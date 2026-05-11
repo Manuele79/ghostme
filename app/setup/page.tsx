@@ -101,11 +101,23 @@ export default function SetupPage() {
   async function saveProfile() {
     setSaveMessage("Salvataggio in corso...");
 
+    const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      console.log("AUTH USER:", user);
+
+      if (!user) {
+        setSaveMessage("Utente non autenticato.");
+        return;
+      }
+
     const { data: userData, error: userError } = await supabase
       .from("users")
       .insert([
         {
-          name: "Test User",
+          name: user.email,
+          email: user.email,
         },
       ])
       .select()
