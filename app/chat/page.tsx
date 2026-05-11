@@ -25,7 +25,9 @@ export default function ChatPage() {
         .from("traits")
         .select("*")
         .eq("user_id", user.id)
-        .single();
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
       console.log("CHAT TRAITS:", data);
       console.log("CHAT ERROR:", error);
