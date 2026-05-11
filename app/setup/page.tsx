@@ -43,8 +43,8 @@ async function saveProfile() {
   const answersToInsert = selected.map((item) => ({
     user_id: userData.id,
     question_id: "stress_01",
-    answer_text: item.text,
-    intensity: item.intensity,
+    selected_answers: [item.text],
+    intensita: item.intensity,
   }));
 
   const { data: answersData, error: answersError } = await supabase
