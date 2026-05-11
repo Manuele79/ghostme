@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { buildPersonalitySummary } from "@/lib/personality";
 
@@ -55,6 +55,9 @@ export default function SetupPage() {
   const [selected, setSelected] = useState<
     { text: string; intensity: number }[]
   >([]);
+
+  const [loadingProfile, setLoadingProfile] =
+  useState(true);
 
   const [saveMessage, setSaveMessage] = useState("");
 
