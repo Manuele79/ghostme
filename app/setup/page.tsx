@@ -114,7 +114,7 @@ export default function SetupPage() {
 
     const { data: userData, error: userError } = await supabase
       .from("users")
-      .insert([
+      .upsert([
         {
           id: user.id,
           name: user.email,
