@@ -10,6 +10,31 @@ const answers = [
   "Faccio battute o ironia",
 ];
 
+const traitMap: Record<
+  string,
+  Record<string, number>
+> = {
+  "Mi innervosisco facilmente": {
+    stress_interno: 3,
+    impulsivita: 2,
+  },
+
+  "Mi chiudo e parlo meno": {
+    chiusura_sociale: 3,
+    stress_interno: 2,
+  },
+
+  "Cerco di controllare tutto": {
+    controllo: 3,
+    ansia_controllo: 2,
+  },
+
+  "Faccio battute o ironia": {
+    sarcasmo: 3,
+    evasione_emotiva: 2,
+  },
+};
+
 export default function SetupPage() {
   const [selected, setSelected] = useState<
     { text: string; intensity: number }[]
