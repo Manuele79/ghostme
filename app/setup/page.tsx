@@ -24,6 +24,37 @@ export default function SetupPage() {
   console.log("SUPABASE ERROR:", error);
 }
 
+async function saveProfile() {
+  const { data: userData, error: userError } = await supabase
+    .from("users")
+    .insert([
+      {
+        name: "Test User",
+      },
+    ])
+    .select()
+    .single();
+
+  console.log("USER:", userData);
+  console.log("USER ERROR:", userError);
+
+  if (!userData) return;
+
+  const answersToInsert = selected.map((item) => ({
+    user_id: userData.id,
+    question_id: "stress_01",
+    answer_text: item.text,
+    intensity: item.intensity,
+  }));
+
+  const { data: answersData, error: answersError } = await supabase
+    .from("answers")
+    .insert(answersToInsert);
+
+  console.log("ANSWERS:", answersData);
+  console.log("ANSWERS ERROR:", answersError);
+}
+
   function toggleAnswer(answer: string) {
     const exists = selected.find((item) => item.text === answer);
 
@@ -137,6 +168,13 @@ export default function SetupPage() {
               className="mt-6 rounded-2xl bg-white px-5 py-3 text-black font-bold"
             >
               Test Supabase
+            </button>
+
+            <button
+              onClick={saveProfile}
+              className="mt-3 ml-3 rounded-2xl bg-green-500 px-5 py-3 text-black font-bold"
+            >
+              Salva Profilo
             </button>
 
             <div className="mt-3 space-y-2 text-sm text-zinc-200">
