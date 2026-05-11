@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 const answers = [
   "Mi innervosisco facilmente",
@@ -13,6 +14,15 @@ export default function SetupPage() {
   const [selected, setSelected] = useState<
     { text: string; intensity: number }[]
   >([]);
+
+  async function testSupabase() {
+  const { data, error } = await supabase
+    .from("questions")
+    .select("*");
+
+  console.log("SUPABASE DATA:", data);
+  console.log("SUPABASE ERROR:", error);
+}
 
   function toggleAnswer(answer: string) {
     const exists = selected.find((item) => item.text === answer);
@@ -121,6 +131,13 @@ export default function SetupPage() {
             <p className="text-sm text-zinc-400">
               Stato mentale attuale:
             </p>
+
+            <button
+              onClick={testSupabase}
+              className="mt-6 rounded-2xl bg-white px-5 py-3 text-black font-bold"
+            >
+              Test Supabase
+            </button>
 
             <div className="mt-3 space-y-2 text-sm text-zinc-200">
               {selected.length === 0 && (
