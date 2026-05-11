@@ -73,386 +73,270 @@ const questions: Question[] = [
       "Evito finché posso",
     ],
   },
-{
-  id: "rabbia_01",
-  title: "Domanda 6 — Rabbia",
-  text: "Quando ti arrabbi davvero, cosa succede più spesso?",
-  answers: [
-    "Esplodo subito",
-    "Mi chiudo e sparisco",
-    "Divento freddo",
-    "Tengo tutto dentro",
-  ],
-},
-
-{
-  id: "gelosia_01",
-  title: "Domanda 7 — Gelosia",
-  text: "Quando una persona importante dà attenzioni ad altri, come reagisci?",
-  answers: [
-    "Mi infastidisco subito",
-    "Fingo indifferenza",
-    "Mi confronto direttamente",
-    "Tengo tutto dentro",
-  ],
-},
-
-{
-  id: "abbandono_01",
-  title: "Domanda 8 — Distanza emotiva",
-  text: "Se qualcuno si allontana senza spiegazioni, cosa fai?",
-  answers: [
-    "Cerco subito spiegazioni",
-    "Aspetto ma sto male",
-    "Mi distacco anch’io",
-    "Faccio finta di niente",
-  ],
-},
-
-{
-  id: "sincerita_01",
-  title: "Domanda 9 — Sincerità",
-  text: "Quando una verità può ferire qualcuno, come ti comporti?",
-  answers: [
-    "La dico comunque",
-    "La addolcisco",
-    "Evito il discorso",
-    "Uso ironia o battute",
-  ],
-},
-
-{
-  id: "orgoglio_01",
-  title: "Domanda 10 — Orgoglio",
-  text: "Quando qualcuno ti ferisce, qual è la tua reazione più comune?",
-  answers: [
-    "Non dimentico facilmente",
-    "Faccio finta di nulla",
-    "Mi allontano",
-    "Affronto subito la situazione",
-  ],
-},
-{
-  id: "affetto_01",
-  title: "Domanda 11 — Affetto",
-  text: "Quando tieni davvero a qualcuno, come lo dimostri?",
-  answers: [
-    "Cerco presenza continua",
-    "Aiuto nelle cose pratiche",
-    "Mi apro molto emotivamente",
-    "Lo dimostro poco ma lo sento forte",
-  ],
-},
-
-{
-  id: "vulnerabilita_01",
-  title: "Domanda 12 — Vulnerabilità",
-  text: "Quanto ti riesce facile mostrare debolezze o fragilità?",
-  answers: [
-    "Molto facilmente",
-    "Solo con poche persone",
-    "Quasi mai",
-    "Uso ironia per nasconderle",
-  ],
-},
-
-{
-  id: "ego_01",
-  title: "Domanda 13 — Ego",
-  text: "Se qualcuno ti sottovaluta, cosa senti più spesso?",
-  answers: [
-    "Rabbia",
-    "Bisogno di dimostrare",
-    "Indifferenza",
-    "Mi ferisce molto",
-  ],
-},
-
-{
-  id: "dipendenza_01",
-  title: "Domanda 14 — Bisogno emotivo",
-  text: "Quanto soffri quando perdi attenzioni da una persona importante?",
-  answers: [
-    "Moltissimo",
-    "Abbastanza",
-    "Poco",
-    "Fingo che non mi importi",
-  ],
-},
-
-{
-  id: "fiducia_01",
-  title: "Domanda 15 — Fiducia",
-  text: "Quando qualcuno ti delude, come cambia il rapporto?",
-  answers: [
-    "Faccio fatica a fidarmi di nuovo",
-    "Perdono ma non dimentico",
-    "Ne parlo subito",
-    "Taglio completamente",
-  ],
-}
+  {
+    id: "rabbia_01",
+    title: "Domanda 6 — Rabbia",
+    text: "Quando ti arrabbi davvero, cosa succede più spesso?",
+    answers: [
+      "Esplodo subito",
+      "Mi chiudo e sparisco",
+      "Divento freddo",
+      "Tengo tutto dentro",
+    ],
+  },
+  {
+    id: "gelosia_01",
+    title: "Domanda 7 — Gelosia",
+    text: "Quando una persona importante dà attenzioni ad altri, come reagisci?",
+    answers: [
+      "Mi infastidisco subito",
+      "Fingo indifferenza",
+      "Mi confronto direttamente",
+      "Tengo tutto dentro",
+    ],
+  },
+  {
+    id: "abbandono_01",
+    title: "Domanda 8 — Distanza emotiva",
+    text: "Se qualcuno si allontana senza spiegazioni, cosa fai?",
+    answers: [
+      "Cerco subito spiegazioni",
+      "Aspetto ma sto male",
+      "Mi distacco anch’io",
+      "Faccio finta di niente",
+    ],
+  },
+  {
+    id: "sincerita_01",
+    title: "Domanda 9 — Sincerità",
+    text: "Quando una verità può ferire qualcuno, come ti comporti?",
+    answers: [
+      "La dico comunque",
+      "La addolcisco",
+      "Evito il discorso",
+      "Uso ironia o battute",
+    ],
+  },
+  {
+    id: "orgoglio_01",
+    title: "Domanda 10 — Orgoglio",
+    text: "Quando qualcuno ti ferisce, qual è la tua reazione più comune?",
+    answers: [
+      "Non dimentico facilmente",
+      "Faccio finta di nulla",
+      "Mi allontano",
+      "Affronto subito la situazione",
+    ],
+  },
+  {
+    id: "affetto_01",
+    title: "Domanda 11 — Affetto",
+    text: "Quando tieni davvero a qualcuno, come lo dimostri?",
+    answers: [
+      "Cerco presenza continua",
+      "Aiuto nelle cose pratiche",
+      "Mi apro molto emotivamente",
+      "Lo dimostro poco ma lo sento forte",
+    ],
+  },
+  {
+    id: "vulnerabilita_01",
+    title: "Domanda 12 — Vulnerabilità",
+    text: "Quanto ti riesce facile mostrare fragilità?",
+    answers: [
+      "Molto facilmente",
+      "Solo con poche persone",
+      "Quasi mai",
+      "Uso ironia per nasconderle",
+    ],
+  },
+  {
+    id: "ego_01",
+    title: "Domanda 13 — Ego",
+    text: "Se qualcuno ti sottovaluta, cosa senti più spesso?",
+    answers: [
+      "Rabbia",
+      "Bisogno di dimostrare",
+      "Indifferenza",
+      "Mi ferisce molto",
+    ],
+  },
+  {
+    id: "bisogno_01",
+    title: "Domanda 14 — Bisogno emotivo",
+    text: "Quanto soffri quando perdi attenzioni da una persona importante?",
+    answers: [
+      "Moltissimo",
+      "Abbastanza",
+      "Poco",
+      "Fingo che non mi importi",
+    ],
+  },
+  {
+    id: "fiducia_01",
+    title: "Domanda 15 — Fiducia",
+    text: "Quando qualcuno ti delude, come cambia il rapporto?",
+    answers: [
+      "Faccio fatica a fidarmi di nuovo",
+      "Perdono ma non dimentico",
+      "Ne parlo subito",
+      "Taglio completamente",
+    ],
+  },
+  {
+    id: "socialita_01",
+    title: "Domanda 16 — Socialità",
+    text: "In mezzo agli altri, di solito come ti comporti?",
+    answers: [
+      "Parlo facilmente",
+      "Osservo prima di espormi",
+      "Mi stanco presto",
+      "Cerco di far ridere",
+    ],
+  },
+  {
+    id: "ansia_01",
+    title: "Domanda 17 — Ansia",
+    text: "Quando non sai cosa succederà, cosa ti viene naturale fare?",
+    answers: [
+      "Penso a mille scenari",
+      "Cerco informazioni",
+      "Mi agito ma non lo mostro",
+      "Faccio finta che vada tutto bene",
+    ],
+  },
+  {
+    id: "controllo_01",
+    title: "Domanda 18 — Controllo",
+    text: "Quando qualcosa non va come vuoi, cosa fai?",
+    answers: [
+      "Provo a sistemarla subito",
+      "Mi irrito",
+      "Delego se mi fido",
+      "Mi blocco un attimo",
+    ],
+  },
+  {
+    id: "empatia_01",
+    title: "Domanda 19 — Empatia",
+    text: "Quando qualcuno sta male, come reagisci?",
+    answers: [
+      "Cerco di aiutarlo subito",
+      "Ascolto senza giudicare",
+      "Mi pesa emotivamente",
+      "Non so sempre cosa dire",
+    ],
+  },
+  {
+    id: "evitamento_01",
+    title: "Domanda 20 — Evitamento",
+    text: "Quando una situazione ti pesa, cosa fai più spesso?",
+    answers: [
+      "La rimando",
+      "Mi distraggo con altro",
+      "La affronto a forza",
+      "Sparisco per un po’",
+    ],
+  },
 ];
 
 const traitMap: Record<string, Record<string, number>> = {
-  "Mi innervosisco facilmente": {
-    ansia: 3,
-    impulsivita: 2,
-  },
-  "Mi chiudo e parlo meno": {
-    sensibilita_critiche: 2,
-    ansia: 2,
-  },
-  "Cerco di controllare tutto": {
-    controllo: 3,
-    ansia: 2,
-  },
-  "Faccio battute o ironia": {
-    sarcasmo: 3,
-  },
+  "Mi innervosisco facilmente": { ansia: 3, impulsivita: 2 },
+  "Mi chiudo e parlo meno": { sensibilita_critiche: 2, ansia: 2 },
+  "Cerco di controllare tutto": { controllo: 3, ansia: 2 },
+  "Faccio battute o ironia": { sarcasmo: 3 },
 
-  "Rispondo subito": {
-    orgoglio: 3,
-    impulsivita: 2,
-  },
-  "Sto zitto ma me la lego": {
-    orgoglio: 2,
-    sensibilita_critiche: 3,
-  },
-  "Faccio una battuta pungente": {
-    sarcasmo: 3,
-    orgoglio: 2,
-  },
-  "Evito la scena e ne parlo dopo": {
-    controllo: 2,
-    impulsivita: -1,
-  },
+  "Rispondo subito": { orgoglio: 3, impulsivita: 2 },
+  "Sto zitto ma me la lego": { orgoglio: 2, sensibilita_critiche: 3 },
+  "Faccio una battuta pungente": { sarcasmo: 3, orgoglio: 2 },
+  "Evito la scena e ne parlo dopo": { controllo: 2, impulsivita: -1 },
 
-  "Chiedo subito cosa c’è": {
-    empatia: 2,
-    controllo: 1,
-  },
-  "Aspetto ma ci sto male": {
-    ansia: 3,
-    sensibilita_critiche: 2,
-  },
-  "Fingo niente ma cambio atteggiamento": {
-    orgoglio: 2,
-    sensibilita_critiche: 2,
-  },
-  "Mi distacco anch’io": {
-    orgoglio: 3,
-    empatia: -1,
-  },
+  "Chiedo subito cosa c’è": { empatia: 2, controllo: 1 },
+  "Aspetto ma ci sto male": { ansia: 3, sensibilita_critiche: 2 },
+  "Fingo niente ma cambio atteggiamento": { orgoglio: 2, sensibilita_critiche: 2 },
+  "Mi distacco anch’io": { orgoglio: 3, empatia: -1, paura_abbandono: 1 },
 
-  "Ragiono molto prima di scegliere": {
-    controllo: 2,
-    ansia: 1,
-  },
-  "Vado abbastanza di pancia": {
-    impulsivita: 3,
-  },
-  "Chiedo consiglio": {
-    socialita: 2,
-    empatia: 1,
-  },
-  "Rimando finché posso": {
-    ansia: 2,
-    controllo: -1,
-  },
+  "Ragiono molto prima di scegliere": { controllo: 2, ansia: 1 },
+  "Vado abbastanza di pancia": { impulsivita: 3 },
+  "Chiedo consiglio": { socialita: 2, empatia: 1 },
+  "Rimando finché posso": { ansia: 2, controllo: -1, evitamento: 2 },
 
-  "Sono diretto": {
-    orgoglio: 1,
-    controllo: 1,
-  },
-  "Cerco di addolcirla": {
-    empatia: 3,
-  },
-  "Uso ironia": {
-    sarcasmo: 3,
-  },
-  "Evito finché posso": {
-    ansia: 2,
-    sensibilita_critiche: 2,
-  },
-  "Esplodo subito": {
-  impulsivita: 3,
-  orgoglio: 1,
-},
+  "Sono diretto": { sincerita: 2, controllo: 1 },
+  "Cerco di addolcirla": { empatia: 3, sincerita: 1 },
+  "Uso ironia": { sarcasmo: 3 },
+  "Evito finché posso": { ansia: 2, evitamento: 3 },
 
-"Mi chiudo e sparisco": {
-  sensibilita_critiche: 2,
-  ansia: 2,
-},
+  "Esplodo subito": { rabbia: 3, impulsivita: 3 },
+  "Mi chiudo e sparisco": { evitamento: 3, ansia: 2 },
+  "Divento freddo": { controllo: 2, orgoglio: 2 },
+  "Tengo tutto dentro": { ansia: 2, sensibilita_critiche: 2 },
 
-"Divento freddo": {
-  controllo: 2,
-  orgoglio: 2,
-},
+  "Mi infastidisco subito": { gelosia: 3, orgoglio: 1 },
+  "Fingo indifferenza": { orgoglio: 2, controllo: 1 },
+  "Mi confronto direttamente": { sincerita: 2, controllo: 1 },
 
-"Tengo tutto dentro": {
-  ansia: 2,
-  sensibilita_critiche: 2,
-},
+  "Cerco subito spiegazioni": { paura_abbandono: 3, ansia: 1 },
+  "Faccio finta di niente": { controllo: 1, evitamento: 2 },
 
-"Mi infastidisco subito": {
-  gelosia: 3,
-  orgoglio: 1,
-},
+  "La dico comunque": { sincerita: 3, orgoglio: 1 },
+  "La addolcisco": { empatia: 2, sincerita: 1 },
+  "Evito il discorso": { ansia: 2, evitamento: 3 },
+  "Uso ironia o battute": { sarcasmo: 3 },
 
-"Fingo indifferenza": {
-  orgoglio: 2,
-  controllo: 1,
-},
+  "Non dimentico facilmente": { orgoglio: 3, sensibilita_critiche: 2 },
+  "Faccio finta di nulla": { controllo: 1, evitamento: 2 },
+  "Mi allontano": { orgoglio: 2, evitamento: 2 },
+  "Affronto subito la situazione": { sincerita: 2, impulsivita: 1 },
 
-"Mi confronto direttamente": {
-  sincerita: 2,
-  controllo: 1,
-},
+  "Cerco presenza continua": { paura_abbandono: 2, bisogno_affetto: 3 },
+  "Aiuto nelle cose pratiche": { empatia: 2, controllo: 1 },
+  "Mi apro molto emotivamente": { empatia: 3, vulnerabilita: 3 },
+  "Lo dimostro poco ma lo sento forte": { bisogno_affetto: 2, vulnerabilita: -1 },
 
-"Cerco subito spiegazioni": {
-  paura_abbandono: 3,
-  ansia: 1,
-},
+  "Molto facilmente": { vulnerabilita: 3, empatia: 1 },
+  "Solo con poche persone": { controllo: 1, vulnerabilita: 1 },
+  "Quasi mai": { orgoglio: 2, controllo: 2, vulnerabilita: -2 },
+  "Uso ironia per nasconderle": { sarcasmo: 3, vulnerabilita: -1 },
 
-"Aspetto ma sto male": {
-  paura_abbandono: 2,
-  ansia: 2,
-},
+  "Rabbia": { rabbia: 3, impulsivita: 2 },
+  "Bisogno di dimostrare": { orgoglio: 3, controllo: 1 },
+  "Indifferenza": { controllo: 1 },
+  "Mi ferisce molto": { sensibilita_critiche: 3, ansia: 1 },
 
-"Faccio finta di niente": {
-  controllo: 1,
-  sensibilita_critiche: 1,
-},
+  "Moltissimo": { paura_abbandono: 3, bisogno_affetto: 3 },
+  "Abbastanza": { paura_abbandono: 2, bisogno_affetto: 1 },
+  "Poco": { controllo: 1 },
+  "Fingo che non mi importi": { orgoglio: 2, evitamento: 1 },
 
-"La dico comunque": {
-  sincerita: 3,
-  orgoglio: 1,
-},
+  "Faccio fatica a fidarmi di nuovo": { fiducia: -3, sensibilita_critiche: 2 },
+  "Perdono ma non dimentico": { fiducia: -1, orgoglio: 2 },
+  "Ne parlo subito": { sincerita: 2, empatia: 1 },
+  "Taglio completamente": { fiducia: -3, orgoglio: 3 },
 
-"La addolcisco": {
-  empatia: 2,
-  sincerita: 1,
-},
+  "Parlo facilmente": { socialita: 3 },
+  "Osservo prima di espormi": { controllo: 2, socialita: -1 },
+  "Mi stanco presto": { socialita: -2, ansia: 1 },
+  "Cerco di far ridere": { sarcasmo: 2, socialita: 2 },
 
-"Evito il discorso": {
-  ansia: 2,
-  sensibilita_critiche: 1,
-},
+  "Penso a mille scenari": { ansia: 3 },
+  "Cerco informazioni": { controllo: 2 },
+  "Mi agito ma non lo mostro": { ansia: 2, controllo: 1 },
+  "Faccio finta che vada tutto bene": { evitamento: 2 },
 
-"Uso ironia o battute": {
-  sarcasmo: 3,
-},
+  "Provo a sistemarla subito": { controllo: 3 },
+  "Mi irrito": { rabbia: 2, impulsivita: 1 },
+  "Delego se mi fido": { fiducia: 2, controllo: -1 },
+  "Mi blocco un attimo": { ansia: 2 },
 
-"Non dimentico facilmente": {
-  orgoglio: 3,
-  sensibilita_critiche: 2,
-},
+  "Cerco di aiutarlo subito": { empatia: 3 },
+  "Ascolto senza giudicare": { empatia: 3, controllo: -1 },
+  "Mi pesa emotivamente": { empatia: 2, ansia: 1 },
+  "Non so sempre cosa dire": { ansia: 1, empatia: 1 },
 
-"Mi allontano": {
-  orgoglio: 2,
-  paura_abbandono: 1,
-},
-
-"Affronto subito la situazione": {
-  sincerita: 2,
-  impulsivita: 1,
-},
-"Cerco presenza continua": {
-  paura_abbandono: 2,
-  socialita: 2,
-},
-
-"Aiuto nelle cose pratiche": {
-  empatia: 2,
-  controllo: 1,
-},
-
-"Mi apro molto emotivamente": {
-  empatia: 3,
-  sensibilita_critiche: 1,
-},
-
-"Lo dimostro poco ma lo sento forte": {
-  orgoglio: 1,
-  sensibilita_critiche: 2,
-},
-
-"Molto facilmente": {
-  empatia: 2,
-  socialita: 1,
-},
-
-"Solo con poche persone": {
-  controllo: 1,
-  sensibilita_critiche: 1,
-},
-
-"Quasi mai": {
-  orgoglio: 2,
-  controllo: 2,
-},
-
-"Uso ironia per nasconderle": {
-  sarcasmo: 3,
-  sensibilita_critiche: 1,
-},
-
-"Rabbia": {
-  impulsivita: 2,
-  orgoglio: 2,
-},
-
-"Bisogno di dimostrare": {
-  orgoglio: 3,
-  controllo: 1,
-},
-
-"Indifferenza": {
-  controllo: 1,
-},
-
-"Mi ferisce molto": {
-  sensibilita_critiche: 3,
-  ansia: 1,
-},
-
-"Moltissimo": {
-  paura_abbandono: 3,
-  sensibilita_critiche: 2,
-},
-
-"Abbastanza": {
-  paura_abbandono: 2,
-},
-
-"Poco": {
-  controllo: 1,
-},
-
-"Fingo che non mi importi": {
-  orgoglio: 2,
-  sarcasmo: 1,
-},
-
-"Faccio fatica a fidarmi di nuovo": {
-  sensibilita_critiche: 2,
-  orgoglio: 2,
-},
-
-"Perdono ma non dimentico": {
-  orgoglio: 2,
-  empatia: 1,
-},
-
-"Ne parlo subito": {
-  sincerita: 2,
-  empatia: 1,
-},
-
-"Taglio completamente": {
-  orgoglio: 3,
-  controllo: 1,
-},
+  "La rimando": { evitamento: 3, ansia: 1 },
+  "Mi distraggo con altro": { evitamento: 3 },
+  "La affronto a forza": { controllo: 2, sincerita: 1 },
+  "Sparisco per un po’": { evitamento: 3, ansia: 2 },
 };
 
 function calculateTraits(selected: SelectedAnswer[]) {
@@ -476,13 +360,11 @@ export default function SetupPage() {
   const [saveMessage, setSaveMessage] = useState("");
   const [loadingProfile, setLoadingProfile] = useState(true);
 
-  const calculatedTraits = useMemo(() => {
-    return calculateTraits(selected);
-  }, [selected]);
-
-  const personalitySummary = useMemo(() => {
-    return buildPersonalitySummary(calculatedTraits);
-  }, [calculatedTraits]);
+  const calculatedTraits = useMemo(() => calculateTraits(selected), [selected]);
+  const personalitySummary = useMemo(
+    () => buildPersonalitySummary(calculatedTraits),
+    [calculatedTraits]
+  );
 
   useEffect(() => {
     async function loadProfile() {
@@ -500,7 +382,7 @@ export default function SetupPage() {
         .select("*")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
-        .limit(20);
+        .limit(80);
 
       console.log("LOADED ANSWERS:", latestAnswers);
       console.log("LOAD ERROR:", error);
@@ -535,14 +417,7 @@ export default function SetupPage() {
       return;
     }
 
-    setSelected([
-      ...selected,
-      {
-        questionId,
-        text: answer,
-        intensity: 3,
-      },
-    ]);
+    setSelected([...selected, { questionId, text: answer, intensity: 3 }]);
   }
 
   function updateIntensity(questionId: string, answer: string, intensity: number) {
@@ -562,8 +437,6 @@ export default function SetupPage() {
       data: { user },
     } = await supabase.auth.getUser();
 
-    console.log("AUTH USER:", user);
-
     if (!user) {
       setSaveMessage("Utente non autenticato.");
       return;
@@ -571,46 +444,36 @@ export default function SetupPage() {
 
     const { data: userData, error: userError } = await supabase
       .from("users")
-      .upsert([
-        {
-          id: user.id,
-          name: user.email,
-          email: user.email,
-        },
-      ])
+      .upsert([{ id: user.id, name: user.email, email: user.email }])
       .select()
       .single();
-
-    console.log("USER:", userData);
-    console.log("USER ERROR:", userError);
 
     if (!userData || userError) {
       setSaveMessage("Errore salvataggio utente.");
       return;
     }
 
-    console.log("CALCULATED TRAITS:", calculatedTraits);
-    console.log("PERSONALITY:", personalitySummary);
-
-    const { data: traitsData, error: traitsError } = await supabase
-      .from("traits")
-      .insert([
-        {
-          user_id: userData.id,
-          sarcasmo: calculatedTraits.sarcasmo || 0,
-          empatia: calculatedTraits.empatia || 0,
-          orgoglio: calculatedTraits.orgoglio || 0,
-          gelosia: calculatedTraits.gelosia || 0,
-          controllo: calculatedTraits.controllo || 0,
-          ansia: calculatedTraits.ansia || 0,
-          impulsivita: calculatedTraits.impulsivita || 0,
-          socialita: calculatedTraits.socialita || 0,
-          sensibilita_critiche: calculatedTraits.sensibilita_critiche || 0,
-        },
-      ]);
-
-    console.log("TRAITS:", traitsData);
-    console.log("TRAITS ERROR:", traitsError);
+    const { error: traitsError } = await supabase.from("traits").insert([
+      {
+        user_id: userData.id,
+        sarcasmo: calculatedTraits.sarcasmo || 0,
+        empatia: calculatedTraits.empatia || 0,
+        orgoglio: calculatedTraits.orgoglio || 0,
+        gelosia: calculatedTraits.gelosia || 0,
+        controllo: calculatedTraits.controllo || 0,
+        ansia: calculatedTraits.ansia || 0,
+        impulsivita: calculatedTraits.impulsivita || 0,
+        socialita: calculatedTraits.socialita || 0,
+        sensibilita_critiche: calculatedTraits.sensibilita_critiche || 0,
+        paura_abbandono: calculatedTraits.paura_abbandono || 0,
+        sincerita: calculatedTraits.sincerita || 0,
+        fiducia: calculatedTraits.fiducia || 0,
+        rabbia: calculatedTraits.rabbia || 0,
+        vulnerabilita: calculatedTraits.vulnerabilita || 0,
+        bisogno_affetto: calculatedTraits.bisogno_affetto || 0,
+        evitamento: calculatedTraits.evitamento || 0,
+      },
+    ]);
 
     const answersToInsert = selected.map((item) => ({
       user_id: userData.id,
@@ -619,14 +482,13 @@ export default function SetupPage() {
       intensita: item.intensity,
     }));
 
-    const { data: answersData, error: answersError } = await supabase
+    const { error: answersError } = await supabase
       .from("answers")
       .insert(answersToInsert);
 
-    console.log("ANSWERS:", answersData);
-    console.log("ANSWERS ERROR:", answersError);
-
     if (traitsError || answersError) {
+      console.log("TRAITS ERROR:", traitsError);
+      console.log("ANSWERS ERROR:", answersError);
       setSaveMessage("Profilo creato, ma c'è stato un errore su traits/risposte.");
       return;
     }
@@ -654,25 +516,19 @@ export default function SetupPage() {
         </h1>
 
         <p className="mt-4 text-zinc-400">
-          Puoi scegliere più risposte per ogni domanda. Poi dai intensità da 1 a
-          5. Qui GhostMe inizia a farsi i fatti tuoi con metodo 😄
+          Puoi scegliere più risposte per ogni domanda. Poi dai intensità da 1 a 5.
         </p>
 
         <div className="mt-10 space-y-8">
           {questions.map((question) => (
-            <div
-              key={question.id}
-              className="rounded-3xl border border-zinc-800 bg-zinc-950 p-6"
-            >
+            <div key={question.id} className="rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
               <p className="text-lg font-bold">{question.title}</p>
-
               <p className="mt-3 text-zinc-300">{question.text}</p>
 
               <div className="mt-6 space-y-4">
                 {question.answers.map((answer) => {
                   const activeItem = selected.find(
-                    (item) =>
-                      item.questionId === question.id && item.text === answer
+                    (item) => item.questionId === question.id && item.text === answer
                   );
 
                   const isActive = !!activeItem;
@@ -695,17 +551,13 @@ export default function SetupPage() {
 
                       {isActive && (
                         <div className="mt-4">
-                          <p className="text-sm opacity-70">
-                            Quanto ti rappresenta?
-                          </p>
+                          <p className="text-sm opacity-70">Quanto ti rappresenta?</p>
 
                           <div className="mt-3 flex gap-2">
                             {[1, 2, 3, 4, 5].map((level) => (
                               <button
                                 key={level}
-                                onClick={() =>
-                                  updateIntensity(question.id, answer, level)
-                                }
+                                onClick={() => updateIntensity(question.id, answer, level)}
                                 className={`h-10 w-10 rounded-full border text-sm font-bold transition ${
                                   activeItem.intensity === level
                                     ? "bg-black text-white border-black"
@@ -736,15 +588,13 @@ export default function SetupPage() {
             Salva Profilo
           </button>
 
-          {saveMessage && (
-            <p className="mt-4 text-sm text-green-300">{saveMessage}</p>
-          )}
+          {saveMessage && <p className="mt-4 text-sm text-green-300">{saveMessage}</p>}
 
           <div className="mt-5 space-y-2 text-sm text-zinc-200">
             {selected.length === 0 && <p>Nessuna risposta selezionata</p>}
 
-            {selected.map((item) => (
-              <div key={`${item.questionId}-${item.text}`}>
+            {selected.map((item, index) => (
+              <div key={`${item.questionId}-${item.text}-${index}`}>
                 • {item.text} — Intensità {item.intensity}/5
               </div>
             ))}
