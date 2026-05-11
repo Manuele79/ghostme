@@ -116,6 +116,7 @@ export default function SetupPage() {
       .from("users")
       .insert([
         {
+          id: user.id,
           name: user.email,
           email: user.email,
         },
