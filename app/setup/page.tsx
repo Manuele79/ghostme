@@ -4,46 +4,169 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { buildPersonalitySummary } from "@/lib/personality";
 
-const answers = [
-  "Mi innervosisco facilmente",
-  "Mi chiudo e parlo meno",
-  "Cerco di controllare tutto",
-  "Faccio battute o ironia",
+type SelectedAnswer = {
+  questionId: string;
+  text: string;
+  intensity: number;
+};
+
+type Question = {
+  id: string;
+  title: string;
+  text: string;
+  answers: string[];
+};
+
+const questions: Question[] = [
+  {
+    id: "stress_01",
+    title: "Domanda 1 — Stress",
+    text: "Quando hai troppi problemi insieme, cosa succede più spesso?",
+    answers: [
+      "Mi innervosisco facilmente",
+      "Mi chiudo e parlo meno",
+      "Cerco di controllare tutto",
+      "Faccio battute o ironia",
+    ],
+  },
+  {
+    id: "conflitto_01",
+    title: "Domanda 2 — Conflitto",
+    text: "Se qualcuno ti manca di rispetto davanti ad altri, cosa fai?",
+    answers: [
+      "Rispondo subito",
+      "Sto zitto ma me la lego",
+      "Faccio una battuta pungente",
+      "Evito la scena e ne parlo dopo",
+    ],
+  },
+  {
+    id: "relazioni_01",
+    title: "Domanda 3 — Relazioni",
+    text: "Se una persona importante diventa fredda con te per giorni, cosa succede?",
+    answers: [
+      "Chiedo subito cosa c’è",
+      "Aspetto ma ci sto male",
+      "Fingo niente ma cambio atteggiamento",
+      "Mi distacco anch’io",
+    ],
+  },
+  {
+    id: "decisioni_01",
+    title: "Domanda 4 — Decisioni",
+    text: "Quando devi prendere una decisione importante, come ti muovi?",
+    answers: [
+      "Ragiono molto prima di scegliere",
+      "Vado abbastanza di pancia",
+      "Chiedo consiglio",
+      "Rimando finché posso",
+    ],
+  },
+  {
+    id: "comunicazione_01",
+    title: "Domanda 5 — Comunicazione",
+    text: "Quando devi dire una cosa scomoda, che stile usi?",
+    answers: [
+      "Sono diretto",
+      "Cerco di addolcirla",
+      "Uso ironia",
+      "Evito finché posso",
+    ],
+  },
 ];
 
 const traitMap: Record<string, Record<string, number>> = {
   "Mi innervosisco facilmente": {
-    stress_interno: 3,
+    ansia: 3,
     impulsivita: 2,
   },
-
   "Mi chiudo e parlo meno": {
-    chiusura_sociale: 3,
-    stress_interno: 2,
+    sensibilita_critiche: 2,
+    ansia: 2,
   },
-
   "Cerco di controllare tutto": {
     controllo: 3,
-    ansia_controllo: 2,
+    ansia: 2,
   },
-
   "Faccio battute o ironia": {
     sarcasmo: 3,
-    evasione_emotiva: 2,
+  },
+
+  "Rispondo subito": {
+    orgoglio: 3,
+    impulsivita: 2,
+  },
+  "Sto zitto ma me la lego": {
+    orgoglio: 2,
+    sensibilita_critiche: 3,
+  },
+  "Faccio una battuta pungente": {
+    sarcasmo: 3,
+    orgoglio: 2,
+  },
+  "Evito la scena e ne parlo dopo": {
+    controllo: 2,
+    impulsivita: -1,
+  },
+
+  "Chiedo subito cosa c’è": {
+    empatia: 2,
+    controllo: 1,
+  },
+  "Aspetto ma ci sto male": {
+    ansia: 3,
+    sensibilita_critiche: 2,
+  },
+  "Fingo niente ma cambio atteggiamento": {
+    orgoglio: 2,
+    sensibilita_critiche: 2,
+  },
+  "Mi distacco anch’io": {
+    orgoglio: 3,
+    empatia: -1,
+  },
+
+  "Ragiono molto prima di scegliere": {
+    controllo: 2,
+    ansia: 1,
+  },
+  "Vado abbastanza di pancia": {
+    impulsivita: 3,
+  },
+  "Chiedo consiglio": {
+    socialita: 2,
+    empatia: 1,
+  },
+  "Rimando finché posso": {
+    ansia: 2,
+    controllo: -1,
+  },
+
+  "Sono diretto": {
+    orgoglio: 1,
+    controllo: 1,
+  },
+  "Cerco di addolcirla": {
+    empatia: 3,
+  },
+  "Uso ironia": {
+    sarcasmo: 3,
+  },
+  "Evito finché posso": {
+    ansia: 2,
+    sensibilita_critiche: 2,
   },
 };
 
-function calculateTraits(selected: { text: string; intensity: number }[]) {
+function calculateTraits(selected: SelectedAnswer[]) {
   const calculatedTraits: Record<string, number> = {};
 
   selected.forEach((item) => {
     const mapping = traitMap[item.text];
-
     if (!mapping) return;
 
     Object.entries(mapping).forEach(([trait, value]) => {
       const total = value * item.intensity;
-
       calculatedTraits[trait] = (calculatedTraits[trait] || 0) + total;
     });
   });
@@ -52,14 +175,9 @@ function calculateTraits(selected: { text: string; intensity: number }[]) {
 }
 
 export default function SetupPage() {
-  const [selected, setSelected] = useState<
-    { text: string; intensity: number }[]
-  >([]);
-
-  const [loadingProfile, setLoadingProfile] =
-  useState(true);
-
+  const [selected, setSelected] = useState<SelectedAnswer[]>([]);
   const [saveMessage, setSaveMessage] = useState("");
+  const [loadingProfile, setLoadingProfile] = useState(true);
 
   const calculatedTraits = useMemo(() => {
     return calculateTraits(selected);
@@ -70,86 +188,89 @@ export default function SetupPage() {
   }, [calculatedTraits]);
 
   useEffect(() => {
-  async function loadProfile() {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    async function loadProfile() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    if (!user) {
+      if (!user) {
+        setLoadingProfile(false);
+        return;
+      }
+
+      const { data: latestAnswers, error } = await supabase
+        .from("answers")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      console.log("LOADED ANSWERS:", latestAnswers);
+      console.log("LOAD ERROR:", error);
+
+      if (latestAnswers && latestAnswers.length > 0) {
+        const restored = latestAnswers.map((answer) => ({
+          questionId: answer.question_id,
+          text: answer.selected_answers?.[0] || "",
+          intensity: answer.intensita || 3,
+        }));
+
+        setSelected(restored.reverse());
+      }
+
       setLoadingProfile(false);
-      return;
     }
 
-    const { data: latestAnswers, error } = await supabase
-      .from("answers")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(4);
+    loadProfile();
+  }, []);
 
-    console.log("LOADED ANSWERS:", latestAnswers);
-    console.log("LOAD ERROR:", error);
-
-    if (latestAnswers && latestAnswers.length > 0) {
-      const restored = latestAnswers.map((answer) => ({
-        text: answer.selected_answers?.[0] || "",
-        intensity: answer.intensita || 3,
-      }));
-
-      setSelected(restored.reverse());
-    }
-
-    setLoadingProfile(false);
-  }
-
-  loadProfile();
-}, []);
-
-  function toggleAnswer(answer: string) {
-    const exists = selected.find((item) => item.text === answer);
+  function toggleAnswer(questionId: string, answer: string) {
+    const exists = selected.find(
+      (item) => item.questionId === questionId && item.text === answer
+    );
 
     if (exists) {
-      setSelected(selected.filter((item) => item.text !== answer));
+      setSelected(
+        selected.filter(
+          (item) => !(item.questionId === questionId && item.text === answer)
+        )
+      );
       return;
     }
 
     setSelected([
       ...selected,
       {
+        questionId,
         text: answer,
         intensity: 3,
       },
     ]);
   }
 
-  function updateIntensity(answer: string, intensity: number) {
+  function updateIntensity(questionId: string, answer: string, intensity: number) {
     setSelected(
       selected.map((item) =>
-        item.text === answer ? { ...item, intensity } : item
+        item.questionId === questionId && item.text === answer
+          ? { ...item, intensity }
+          : item
       )
     );
-  }
-
-  async function testSupabase() {
-    const { data, error } = await supabase.from("questions").select("*");
-
-    console.log("SUPABASE DATA:", data);
-    console.log("SUPABASE ERROR:", error);
   }
 
   async function saveProfile() {
     setSaveMessage("Salvataggio in corso...");
 
     const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      data: { user },
+    } = await supabase.auth.getUser();
 
-      console.log("AUTH USER:", user);
+    console.log("AUTH USER:", user);
 
-      if (!user) {
-        setSaveMessage("Utente non autenticato.");
-        return;
-      }
+    if (!user) {
+      setSaveMessage("Utente non autenticato.");
+      return;
+    }
 
     const { data: userData, error: userError } = await supabase
       .from("users")
@@ -180,9 +301,14 @@ export default function SetupPage() {
         {
           user_id: userData.id,
           sarcasmo: calculatedTraits.sarcasmo || 0,
+          empatia: calculatedTraits.empatia || 0,
+          orgoglio: calculatedTraits.orgoglio || 0,
+          gelosia: calculatedTraits.gelosia || 0,
           controllo: calculatedTraits.controllo || 0,
+          ansia: calculatedTraits.ansia || 0,
           impulsivita: calculatedTraits.impulsivita || 0,
-          ansia: calculatedTraits.ansia_controllo || 0,
+          socialita: calculatedTraits.socialita || 0,
+          sensibilita_critiche: calculatedTraits.sensibilita_critiche || 0,
         },
       ]);
 
@@ -191,7 +317,7 @@ export default function SetupPage() {
 
     const answersToInsert = selected.map((item) => ({
       user_id: userData.id,
-      question_id: "stress_01",
+      question_id: item.questionId,
       selected_answers: [item.text],
       intensita: item.intensity,
     }));
@@ -211,6 +337,14 @@ export default function SetupPage() {
     setSaveMessage("Profilo salvato correttamente.");
   }
 
+  if (loadingProfile) {
+    return (
+      <main className="min-h-screen bg-black text-white flex items-center justify-center">
+        <p className="text-zinc-400">GhostMe sta caricando il profilo...</p>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-black text-white px-6 py-10">
       <div className="mx-auto max-w-3xl">
@@ -223,110 +357,110 @@ export default function SetupPage() {
         </h1>
 
         <p className="mt-4 text-zinc-400">
-          Le persone vere sono incoerenti, complicate e piene di bug 😄
+          Puoi scegliere più risposte per ogni domanda. Poi dai intensità da 1 a
+          5. Qui GhostMe inizia a farsi i fatti tuoi con metodo 😄
         </p>
 
-        <div className="mt-10 rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
-          <p className="text-lg font-bold">Domanda 1</p>
+        <div className="mt-10 space-y-8">
+          {questions.map((question) => (
+            <div
+              key={question.id}
+              className="rounded-3xl border border-zinc-800 bg-zinc-950 p-6"
+            >
+              <p className="text-lg font-bold">{question.title}</p>
 
-          <p className="mt-3 text-zinc-300">
-            Quando hai troppi problemi insieme, cosa succede più spesso?
-          </p>
+              <p className="mt-3 text-zinc-300">{question.text}</p>
 
-          <div className="mt-6 space-y-4">
-            {answers.map((answer) => {
-              const activeItem = selected.find(
-                (item) => item.text === answer
-              );
+              <div className="mt-6 space-y-4">
+                {question.answers.map((answer) => {
+                  const activeItem = selected.find(
+                    (item) =>
+                      item.questionId === question.id && item.text === answer
+                  );
 
-              const isActive = !!activeItem;
+                  const isActive = !!activeItem;
 
-              return (
-                <div
-                  key={answer}
-                  className={`rounded-2xl border p-4 transition ${
-                    isActive
-                      ? "border-white bg-white text-black"
-                      : "border-zinc-700 bg-zinc-900 text-white"
-                  }`}
-                >
-                  <button
-                    onClick={() => toggleAnswer(answer)}
-                    className="w-full text-left"
-                  >
-                    {answer}
-                  </button>
+                  return (
+                    <div
+                      key={answer}
+                      className={`rounded-2xl border p-4 transition ${
+                        isActive
+                          ? "border-white bg-white text-black"
+                          : "border-zinc-700 bg-zinc-900 text-white"
+                      }`}
+                    >
+                      <button
+                        onClick={() => toggleAnswer(question.id, answer)}
+                        className="w-full text-left"
+                      >
+                        {answer}
+                      </button>
 
-                  {isActive && (
-                    <div className="mt-4">
-                      <p className="text-sm opacity-70">
-                        Quanto ti rappresenta?
-                      </p>
+                      {isActive && (
+                        <div className="mt-4">
+                          <p className="text-sm opacity-70">
+                            Quanto ti rappresenta?
+                          </p>
 
-                      <div className="mt-3 flex gap-2">
-                        {[1, 2, 3, 4, 5].map((level) => (
-                          <button
-                            key={level}
-                            onClick={() => updateIntensity(answer, level)}
-                            className={`h-10 w-10 rounded-full border text-sm font-bold transition ${
-                              activeItem.intensity === level
-                                ? "bg-black text-white border-black"
-                                : "border-zinc-400"
-                            }`}
-                          >
-                            {level}
-                          </button>
-                        ))}
-                      </div>
+                          <div className="mt-3 flex gap-2">
+                            {[1, 2, 3, 4, 5].map((level) => (
+                              <button
+                                key={level}
+                                onClick={() =>
+                                  updateIntensity(question.id, answer, level)
+                                }
+                                className={`h-10 w-10 rounded-full border text-sm font-bold transition ${
+                                  activeItem.intensity === level
+                                    ? "bg-black text-white border-black"
+                                    : "border-zinc-400"
+                                }`}
+                              >
+                                {level}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              );
-            })}
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-8 rounded-2xl border border-zinc-800 bg-black p-4">
+          <p className="text-sm text-zinc-400">Stato mentale attuale:</p>
+
+          <button
+            onClick={saveProfile}
+            className="mt-4 rounded-2xl bg-green-500 px-5 py-3 text-black font-bold"
+          >
+            Salva Profilo
+          </button>
+
+          {saveMessage && (
+            <p className="mt-4 text-sm text-green-300">{saveMessage}</p>
+          )}
+
+          <div className="mt-5 space-y-2 text-sm text-zinc-200">
+            {selected.length === 0 && <p>Nessuna risposta selezionata</p>}
+
+            {selected.map((item) => (
+              <div key={`${item.questionId}-${item.text}`}>
+                • {item.text} — Intensità {item.intensity}/5
+              </div>
+            ))}
           </div>
+        </div>
 
-          <div className="mt-8 rounded-2xl border border-zinc-800 bg-black p-4">
-            <p className="text-sm text-zinc-400">Stato mentale attuale:</p>
+        <div className="mt-6 rounded-3xl border border-cyan-500/30 bg-cyan-500/10 p-6">
+          <p className="text-lg font-bold text-cyan-300">GhostMe pensa:</p>
 
-            <div className="mt-4 flex flex-wrap gap-3">
-              <button
-                onClick={testSupabase}
-                className="rounded-2xl bg-white px-5 py-3 text-black font-bold"
-              >
-                Test Supabase
-              </button>
-
-              <button
-                onClick={saveProfile}
-                className="rounded-2xl bg-green-500 px-5 py-3 text-black font-bold"
-              >
-                Salva Profilo
-              </button>
-            </div>
-
-            {saveMessage && (
-              <p className="mt-4 text-sm text-green-300">{saveMessage}</p>
-            )}
-
-            <div className="mt-5 space-y-2 text-sm text-zinc-200">
-              {selected.length === 0 && <p>Nessuna risposta selezionata</p>}
-
-              {selected.map((item) => (
-                <div key={item.text}>
-                  • {item.text} — Intensità {item.intensity}/5
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-6 rounded-3xl border border-cyan-500/30 bg-cyan-500/10 p-6">
-            <p className="text-lg font-bold text-cyan-300">GhostMe pensa:</p>
-
-            <div className="mt-4 space-y-2 text-sm text-cyan-100">
-              {personalitySummary.map((line, index) => (
-                <p key={index}>• {line}</p>
-              ))}
-            </div>
+          <div className="mt-4 space-y-2 text-sm text-cyan-100">
+            {personalitySummary.map((line, index) => (
+              <p key={index}>• {line}</p>
+            ))}
           </div>
         </div>
       </div>
