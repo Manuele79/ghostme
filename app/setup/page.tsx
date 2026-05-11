@@ -131,6 +131,65 @@ const questions: Question[] = [
     "Mi allontano",
     "Affronto subito la situazione",
   ],
+},
+{
+  id: "affetto_01",
+  title: "Domanda 11 — Affetto",
+  text: "Quando tieni davvero a qualcuno, come lo dimostri?",
+  answers: [
+    "Cerco presenza continua",
+    "Aiuto nelle cose pratiche",
+    "Mi apro molto emotivamente",
+    "Lo dimostro poco ma lo sento forte",
+  ],
+},
+
+{
+  id: "vulnerabilita_01",
+  title: "Domanda 12 — Vulnerabilità",
+  text: "Quanto ti riesce facile mostrare debolezze o fragilità?",
+  answers: [
+    "Molto facilmente",
+    "Solo con poche persone",
+    "Quasi mai",
+    "Uso ironia per nasconderle",
+  ],
+},
+
+{
+  id: "ego_01",
+  title: "Domanda 13 — Ego",
+  text: "Se qualcuno ti sottovaluta, cosa senti più spesso?",
+  answers: [
+    "Rabbia",
+    "Bisogno di dimostrare",
+    "Indifferenza",
+    "Mi ferisce molto",
+  ],
+},
+
+{
+  id: "dipendenza_01",
+  title: "Domanda 14 — Bisogno emotivo",
+  text: "Quanto soffri quando perdi attenzioni da una persona importante?",
+  answers: [
+    "Moltissimo",
+    "Abbastanza",
+    "Poco",
+    "Fingo che non mi importi",
+  ],
+},
+
+{
+  id: "fiducia_01",
+  title: "Domanda 15 — Fiducia",
+  text: "Quando qualcuno ti delude, come cambia il rapporto?",
+  answers: [
+    "Faccio fatica a fidarmi di nuovo",
+    "Perdono ma non dimentico",
+    "Ne parlo subito",
+    "Taglio completamente",
+  ],
 }
 ];
 
@@ -297,6 +356,102 @@ const traitMap: Record<string, Record<string, number>> = {
 "Affronto subito la situazione": {
   sincerita: 2,
   impulsivita: 1,
+},
+"Cerco presenza continua": {
+  paura_abbandono: 2,
+  socialita: 2,
+},
+
+"Aiuto nelle cose pratiche": {
+  empatia: 2,
+  controllo: 1,
+},
+
+"Mi apro molto emotivamente": {
+  empatia: 3,
+  sensibilita_critiche: 1,
+},
+
+"Lo dimostro poco ma lo sento forte": {
+  orgoglio: 1,
+  sensibilita_critiche: 2,
+},
+
+"Molto facilmente": {
+  empatia: 2,
+  socialita: 1,
+},
+
+"Solo con poche persone": {
+  controllo: 1,
+  sensibilita_critiche: 1,
+},
+
+"Quasi mai": {
+  orgoglio: 2,
+  controllo: 2,
+},
+
+"Uso ironia per nasconderle": {
+  sarcasmo: 3,
+  sensibilita_critiche: 1,
+},
+
+"Rabbia": {
+  impulsivita: 2,
+  orgoglio: 2,
+},
+
+"Bisogno di dimostrare": {
+  orgoglio: 3,
+  controllo: 1,
+},
+
+"Indifferenza": {
+  controllo: 1,
+},
+
+"Mi ferisce molto": {
+  sensibilita_critiche: 3,
+  ansia: 1,
+},
+
+"Moltissimo": {
+  paura_abbandono: 3,
+  sensibilita_critiche: 2,
+},
+
+"Abbastanza": {
+  paura_abbandono: 2,
+},
+
+"Poco": {
+  controllo: 1,
+},
+
+"Fingo che non mi importi": {
+  orgoglio: 2,
+  sarcasmo: 1,
+},
+
+"Faccio fatica a fidarmi di nuovo": {
+  sensibilita_critiche: 2,
+  orgoglio: 2,
+},
+
+"Perdono ma non dimentico": {
+  orgoglio: 2,
+  empatia: 1,
+},
+
+"Ne parlo subito": {
+  sincerita: 2,
+  empatia: 1,
+},
+
+"Taglio completamente": {
+  orgoglio: 3,
+  controllo: 1,
 },
 };
 
