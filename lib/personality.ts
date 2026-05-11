@@ -83,3 +83,63 @@ export function buildPersonalitySummary(traits: Traits) {
 
   return summary;
 }
+
+export function buildGhostMeMessage(traits: Traits) {
+  const messages: string[] = [];
+
+  if ((traits.controllo || 0) >= 10) {
+    messages.push(
+      "Quando qualcosa ti sfugge di mano tendi a voler riprendere controllo molto rapidamente."
+    );
+  }
+
+  if ((traits.sarcasmo || 0) >= 10) {
+    messages.push(
+      "Usi spesso ironia o battute per alleggerire situazioni emotivamente pesanti."
+    );
+  }
+
+  if ((traits.ansia || 0) >= 10) {
+    messages.push(
+      "Dentro elabori molto più stress di quanto fai vedere fuori."
+    );
+  }
+
+  if ((traits.empatia || 0) >= 10) {
+    messages.push(
+      "Le emozioni degli altri hanno un peso reale nel tuo modo di reagire."
+    );
+  }
+
+  if ((traits.orgoglio || 0) >= 10) {
+    messages.push(
+      "Quando ti senti ferito o sottovalutato l’orgoglio entra subito in gioco."
+    );
+  }
+
+  if ((traits.paura_abbandono || 0) >= 10) {
+    messages.push(
+      "La distanza emotiva o i cambiamenti improvvisi nei rapporti possono colpirti molto."
+    );
+  }
+
+  if ((traits.vulnerabilita || 0) >= 10) {
+    messages.push(
+      "Quando ti senti al sicuro riesci ad aprirti emotivamente molto più della media."
+    );
+  }
+
+  if ((traits.evitamento || 0) >= 10) {
+    messages.push(
+      "Quando una situazione pesa troppo, a volte tendi ad allontanarti o sparire per rifiatare."
+    );
+  }
+
+  if (messages.length === 0) {
+    messages.push(
+      "Sto ancora imparando come reagisci emotivamente alle situazioni."
+    );
+  }
+
+  return messages.join(" ");
+}
