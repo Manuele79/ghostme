@@ -65,6 +65,47 @@ async function saveProfile() {
 
   if (!userData) return;
 
+  const calculatedTraits: Record<string, number> = {};
+
+    selected.forEach((item) => {
+      const mapping = traitMap[item.text];
+
+      if (!mapping) return;
+
+      Object.entries(mapping).forEach(([trait, value]) => {
+        const total = value * item.intensity;
+
+        calculatedTraits[trait] =
+          (calculatedTraits[trait] || 0) + total;
+      });
+    });
+
+    console.log("CALCULATED TRAITS:", calculatedTraits);
+
+    const { data: traitsData, error: traitsError } =
+      await supabase
+        .from("traits")
+        .insert([
+          {
+            user_id: userData.id,
+
+            sarcasmo:
+              calculatedTraits.sarcasmo || 0,
+
+            controllo:
+              calculatedTraits.controllo || 0,
+
+            impulsivita:
+              calculatedTraits.impulsivita || 0,
+
+            ansia:
+              calculatedTraits.ansia_controllo || 0,
+          },
+        ]);
+
+    console.log("TRAITS:", traitsData);
+    console.log("TRAITS ERROR:", traitsError);
+
   const answersToInsert = selected.map((item) => ({
     user_id: userData.id,
     question_id: "stress_01",
