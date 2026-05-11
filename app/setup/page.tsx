@@ -73,6 +73,65 @@ const questions: Question[] = [
       "Evito finché posso",
     ],
   },
+{
+  id: "rabbia_01",
+  title: "Domanda 6 — Rabbia",
+  text: "Quando ti arrabbi davvero, cosa succede più spesso?",
+  answers: [
+    "Esplodo subito",
+    "Mi chiudo e sparisco",
+    "Divento freddo",
+    "Tengo tutto dentro",
+  ],
+},
+
+{
+  id: "gelosia_01",
+  title: "Domanda 7 — Gelosia",
+  text: "Quando una persona importante dà attenzioni ad altri, come reagisci?",
+  answers: [
+    "Mi infastidisco subito",
+    "Fingo indifferenza",
+    "Mi confronto direttamente",
+    "Tengo tutto dentro",
+  ],
+},
+
+{
+  id: "abbandono_01",
+  title: "Domanda 8 — Distanza emotiva",
+  text: "Se qualcuno si allontana senza spiegazioni, cosa fai?",
+  answers: [
+    "Cerco subito spiegazioni",
+    "Aspetto ma sto male",
+    "Mi distacco anch’io",
+    "Faccio finta di niente",
+  ],
+},
+
+{
+  id: "sincerita_01",
+  title: "Domanda 9 — Sincerità",
+  text: "Quando una verità può ferire qualcuno, come ti comporti?",
+  answers: [
+    "La dico comunque",
+    "La addolcisco",
+    "Evito il discorso",
+    "Uso ironia o battute",
+  ],
+},
+
+{
+  id: "orgoglio_01",
+  title: "Domanda 10 — Orgoglio",
+  text: "Quando qualcuno ti ferisce, qual è la tua reazione più comune?",
+  answers: [
+    "Non dimentico facilmente",
+    "Faccio finta di nulla",
+    "Mi allontano",
+    "Affronto subito la situazione",
+  ],
+}
 ];
 
 const traitMap: Record<string, Record<string, number>> = {
@@ -156,6 +215,89 @@ const traitMap: Record<string, Record<string, number>> = {
     ansia: 2,
     sensibilita_critiche: 2,
   },
+  "Esplodo subito": {
+  impulsivita: 3,
+  orgoglio: 1,
+},
+
+"Mi chiudo e sparisco": {
+  sensibilita_critiche: 2,
+  ansia: 2,
+},
+
+"Divento freddo": {
+  controllo: 2,
+  orgoglio: 2,
+},
+
+"Tengo tutto dentro": {
+  ansia: 2,
+  sensibilita_critiche: 2,
+},
+
+"Mi infastidisco subito": {
+  gelosia: 3,
+  orgoglio: 1,
+},
+
+"Fingo indifferenza": {
+  orgoglio: 2,
+  controllo: 1,
+},
+
+"Mi confronto direttamente": {
+  sincerita: 2,
+  controllo: 1,
+},
+
+"Cerco subito spiegazioni": {
+  paura_abbandono: 3,
+  ansia: 1,
+},
+
+"Aspetto ma sto male": {
+  paura_abbandono: 2,
+  ansia: 2,
+},
+
+"Faccio finta di niente": {
+  controllo: 1,
+  sensibilita_critiche: 1,
+},
+
+"La dico comunque": {
+  sincerita: 3,
+  orgoglio: 1,
+},
+
+"La addolcisco": {
+  empatia: 2,
+  sincerita: 1,
+},
+
+"Evito il discorso": {
+  ansia: 2,
+  sensibilita_critiche: 1,
+},
+
+"Uso ironia o battute": {
+  sarcasmo: 3,
+},
+
+"Non dimentico facilmente": {
+  orgoglio: 3,
+  sensibilita_critiche: 2,
+},
+
+"Mi allontano": {
+  orgoglio: 2,
+  paura_abbandono: 1,
+},
+
+"Affronto subito la situazione": {
+  sincerita: 2,
+  impulsivita: 1,
+},
 };
 
 function calculateTraits(selected: SelectedAnswer[]) {
