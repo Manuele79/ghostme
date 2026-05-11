@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { buildPersonalitySummary } from "@/lib/personality";
 
@@ -68,6 +68,42 @@ export default function SetupPage() {
   const personalitySummary = useMemo(() => {
     return buildPersonalitySummary(calculatedTraits);
   }, [calculatedTraits]);
+
+  useEffect(() => {
+  async function loadProfile() {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      setLoadingProfile(false);
+      return;
+    }
+
+    const { data: latestAnswers, error } = await supabase
+      .from("answers")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(4);
+
+    console.log("LOADED ANSWERS:", latestAnswers);
+    console.log("LOAD ERROR:", error);
+
+    if (latestAnswers && latestAnswers.length > 0) {
+      const restored = latestAnswers.map((answer) => ({
+        text: answer.selected_answers?.[0] || "",
+        intensity: answer.intensita || 3,
+      }));
+
+      setSelected(restored.reverse());
+    }
+
+    setLoadingProfile(false);
+  }
+
+  loadProfile();
+}, []);
 
   function toggleAnswer(answer: string) {
     const exists = selected.find((item) => item.text === answer);
