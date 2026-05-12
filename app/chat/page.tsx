@@ -84,6 +84,12 @@ export default function ChatPage() {
     loadProfile();
   }, []);
 
+    useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({
+      behavior: "smooth",
+    });
+  }, [messages]);
+
   if (loading) {
     return (
       <main className="min-h-screen bg-black text-white flex items-center justify-center">
@@ -110,11 +116,7 @@ export default function ChatPage() {
     );
   }
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({
-      behavior: "smooth",
-    });
-  }, [messages]);
+
 
   async function sendMessage() {
   if (!input.trim()) return;
