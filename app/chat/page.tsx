@@ -228,6 +228,7 @@ return (
     </div>
 
     {showProfile && (
+     <>
       <div className="mt-10 rounded-3xl border border-cyan-500/30 bg-cyan-500/10 p-8">
         <h2 className="text-2xl font-black text-cyan-300">
           Profilo mentale rilevato
@@ -252,7 +253,7 @@ return (
             ))}
         </div>
       </div>
-)}
+
       <div className="mt-8 rounded-3xl border border-cyan-500/30 bg-cyan-500/10 p-8">
         <p className="text-sm uppercase tracking-[0.3em] text-cyan-300">
           GhostMe
@@ -271,9 +272,10 @@ return (
               • {item}
             </div>
           ))}
-        </div>
+        </div>      
       </div>
-
+     </>
+  )}
       <div className="mt-8 rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
         <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">
           Chat con GhostMe
