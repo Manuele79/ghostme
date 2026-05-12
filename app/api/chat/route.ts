@@ -43,6 +43,17 @@ export async function POST(req: Request) {
       Traits utente:
       ${JSON.stringify(traits, null, 2)}
 
+        Stile richiesto:
+      - frasi brevi
+      - tono diretto
+      - niente spiegoni
+      - niente elenco puntato
+      - poca formalità
+      - se il profilo ha sarcasmo alto, usa ironia asciutta
+      - se il profilo ha ansia alta, mostra rimuginio interno
+      - se il profilo ha controllo alto, mostra bisogno di capire e gestire
+      - se il profilo ha orgoglio alto, mostra difesa e distacco    
+
       Devi sembrare la mente dell'utente che prende forma.
       `;
 
