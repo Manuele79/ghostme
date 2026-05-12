@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   buildGhostMeMessage,
@@ -19,6 +19,7 @@ export default function ChatPage() {
   >([]);
   const [loadingChat, setLoadingChat] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     async function loadProfile() {
@@ -108,6 +109,12 @@ export default function ChatPage() {
       </main>
     );
   }
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({
+      behavior: "smooth",
+    });
+  }, [messages]);
 
   async function sendMessage() {
   if (!input.trim()) return;
@@ -264,7 +271,7 @@ export default function ChatPage() {
             {loadingChat ? "GhostMe pensa..." : "Invia"}
         </button>
 
-          <div className="mt-8 space-y-4">
+          <div className="mt-8 h-[55vh] overflow-y-auto space-y-4 pr-2">
             {messages.map((msg, index) => (
               <div
                 key={index}
@@ -281,6 +288,7 @@ export default function ChatPage() {
                 {msg.content}
               </div>
             ))}
+            <div ref={messagesEndRef} />
           </div>
         </div>
     </main>
