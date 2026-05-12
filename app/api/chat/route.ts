@@ -180,9 +180,22 @@ export async function POST(req: Request) {
             .limit(1);
 
           if (existingMemories && existingMemories.length > 0) {
-            console.log("MEMORY DUPLICATE SKIPPED:", existingMemories);
+            const existing = existingMemories[0];
+
+            await supabase
+              .from("memories_active")
+              .update({
+                importance: 8,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", existing.id);
+
+            console.log(
+              "MEMORY CONSOLIDATED:",
+              existing.id
+            );
           } else {
-            
+                      
 
 
       const { data: memoryData, error: memoryError } =
