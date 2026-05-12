@@ -49,6 +49,34 @@ export default function ChatPage() {
         setGhostMessage(buildGhostMeMessage(data));
         setSummary(buildPersonalitySummary(data));
 }
+
+      const { data: chatHistory, error: chatError } = await supabase
+        .from("chat_messages")
+        .select("role, content")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: true })
+        .limit(20);
+
+      console.log("CHAT HISTORY:", chatHistory);
+      console.log("CHAT HISTORY ERROR:", chatError);
+
+      if (chatHistory) {
+        setMessages(
+          chatHistory.map((msg) => ({
+            role: msg.role as "user" | "assistant",
+            content: msg.content,
+          }))
+        );
+
+        const lastAssistant = [...chatHistory]
+          .reverse()
+          .find((msg) => msg.role === "assistant");
+
+        if (lastAssistant) {
+          setReply(lastAssistant.content);
+        }
+      }
+
       setLoading(false);
     }
 
@@ -116,6 +144,26 @@ export default function ChatPage() {
         content: data.reply,
       },
     ]);
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (user) {
+      await supabase.from("chat_messages").insert([
+        {
+          user_id: user.id,
+          role: "user",
+          content: input,
+        },
+        {
+          user_id: user.id,
+          role: "assistant",
+          content: data.reply,
+        },
+      ]);
+    }
+
   } catch (err) {
     console.log(err);
     setReply("Errore comunicazione GhostMe.");
