@@ -134,7 +134,7 @@ export default function ChatPage() {
         message: input,
         traits,
         messages,
-        userId: traits.user_id,
+        user_Id: traits.user_id,
       }),
     });
 
