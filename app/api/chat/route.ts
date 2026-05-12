@@ -81,6 +81,36 @@ export async function POST(req: Request) {
       completion.choices[0]?.message?.content ||
       "Non so cosa dire.";
 
+      const lowerMessage = message.toLowerCase();
+
+      const shouldSaveMemory =
+        lowerMessage.includes("mi piace") ||
+        lowerMessage.includes("voglio") ||
+        lowerMessage.includes("sto creando") ||
+        lowerMessage.includes("vorrei") ||
+        lowerMessage.includes("importante") ||
+        lowerMessage.includes("ricordo");
+
+      if (shouldSaveMemory && body.userId) {
+        try {
+          await fetch("http://localhost:3000/api/memory", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              userId: body.userId,
+              title: "Memoria automatica",
+              content: message,
+              category: "conversation",
+              importance: 6,
+            }),
+          });
+        } catch (err) {
+          console.log("MEMORY SAVE ERROR:", err);
+        }
+      }
+
     return NextResponse.json({
       reply,
     });
