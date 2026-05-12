@@ -56,15 +56,17 @@ export default function ChatPage() {
         .from("chat_messages")
         .select("role, content")
         .eq("user_id", user.id)
-        .order("created_at", { ascending: true })
+        .order("created_at", { ascending: false })
         .limit(20);
 
       console.log("CHAT HISTORY:", chatHistory);
       console.log("CHAT HISTORY ERROR:", chatError);
 
       if (chatHistory) {
+        const orderedHistory = [...chatHistory].reverse();
+
         setMessages(
-          chatHistory.map((msg) => ({
+          orderedHistory.map((msg) => ({
             role: msg.role as "user" | "assistant",
             content: msg.content,
           }))
