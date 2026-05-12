@@ -10,6 +10,8 @@ type MemoryItem = {
   category: string;
   importance: number;
   created_at: string;
+  pinned?: boolean;
+  updated_at?: string;
 };
 
 export default function MemoryPage() {
@@ -35,6 +37,7 @@ export default function MemoryPage() {
       .from("memories_active")
       .select("*")
       .eq("user_id", user.id)
+      .order("pinned", { ascending: false })
       .order("importance", { ascending: false })
       .order("created_at", { ascending: false });
 
@@ -58,6 +61,53 @@ export default function MemoryPage() {
       prev.filter((m) => m.id !== id)
     );
   }
+
+ async function togglePinned(id: string, current: boolean) {
+  await supabase
+    .from("memories_active")
+    .update({
+      pinned: !current,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+
+  setMemories((prev) =>
+    prev.map((m) =>
+      m.id === id
+        ? {
+            ...m,
+            pinned: !current,
+          }
+        : m
+    )
+  );
+}
+
+async function increaseImportance(
+  id: string,
+  current: number
+) {
+  const next = Math.min(current + 1, 10);
+
+  await supabase
+    .from("memories_active")
+    .update({
+      importance: next,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+
+  setMemories((prev) =>
+    prev.map((m) =>
+      m.id === id
+        ? {
+            ...m,
+            importance: next,
+          }
+        : m
+    )
+  );
+}
 
   const filteredMemories = memories.filter((m) =>
     `${m.title} ${m.content} ${m.category}`
@@ -117,12 +167,37 @@ export default function MemoryPage() {
                 {memory.content}
               </p>
 
-              <button
-                onClick={() => deleteMemory(memory.id)}
-                className="mt-5 rounded-2xl border border-red-500/30 px-4 py-2 text-sm text-red-400"
-              >
-                Elimina memoria
-              </button>
+                <div className="mt-5 flex flex-wrap gap-3">
+                <button
+                    onClick={() =>
+                    togglePinned(memory.id, !!memory.pinned)
+                    }
+                    className="rounded-2xl border border-yellow-500/30 px-4 py-2 text-sm text-yellow-300"
+                >
+                    {memory.pinned ? "Unpin" : "📌 Pin"}
+                </button>
+
+                <button
+                    onClick={() =>
+                    increaseImportance(
+                        memory.id,
+                        memory.importance
+                    )
+                    }
+                    className="rounded-2xl border border-cyan-500/30 px-4 py-2 text-sm text-cyan-300"
+                >
+                    ⭐ Importanza +
+                </button>
+
+                <button
+                    onClick={() => deleteMemory(memory.id)}
+                    className="rounded-2xl border border-red-500/30 px-4 py-2 text-sm text-red-400"
+                >
+                    🗑 Elimina
+                </button>
+                </div>         
+
+
             </div>
           ))}
         </div>
