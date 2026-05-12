@@ -5,44 +5,47 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const userId = body.userId;
-    const title = body.title;
-    const content = body.content;
-    const category = body.category || "general";
-    const importance = body.importance || 5;
+    console.log("MEMORY API HIT:", body);
 
-    if (!userId || !content) {
-      return NextResponse.json(
-        { error: "Dati memoria mancanti" },
-        { status: 400 }
-      );
-    }
+    const {
+      user_id,
+      title,
+      content,
+      category,
+      importance,
+    } = body;
 
     const { data, error } = await supabase
       .from("memories_active")
       .insert([
         {
-          user_id: userId,
+          user_id,
           title,
           content,
           category,
           importance,
         },
       ])
-      .select()
-      .single();
+      .select();
+
+    console.log("MEMORY INSERT:", data);
+    console.log("MEMORY ERROR:", error);
 
     if (error) {
-      console.log("MEMORY ERROR:", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({
+        error: error.message,
+      });
     }
 
-    return NextResponse.json({ memory: data });
+    return NextResponse.json({
+      success: true,
+      data,
+    });
   } catch (err) {
     console.log(err);
-    return NextResponse.json(
-      { error: "Errore memoria GhostMe" },
-      { status: 500 }
-    );
+
+    return NextResponse.json({
+      error: "memory route failed",
+    });
   }
 }
