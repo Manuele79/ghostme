@@ -14,6 +14,9 @@ export default function ChatPage() {
   const [summary, setSummary] = useState<string[]>([]);
   const [input, setInput] = useState("");
   const [reply, setReply] = useState("");
+  const [messages, setMessages] = useState<
+    { role: "user" | "assistant"; content: string }[]
+  >([]);
   const [loadingChat, setLoadingChat] = useState(false);
   const [userEmail, setUserEmail] = useState("");
 
