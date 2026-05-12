@@ -95,6 +95,7 @@ export default function ChatPage() {
       body: JSON.stringify({
         message: input,
         traits,
+        messages,
       }),
     });
 
@@ -103,6 +104,18 @@ export default function ChatPage() {
     console.log("CHAT RESPONSE:", data);
 
     setReply(data.reply || "Nessuna risposta.");
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "user",
+        content: input,
+      },
+      {
+        role: "assistant",
+        content: data.reply,
+      },
+    ]);
   } catch (err) {
     console.log(err);
     setReply("Errore comunicazione GhostMe.");
