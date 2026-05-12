@@ -34,10 +34,10 @@ export async function POST(req: Request) {
 
       if (memories?.length) {
         memoryContext = memories
-          .map(
-            (m) =>
-              `[${m.category}] (${m.importance}) ${m.content}`
-          )
+        .map(
+          (m) =>
+            `${m.pinned ? "[PINNED]" : ""} [${m.category}] (${m.importance}) ${m.content}`
+        )
           .join("\n");
       }
     }
@@ -169,7 +169,22 @@ export async function POST(req: Request) {
     }
 
 
+
     if (shouldSaveMemory && body.userId) {
+
+      const { data: existingMemories } = await supabase
+            .from("memories_active")
+            .select("id, content")
+            .eq("user_id", body.userId)
+            .ilike("content", `%${message.slice(0, 40)}%`)
+            .limit(1);
+
+          if (existingMemories && existingMemories.length > 0) {
+            console.log("MEMORY DUPLICATE SKIPPED:", existingMemories);
+          } else {
+            
+
+
       const { data: memoryData, error: memoryError } =
         await supabase
           .from("memories_active")
@@ -187,7 +202,7 @@ export async function POST(req: Request) {
       console.log("MEMORY DATA:", memoryData);
       console.log("MEMORY ERROR:", memoryError);
     }
-
+   }
     return NextResponse.json({
       reply,
     });
