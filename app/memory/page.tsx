@@ -18,6 +18,7 @@ export default function MemoryPage() {
   const [memories, setMemories] = useState<MemoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
   const [newTitle, setNewTitle] = useState("");
   const [newContent, setNewContent] = useState("");
   const [newCategory, setNewCategory] = useState("general");
@@ -48,9 +49,30 @@ export default function MemoryPage() {
     console.log("MEMORIES:", data);
     console.log("MEMORIES ERROR:", error);
 
-    if (data) {
-      setMemories(data);
-    }
+        if (data) {
+    const sortedMemories = [...data].sort((a, b) => {
+    if (a.pinned && !b.pinned) return -1;
+    if (!a.pinned && b.pinned) return 1;
+
+    const aScore =
+        a.importance +
+        (Date.now() - new Date(a.updated_at).getTime() <
+        1000 * 60 * 60 * 24
+        ? 3
+        : 0);
+
+    const bScore =
+        b.importance +
+        (Date.now() - new Date(b.updated_at).getTime() <
+        1000 * 60 * 60 * 24
+        ? 3
+        : 0);
+
+    return bScore - aScore;
+    });
+
+        setMemories(sortedMemories);
+        }
 
     setLoading(false);
   }
@@ -152,11 +174,19 @@ async function createMemory() {
   }
 }
 
-  const filteredMemories = memories.filter((m) =>
-    `${m.title} ${m.content} ${m.category}`
-      .toLowerCase()
-      .includes(search.toLowerCase())
-  );
+    const pinnedCount = memories.filter((m) => m.pinned).length;
+
+    const filteredMemories = memories.filter((m) => {
+    
+    const matchesSearch = `${m.title} ${m.content} ${m.category}`
+        .toLowerCase()
+        .includes(search.toLowerCase());
+
+    const matchesCategory =
+        categoryFilter === "all" || m.category === categoryFilter;
+
+    return matchesSearch && matchesCategory;
+    });
 
   if (loading) {
     return (
@@ -178,6 +208,29 @@ async function createMemory() {
         <p className="mt-4 text-zinc-400">
           Ricordi salvati da GhostMe.
         </p>
+
+        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+            <p className="text-xs uppercase tracking-wider text-zinc-500">
+            Totali
+            </p>
+            <p className="mt-2 text-3xl font-black">{memories.length}</p>
+        </div>
+
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+            <p className="text-xs uppercase tracking-wider text-zinc-500">
+            Filtrate
+            </p>
+            <p className="mt-2 text-3xl font-black">{filteredMemories.length}</p>
+        </div>
+
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+            <p className="text-xs uppercase tracking-wider text-zinc-500">
+            Pinnate
+            </p>
+            <p className="mt-2 text-3xl font-black">{pinnedCount}</p>
+        </div>
+        </div>   
 
         <div className="mt-8 rounded-3xl border border-cyan-500/20 bg-zinc-950 p-6">
         <p className="text-xl font-black text-cyan-300">
@@ -237,6 +290,25 @@ async function createMemory() {
           placeholder="Cerca memoria..."
           className="mt-8 w-full rounded-2xl border border-zinc-800 bg-zinc-950 p-4 outline-none"
         />
+
+        <div className="mt-4 flex flex-wrap gap-3">
+        {["all", "general", "project", "home", "work", "family", "conversation"].map(
+            (category) => (
+            <button
+                key={category}
+                onClick={() => setCategoryFilter(category)}
+                className={`rounded-2xl border px-4 py-2 text-sm font-bold ${
+                categoryFilter === category
+                    ? "border-cyan-400 bg-cyan-400 text-black"
+                    : "border-zinc-800 text-zinc-400"
+                }`}
+            >
+                {category}
+            </button>
+            )
+        )}
+        </div>
+
 
         <div className="mt-8 space-y-5">
           {filteredMemories.map((memory) => (
