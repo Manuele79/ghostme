@@ -50,7 +50,7 @@ export default function ChatPage() {
       if (data) {
         setGhostMessage(buildGhostMeMessage(data));
         setSummary(buildPersonalitySummary(data));
-}
+      }
 
       const { data: chatHistory, error: chatError } = await supabase
         .from("chat_messages")
@@ -142,7 +142,9 @@ export default function ChatPage() {
 
     console.log("CHAT RESPONSE:", data);
 
-    setReply(data.reply || "Nessuna risposta.");
+    const assistantReply = data.reply || "Nessuna risposta.";
+
+    setReply(assistantReply);
 
     setMessages((prev) => [
       ...prev,
@@ -152,7 +154,7 @@ export default function ChatPage() {
       },
       {
         role: "assistant",
-        content: data.reply,
+        content: assistantReply,
       },
     ]);
 
@@ -172,7 +174,7 @@ export default function ChatPage() {
         {
           user_id: user.id,
           role: "assistant",
-          content: data.reply,
+          content: assistantReply,
         },
       ]);
     }
