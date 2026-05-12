@@ -83,19 +83,22 @@ export default function MemoryPage() {
   );
 }
 
-async function increaseImportance(
-  id: string,
-  current: number
-) {
+async function increaseImportance(id: string, current: number) {
   const next = Math.min(current + 1, 10);
 
-  await supabase
+  const { data, error } = await supabase
     .from("memories_active")
     .update({
       importance: next,
       updated_at: new Date().toISOString(),
     })
-    .eq("id", id);
+    .eq("id", id)
+    .select();
+
+  console.log("IMPORTANCE DATA:", data);
+  console.log("IMPORTANCE ERROR:", error);
+
+  if (error) return;
 
   setMemories((prev) =>
     prev.map((m) =>
@@ -108,7 +111,6 @@ async function increaseImportance(
     )
   );
 }
-
   const filteredMemories = memories.filter((m) =>
     `${m.title} ${m.content} ${m.category}`
       .toLowerCase()
