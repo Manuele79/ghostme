@@ -11,6 +11,7 @@ export async function POST(req: Request) {
 
     const message = body.message;
     const traits = body.traits;
+    const messages = body.messages || [];
 
     const systemPrompt = `
       Sei GhostMe.
@@ -64,6 +65,9 @@ export async function POST(req: Request) {
           role: "system",
           content: systemPrompt,
         },
+
+        ...messages,
+
         {
           role: "user",
           content: message,
