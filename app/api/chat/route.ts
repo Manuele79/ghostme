@@ -108,15 +108,58 @@ export async function POST(req: Request) {
     const lowerMessage = message.toLowerCase();
 
     const shouldSaveMemory =
-      lowerMessage.includes("mi piace") ||
       lowerMessage.includes("voglio") ||
-      lowerMessage.includes("sto creando") ||
       lowerMessage.includes("vorrei") ||
-      lowerMessage.includes("importante") ||
-      lowerMessage.includes("ricordo");
+      lowerMessage.includes("mi piace") ||
+      lowerMessage.includes("mi interessa") ||
+      lowerMessage.includes("sto creando") ||
+      lowerMessage.includes("sto sviluppando") ||
+      lowerMessage.includes("per me è importante") ||
+      lowerMessage.includes("ricordati") ||
+      lowerMessage.includes("non dimenticare") ||
+      lowerMessage.includes("in futuro");
 
-  console.log("MEMORY USER ID:", body.userId);
-  console.log("SHOULD SAVE MEMORY:", shouldSaveMemory);     
+      console.log("MEMORY USER ID:", body.userId);
+      console.log("SHOULD SAVE MEMORY:", shouldSaveMemory);    
+      
+      let memoryCategory = "conversation";
+
+    if (
+      lowerMessage.includes("home assistant") ||
+      lowerMessage.includes("domotica") ||
+      lowerMessage.includes("casa")
+    ) {
+      memoryCategory = "home";
+    }
+
+    if (
+      lowerMessage.includes("lavoro") ||
+      lowerMessage.includes("azienda") ||
+      lowerMessage.includes("collega")
+    ) {
+      memoryCategory = "work";
+    }
+
+    if (
+      lowerMessage.includes("famiglia") ||
+      lowerMessage.includes("figli") ||
+      lowerMessage.includes("moglie") ||
+      lowerMessage.includes("marito") ||
+      lowerMessage.includes("compagna") ||
+      lowerMessage.includes("compagno")
+    ) {
+      memoryCategory = "family";
+    }
+
+    if (
+      lowerMessage.includes("app") ||
+      lowerMessage.includes("progetto") ||
+      lowerMessage.includes("sviluppando") ||
+      lowerMessage.includes("ghostme")
+    ) {
+      memoryCategory = "project";
+    }
+
 
     if (shouldSaveMemory && body.userId) {
       const { data: memoryData, error: memoryError } =
@@ -127,7 +170,7 @@ export async function POST(req: Request) {
               user_id: body.userId,
               title: "Memoria automatica",
               content: message,
-              category: "conversation",
+              category: memoryCategory,
               importance: 6,
             },
           ])
