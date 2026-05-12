@@ -92,6 +92,9 @@ export async function POST(req: Request) {
       lowerMessage.includes("importante") ||
       lowerMessage.includes("ricordo");
 
+  console.log("MEMORY USER ID:", body.userId);
+  console.log("SHOULD SAVE MEMORY:", shouldSaveMemory);     
+
     if (shouldSaveMemory && body.userId) {
       const { data: memoryData, error: memoryError } =
         await supabase
