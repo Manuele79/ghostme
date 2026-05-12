@@ -2,10 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import {
+  buildGhostMeMessage,
+  buildPersonalitySummary,
+} from "@/lib/personality";
 
 export default function ChatPage() {
   const [loading, setLoading] = useState(true);
   const [traits, setTraits] = useState<any>(null);
+  const [ghostMessage, setGhostMessage] = useState("");
+  const [summary, setSummary] = useState<string[]>([]);
   const [userEmail, setUserEmail] = useState("");
 
   useEffect(() => {
@@ -33,6 +39,10 @@ export default function ChatPage() {
       console.log("CHAT ERROR:", error);
 
       setTraits(data);
+      if (data) {
+        setGhostMessage(buildGhostMeMessage(data));
+        setSummary(buildPersonalitySummary(data));
+}
       setLoading(false);
     }
 
@@ -114,10 +124,25 @@ export default function ChatPage() {
           </div>
         </div>
 
-        <div className="mt-8 rounded-3xl border border-zinc-800 bg-zinc-950 p-8">
-          <p className="text-zinc-400">
-            Presto qui parlerai con te 😄
-          </p>
+        <div className="mt-8 rounded-3xl border border-cyan-500/30 bg-cyan-500/10 p-8">
+        <p className="text-sm uppercase tracking-[0.3em] text-cyan-300">
+            GhostMe
+        </p>
+
+        <p className="mt-4 text-xl leading-relaxed text-cyan-50">
+            {ghostMessage}
+        </p>
+
+        <div className="mt-8 space-y-3">
+            {summary.map((item, index) => (
+            <div
+                key={index}
+                className="rounded-2xl border border-zinc-800 bg-black/30 p-4 text-sm text-zinc-200"
+            >
+                • {item}
+            </div>
+            ))}
+        </div>
         </div>
       </div>
     </main>
