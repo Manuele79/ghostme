@@ -1,5 +1,6 @@
 import { OpenAI } from "openai";
 import { NextResponse } from "next/server";
+import { supabase } from "@/lib/supabase";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -81,35 +82,34 @@ export async function POST(req: Request) {
       completion.choices[0]?.message?.content ||
       "Non so cosa dire.";
 
-      const lowerMessage = message.toLowerCase();
+    const lowerMessage = message.toLowerCase();
 
-      const shouldSaveMemory =
-        lowerMessage.includes("mi piace") ||
-        lowerMessage.includes("voglio") ||
-        lowerMessage.includes("sto creando") ||
-        lowerMessage.includes("vorrei") ||
-        lowerMessage.includes("importante") ||
-        lowerMessage.includes("ricordo");
+    const shouldSaveMemory =
+      lowerMessage.includes("mi piace") ||
+      lowerMessage.includes("voglio") ||
+      lowerMessage.includes("sto creando") ||
+      lowerMessage.includes("vorrei") ||
+      lowerMessage.includes("importante") ||
+      lowerMessage.includes("ricordo");
 
-      if (shouldSaveMemory && body.userId) {
-        try {
-          await fetch("http://localhost:3000/api/memory", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
+    if (shouldSaveMemory && body.userId) {
+      const { data: memoryData, error: memoryError } =
+        await supabase
+          .from("memories_active")
+          .insert([
+            {
               user_id: body.userId,
               title: "Memoria automatica",
               content: message,
               category: "conversation",
               importance: 6,
-            }),
-          });
-        } catch (err) {
-          console.log("MEMORY SAVE ERROR:", err);
-        }
-      }
+            },
+          ])
+          .select();
+
+      console.log("MEMORY DATA:", memoryData);
+      console.log("MEMORY ERROR:", memoryError);
+    }
 
     return NextResponse.json({
       reply,
