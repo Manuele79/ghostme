@@ -18,6 +18,10 @@ export default function MemoryPage() {
   const [memories, setMemories] = useState<MemoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [newTitle, setNewTitle] = useState("");
+  const [newContent, setNewContent] = useState("");
+  const [newCategory, setNewCategory] = useState("general");
+  const [newImportance, setNewImportance] = useState(5);
 
   useEffect(() => {
     loadMemories();
@@ -111,6 +115,43 @@ async function increaseImportance(id: string, current: number) {
     )
   );
 }
+
+async function createMemory() {
+  if (!newContent.trim()) return;
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return;
+
+  const { data, error } = await supabase
+    .from("memories_active")
+    .insert([
+      {
+        user_id: user.id,
+        title: newTitle || "Memoria manuale",
+        content: newContent,
+        category: newCategory,
+        importance: newImportance,
+      },
+    ])
+    .select()
+    .single();
+
+  console.log("CREATE MEMORY:", data);
+  console.log("CREATE MEMORY ERROR:", error);
+
+  if (data) {
+    setMemories((prev) => [data, ...prev]);
+
+    setNewTitle("");
+    setNewContent("");
+    setNewCategory("general");
+    setNewImportance(5);
+  }
+}
+
   const filteredMemories = memories.filter((m) =>
     `${m.title} ${m.content} ${m.category}`
       .toLowerCase()
@@ -137,6 +178,58 @@ async function increaseImportance(id: string, current: number) {
         <p className="mt-4 text-zinc-400">
           Ricordi salvati da GhostMe.
         </p>
+
+        <div className="mt-8 rounded-3xl border border-cyan-500/20 bg-zinc-950 p-6">
+        <p className="text-xl font-black text-cyan-300">
+            Nuova memoria
+        </p>
+
+        <input
+            value={newTitle}
+            onChange={(e) => setNewTitle(e.target.value)}
+            placeholder="Titolo memoria"
+            className="mt-5 w-full rounded-2xl border border-zinc-800 bg-black p-4 outline-none"
+        />
+
+        <textarea
+            value={newContent}
+            onChange={(e) => setNewContent(e.target.value)}
+            placeholder="Cosa deve ricordare GhostMe?"
+            className="mt-4 h-32 w-full rounded-2xl border border-zinc-800 bg-black p-4 outline-none"
+        />
+
+        <div className="mt-4 flex flex-wrap gap-4">
+            <select
+            value={newCategory}
+            onChange={(e) => setNewCategory(e.target.value)}
+            className="rounded-2xl border border-zinc-800 bg-black px-4 py-3"
+            >
+            <option value="general">General</option>
+            <option value="project">Project</option>
+            <option value="home">Home</option>
+            <option value="work">Work</option>
+            <option value="family">Family</option>
+            </select>
+
+            <input
+            type="number"
+            min={1}
+            max={10}
+            value={newImportance}
+            onChange={(e) =>
+                setNewImportance(Number(e.target.value))
+            }
+            className="w-24 rounded-2xl border border-zinc-800 bg-black px-4 py-3"
+            />
+        </div>
+
+        <button
+            onClick={createMemory}
+            className="mt-5 rounded-2xl bg-cyan-400 px-6 py-3 font-black text-black"
+        >
+            Salva memoria
+        </button>
+        </div>
 
         <input
           value={search}
