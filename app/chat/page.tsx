@@ -19,6 +19,7 @@ export default function ChatPage() {
   >([]);
   const [loadingChat, setLoadingChat] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+  const [showProfile, setShowProfile] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -199,6 +200,34 @@ return (
         <span className="ml-2 text-cyan-400">{userEmail}</span>
       </p>
 
+      <button
+        onClick={() => setShowProfile((prev) => !prev)}
+        className="mt-6 rounded-2xl border border-cyan-500/40 px-5 py-3 text-sm font-bold text-cyan-300"
+      >
+        {showProfile ? "Nascondi profilo" : "Mostra profilo"}
+      </button>
+
+      <div className="mt-8 rounded-3xl border border-cyan-500/30 bg-gradient-to-b from-cyan-500/10 to-zinc-950 p-8 text-center">
+      <div className="mx-auto flex h-28 w-28 items-center justify-center rounded-full border border-cyan-400/50 bg-black shadow-[0_0_45px_rgba(34,211,238,0.25)]">
+        <span className="text-4xl font-black text-cyan-300">G</span>
+      </div>
+
+      <p className="mt-5 text-sm uppercase tracking-[0.35em] text-cyan-300">
+        GhostMe Core
+      </p>
+
+      <p className="mt-3 text-zinc-300">
+        Modalità attiva: chat testuale
+      </p>
+
+      <button
+        className="mt-5 rounded-2xl border border-zinc-700 px-5 py-3 text-sm font-bold text-zinc-300"
+      >
+        Modalità voce — presto
+      </button>
+    </div>
+
+    {showProfile && (
       <div className="mt-10 rounded-3xl border border-cyan-500/30 bg-cyan-500/10 p-8">
         <h2 className="text-2xl font-black text-cyan-300">
           Profilo mentale rilevato
@@ -223,7 +252,7 @@ return (
             ))}
         </div>
       </div>
-
+)}
       <div className="mt-8 rounded-3xl border border-cyan-500/30 bg-cyan-500/10 p-8">
         <p className="text-sm uppercase tracking-[0.3em] text-cyan-300">
           GhostMe
@@ -274,6 +303,12 @@ return (
         <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              sendMessage();
+            }
+          }}
           placeholder="Scrivi qualcosa..."
           className="mt-4 h-28 w-full rounded-2xl border border-zinc-700 bg-black p-4 text-white outline-none"
         />
@@ -281,7 +316,7 @@ return (
         <button
           onClick={sendMessage}
           disabled={loadingChat}
-          className="mt-4 rounded-2xl bg-cyan-400 px-5 py-3 font-bold text-black"
+          className="mt-4 ml-auto block rounded-2xl bg-cyan-400 px-8 py-3 font-bold text-black"
         >
           {loadingChat ? "GhostMe pensa..." : "Invia"}
         </button>
