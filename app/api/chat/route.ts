@@ -14,6 +14,26 @@ export async function POST(req: Request) {
     const traits = body.traits;
     const messages = body.messages || [];
 
+    let memoryContext = "";
+
+    if (body.userId) {
+      const { data: memories } = await supabase
+        .from("memories_active")
+        .select("content, category, importance")
+        .eq("user_id", body.userId)
+        .order("importance", { ascending: false })
+        .limit(10);
+
+      if (memories?.length) {
+        memoryContext = memories
+          .map(
+            (m) =>
+              `[${m.category}] (${m.importance}) ${m.content}`
+          )
+          .join("\n");
+      }
+    }
+
     const systemPrompt = `
       Sei GhostMe.
 
@@ -44,6 +64,9 @@ export async function POST(req: Request) {
 
       Traits utente:
       ${JSON.stringify(traits, null, 2)}
+
+      Memorie conosciute:
+      ${memoryContext}
 
         Stile richiesto:
       - frasi brevi
