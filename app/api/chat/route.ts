@@ -1,4 +1,9 @@
+import OpenAI from "openai";
 import { NextResponse } from "next/server";
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 export async function POST(req: Request) {
   try {
@@ -7,32 +12,51 @@ export async function POST(req: Request) {
     const message = body.message;
     const traits = body.traits;
 
-    const prompt = `
+    const systemPrompt = `
 Sei GhostMe.
 
-Parli come la versione mentale ed emotiva dell'utente.
+Sei la versione mentale, emotiva e caratteriale dell'utente.
 
+NON parlare come ChatGPT.
 NON parlare come uno psicologo.
 NON fare liste.
-NON usare tono da AI.
+NON essere freddo.
 
-Traits utente:
+Parla come una coscienza personale.
+
+Traits:
 ${JSON.stringify(traits, null, 2)}
-
-Messaggio utente:
-"${message}"
-
-Rispondi in modo umano, personale, emotivo e realistico.
 `;
 
+    const completion = await openai.chat.completions.create({
+      model: "gpt-5-mini",
+      messages: [
+        {
+          role: "system",
+          content: systemPrompt,
+        },
+        {
+          role: "user",
+          content: message,
+        },
+      ],
+      temperature: 0.9,
+      max_tokens: 300,
+    });
+
+    const reply =
+      completion.choices[0]?.message?.content ||
+      "Non so cosa dire.";
+
     return NextResponse.json({
-      reply: `GhostMe pensa: ${message}`,
-      prompt,
+      reply,
     });
   } catch (err) {
+    console.log(err);
+
     return NextResponse.json(
       {
-        error: "Errore route chat",
+        error: "Errore GhostMe AI",
       },
       {
         status: 500,
