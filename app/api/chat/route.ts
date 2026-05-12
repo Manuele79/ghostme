@@ -17,12 +17,20 @@ export async function POST(req: Request) {
     let memoryContext = "";
 
     if (body.userId) {
-      const { data: memories } = await supabase
-        .from("memories_active")
-        .select("content, category, importance")
-        .eq("user_id", body.userId)
-        .order("importance", { ascending: false })
-        .limit(10);
+    const { data: memories } = await supabase
+      .from("memories_active")
+      .select(`
+        content,
+        category,
+        importance,
+        pinned,
+        created_at
+      `)
+      .eq("user_id", body.userId)
+      .order("pinned", { ascending: false })
+      .order("importance", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(15);
 
       if (memories?.length) {
         memoryContext = memories
