@@ -145,6 +145,8 @@ export default function ChatPage() {
       },
     ]);
 
+    setInput("");
+
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -262,13 +264,24 @@ export default function ChatPage() {
             {loadingChat ? "GhostMe pensa..." : "Invia"}
         </button>
 
-        {reply && (
-            <div className="mt-6 rounded-2xl border border-cyan-500/30 bg-cyan-500/10 p-5">
-            <p className="text-cyan-100 leading-relaxed">
-                {reply}
-            </p>
-            </div>
-        )}
+          <div className="mt-8 space-y-4">
+            {messages.map((msg, index) => (
+              <div
+                key={index}
+                className={`rounded-3xl border px-5 py-4 text-lg leading-relaxed ${
+                  msg.role === "user"
+                    ? "ml-auto max-w-[80%] border-cyan-500/40 bg-cyan-500/10 text-white"
+                    : "mr-auto max-w-[80%] border-zinc-800 bg-zinc-900 text-zinc-100"
+                }`}
+              >
+                <div className="mb-2 text-xs uppercase tracking-[0.3em] text-zinc-500">
+                  {msg.role === "user" ? "Tu" : "GhostMe"}
+                </div>
+
+                {msg.content}
+              </div>
+            ))}
+          </div>
         </div>
     </main>
   );
