@@ -44,7 +44,12 @@ export async function POST(req: Request) {
 
    let profileContext = "";
 
+
+
       if (body.userId) {
+
+   console.log("BODY USER ID:", body.userId);
+
         const { data: userProfile } = await supabase
           .from("user_profiles")
           .select("*")
@@ -52,6 +57,8 @@ export async function POST(req: Request) {
           .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle();
+
+          console.log("USER PROFILE RAW:", userProfile);
 
           if (userProfile) {
 
