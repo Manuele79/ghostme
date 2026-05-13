@@ -95,6 +95,13 @@ export async function POST(req: Request) {
       Profilo utente:
       ${profileContext}
 
+        Quando l'utente chiede informazioni su di sé, hobby, lavoro, età, sport, famiglia, interessi o dati personali:
+      - usa prima il Profilo utente
+      - poi le Memorie conosciute
+      - poi la chat recente
+      - non inventare
+      - se il dato è presente nel profilo, rispondi direttamente   
+
         Stile richiesto:
       - frasi brevi
       - tono diretto
