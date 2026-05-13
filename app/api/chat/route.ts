@@ -50,7 +50,7 @@ export async function POST(req: Request) {
 
    console.log("BODY USER ID:", body.userId);
 
-        const { data: userProfile } = await supabase
+        const { data: userProfile, error: userProfileError } = await supabase
           .from("user_profiles")
           .select("*")
           .eq("user_id", body.userId)
@@ -59,6 +59,7 @@ export async function POST(req: Request) {
           .maybeSingle();
 
           console.log("USER PROFILE RAW:", userProfile);
+          console.log("USER PROFILE ERROR:", userProfileError);
 
           if (userProfile) {
 
