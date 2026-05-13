@@ -54,6 +54,9 @@ export async function POST(req: Request) {
           .maybeSingle();
 
           if (userProfile) {
+
+          console.log("USER PROFILE:", userProfile);
+
             profileContext = `
           Nome: ${userProfile.full_name || ""}
           Età: ${userProfile.age || ""}
