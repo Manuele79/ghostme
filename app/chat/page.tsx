@@ -54,10 +54,9 @@ export default function ChatPage() {
 
       const { data: chatHistory, error: chatError } = await supabase
         .from("chat_messages")
-        .select("role, content, created_at, id")
+        .select("role, content, created_at, id, message_order")
         .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .order("id", { ascending: false })
+        .order("message_order", { ascending: false })
         .limit(60);
 
       console.log("CHAT HISTORY:", chatHistory);
