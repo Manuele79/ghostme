@@ -95,12 +95,23 @@ export async function POST(req: Request) {
       Profilo utente:
       ${profileContext}
 
-        Quando l'utente chiede informazioni su di sé, hobby, lavoro, età, sport, famiglia, interessi o dati personali:
-      - usa prima il Profilo utente
-      - poi le Memorie conosciute
-      - poi la chat recente
-      - non inventare
-      - se il dato è presente nel profilo, rispondi direttamente   
+      Quando l'utente chiede informazioni personali:
+      - usa SEMPRE prima il Profilo utente
+      - NON riassumere se il dato esiste già
+      - NON reinterpretare
+      - NON trasformare i dati in descrizioni generiche
+      - riporta i dati reali presenti nel profilo
+
+      Esempio:
+      se nel profilo c'è:
+      "interests: domotica, musica, moto"
+
+      devi rispondere usando quei dati reali.
+
+      Se il profilo contiene una lista:
+      - mostrala direttamente
+      - non accorciarla
+      - non scegliere solo alcune parti
 
         Stile richiesto:
       - frasi brevi
