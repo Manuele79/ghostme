@@ -495,6 +495,19 @@ console.log("SAVING LIFE TOPIC:", item);
           .eq("topic", "Valentina");
       }
 
+      await supabase
+        .from("memories_active")
+        .insert([
+          {
+            user_id: body.userId,
+            title: "Relazione importante",
+            content: message,
+            category: "family",
+            importance: 9,
+            pinned: true,
+          },
+        ]);     
+
     return NextResponse.json({
       reply,
     });
