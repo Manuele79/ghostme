@@ -53,9 +53,21 @@ export async function POST(req: Request) {
           .limit(1)
           .maybeSingle();
 
-        if (userProfile) {
-          profileContext = JSON.stringify(userProfile, null, 2);
-        }
+          if (userProfile) {
+            profileContext = `
+          Nome: ${userProfile.full_name || ""}
+          Età: ${userProfile.age || ""}
+          Genere: ${userProfile.gender || ""}
+          Lavoro: ${userProfile.job || ""}
+          Hobby: ${userProfile.hobbies || ""}
+          Sport: ${userProfile.sports || ""}
+          Relazione: ${userProfile.relationship_status || ""}
+          Figli: ${userProfile.children_info || ""}
+          Interessi: ${userProfile.interests || ""}
+          Tipo di persona: ${userProfile.communication_style || ""}
+          Bio: ${userProfile.short_bio || ""}
+          `;
+          }
       }
 
     const systemPrompt = `
