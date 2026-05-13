@@ -81,6 +81,36 @@ export async function POST(req: Request) {
           }
       }
 
+      let clarificationPrompt = "";
+
+      if (body.userId) {
+        const { data: topicToClarify } = await supabase
+          .from("life_topics")
+          .select("*")
+          .eq("user_id", body.userId)
+          .eq("needs_clarification", true)
+          .eq("clarification_asked", false)
+          .order("mention_count", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (topicToClarify) {
+          clarificationPrompt = `
+
+      Aggiungi alla fine della risposta, in modo naturale e breve:
+      "Ti sento nominare spesso ${topicToClarify.topic}. Chi è o cos'è per te?"
+      `;
+
+          await supabase
+            .from("life_topics")
+            .update({
+              clarification_asked: true,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", topicToClarify.id);
+        }
+      }
+
     const systemPrompt = `
       Sei GhostMe.
 
@@ -136,7 +166,10 @@ export async function POST(req: Request) {
       - non accorciarla
       - non scegliere solo alcune parti
 
+      ${clarificationPrompt}
+
         Stile richiesto:
+     
       - frasi brevi
       - tono diretto
       - niente spiegoni
@@ -228,7 +261,107 @@ export async function POST(req: Request) {
       memoryCategory = "project";
     }
 
+    const detectedTopics: {
+      topic: string;
+      category: string;
+      entity_type: string;
+      needs_clarification?: boolean;
+    }[] = [];
 
+    if (
+      lowerMessage.includes("home assistant") ||
+      lowerMessage.includes("domotica")
+    ) {
+      detectedTopics.push({
+        topic: "Home Assistant",
+        category: "home",
+        entity_type: "system",
+      });
+    }
+
+    if (
+      lowerMessage.includes("palestra") ||
+      lowerMessage.includes("allenamento")
+    ) {
+      detectedTopics.push({
+        topic: "Palestra",
+        category: "health",
+        entity_type: "habit",
+      });
+    }
+
+    if (
+      lowerMessage.includes("lavoro") ||
+      lowerMessage.includes("azienda")
+    ) {
+      detectedTopics.push({
+        topic: "Lavoro",
+        category: "work",
+        entity_type: "work",
+      });
+    }
+
+    if (
+      lowerMessage.includes("moto") ||
+      lowerMessage.includes("vespa") ||
+      lowerMessage.includes("piaggio")
+    ) {
+      detectedTopics.push({
+        topic: "Moto / Piaggio",
+        category: "passion",
+        entity_type: "passion",
+      });
+    }
+
+    if (
+      lowerMessage.includes("ghostme") ||
+      lowerMessage.includes("ghost")
+    ) {
+      detectedTopics.push({
+        topic: "GhostMe",
+        category: "project",
+        entity_type: "project",
+      });
+    }
+
+    const words = message
+      .split(/\s+/)
+      .map((word: string) =>
+        word.replace(/[.,!?;:()"]/g, "").trim()
+      )
+      .filter(Boolean);
+
+    const ignoredWords = [
+      "ciao",
+      "oggi",
+      "domani",
+      "ieri",
+      "come",
+      "cosa",
+      "sono",
+      "voglio",
+      "vorrei",
+      "perché",
+      "quando",
+      "dove",
+      "ghostme",
+    ];
+
+    const possibleNames = words.filter((word: string) => {
+      if (word.length < 3) return false;
+      if (ignoredWords.includes(word.toLowerCase())) return false;
+
+      return /^[A-ZÀ-Ù][a-zà-ù]+$/.test(word);
+    });
+
+    possibleNames.forEach((name: string) => {
+      detectedTopics.push({
+        topic: name,
+        category: "unknown",
+        entity_type: "unknown",
+        needs_clarification: true,
+      });
+    });
 
     if (shouldSaveMemory && body.userId) {
 
@@ -276,12 +409,73 @@ export async function POST(req: Request) {
       console.log("MEMORY ERROR:", memoryError);
     }
    }
+
+    if (body.userId && detectedTopics.length > 0) {
+      for (const item of detectedTopics) {
+        const { data: existingTopic } = await supabase
+          .from("life_topics")
+          .select("*")
+          .eq("user_id", body.userId)
+          .eq("topic", item.topic)
+          .maybeSingle();
+
+        if (existingTopic) {
+          const nextMentionCount =
+            (existingTopic.mention_count || 0) + 1;
+
+          const nextWeight = Math.min(
+            (existingTopic.weight || 1) + 1,
+            10
+          );
+
+          const shouldAskClarification =
+            nextMentionCount >= 3 &&
+            !existingTopic.description &&
+            !existingTopic.clarification_asked;
+
+          await supabase
+            .from("life_topics")
+            .update({
+              weight: nextWeight,
+              mention_count: nextMentionCount,
+              status: shouldAskClarification
+                ? "needs_clarification"
+                : "active",
+              needs_clarification: shouldAskClarification,
+              entity_type:
+                existingTopic.entity_type || item.entity_type,
+              last_mentioned_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", existingTopic.id);
+        } else {
+          await supabase.from("life_topics").insert([
+            {
+              user_id: body.userId,
+              topic: item.topic,
+              category: item.category,
+              entity_type: item.entity_type,
+              weight: 1,
+              status: item.needs_clarification
+                ? "unknown"
+                : "active",
+              mention_count: 1,
+              needs_clarification:
+                item.needs_clarification || false,
+              notes: message,
+            },
+          ]);
+        }
+      }
+    }
+
+
+
     return NextResponse.json({
       reply,
     });
   } catch (err) {
     console.log(err);
-
     return NextResponse.json(
       {
         error: "Errore GhostMe AI",
