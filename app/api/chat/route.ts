@@ -363,6 +363,10 @@ export async function POST(req: Request) {
       });
     });
 
+    console.log("WORDS:", words);
+console.log("POSSIBLE NAMES:", possibleNames);
+console.log("DETECTED TOPICS:", detectedTopics);
+
     if (shouldSaveMemory && body.userId) {
 
       const { data: existingMemories } = await supabase
@@ -410,8 +414,14 @@ export async function POST(req: Request) {
     }
    }
 
+   console.log("LIFE TOPICS USER ID:", body.userId);
+console.log("LIFE TOPICS TO SAVE:", detectedTopics);
+
     if (body.userId && detectedTopics.length > 0) {
       for (const item of detectedTopics) {
+
+console.log("SAVING LIFE TOPIC:", item);
+
         const { data: existingTopic } = await supabase
           .from("life_topics")
           .select("*")
