@@ -459,22 +459,29 @@ console.log("SAVING LIFE TOPIC:", item);
             })
             .eq("id", existingTopic.id);
         } else {
-          await supabase.from("life_topics").insert([
-            {
-              user_id: body.userId,
-              topic: item.topic,
-              category: item.category,
-              entity_type: item.entity_type,
-              weight: 1,
-              status: item.needs_clarification
-                ? "unknown"
-                : "active",
-              mention_count: 1,
-              needs_clarification:
-                item.needs_clarification || false,
-              notes: message,
-            },
-          ]);
+          const { data: insertedTopic, error: insertTopicError } =
+            await supabase
+              .from("life_topics")
+              .insert([
+                {
+                  user_id: body.userId,
+                  topic: item.topic,
+                  category: item.category,
+                  entity_type: item.entity_type,
+                  weight: 1,
+                  status: item.needs_clarification
+                    ? "unknown"
+                    : "active",
+                  mention_count: 1,
+                  needs_clarification:
+                    item.needs_clarification || false,
+                  notes: message,
+                },
+              ])
+              .select();
+
+          console.log("INSERTED LIFE TOPIC:", insertedTopic);
+          console.log("INSERT LIFE TOPIC ERROR:", insertTopicError);
         }
       }
     }
