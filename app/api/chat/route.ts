@@ -411,10 +411,10 @@ console.log("SAVING LIFE TOPIC:", item);
             10
           );
 
-          const shouldAskClarification =
-            nextMentionCount >= 3 &&
-            !existingTopic.description &&
-            !existingTopic.clarification_asked;
+        const shouldAskClarification =
+          nextMentionCount >= 3 &&
+          !existingTopic.description &&
+          existingTopic.entity_type === "unknown";
 
             if (shouldAskClarification) {
               clarificationQuestion = `
