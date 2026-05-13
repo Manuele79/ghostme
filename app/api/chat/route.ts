@@ -472,6 +472,29 @@ console.log("SAVING LIFE TOPIC:", item);
         reply = `${reply}${clarificationQuestion}`;
       }
 
+      if (
+        body.userId &&
+        (
+          lowerMessage.includes("mia moglie") ||
+          lowerMessage.includes("mio marito")
+        )
+      )
+      {
+        await supabase
+          .from("life_topics")
+          .update({
+            entity_type: "person",
+            category: "family",
+            description: message,
+            needs_clarification: false,
+            clarification_asked: true,
+            status: "known",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("user_id", body.userId)
+          .eq("topic", "Valentina");
+      }
+
     return NextResponse.json({
       reply,
     });
