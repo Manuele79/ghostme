@@ -42,6 +42,22 @@ export async function POST(req: Request) {
       }
     }
 
+   let profileContext = "";
+
+      if (body.userId) {
+        const { data: userProfile } = await supabase
+          .from("user_profiles")
+          .select("*")
+          .eq("user_id", body.userId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (userProfile) {
+          profileContext = JSON.stringify(userProfile, null, 2);
+        }
+      }
+
     const systemPrompt = `
       Sei GhostMe.
 
@@ -75,6 +91,9 @@ export async function POST(req: Request) {
 
       Memorie conosciute:
       ${memoryContext}
+
+      Profilo utente:
+      ${profileContext}
 
         Stile richiesto:
       - frasi brevi
