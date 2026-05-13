@@ -89,13 +89,13 @@ export async function POST(req: Request) {
       Traits utente:
       ${JSON.stringify(traits, null, 2)}
 
-      Memorie conosciute:
-      ${memoryContext}
-
       Profilo utente:
       ${profileContext}
 
-      Quando l'utente chiede informazioni personali:
+      Memorie conosciute:
+      ${memoryContext}
+
+      Quando l'utente chiede informazioni personali, devi rispondere usando ESATTAMENTE i campi del Profilo utente se esistono.
       - usa SEMPRE prima il Profilo utente
       - NON riassumere se il dato esiste già
       - NON reinterpretare
