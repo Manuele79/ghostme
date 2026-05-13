@@ -81,35 +81,7 @@ export async function POST(req: Request) {
           }
       }
 
-      let clarificationPrompt = "";
 
-      if (body.userId) {
-        const { data: topicToClarify } = await supabase
-          .from("life_topics")
-          .select("*")
-          .eq("user_id", body.userId)
-          .eq("needs_clarification", true)
-          .eq("clarification_asked", false)
-          .order("mention_count", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (topicToClarify) {
-          clarificationPrompt = `
-
-      Aggiungi alla fine della risposta, in modo naturale e breve:
-      "Ti sento nominare spesso ${topicToClarify.topic}. Chi è o cos'è per te?"
-      `;
-
-          await supabase
-            .from("life_topics")
-            .update({
-              clarification_asked: true,
-              updated_at: new Date().toISOString(),
-            })
-            .eq("id", topicToClarify.id);
-        }
-      }
 
     const systemPrompt = `
       Sei GhostMe.
@@ -166,7 +138,6 @@ export async function POST(req: Request) {
       - non accorciarla
       - non scegliere solo alcune parti
 
-      ${clarificationPrompt}
 
         Stile richiesto:
      
@@ -202,9 +173,11 @@ export async function POST(req: Request) {
       max_tokens: 300,
     });
 
-    const reply =
+    let reply =
       completion.choices[0]?.message?.content ||
       "Non so cosa dire.";
+
+    let clarificationQuestion = "";
 
     const lowerMessage = message.toLowerCase();
 
@@ -443,6 +416,12 @@ console.log("SAVING LIFE TOPIC:", item);
             !existingTopic.description &&
             !existingTopic.clarification_asked;
 
+            if (shouldAskClarification) {
+              clarificationQuestion = `
+
+            Ti sento nominare spesso ${item.topic}. Chi è o cos'è per te?`;
+          }
+
           await supabase
             .from("life_topics")
             .update({
@@ -452,6 +431,9 @@ console.log("SAVING LIFE TOPIC:", item);
                 ? "needs_clarification"
                 : "active",
               needs_clarification: shouldAskClarification,
+              clarification_asked: shouldAskClarification
+                ? true
+                : existingTopic.clarification_asked,
               entity_type:
                 existingTopic.entity_type || item.entity_type,
               last_mentioned_at: new Date().toISOString(),
@@ -486,7 +468,9 @@ console.log("SAVING LIFE TOPIC:", item);
       }
     }
 
-
+      if (clarificationQuestion) {
+        reply = `${reply}${clarificationQuestion}`;
+      }
 
     return NextResponse.json({
       reply,
