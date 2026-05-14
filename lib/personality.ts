@@ -85,61 +85,100 @@ export function buildPersonalitySummary(traits: Traits) {
 }
 
 export function buildGhostMeMessage(traits: Traits) {
-  const messages: string[] = [];
+  const entries = Object.entries(traits)
+    .filter(([key]) => !["id", "user_id", "created_at"].includes(key))
+    .sort((a, b) => (b[1] || 0) - (a[1] || 0));
 
-  if ((traits.controllo || 0) >= 10) {
-    messages.push(
-      "Quando qualcosa ti sfugge di mano tendi a voler riprendere controllo molto rapidamente."
+  const topTraits = entries.slice(0, 3).map(([key]) => key);
+  const highestValue = entries[0]?.[1] || 0;
+
+  if (highestValue === 0) {
+    return "Sto ancora imparando come reagisci davvero. Il profilo è troppo vuoto per descriverti bene.";
+  }
+
+  const parts: string[] = [];
+
+  if (topTraits.includes("controllo")) {
+    parts.push(
+      "Quando qualcosa diventa incerto, la tua prima reazione è cercare di rimettere ordine."
     );
   }
 
-  if ((traits.sarcasmo || 0) >= 10) {
-    messages.push(
-      "Usi spesso ironia o battute per alleggerire situazioni emotivamente pesanti."
+  if (topTraits.includes("ansia")) {
+    parts.push(
+      "Tendi a elaborare molto nella testa prima ancora di far vedere fuori cosa ti sta pesando."
     );
   }
 
-  if ((traits.ansia || 0) >= 10) {
-    messages.push(
-      "Dentro elabori molto più stress di quanto fai vedere fuori."
+  if (topTraits.includes("sarcasmo")) {
+    parts.push(
+      "L’ironia per te non è solo una battuta: spesso è un modo per tenere distanza da ciò che pesa."
     );
   }
 
-  if ((traits.empatia || 0) >= 10) {
-    messages.push(
-      "Le emozioni degli altri hanno un peso reale nel tuo modo di reagire."
+  if (topTraits.includes("empatia")) {
+    parts.push(
+      "Le emozioni degli altri ti arrivano addosso più di quanto sembri, anche quando provi a restare pratico."
     );
   }
 
-  if ((traits.orgoglio || 0) >= 10) {
-    messages.push(
-      "Quando ti senti ferito o sottovalutato l’orgoglio entra subito in gioco."
+  if (topTraits.includes("orgoglio")) {
+    parts.push(
+      "Quando ti senti toccato sul personale, l’orgoglio entra in gioco prima ancora delle parole."
     );
   }
 
-  if ((traits.paura_abbandono || 0) >= 10) {
-    messages.push(
-      "La distanza emotiva o i cambiamenti improvvisi nei rapporti possono colpirti molto."
+  if (topTraits.includes("gelosia")) {
+    parts.push(
+      "Quando qualcosa o qualcuno per te conta davvero, puoi diventare molto attento ai segnali di distanza."
     );
   }
 
-  if ((traits.vulnerabilita || 0) >= 10) {
-    messages.push(
-      "Quando ti senti al sicuro riesci ad aprirti emotivamente molto più della media."
+  if (topTraits.includes("paura_abbandono")) {
+    parts.push(
+      "Il silenzio o la distanza emotiva possono pesarti più di quanto ammetteresti subito."
     );
   }
 
-  if ((traits.evitamento || 0) >= 10) {
-    messages.push(
-      "Quando una situazione pesa troppo, a volte tendi ad allontanarti o sparire per rifiatare."
+  if (topTraits.includes("sensibilita_critiche")) {
+    parts.push(
+      "Le critiche, soprattutto se arrivano fredde o improvvise, possono restarti addosso."
     );
   }
 
-  if (messages.length === 0) {
-    messages.push(
-      "Sto ancora imparando come reagisci emotivamente alle situazioni."
+  if (topTraits.includes("sincerita")) {
+    parts.push(
+      "Per te la sincerità conta molto: preferisci una verità scomoda a una frase comoda ma finta."
     );
   }
 
-  return messages.join(" ");
+  if (topTraits.includes("socialita")) {
+    parts.push(
+      "Hai bisogno di confronto, ma non sempre significa esporti subito del tutto."
+    );
+  }
+
+  if (topTraits.includes("vulnerabilita")) {
+    parts.push(
+      "Quando ti senti al sicuro, riesci ad aprirti molto più di quanto sembri all’inizio."
+    );
+  }
+
+  if (topTraits.includes("evitamento")) {
+    parts.push(
+      "Quando una situazione pesa troppo, puoi prendere distanza per respirare e rimettere insieme i pezzi."
+    );
+  }
+
+  if (topTraits.includes("impulsivita")) {
+    parts.push(
+      "Quando la pressione sale, puoi reagire prima di aver davvero finito di elaborare."
+    );
+  }
+
+  if (parts.length === 0) {
+    return "Il tuo profilo sta prendendo forma, ma servono più dati per descrivere davvero il tuo modo di reagire.";
+  }
+
+  return parts.join(" ");
 }
