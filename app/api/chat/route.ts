@@ -247,6 +247,39 @@ export async function POST(req: Request) {
       lowerMessage.includes("sono andato") ||
       lowerMessage.includes("siamo andati") ||
       lowerMessage.includes("ho fatto") ||
+      lowerMessage.includes("uscire") ||
+      lowerMessage.includes("andare") ||
+      lowerMessage.includes("vado") ||
+      lowerMessage.includes("pizza") ||
+      lowerMessage.includes("cena") ||
+      lowerMessage.includes("aperitivo") ||
+      lowerMessage.includes("usciti") ||
+
+      lowerMessage.includes("andranno") ||
+      lowerMessage.includes("tornati") ||
+      lowerMessage.includes("tornato") ||
+      lowerMessage.includes("birra") ||
+      lowerMessage.includes("vino") ||
+      lowerMessage.includes("andata") ||
+      lowerMessage.includes("sono stato") ||
+      lowerMessage.includes("sono stata") ||
+      lowerMessage.includes("siamo stati") ||
+      lowerMessage.includes("siamo state") ||
+      lowerMessage.includes("visto") ||
+      lowerMessage.includes("parlato") ||
+      lowerMessage.includes("ho incontrato") ||
+      lowerMessage.includes("abbiamo incontrato") ||
+      lowerMessage.includes("sono uscito") ||
+      lowerMessage.includes("sono uscita") ||
+      lowerMessage.includes("siamo usciti") ||
+      lowerMessage.includes("siamo uscite") ||
+      lowerMessage.includes("vado a") ||
+      lowerMessage.includes("andiamo a") ||
+      lowerMessage.includes("usciremo") ||
+      lowerMessage.includes("andremo") ||
+      lowerMessage.includes("litigato") ||
+      lowerMessage.includes("discusso") ||
+      lowerMessage.includes("mi ha detto") ||
       lowerMessage.includes("è successo");
 
       let emotionalTone = "neutral";
@@ -737,7 +770,34 @@ console.log("SAVING LIFE TOPIC:", item);
           .maybeSingle()
       : { data: null };
 
-    if (body.userId && topicToClarify) {
+
+
+      const directTopicToClassify =
+        topicToClarify ||
+        detectedTopics.find((item) => {
+          const topicLower = item.topic.toLowerCase();
+
+          return (
+            lowerMessage.includes(topicLower) &&
+            (
+            lowerMessage.includes("amica") ||
+            lowerMessage.includes("amico") ||
+            lowerMessage.includes("collega") ||
+            lowerMessage.includes("moglie") ||
+            lowerMessage.includes("marito") ||
+            lowerMessage.includes("figlio") ||
+            lowerMessage.includes("figlia") ||
+            lowerMessage.includes("cane") ||
+            lowerMessage.includes("gatto") ||
+            lowerMessage.includes("cliente") ||
+            lowerMessage.includes("capo") ||
+            lowerMessage.includes("fratello") ||
+            lowerMessage.includes("sorella")
+            )
+          );
+        });
+
+    if (body.userId && directTopicToClassify) {
       const classification = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
