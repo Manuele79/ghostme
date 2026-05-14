@@ -472,41 +472,92 @@ console.log("SAVING LIFE TOPIC:", item);
         reply = `${reply}${clarificationQuestion}`;
       }
 
-      if (
-        body.userId &&
-        (
-          lowerMessage.includes("mia moglie") ||
-          lowerMessage.includes("mio marito")
-        )
-      )
-      {
-        await supabase
-          .from("life_topics")
-          .update({
-            entity_type: "person",
-            category: "family",
-            description: message,
-            needs_clarification: false,
-            clarification_asked: true,
-            status: "known",
-            updated_at: new Date().toISOString(),
-          })
-          .eq("user_id", body.userId)
-          .eq("topic", "Valentina");
-      }
+const topicToClarify = detectedTopics.find(
+  (item) => item.needs_clarification
+);
 
-      await supabase
-        .from("memories_active")
-        .insert([
-          {
-            user_id: body.userId,
-            title: "Relazione importante",
-            content: message,
-            category: "family",
-            importance: 9,
-            pinned: true,
-          },
-        ]);     
+if (body.userId && topicToClarify) {
+  const classification = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [
+      {
+        role: "system",
+        content: `
+Devi classificare una risposta dell'utente che spiega chi o cosa è un topic.
+
+Rispondi SOLO con JSON valido.
+
+Campi:
+{
+  "understood": true/false,
+  "entity_type": "person" | "animal" | "project" | "place" | "habit" | "object" | "unknown",
+  "category": "family" | "work" | "friend" | "home" | "project" | "passion" | "health" | "general",
+  "description": "frase breve e chiara"
+}
+
+Se la risposta non spiega davvero chi/cosa è il topic, understood deve essere false.
+        `,
+      },
+      {
+        role: "user",
+        content: `
+Topic: ${topicToClarify.topic}
+
+Risposta utente:
+${message}
+        `,
+      },
+    ],
+    temperature: 0,
+    max_tokens: 200,
+  });
+
+  const rawClassification =
+    classification.choices[0]?.message?.content || "{}";
+
+  let parsedClassification: any = null;
+
+  try {
+    parsedClassification = JSON.parse(rawClassification);
+  } catch (err) {
+    console.log("CLASSIFICATION PARSE ERROR:", err);
+    console.log("RAW CLASSIFICATION:", rawClassification);
+  }
+
+  if (parsedClassification?.understood) {
+    await supabase
+      .from("life_topics")
+      .update({
+        entity_type:
+          parsedClassification.entity_type || "unknown",
+        category:
+          parsedClassification.category || "general",
+        description:
+          parsedClassification.description || message,
+        needs_clarification: false,
+        clarification_asked: true,
+        status: "known",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", body.userId)
+      .eq("topic", topicToClarify.topic);
+
+    await supabase
+      .from("memories_active")
+      .insert([
+        {
+          user_id: body.userId,
+          title: `Info su ${topicToClarify.topic}`,
+          content:
+            parsedClassification.description || message,
+          category:
+            parsedClassification.category || "general",
+          importance: 9,
+          pinned: true,
+        },
+      ]);
+  }
+}
 
     return NextResponse.json({
       reply,
