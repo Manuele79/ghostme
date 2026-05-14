@@ -382,13 +382,28 @@ export async function POST(req: Request) {
       "quando",
       "dove",
       "ghostme",
+      "era",
+      "ero",
+      "sto",
+      "stavo",
+      "appena",
+      "lavorando",
+      "memoria",
+      "conversazioni",
+      "test",
+      "mare",
+      "casa",
+      "passeggiata",
+      "stanca",
+      "invece",
+      "per",
     ];
 
     const possibleNames = words.filter((word: string) => {
       if (word.length < 3) return false;
       if (ignoredWords.includes(word.toLowerCase())) return false;
 
-      return /^[a-zà-ù]{3,}$/i.test(word);
+      return /^[A-ZÀ-Ù][a-zà-ù]+$/.test(word);
     });
 
     possibleNames.forEach((name: string) => {
@@ -541,6 +556,7 @@ console.log("SAVING LIFE TOPIC:", item);
     (t) => t.topic
   );
 
+const { data: episodicData, error: episodicError } =
   await supabase
     .from("episodic_memories")
     .insert([
@@ -554,12 +570,24 @@ console.log("SAVING LIFE TOPIC:", item);
         ),
         related_topics: relatedTopics,
       },
-    ]);
-} 
+    ])
+    .select();
 
-const topicToClarify = detectedTopics.find(
-  (item) => item.needs_clarification
-);
+console.log("EPISODIC DATA:", episodicData);
+console.log("EPISODIC ERROR:", episodicError);
+ }
+const { data: topicToClarify } = body.userId
+  ? await supabase
+      .from("life_topics")
+      .select("*")
+      .eq("user_id", body.userId)
+      .eq("needs_clarification", true)
+      .eq("clarification_asked", true)
+      .is("description", null)
+      .order("mention_count", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+  : { data: null };
 
 if (body.userId && topicToClarify) {
   const classification = await openai.chat.completions.create({
