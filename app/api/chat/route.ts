@@ -16,6 +16,8 @@ export async function POST(req: Request) {
 
     let memoryContext = "";
 
+    let loadedLifeTopics: any[] = [];
+
     if (body.userId) {
     const { data: memories } = await supabase
       .from("memories_active")
@@ -97,6 +99,8 @@ export async function POST(req: Request) {
           .limit(20);
 
         if (lifeTopics?.length) {
+          loadedLifeTopics = lifeTopics;
+
           lifeTopicsContext = lifeTopics
             .map(
               (t) =>
@@ -244,6 +248,31 @@ export async function POST(req: Request) {
       lowerMessage.includes("siamo andati") ||
       lowerMessage.includes("ho fatto") ||
       lowerMessage.includes("è successo");
+
+      let emotionalTone = "neutral";
+
+      if (
+        lowerMessage.includes("felice") ||
+        lowerMessage.includes("contento") ||
+        lowerMessage.includes("bene") ||
+        lowerMessage.includes("bello") ||
+        lowerMessage.includes("figo") ||
+        lowerMessage.includes("top")
+      ) {
+        emotionalTone = "positive";
+      }
+
+      if (
+        lowerMessage.includes("stanco") ||
+        lowerMessage.includes("stress") ||
+        lowerMessage.includes("ansia") ||
+        lowerMessage.includes("nervoso") ||
+        lowerMessage.includes("male") ||
+        lowerMessage.includes("incazzato") ||
+        lowerMessage.includes("litigato")
+      ) {
+        emotionalTone = "negative";
+      }
 
     const shouldSaveMemory =
       lowerMessage.includes("voglio") ||
@@ -551,79 +580,183 @@ console.log("SAVING LIFE TOPIC:", item);
         reply = `${reply}${clarificationQuestion}`;
       }
 
-    if (body.userId && possibleEpisode) {
-  const relatedTopics = detectedTopics.map(
-    (t) => t.topic
-  );
+      if (body.userId && possibleEpisode) {
+        const detectedTopicNames = detectedTopics.map(
+          (t) => t.topic
+        );
 
-const { data: episodicData, error: episodicError } =
-  await supabase
-    .from("episodic_memories")
-    .insert([
-      {
-        user_id: body.userId,
-        summary: message,
-        emotional_tone: "neutral",
-        importance: Math.min(
-          relatedTopics.length + 1,
-          10
-        ),
-        related_topics: relatedTopics,
-      },
-    ])
-    .select();
+        const knownTopicNames = loadedLifeTopics
+          .filter((t) =>
+            lowerMessage.includes(
+              String(t.topic).toLowerCase()
+            )
+          )
+          .map((t) => t.topic);
 
-console.log("EPISODIC DATA:", episodicData);
-console.log("EPISODIC ERROR:", episodicError);
- }
-const { data: topicToClarify } = body.userId
-  ? await supabase
-      .from("life_topics")
-      .select("*")
-      .eq("user_id", body.userId)
-      .eq("needs_clarification", true)
-      .eq("clarification_asked", true)
-      .is("description", null)
-      .order("mention_count", { ascending: false })
-      .limit(1)
-      .maybeSingle()
-  : { data: null };
+        const relatedTopics = Array.from(
+          new Set([...detectedTopicNames, ...knownTopicNames])
+        );
 
-if (body.userId && topicToClarify) {
-  const classification = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [
-      {
-        role: "system",
-        content: `
-Devi classificare una risposta dell'utente che spiega chi o cosa è un topic.
+        const { data: episodicData, error: episodicError } =
+          await supabase
+            .from("episodic_memories")
+            .insert([
+              {
+                user_id: body.userId,
+                summary: message,
+                emotional_tone: emotionalTone,
+                importance: Math.min(
+                  relatedTopics.length + 1,
+                  10
+                ),
+                related_topics: relatedTopics,
+              },
+            ])
+            .select();
 
-Rispondi SOLO con JSON valido.
+        console.log("EPISODIC DATA:", episodicData);
+        console.log("EPISODIC ERROR:", episodicError);
 
-Campi:
-{
-  "understood": true/false,
-  "entity_type": "person" | "animal" | "project" | "place" | "habit" | "object" | "unknown",
-  "category": "family" | "work" | "friend" | "home" | "project" | "passion" | "health" | "general",
-  "description": "frase breve e chiara"
-}
+        for (const topic of relatedTopics) {
+          const updateData: any = {
+            last_emotional_tone: emotionalTone,
+            relationship_strength: 2,
+            updated_at: new Date().toISOString(),
+          };
 
-Se la risposta non spiega davvero chi/cosa è il topic, understood deve essere false.
-        `,
-      },
-      {
-        role: "user",
-        content: `
-Topic: ${topicToClarify.topic}
+          if (emotionalTone === "positive") {
+            updateData.positive_count = 1;
+          }
 
-Risposta utente:
-${message}
-        `,
-      },
-    ],
-    temperature: 0,
-    max_tokens: 200,
-  });
+          if (emotionalTone === "negative") {
+            updateData.negative_count = 1;
+          }
+
+          if (emotionalTone === "neutral") {
+            updateData.neutral_count = 1;
+          }
+
+          const { data: existingTopic } = await supabase
+            .from("life_topics")
+            .select("*")
+            .eq("user_id", body.userId)
+            .eq("topic", topic)
+            .maybeSingle();
+
+          if (existingTopic) {
+            await supabase
+              .from("life_topics")
+              .update({
+                positive_count:
+                  (existingTopic.positive_count || 0) +
+                  (emotionalTone === "positive" ? 1 : 0),
+                negative_count:
+                  (existingTopic.negative_count || 0) +
+                  (emotionalTone === "negative" ? 1 : 0),
+                neutral_count:
+                  (existingTopic.neutral_count || 0) +
+                  (emotionalTone === "neutral" ? 1 : 0),
+                relationship_strength: Math.min(
+                  (existingTopic.relationship_strength || 1) + 1,
+                  10
+                ),
+                last_emotional_tone: emotionalTone,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", existingTopic.id);
+          }
+        }
+
+        if (relatedTopics.length >= 2) {
+          for (let i = 0; i < relatedTopics.length; i++) {
+            for (let j = i + 1; j < relatedTopics.length; j++) {
+              const source = relatedTopics[i];
+              const target = relatedTopics[j];
+
+              const { data: existingLink } = await supabase
+                .from("topic_links")
+                .select("*")
+                .eq("user_id", body.userId)
+                .eq("source_topic", source)
+                .eq("target_topic", target)
+                .maybeSingle();
+
+              if (existingLink) {
+                await supabase
+                  .from("topic_links")
+                  .update({
+                    weight: Math.min(
+                      (existingLink.weight || 1) + 1,
+                      10
+                    ),
+                    updated_at: new Date().toISOString(),
+                  })
+                  .eq("id", existingLink.id);
+              } else {
+                await supabase.from("topic_links").insert([
+                  {
+                    user_id: body.userId,
+                    source_topic: source,
+                    target_topic: target,
+                    link_type: "mentioned_together",
+                    weight: 1,
+                  },
+                ]);
+              }
+            }
+          }
+        }
+      }
+
+      
+    const { data: topicToClarify } = body.userId
+      ? await supabase
+          .from("life_topics")
+          .select("*")
+          .eq("user_id", body.userId)
+          .eq("needs_clarification", true)
+          .eq("clarification_asked", true)
+          .is("description", null)
+          .order("mention_count", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      : { data: null };
+
+    if (body.userId && topicToClarify) {
+      const classification = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: `
+    Devi classificare una risposta dell'utente che spiega chi o cosa è un topic.
+
+    Rispondi SOLO con JSON valido.
+
+    Campi:
+    {
+      "understood": true/false,
+      "entity_type": "person" | "animal" | "project" | "place" | "habit" | "object" | "unknown",
+      "category": "family" | "work" | "friend" | "home" | "project" | "passion" | "health" | "general",
+      "description": "frase breve e chiara"
+    }
+
+    Se la risposta non spiega davvero chi/cosa è il topic, understood deve essere false.
+            `,
+          },
+          {
+            role: "user",
+            content: `
+    Topic: ${topicToClarify.topic}
+
+    Risposta utente:
+    ${message}
+            `,
+          },
+        ],
+        temperature: 0,
+        max_tokens: 200,
+      });
 
   const rawClassification =
     classification.choices[0]?.message?.content || "{}";
