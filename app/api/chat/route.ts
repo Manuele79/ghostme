@@ -405,27 +405,42 @@ export async function POST(req: Request) {
       "come",
       "cosa",
       "sono",
+      "sei",
+      "siamo",
+      "ero",
+      "era",
+      "eri",
+      "stato",
+      "stata",
+      "stavo",
+      "sto",
+      "per",
+      "con",
+      "senza",
+      "dentro",
+      "fuori",
+      "dopo",
+      "prima",
       "voglio",
       "vorrei",
-      "perché",
+      "devo",
+      "faccio",
+      "facendo",
+      "lavoro",
+      "lavorando",
+      "provando",
+      "appena",
       "quando",
       "dove",
+      "perché",
+      "quindi",
       "ghostme",
-      "era",
-      "ero",
-      "sto",
-      "stavo",
-      "appena",
-      "lavorando",
-      "memoria",
-      "conversazioni",
       "test",
+      "memoria",
+      "conversazione",
+      "codici",
       "mare",
-      "casa",
-      "passeggiata",
-      "stanca",
-      "invece",
-      "per",
+      "casa"
     ];
 
     const possibleNames = words.filter((word: string) => {
@@ -708,7 +723,7 @@ console.log("SAVING LIFE TOPIC:", item);
         }
       }
 
-      
+
     const { data: topicToClarify } = body.userId
       ? await supabase
           .from("life_topics")
