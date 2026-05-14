@@ -430,71 +430,79 @@ export default function SetupPage() {
     );
   }
 
-  async function saveProfile() {
-    setSaveMessage("Salvataggio in corso...");
+async function saveProfile() {
+  setSaveMessage("Salvataggio in corso...");
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-    if (!user) {
-      setSaveMessage("Utente non autenticato.");
-      return;
-    }
-
-    const { data: userData, error: userError } = await supabase
-      .from("users")
-      .upsert([{ id: user.id, name: user.email, email: user.email }])
-      .select()
-      .single();
-
-    if (!userData || userError) {
-      setSaveMessage("Errore salvataggio utente.");
-      return;
-    }
-
-    const { error: traitsError } = await supabase.from("traits").insert([
-      {
-        user_id: userData.id,
-        sarcasmo: calculatedTraits.sarcasmo || 0,
-        empatia: calculatedTraits.empatia || 0,
-        orgoglio: calculatedTraits.orgoglio || 0,
-        gelosia: calculatedTraits.gelosia || 0,
-        controllo: calculatedTraits.controllo || 0,
-        ansia: calculatedTraits.ansia || 0,
-        impulsivita: calculatedTraits.impulsivita || 0,
-        socialita: calculatedTraits.socialita || 0,
-        sensibilita_critiche: calculatedTraits.sensibilita_critiche || 0,
-        paura_abbandono: calculatedTraits.paura_abbandono || 0,
-        sincerita: calculatedTraits.sincerita || 0,
-        fiducia: calculatedTraits.fiducia || 0,
-        rabbia: calculatedTraits.rabbia || 0,
-        vulnerabilita: calculatedTraits.vulnerabilita || 0,
-        bisogno_affetto: calculatedTraits.bisogno_affetto || 0,
-        evitamento: calculatedTraits.evitamento || 0,
-      },
-    ]);
-
-    const answersToInsert = selected.map((item) => ({
-      user_id: userData.id,
-      question_id: item.questionId,
-      selected_answers: [item.text],
-      intensita: item.intensity,
-    }));
-
-    const { error: answersError } = await supabase
-      .from("answers")
-      .insert(answersToInsert);
-
-    if (traitsError || answersError) {
-      console.log("TRAITS ERROR:", traitsError);
-      console.log("ANSWERS ERROR:", answersError);
-      setSaveMessage("Profilo creato, ma c'è stato un errore su traits/risposte.");
-      return;
-    }
-
-    setSaveMessage("Profilo salvato correttamente.");
+  if (!user) {
+    setSaveMessage("Utente non autenticato.");
+    return;
   }
+
+  const { data: userData, error: userError } = await supabase
+    .from("users")
+    .upsert(
+      [{ id: user.id, name: user.email, email: user.email }],
+      { onConflict: "id" }
+    )
+    .select()
+    .single();
+
+  if (!userData || userError) {
+    console.log("USER ERROR:", userError);
+    setSaveMessage("Errore salvataggio utente.");
+    return;
+  }
+
+  // Pulisce vecchio test dello stesso utente
+  await supabase.from("answers").delete().eq("user_id", userData.id);
+  await supabase.from("traits").delete().eq("user_id", userData.id);
+
+  const { error: traitsError } = await supabase.from("traits").insert([
+    {
+      user_id: userData.id,
+      sarcasmo: calculatedTraits.sarcasmo || 0,
+      empatia: calculatedTraits.empatia || 0,
+      orgoglio: calculatedTraits.orgoglio || 0,
+      gelosia: calculatedTraits.gelosia || 0,
+      controllo: calculatedTraits.controllo || 0,
+      ansia: calculatedTraits.ansia || 0,
+      impulsivita: calculatedTraits.impulsivita || 0,
+      socialita: calculatedTraits.socialita || 0,
+      sensibilita_critiche: calculatedTraits.sensibilita_critiche || 0,
+      paura_abbandono: calculatedTraits.paura_abbandono || 0,
+      sincerita: calculatedTraits.sincerita || 0,
+      fiducia: calculatedTraits.fiducia || 0,
+      rabbia: calculatedTraits.rabbia || 0,
+      vulnerabilita: calculatedTraits.vulnerabilita || 0,
+      bisogno_affetto: calculatedTraits.bisogno_affetto || 0,
+      evitamento: calculatedTraits.evitamento || 0,
+    },
+  ]);
+
+  const answersToInsert = selected.map((item) => ({
+    user_id: userData.id,
+    question_id: item.questionId,
+    selected_answers: [item.text],
+    intensita: item.intensity,
+  }));
+
+  const { error: answersError } = await supabase
+    .from("answers")
+    .insert(answersToInsert);
+
+  if (traitsError || answersError) {
+    console.log("TRAITS ERROR:", traitsError);
+    console.log("ANSWERS ERROR:", answersError);
+    setSaveMessage("Profilo creato, ma c'è stato un errore su traits/risposte.");
+    return;
+  }
+
+  setSaveMessage("Profilo salvato correttamente.");
+}
 
   if (loadingProfile) {
     return (
