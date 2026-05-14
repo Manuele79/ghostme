@@ -43,8 +43,8 @@ export async function POST(req: Request) {
     }
 
    let profileContext = "";
-
-
+   let lifeTopicsContext = "";
+   let episodicContext = "";
 
       if (body.userId) {
 
@@ -81,7 +81,54 @@ export async function POST(req: Request) {
           }
       }
 
+      if (body.userId) {
+        const { data: lifeTopics } = await supabase
+          .from("life_topics")
+          .select(`
+            topic,
+            entity_type,
+            category,
+            description,
+            weight,
+            status
+          `)
+          .eq("user_id", body.userId)
+          .order("weight", { ascending: false })
+          .limit(20);
 
+        if (lifeTopics?.length) {
+          lifeTopicsContext = lifeTopics
+            .map(
+              (t) =>
+                `${t.topic} | ${t.entity_type} | ${t.category} | ${t.description || "nessuna descrizione"}`
+            )
+            .join("\n");
+        }
+      }
+
+      if (body.userId) {
+        const { data: episodicMemories } = await supabase
+          .from("episodic_memories")
+          .select(`
+            summary,
+            emotional_tone,
+            related_topics,
+            importance,
+            created_at
+          `)
+          .eq("user_id", body.userId)
+          .order("created_at", { ascending: false })
+          .limit(10);
+
+        if (episodicMemories?.length) {
+          episodicContext = episodicMemories
+            .map(
+              (e) =>
+                `${e.summary} | tono: ${e.emotional_tone} | topics: ${e.related_topics?.join(", ")}`
+            )
+            .join("\n");
+        }
+      }
 
     const systemPrompt = `
       Sei GhostMe.
@@ -116,6 +163,12 @@ export async function POST(req: Request) {
 
       Profilo utente:
       ${profileContext}
+
+      Topic conosciuti:
+      ${lifeTopicsContext}
+
+      Episodi recenti:
+      ${episodicContext}
 
       Memorie conosciute:
       ${memoryContext}
@@ -180,6 +233,17 @@ export async function POST(req: Request) {
     let clarificationQuestion = "";
 
     const lowerMessage = message.toLowerCase();
+
+    const possibleEpisode =
+      lowerMessage.includes("ieri") ||
+      lowerMessage.includes("oggi") ||
+      lowerMessage.includes("domani") ||
+      lowerMessage.includes("stamattina") ||
+      lowerMessage.includes("stasera") ||
+      lowerMessage.includes("sono andato") ||
+      lowerMessage.includes("siamo andati") ||
+      lowerMessage.includes("ho fatto") ||
+      lowerMessage.includes("è successo");
 
     const shouldSaveMemory =
       lowerMessage.includes("voglio") ||
@@ -324,12 +388,12 @@ export async function POST(req: Request) {
       if (word.length < 3) return false;
       if (ignoredWords.includes(word.toLowerCase())) return false;
 
-      return /^[A-ZÀ-Ù][a-zà-ù]+$/.test(word);
+      return /^[a-zà-ù]{3,}$/i.test(word);
     });
 
     possibleNames.forEach((name: string) => {
       detectedTopics.push({
-        topic: name,
+        topic: name.charAt(0).toUpperCase() + name.slice(1).toLowerCase(),
         category: "unknown",
         entity_type: "unknown",
         needs_clarification: true,
@@ -472,6 +536,27 @@ console.log("SAVING LIFE TOPIC:", item);
         reply = `${reply}${clarificationQuestion}`;
       }
 
+    if (body.userId && possibleEpisode) {
+  const relatedTopics = detectedTopics.map(
+    (t) => t.topic
+  );
+
+  await supabase
+    .from("episodic_memories")
+    .insert([
+      {
+        user_id: body.userId,
+        summary: message,
+        emotional_tone: "neutral",
+        importance: Math.min(
+          relatedTopics.length + 1,
+          10
+        ),
+        related_topics: relatedTopics,
+      },
+    ]);
+} 
+
 const topicToClarify = detectedTopics.find(
   (item) => item.needs_clarification
 );
@@ -542,20 +627,41 @@ ${message}
       .eq("user_id", body.userId)
       .eq("topic", topicToClarify.topic);
 
-    await supabase
+    const memoryContent =
+      parsedClassification.description || message;
+
+    const { data: existingTopicMemory } = await supabase
       .from("memories_active")
-      .insert([
-        {
-          user_id: body.userId,
-          title: `Info su ${topicToClarify.topic}`,
-          content:
-            parsedClassification.description || message,
-          category:
-            parsedClassification.category || "general",
+      .select("id")
+      .eq("user_id", body.userId)
+      .eq("title", `Info su ${topicToClarify.topic}`)
+      .limit(1);
+
+    if (existingTopicMemory && existingTopicMemory.length > 0) {
+      await supabase
+        .from("memories_active")
+        .update({
+          content: memoryContent,
+          category: parsedClassification.category || "general",
           importance: 9,
           pinned: true,
-        },
-      ]);
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", existingTopicMemory[0].id);
+    } else {
+      await supabase
+        .from("memories_active")
+        .insert([
+          {
+            user_id: body.userId,
+            title: `Info su ${topicToClarify.topic}`,
+            content: memoryContent,
+            category: parsedClassification.category || "general",
+            importance: 9,
+            pinned: true,
+          },
+        ]);
+    }
   }
 }
 
