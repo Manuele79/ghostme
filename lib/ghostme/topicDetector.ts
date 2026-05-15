@@ -9,65 +9,18 @@ export type DetectedTopic = {
 
 const ignoredWords = new Set(
   [
-    "ciao",
-    "oggi",
-    "domani",
-    "ieri",
-    "come",
-    "cosa",
-    "sono",
-    "sei",
-    "siamo",
-    "ero",
-    "era",
-    "eri",
-    "stato",
-    "stata",
-    "stavo",
-    "sto",
-    "per",
-    "con",
-    "senza",
-    "dentro",
-    "fuori",
-    "dopo",
-    "prima",
-    "voglio",
-    "vorrei",
-    "devo",
-    "faccio",
-    "facendo",
-    "lavoro",
-    "lavorando",
-    "provando",
-    "appena",
-    "quando",
-    "dove",
-    "perché",
-    "quindi",
-    "test",
-    "memoria",
-    "conversazione",
-    "codici",
-    "codice",
-    "mare",
-    "casa",
-    "andare",
-    "vado",
-    "andiamo",
-    "uscire",
-    "uscito",
-    "uscita",
-    "usciti",
-    "uscite",
-    "sera",
-    "mattina",
-    "pomeriggio",
-    "notte",
-    "bene",
-    "male",
-    "grazie",
-    "ok",
+    "ciao", "oggi", "domani", "ieri", "come", "cosa", "sono", "sei", "siamo",
+    "ero", "era", "eri", "stato", "stata", "stavo", "sto", "per", "con",
+    "senza", "dentro", "fuori", "dopo", "prima", "voglio", "vorrei", "devo",
+    "faccio", "facendo", "lavoro", "lavorando", "provando", "appena",
+    "quando", "dove", "perché", "quindi", "test", "memoria",
+    "conversazione", "codici", "codice", "mare", "casa", "andare", "vado",
+    "andiamo", "uscire", "uscito", "uscita", "usciti", "uscite", "sera",
+    "mattina", "pomeriggio", "notte", "bene", "male", "grazie", "ok",
+    "home", "assistant", "san", "santo", "santa", "friulano", "friuli",
+    "collio", "cormons", "zona", "ristorante", "friggitoria", "fritto",
+    "frittura", "pesce", "moto", "vespa", "piaggio", "ghost", "ghostme",
+    "askdj",
   ].map((w) => w.toLowerCase())
 );
 
@@ -99,7 +52,7 @@ const knownTopicRules: {
     topic: "Moto / Piaggio",
     category: "passion",
     entity_type: "passion",
-    keywords: ["moto", "vespa", "piaggio", "ciao", "ciao piaggio"],
+    keywords: ["moto", "vespa", "piaggio", "ciao piaggio", "kawasaki"],
   },
   {
     topic: "Snowboard",
@@ -111,7 +64,7 @@ const knownTopicRules: {
     topic: "GhostMe",
     category: "project",
     entity_type: "project",
-    keywords: ["ghostme", "ghost"],
+    keywords: ["ghostme", "ghost me"],
   },
   {
     topic: "AskDJ",
@@ -134,12 +87,22 @@ function normalizeTopicName(name: string) {
   return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
 }
 
+function extractWords(message: string) {
+  return message
+    .split(/\s+/)
+    .map((word) =>
+      word
+        .replace(/[.,!?;:()[\]{}"]/g, "")
+        .trim()
+    )
+    .filter(Boolean);
+}
+
 function uniqueTopics(topics: DetectedTopic[]) {
   const map = new Map<string, DetectedTopic>();
 
   for (const item of topics) {
     const key = item.topic.toLowerCase();
-
     const existing = map.get(key);
 
     if (!existing || item.confidence > existing.confidence) {
@@ -152,33 +115,45 @@ function uniqueTopics(topics: DetectedTopic[]) {
   );
 }
 
-function extractWords(message: string) {
-  return message
-    .split(/\s+/)
-    .map((word) =>
-      word
-        .replace(/[.,!?;:()[\]{}"]/g, "")
-        .trim()
-    )
-    .filter(Boolean);
+function isInsideKnownTopicWord(word: string, detected: DetectedTopic[]) {
+  const lower = word.toLowerCase();
+
+  return detected.some((topic) =>
+    topic.topic.toLowerCase().split(/\s+|\/+/).includes(lower)
+  );
 }
 
-function isPossiblePersonOrEntityName(word: string, index: number) {
+function isPossiblePersonName(
+  word: string,
+  index: number,
+  words: string[],
+  detected: DetectedTopic[]
+) {
   if (word.length < 3) return false;
 
   const clean = word.trim();
   const lower = clean.toLowerCase();
 
   if (ignoredWords.has(lower)) return false;
+  if (isInsideKnownTopicWord(clean, detected)) return false;
 
-  // evita parole tutte maiuscole tipo URL, sigle o urla
+  // evita URL, sigle, urla
   if (/^[A-ZÀ-Ù]{3,}$/.test(clean)) return false;
 
-  // evita prima parola della frase se è troppo generica
-  if (index === 0 && ignoredWords.has(lower)) return false;
+  // evita prima parola della frase: spesso è maiuscola solo perché inizia la frase
+  if (index === 0) return false;
 
-  // Nome proprio semplice: Valentina, Enrico, Marco
-  return /^[A-ZÀ-Ù][a-zà-ù]+$/.test(clean);
+  // evita pezzi di nomi geografici tipo "San Giovanni"
+  const prev = words[index - 1]?.toLowerCase();
+  const next = words[index + 1]?.toLowerCase();
+
+  if (lower === "giovanni" && prev === "san") return false;
+  if (["san", "santo", "santa"].includes(lower)) return false;
+
+  // Nome proprio semplice: Valentina, Enrico, Ale, Marco
+  if (!/^[A-ZÀ-Ù][a-zà-ù]+$/.test(clean)) return false;
+
+  return true;
 }
 
 export function detectTopicsFromMessage(message: string): DetectedTopic[] {
@@ -196,7 +171,7 @@ export function detectTopicsFromMessage(message: string): DetectedTopic[] {
         category: rule.category,
         entity_type: rule.entity_type,
         needs_clarification: false,
-        confidence: 90,
+        confidence: 95,
         reason: `keyword:${matchedKeyword}`,
       });
     }
@@ -205,23 +180,17 @@ export function detectTopicsFromMessage(message: string): DetectedTopic[] {
   const words = extractWords(message);
 
   words.forEach((word, index) => {
-    if (!isPossiblePersonOrEntityName(word, index)) return;
+    if (!isPossiblePersonName(word, index, words, detected)) return;
 
     const cleanName = normalizeTopicName(word);
-
-    const alreadyKnown = detected.some(
-      (item) => item.topic.toLowerCase() === cleanName.toLowerCase()
-    );
-
-    if (alreadyKnown) return;
 
     detected.push({
       topic: cleanName,
       category: "unknown",
       entity_type: "unknown",
       needs_clarification: true,
-      confidence: index === 0 ? 45 : 65,
-      reason: "capitalized_name",
+      confidence: 70,
+      reason: "possible_person_name",
     });
   });
 
@@ -232,43 +201,14 @@ export function isPossibleEpisode(message: string) {
   const lower = normalizeText(message);
 
   const episodeSignals = [
-    "ieri",
-    "oggi",
-    "domani",
-    "stamattina",
-    "stasera",
-    "sono andato",
-    "sono andata",
-    "siamo andati",
-    "siamo andate",
-    "ho fatto",
-    "è successo",
-    "sono stato",
-    "sono stata",
-    "siamo stati",
-    "siamo state",
-    "ho incontrato",
-    "abbiamo incontrato",
-    "ho visto",
-    "abbiamo visto",
-    "ho parlato",
-    "abbiamo parlato",
-    "sono uscito",
-    "sono uscita",
-    "siamo usciti",
-    "siamo uscite",
-    "andremo",
-    "usciremo",
-    "vado a",
-    "andiamo a",
-    "litigato",
-    "discusso",
-    "mi ha detto",
-    "cena",
-    "pizza",
-    "aperitivo",
-    "birra",
-    "vino",
+    "ieri", "oggi", "domani", "stamattina", "stasera", "sono andato",
+    "sono andata", "siamo andati", "siamo andate", "ho fatto", "è successo",
+    "sono stato", "sono stata", "siamo stati", "siamo state", "ho incontrato",
+    "abbiamo incontrato", "ho visto", "abbiamo visto", "ho parlato",
+    "abbiamo parlato", "sono uscito", "sono uscita", "siamo usciti",
+    "siamo uscite", "andremo", "usciremo", "vado a", "andiamo a",
+    "litigato", "discusso", "mi ha detto", "cena", "pizza", "aperitivo",
+    "birra", "vino", "pranzo", "ristorante",
   ];
 
   return episodeSignals.some((signal) => lower.includes(signal));
@@ -278,49 +218,21 @@ export function detectEmotionalTone(message: string) {
   const lower = normalizeText(message);
 
   const positiveSignals = [
-    "felice",
-    "contento",
-    "contenta",
-    "bene",
-    "bello",
-    "bella",
-    "figo",
-    "figata",
-    "top",
-    "gasato",
-    "gasata",
-    "mi piace",
+    "felice", "contento", "contenta", "bene", "bello", "bella", "figo",
+    "figata", "top", "gasato", "gasata", "mi piace", "rilasso", "stacco",
   ];
 
   const negativeSignals = [
-    "stanco",
-    "stanca",
-    "stress",
-    "ansia",
-    "nervoso",
-    "nervosa",
-    "male",
-    "incazzato",
-    "incazzata",
-    "litigato",
-    "triste",
-    "preoccupato",
-    "preoccupata",
-    "paura",
+    "stanco", "stanca", "stress", "ansia", "nervoso", "nervosa", "male",
+    "incazzato", "incazzata", "litigato", "triste", "preoccupato",
+    "preoccupata", "paura",
   ];
 
-  const positive = positiveSignals.some((signal) =>
-    lower.includes(signal)
-  );
-
-  const negative = negativeSignals.some((signal) =>
-    lower.includes(signal)
-  );
+  const positive = positiveSignals.some((signal) => lower.includes(signal));
+  const negative = negativeSignals.some((signal) => lower.includes(signal));
 
   if (positive && !negative) return "positive";
   if (negative && !positive) return "negative";
-
-  // Se ci sono entrambi, meglio non inventarsi troppo.
   if (positive && negative) return "mixed";
 
   return "neutral";
@@ -330,18 +242,9 @@ export function shouldSaveActiveMemory(message: string) {
   const lower = normalizeText(message);
 
   const memorySignals = [
-    "voglio",
-    "vorrei",
-    "mi piace",
-    "mi interessa",
-    "sto creando",
-    "sto sviluppando",
-    "per me è importante",
-    "ricordati",
-    "non dimenticare",
-    "in futuro",
-    "da ora in poi",
-    "questa cosa è importante",
+    "voglio", "vorrei", "mi piace", "mi interessa", "sto creando",
+    "sto sviluppando", "per me è importante", "ricordati", "non dimenticare",
+    "in futuro", "da ora in poi", "questa cosa è importante",
   ];
 
   return memorySignals.some((signal) => lower.includes(signal));
