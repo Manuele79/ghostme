@@ -8,6 +8,7 @@ import {
   shouldSaveActiveMemory,
   detectMemoryCategory,
 } from "@/lib/ghostme/topicDetector";
+import { buildContextualMemory } from "@/lib/ghostme/retrieval";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -21,125 +22,64 @@ export async function POST(req: Request) {
     const traits = body.traits;
     const messages = body.messages || [];
 
-    let memoryContext = "";
+let memoryContext = "";
+let profileContext = "";
+let lifeTopicsContext = "";
+let episodicContext = "";
 
-    let loadedLifeTopics: any[] = [];
+let loadedLifeTopics: any[] = [];
 
-    if (body.userId) {
-    const { data: memories } = await supabase
-      .from("memories_active")
-      .select(`
-        content,
-        category,
-        importance,
-        pinned,
-        created_at
-      `)
+const detectedTopics = detectTopicsFromMessage(message);
+
+if (body.userId) {
+  console.log("BODY USER ID:", body.userId);
+
+  const { data: userProfile, error: userProfileError } =
+    await supabase
+      .from("user_profiles")
+      .select("*")
       .eq("user_id", body.userId)
-      .order("pinned", { ascending: false })
-      .order("importance", { ascending: false })
       .order("created_at", { ascending: false })
-      .limit(15);
+      .limit(1)
+      .maybeSingle();
 
-      if (memories?.length) {
-        memoryContext = memories
-        .map(
-          (m) =>
-            `${m.pinned ? "[PINNED]" : ""} [${m.category}] (${m.importance}) ${m.content}`
-        )
-          .join("\n");
-      }
-    }
+  console.log("USER PROFILE RAW:", userProfile);
+  console.log("USER PROFILE ERROR:", userProfileError);
 
-   let profileContext = "";
-   let lifeTopicsContext = "";
-   let episodicContext = "";
+  if (userProfile) {
+    profileContext = `
+Nome: ${userProfile.full_name || ""}
+Età: ${userProfile.age || ""}
+Genere: ${userProfile.gender || ""}
+Lavoro: ${userProfile.job || ""}
+Hobby: ${userProfile.hobbies || ""}
+Sport: ${userProfile.sports || ""}
+Relazione: ${userProfile.relationship_status || ""}
+Figli: ${userProfile.children_info || ""}
+Interessi: ${userProfile.interests || ""}
+Tipo di persona: ${userProfile.communication_style || ""}
+Bio: ${userProfile.short_bio || ""}
+`;
+  }
 
-      if (body.userId) {
+  const contextualData =
+    await buildContextualMemory({
+      userId: body.userId,
+      detectedTopics,
+    });
 
-   console.log("BODY USER ID:", body.userId);
+  memoryContext = contextualData.memoryContext;
+  episodicContext = contextualData.episodicContext;
+  lifeTopicsContext =
+    contextualData.lifeTopicsContext;
 
-        const { data: userProfile, error: userProfileError } = await supabase
-          .from("user_profiles")
-          .select("*")
-          .eq("user_id", body.userId)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
+  const { data: existingTopics } = await supabase
+    .from("life_topics")
+    .select("*")
+    .eq("user_id", body.userId);
 
-          console.log("USER PROFILE RAW:", userProfile);
-          console.log("USER PROFILE ERROR:", userProfileError);
-
-          if (userProfile) {
-
-          console.log("USER PROFILE:", userProfile);
-
-            profileContext = `
-          Nome: ${userProfile.full_name || ""}
-          Età: ${userProfile.age || ""}
-          Genere: ${userProfile.gender || ""}
-          Lavoro: ${userProfile.job || ""}
-          Hobby: ${userProfile.hobbies || ""}
-          Sport: ${userProfile.sports || ""}
-          Relazione: ${userProfile.relationship_status || ""}
-          Figli: ${userProfile.children_info || ""}
-          Interessi: ${userProfile.interests || ""}
-          Tipo di persona: ${userProfile.communication_style || ""}
-          Bio: ${userProfile.short_bio || ""}
-          `;
-          }
-      }
-
-      if (body.userId) {
-        const { data: lifeTopics } = await supabase
-          .from("life_topics")
-          .select(`
-            topic,
-            entity_type,
-            category,
-            description,
-            weight,
-            status
-          `)
-          .eq("user_id", body.userId)
-          .order("weight", { ascending: false })
-          .limit(20);
-
-        if (lifeTopics?.length) {
-          loadedLifeTopics = lifeTopics;
-
-          lifeTopicsContext = lifeTopics
-            .map(
-              (t) =>
-                `${t.topic} | ${t.entity_type} | ${t.category} | ${t.description || "nessuna descrizione"}`
-            )
-            .join("\n");
-        }
-      }
-
-      if (body.userId) {
-        const { data: episodicMemories } = await supabase
-          .from("episodic_memories")
-          .select(`
-            summary,
-            emotional_tone,
-            related_topics,
-            importance,
-            created_at
-          `)
-          .eq("user_id", body.userId)
-          .order("created_at", { ascending: false })
-          .limit(10);
-
-        if (episodicMemories?.length) {
-          episodicContext = episodicMemories
-            .map(
-              (e) =>
-                `${e.summary} | tono: ${e.emotional_tone} | topics: ${e.related_topics?.join(", ")}`
-            )
-            .join("\n");
-        }
-      }
+  loadedLifeTopics = existingTopics || [];
+}
 
     const systemPrompt = `
       Sei GhostMe.
@@ -251,7 +191,6 @@ export async function POST(req: Request) {
       const shouldSaveMemory = shouldSaveActiveMemory(message);
       const memoryCategory = detectMemoryCategory(message);
 
-      const detectedTopics = detectTopicsFromMessage(message);
 
       console.log("DETECTED TOPICS:", detectedTopics);
 
