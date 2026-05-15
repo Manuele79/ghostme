@@ -1,6 +1,13 @@
 import { OpenAI } from "openai";
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import {
+  detectTopicsFromMessage,
+  isPossibleEpisode,
+  detectEmotionalTone,
+  shouldSaveActiveMemory,
+  detectMemoryCategory,
+} from "@/lib/ghostme/topicDetector";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -236,273 +243,22 @@ export async function POST(req: Request) {
 
     let clarificationQuestion = "";
 
-    const lowerMessage = message.toLowerCase();
+      const lowerMessage = message.toLowerCase();
 
-    const possibleEpisode =
-      lowerMessage.includes("ieri") ||
-      lowerMessage.includes("oggi") ||
-      lowerMessage.includes("domani") ||
-      lowerMessage.includes("stamattina") ||
-      lowerMessage.includes("stasera") ||
-      lowerMessage.includes("sono andato") ||
-      lowerMessage.includes("siamo andati") ||
-      lowerMessage.includes("ho fatto") ||
-      lowerMessage.includes("uscire") ||
-      lowerMessage.includes("andare") ||
-      lowerMessage.includes("vado") ||
-      lowerMessage.includes("pizza") ||
-      lowerMessage.includes("cena") ||
-      lowerMessage.includes("aperitivo") ||
-      lowerMessage.includes("usciti") ||
-      lowerMessage.includes("pomeriggio") ||
-      lowerMessage.includes("andranno") ||
-      lowerMessage.includes("tornati") ||
-      lowerMessage.includes("tornato") ||
-      lowerMessage.includes("birra") ||
-      lowerMessage.includes("vino") ||
-      lowerMessage.includes("andata") ||
-      lowerMessage.includes("sono stato") ||
-      lowerMessage.includes("sono stata") ||
-      lowerMessage.includes("siamo stati") ||
-      lowerMessage.includes("siamo state") ||
-      lowerMessage.includes("visto") ||
-      lowerMessage.includes("parlato") ||
-      lowerMessage.includes("ho incontrato") ||
-      lowerMessage.includes("abbiamo incontrato") ||
-      lowerMessage.includes("sono uscito") ||
-      lowerMessage.includes("sono uscita") ||
-      lowerMessage.includes("siamo usciti") ||
-      lowerMessage.includes("siamo uscite") ||
-      lowerMessage.includes("vado a") ||
-      lowerMessage.includes("andiamo a") ||
-      lowerMessage.includes("usciremo") ||
-      lowerMessage.includes("andremo") ||
-      lowerMessage.includes("litigato") ||
-      lowerMessage.includes("discusso") ||
-      lowerMessage.includes("mi ha detto") ||
-      lowerMessage.includes("è successo");
+      const possibleEpisode = isPossibleEpisode(message);
+      const emotionalTone = detectEmotionalTone(message);
 
-      let emotionalTone = "neutral";
+      const shouldSaveMemory = shouldSaveActiveMemory(message);
+      const memoryCategory = detectMemoryCategory(message);
 
-      if (
-        lowerMessage.includes("felice") ||
-        lowerMessage.includes("contento") ||
-        lowerMessage.includes("bene") ||
-        lowerMessage.includes("bello") ||
-        lowerMessage.includes("figo") ||
-        lowerMessage.includes("top")
-      ) {
-        emotionalTone = "positive";
-      }
+      const detectedTopics = detectTopicsFromMessage(message);
 
-      if (
-        lowerMessage.includes("stanco") ||
-        lowerMessage.includes("stress") ||
-        lowerMessage.includes("ansia") ||
-        lowerMessage.includes("nervoso") ||
-        lowerMessage.includes("male") ||
-        lowerMessage.includes("incazzato") ||
-        lowerMessage.includes("litigato")
-      ) {
-        emotionalTone = "negative";
-      }
-
-    const shouldSaveMemory =
-      lowerMessage.includes("voglio") ||
-      lowerMessage.includes("vorrei") ||
-      lowerMessage.includes("mi piace") ||
-      lowerMessage.includes("mi interessa") ||
-      lowerMessage.includes("sto creando") ||
-      lowerMessage.includes("sto sviluppando") ||
-      lowerMessage.includes("per me è importante") ||
-      lowerMessage.includes("ricordati") ||
-      lowerMessage.includes("non dimenticare") ||
-      lowerMessage.includes("in futuro");
+      console.log("DETECTED TOPICS:", detectedTopics);
 
       console.log("MEMORY USER ID:", body.userId);
       console.log("SHOULD SAVE MEMORY:", shouldSaveMemory);    
       
-      let memoryCategory = "conversation";
 
-    if (
-      lowerMessage.includes("home assistant") ||
-      lowerMessage.includes("domotica") ||
-      lowerMessage.includes("cucina") ||
-      lowerMessage.includes("doccia") ||
-      lowerMessage.includes("cucinare") ||
-      lowerMessage.includes("casa")
-    ) {
-      memoryCategory = "home";
-    }
-
-    if (
-      lowerMessage.includes("lavoro") ||
-      lowerMessage.includes("azienda") ||
-      lowerMessage.includes("capo") ||
-      lowerMessage.includes("fabbrica") ||
-      lowerMessage.includes("collega")
-    ) {
-      memoryCategory = "work";
-    }
-
-    if (
-      lowerMessage.includes("famiglia") ||
-      lowerMessage.includes("figli") ||
-      lowerMessage.includes("moglie") ||
-      lowerMessage.includes("marito") ||
-      lowerMessage.includes("compagna") ||
-      lowerMessage.includes("compagno")
-    ) {
-      memoryCategory = "family";
-    }
-
-    if (
-      lowerMessage.includes("app") ||
-      lowerMessage.includes("progetto") ||
-      lowerMessage.includes("sviluppando") ||
-      lowerMessage.includes("codice") ||
-      lowerMessage.includes("automazioni") ||
-      lowerMessage.includes("pc") ||
-      lowerMessage.includes("ghostme")
-    ) {
-      memoryCategory = "project";
-    }
-
-    const detectedTopics: {
-      topic: string;
-      category: string;
-      entity_type: string;
-      needs_clarification?: boolean;
-    }[] = [];
-
-    if (
-      lowerMessage.includes("home assistant") ||
-      lowerMessage.includes("domotica")
-    ) {
-      detectedTopics.push({
-        topic: "Home Assistant",
-        category: "home",
-        entity_type: "system",
-      });
-    }
-
-    if (
-      lowerMessage.includes("palestra") ||
-      lowerMessage.includes("allenamento")
-    ) {
-      detectedTopics.push({
-        topic: "Palestra",
-        category: "health",
-        entity_type: "habit",
-      });
-    }
-
-    if (
-      lowerMessage.includes("lavoro") ||
-      lowerMessage.includes("azienda")
-    ) {
-      detectedTopics.push({
-        topic: "Lavoro",
-        category: "work",
-        entity_type: "work",
-      });
-    }
-
-    if (
-      lowerMessage.includes("moto") ||
-      lowerMessage.includes("vespa") ||
-      lowerMessage.includes("piaggio")
-    ) {
-      detectedTopics.push({
-        topic: "Moto / Piaggio",
-        category: "passion",
-        entity_type: "passion",
-      });
-    }
-
-    if (
-      lowerMessage.includes("ghostme") ||
-      lowerMessage.includes("ghost")
-    ) {
-      detectedTopics.push({
-        topic: "GhostMe",
-        category: "project",
-        entity_type: "project",
-      });
-    }
-
-    const words = message
-      .split(/\s+/)
-      .map((word: string) =>
-        word.replace(/[.,!?;:()"]/g, "").trim()
-      )
-      .filter(Boolean);
-
-    const ignoredWords = [
-      "ciao",
-      "oggi",
-      "domani",
-      "ieri",
-      "come",
-      "cosa",
-      "sono",
-      "sei",
-      "siamo",
-      "ero",
-      "era",
-      "eri",
-      "stato",
-      "stata",
-      "stavo",
-      "sto",
-      "per",
-      "con",
-      "senza",
-      "dentro",
-      "fuori",
-      "dopo",
-      "prima",
-      "voglio",
-      "vorrei",
-      "devo",
-      "faccio",
-      "facendo",
-      "lavoro",
-      "lavorando",
-      "provando",
-      "appena",
-      "quando",
-      "dove",
-      "perché",
-      "quindi",
-      "ghostme",
-      "test",
-      "memoria",
-      "conversazione",
-      "codici",
-      "mare",
-      "casa"
-    ];
-
-    const possibleNames = words.filter((word: string) => {
-      if (word.length < 3) return false;
-      if (ignoredWords.includes(word.toLowerCase())) return false;
-
-      return /^[A-ZÀ-Ù][a-zà-ù]+$/.test(word);
-    });
-
-    possibleNames.forEach((name: string) => {
-      detectedTopics.push({
-        topic: name.charAt(0).toUpperCase() + name.slice(1).toLowerCase(),
-        category: "unknown",
-        entity_type: "unknown",
-        needs_clarification: true,
-      });
-    });
-
-    console.log("WORDS:", words);
-console.log("POSSIBLE NAMES:", possibleNames);
-console.log("DETECTED TOPICS:", detectedTopics);
 
     if (shouldSaveMemory && body.userId) {
 
