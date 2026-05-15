@@ -9,6 +9,7 @@ import {
   detectMemoryCategory,
 } from "@/lib/ghostme/topicDetector";
 import { buildContextualMemory } from "@/lib/ghostme/retrieval";
+import { generateDailyConversationSummary } from "@/lib/ghostme/conversationSummary";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -601,6 +602,14 @@ console.log("SAVING LIFE TOPIC:", item);
           },
         ]);
     }
+  }
+}
+
+if (body.userId) {
+  try {
+    await generateDailyConversationSummary(body.userId);
+  } catch (err) {
+    console.log("DAILY SUMMARY ERROR:", err);
   }
 }
 
