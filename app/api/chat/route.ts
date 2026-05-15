@@ -254,7 +254,7 @@ export async function POST(req: Request) {
       lowerMessage.includes("cena") ||
       lowerMessage.includes("aperitivo") ||
       lowerMessage.includes("usciti") ||
-
+      lowerMessage.includes("pomeriggio") ||
       lowerMessage.includes("andranno") ||
       lowerMessage.includes("tornati") ||
       lowerMessage.includes("tornato") ||
@@ -327,6 +327,9 @@ export async function POST(req: Request) {
     if (
       lowerMessage.includes("home assistant") ||
       lowerMessage.includes("domotica") ||
+      lowerMessage.includes("cucina") ||
+      lowerMessage.includes("doccia") ||
+      lowerMessage.includes("cucinare") ||
       lowerMessage.includes("casa")
     ) {
       memoryCategory = "home";
@@ -335,6 +338,8 @@ export async function POST(req: Request) {
     if (
       lowerMessage.includes("lavoro") ||
       lowerMessage.includes("azienda") ||
+      lowerMessage.includes("capo") ||
+      lowerMessage.includes("fabbrica") ||
       lowerMessage.includes("collega")
     ) {
       memoryCategory = "work";
@@ -355,6 +360,9 @@ export async function POST(req: Request) {
       lowerMessage.includes("app") ||
       lowerMessage.includes("progetto") ||
       lowerMessage.includes("sviluppando") ||
+      lowerMessage.includes("codice") ||
+      lowerMessage.includes("automazioni") ||
+      lowerMessage.includes("pc") ||
       lowerMessage.includes("ghostme")
     ) {
       memoryCategory = "project";
