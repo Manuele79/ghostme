@@ -1,5 +1,5 @@
 import { OpenAI } from "openai";
-import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -25,7 +25,7 @@ export async function generateDailyConversationSummary(userId: string) {
 
   const { start, end } = getTodayRange();
 
-  const { data: messages, error } = await supabase
+  const { data: messages, error } = await supabaseAdmin
     .from("chat_messages")
     .select(`
       role,
@@ -118,7 +118,7 @@ Rispondi SOLO con JSON valido:
     return;
   }
 
-  const { data: existingSummary } = await supabase
+  const { data: existingSummary } = await supabaseAdmin
     .from("conversation_summaries")
     .select("id")
     .eq("user_id", userId)
@@ -128,7 +128,7 @@ Rispondi SOLO con JSON valido:
     .maybeSingle();
 
   if (existingSummary) {
-    const { data: updated, error: updateError } = await supabase
+    const { data: updated, error: updateError } = await supabaseAdmin
       .from("conversation_summaries")
       .update({
         title: parsed.title || "Riassunto giornata",
@@ -149,7 +149,7 @@ Rispondi SOLO con JSON valido:
     return updated;
   }
 
-  const { data: inserted, error: insertError } = await supabase
+  const { data: inserted, error: insertError } = await supabaseAdmin
     .from("conversation_summaries")
     .insert([
       {
