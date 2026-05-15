@@ -156,9 +156,36 @@ export async function buildContextualMemory({
     )
     .join("\n");
 
+    const { data: summaries } = await supabase
+    .from("conversation_summaries")
+    .select(`
+        title,
+        summary,
+        topics,
+        emotional_tone,
+        period_start,
+        period_end,
+        updated_at
+    `)
+    .eq("user_id", userId)
+    .order("updated_at", { ascending: false })
+    .limit(5);
+
+    const summaryContext =
+    summaries
+        ?.map(
+        (s) =>
+            `${s.title || "Riassunto"} | tono: ${s.emotional_tone} | topics: ${
+            s.topics?.join(", ") || ""
+            } | ${s.summary}`
+        )
+        .join("\n") || "";
+
+
   return {
     memoryContext,
     episodicContext,
     lifeTopicsContext,
+    summaryContext,
   };
 }
