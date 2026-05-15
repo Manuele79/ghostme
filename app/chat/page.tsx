@@ -166,8 +166,10 @@ export default function ChatPage() {
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (user) {
-      await supabase.from("chat_messages").insert([
+  if (user) {
+    const { error: insertError } = await supabase
+      .from("chat_messages")
+      .insert([
         {
           user_id: user.id,
           role: "user",
@@ -179,7 +181,21 @@ export default function ChatPage() {
           content: assistantReply,
         },
       ]);
+
+    console.log("CHAT INSERT ERROR:", insertError);
+
+    if (!insertError) {
+      await fetch("/api/conversation-summary", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: user.id,
+        }),
+      });
     }
+  }
 
   } catch (err) {
     console.log(err);
