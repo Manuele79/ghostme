@@ -36,6 +36,9 @@ export async function generateDailyConversationSummary(userId: string) {
         .order("message_order", { ascending: false })
         .limit(30);
 
+        console.log("DAILY SUMMARY QUERY ERROR:", error);
+console.log("DAILY SUMMARY MESSAGES:", messages?.length, messages);
+
   if (error || !messages || messages.length < 6) {
     console.log("DAILY SUMMARY: non abbastanza messaggi oggi", messages?.length || 0);
     return;
