@@ -32,17 +32,18 @@ export async function generateDailyConversationSummary(userId: string) {
       content,
       created_at
     `)
-    .eq("user_id", userId)
-    .gte("created_at", start)
-    .lte("created_at", end)
-    .order("message_order", { ascending: true });
+        .eq("user_id", userId)
+        .order("message_order", { ascending: false })
+        .limit(30);
 
   if (error || !messages || messages.length < 6) {
     console.log("DAILY SUMMARY: non abbastanza messaggi oggi", messages?.length || 0);
     return;
   }
 
-  const conversationText = messages
+const orderedMessages = [...messages].reverse();
+
+  const conversationText = orderedMessages
     .map(
       (m) =>
         `${m.role === "user" ? "Utente" : "GhostMe"}: ${m.content}`
