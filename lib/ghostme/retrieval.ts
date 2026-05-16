@@ -25,6 +25,29 @@ export async function buildContextualMemory({
     t.topic.toLowerCase()
   );
 
+  const { data: linkedTopics } = await supabase
+  .from("topic_links")
+  .select("*")
+  .eq("user_id", userId)
+  .or(
+    topicNames
+      .map(
+        (t) =>
+          `source_topic.ilike.%${t}%,target_topic.ilike.%${t}%`
+      )
+      .join(",")
+  )
+  .order("weight", { ascending: false })
+  .limit(20);
+
+const linkedTopicsContext =
+  linkedTopics
+    ?.map(
+      (l) =>
+        `${l.source_topic} ↔ ${l.target_topic} (${l.weight})`
+    )
+    .join("\n") || "";
+
   // =========================================================
   // LIFE TOPICS
   // =========================================================
@@ -187,5 +210,6 @@ export async function buildContextualMemory({
     episodicContext,
     lifeTopicsContext,
     summaryContext,
+    linkedTopicsContext,
   };
 }
