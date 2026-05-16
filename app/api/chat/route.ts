@@ -29,6 +29,7 @@ let profileContext = "";
 let lifeTopicsContext = "";
 let episodicContext = "";
 let summaryContext = "";
+let linkedTopicsContext = "";
 
 let loadedLifeTopics: any[] = [];
 
@@ -75,6 +76,7 @@ Bio: ${userProfile.short_bio || ""}
   episodicContext = contextualData.episodicContext;
   lifeTopicsContext = contextualData.lifeTopicsContext;
   summaryContext = contextualData.summaryContext || "";
+  linkedTopicsContext = contextualData.linkedTopicsContext || "";
 
   const { data: existingTopics } = await supabase
     .from("life_topics")
@@ -120,6 +122,9 @@ Bio: ${userProfile.short_bio || ""}
 
       Topic conosciuti:
       ${lifeTopicsContext}
+
+      Relazioni tra topic:
+      ${linkedTopicsContext}
 
       Episodi recenti:
       ${episodicContext}
