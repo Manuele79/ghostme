@@ -168,55 +168,36 @@ export default function ChatPage() {
     });
   }, [messages, historyOpen]);
 
-  async function loadBrainData(userId: string) {
-    const [memoriesRes, timelineRes, goalsRes, mentalRes, actionsRes] =
-      await Promise.all([
-        supabase
-          .from("memories_active")
-          .select("*")
-          .eq("user_id", userId)
-          .order("pinned", { ascending: false })
-          .order("importance", { ascending: false })
-          .limit(30),
+async function loadBrainData(userId: string) {
+  const res = await fetch("/api/ghostme/brain", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ userId }),
+  });
 
-        supabase
-          .from("autobiographical_timeline")
-          .select("*")
-          .eq("user_id", userId)
-          .order("event_date", { ascending: false })
-          .limit(30),
+  const data = await res.json();
 
-        supabase
-          .from("goals_desires")
-          .select("*")
-          .eq("user_id", userId)
-          .order("importance", { ascending: false })
-          .limit(30),
+  setBrainData({
+    memories: data.memories || [],
+    timeline: data.timeline || [],
+    goals: data.goals || [],
+    mentalState: data.mentalState || null,
+    actions: data.actions || [],
+  });
 
-        supabase
-          .from("mental_states")
-          .select("*")
-          .eq("user_id", userId)
-          .order("updated_at", { ascending: false })
-          .limit(1)
-          .maybeSingle(),
-
-        supabase
-          .from("action_intents")
-          .select("*")
-          .eq("user_id", userId)
-          .order("priority", { ascending: false })
-          .limit(30),
-      ]);
-
-    setBrainData({
-      memories: memoriesRes.data || [],
-      timeline: timelineRes.data || [],
-      goals: goalsRes.data || [],
-      mentalState: mentalRes.data || null,
-      actions: actionsRes.data || [],
-    });
+  if (data.profile) {
+    setUserProfile(data.profile);
+    setUserName(data.profile.full_name || "Tu");
   }
+
+  if (data.traits) {
+    setTraits(data.traits);
+    setGhostMessage(buildGhostMeMessage(data.traits));
+    setSummary(buildPersonalitySummary(data.traits));
+  }
+}
 
   function cycleMode() {
     const next: Mode =
