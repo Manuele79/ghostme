@@ -120,20 +120,32 @@ Bio: ${userProfile.short_bio || ""}
       Profilo utente:
       ${profileContext}
 
-      Topic conosciuti:
-      ${lifeTopicsContext}
+      CONTESTO MENTALE ATTIVO
 
-      Relazioni tra topic:
-      ${linkedTopicsContext}
+      Topic direttamente collegati al messaggio:
+      ${lifeTopicsContext || "nessun topic diretto rilevante"}
 
-      Episodi recenti:
-      ${episodicContext}
+      Relazioni mentali tra topic:
+      ${linkedTopicsContext || "nessuna relazione rilevante"}
+
+      Episodi collegati:
+      ${episodicContext || "nessun episodio collegato"}
 
       Archivio conversazioni recenti:
-      ${summaryContext}
+      ${summaryContext || "nessun riassunto recente"}
 
-      Memorie conosciute:
-      ${memoryContext}
+      Memorie importanti:
+      ${memoryContext || "nessuna memoria attiva collegata"}
+
+      Regola fondamentale:
+      Se esistono relazioni mentali tra topic, usale per fare collegamenti naturali.
+      Non elencarle.
+      Non dire "vedo una relazione".
+      Usale come farebbe una persona che ricorda il contesto.
+
+      Esempio:
+      Se l'utente parla di GhostMe e tra le relazioni c'è AskDJ ↔ GhostMe,
+      puoi collegare GhostMe anche ad AskDJ se ha senso nella risposta.
 
       Quando l'utente chiede informazioni personali, devi rispondere usando ESATTAMENTE i campi del Profilo utente se esistono.
       - usa SEMPRE prima il Profilo utente
