@@ -430,7 +430,9 @@ async function loadBrainData(userId: string) {
 
     const userText = input.trim();
 
-    setVoiceState("thinking");
+    if (mode !== "chat-chat") {
+      setVoiceState("thinking");
+    }
     setLoadingChat(true);
     setInput("");
 
