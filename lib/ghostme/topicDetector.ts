@@ -123,6 +123,19 @@ function isInsideKnownTopicWord(word: string, detected: DetectedTopic[]) {
   );
 }
 
+const knownPlaces = new Set(
+  [
+    "tokyo",
+    "giappone",
+    "cividale",
+    "zoncolan",
+    "pramollo",
+    "austria",
+    "badia",
+    "collio",
+  ]
+);
+
 function isPossiblePersonName(
   word: string,
   index: number,
@@ -178,6 +191,23 @@ export function detectTopicsFromMessage(message: string): DetectedTopic[] {
   }
 
   const words = extractWords(message);
+
+words.forEach((word) => {
+  const clean = word.trim();
+  const lower = clean.toLowerCase();
+
+  if (!knownPlaces.has(lower)) return;
+
+  detected.push({
+    topic: normalizeTopicName(clean),
+    category: "place",
+    entity_type: "place",
+    needs_clarification: false,
+    confidence: 90,
+    reason: "known_place",
+  });
+});
+
 
   words.forEach((word, index) => {
     if (!isPossiblePersonName(word, index, words, detected)) return;
