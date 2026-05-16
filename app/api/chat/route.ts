@@ -300,9 +300,22 @@ console.log("SAVING LIFE TOPIC:", item);
         if (existingTopic) {
           const nextMentionCount =
             (existingTopic.mention_count || 0) + 1;
+          const confidenceBoost =
+            item.confidence >= 90 ? 2 : 1;
+
+          const relationBoost =
+            detectedTopics.length >= 2 ? 1 : 0;
 
           const nextWeight = Math.min(
-            (existingTopic.weight || 1) + 1,
+            (existingTopic.weight || 1) +
+              confidenceBoost,
+            10
+          );
+
+          const nextRelationshipStrength = Math.min(
+            (existingTopic.relationship_strength || 1) +
+              confidenceBoost +
+              relationBoost,
             10
           );
 
@@ -322,6 +335,11 @@ console.log("SAVING LIFE TOPIC:", item);
             .update({
               weight: nextWeight,
               mention_count: nextMentionCount,
+              relationship_strength: nextRelationshipStrength,
+              category:
+                existingTopic.category === "unknown"
+                  ? item.category
+                  : existingTopic.category,
               status: shouldAskClarification
                 ? "needs_clarification"
                 : "active",
@@ -330,7 +348,9 @@ console.log("SAVING LIFE TOPIC:", item);
                 ? true
                 : existingTopic.clarification_asked,
               entity_type:
-                existingTopic.entity_type || item.entity_type,
+                existingTopic.entity_type === "unknown"
+                  ? item.entity_type
+                  : existingTopic.entity_type,
               last_mentioned_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
             })
