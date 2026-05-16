@@ -48,6 +48,16 @@ const linkedTopicsContext =
     )
     .join("\n") || "";
 
+
+const relatedTopicNames = Array.from(
+  new Set(
+    linkedTopics?.flatMap((l) => [
+      l.source_topic,
+      l.target_topic,
+    ]) || []
+  )
+).filter(Boolean);
+
   // =========================================================
   // LIFE TOPICS
   // =========================================================
@@ -157,16 +167,21 @@ const linkedTopicsContext =
     .order("created_at", { ascending: false })
     .limit(100);
 
-  const relevantEpisodes =
+    const relevantEpisodes =
     allEpisodes?.filter((episode) => {
-      const related =
+        const related =
         episode.related_topics?.map((t: string) =>
-          t.toLowerCase()
+            t.toLowerCase()
         ) || [];
 
-      return topicNames.some((topic) =>
-        related.includes(topic)
-      );
+        return (
+        topicNames.some((topic) =>
+            related.includes(topic)
+        ) ||
+        relatedTopicNames.some((topic) =>
+            related.includes(topic.toLowerCase())
+        )
+        );
     }) || [];
 
   const episodicContext = relevantEpisodes
