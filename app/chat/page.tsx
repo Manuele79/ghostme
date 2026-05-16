@@ -15,6 +15,12 @@ type ChatMessage = {
 
 type Mode = "chat-chat" | "voce-chat" | "voce-voce";
 
+type VoiceState =
+  | "idle"
+  | "listening"
+  | "thinking"
+  | "speaking";
+
 type BrainData = {
   memories: any[];
   timeline: any[];
@@ -46,6 +52,12 @@ export default function ChatPage() {
   const [loadingChat, setLoadingChat] = useState(false);
 
   const [mode, setMode] = useState<Mode>("chat-chat");
+  const [voiceState, setVoiceState] =
+  useState<VoiceState>("idle");
+
+  const recognitionRef = useRef<any>(null);
+  const silenceTimeoutRef = useRef<any>(null);
+  const speakingRef = useRef(false);
   const [memoryOpen, setMemoryOpen] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -213,18 +225,43 @@ async function loadBrainData(userId: string) {
 
   function speak(text: string) {
     if (typeof window === "undefined") return;
+
     if (!("speechSynthesis" in window)) return;
 
+    setVoiceState("speaking");
+
     const utterance = new SpeechSynthesisUtterance(text);
+
     utterance.lang = "it-IT";
     utterance.rate = 1;
     utterance.pitch = 1;
+
+    speakingRef.current = true;
+
+    utterance.onend = () => {
+      speakingRef.current = false;
+
+      setVoiceState("idle");
+
+      if (mode === "voce-voce") {
+        setTimeout(() => {
+          startVoiceInput();
+        }, 600);
+      }
+    };
+
+    utterance.onerror = () => {
+      speakingRef.current = false;
+      setVoiceState("idle");
+    };
 
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
   }
 
   function startVoiceInput() {
+    if (speakingRef.current) return;
+
     const SpeechRecognition =
       typeof window !== "undefined"
         ? (window as any).SpeechRecognition ||
@@ -232,22 +269,160 @@ async function loadBrainData(userId: string) {
         : null;
 
     if (!SpeechRecognition) {
-      alert("Il riconoscimento vocale non è supportato da questo browser.");
+      alert("Riconoscimento vocale non supportato.");
       return;
     }
 
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch {}
+    }
+
     const recognition = new SpeechRecognition();
+
+    recognitionRef.current = recognition;
+
     recognition.lang = "it-IT";
-    recognition.interimResults = false;
+    recognition.continuous = true;
+    recognition.interimResults = true;
     recognition.maxAlternatives = 1;
 
+    let finalTranscript = "";
+
+    setVoiceState("listening");
+
     recognition.onresult = (event: any) => {
-      const transcript = event.results?.[0]?.[0]?.transcript || "";
-      setInput(transcript);
+      clearTimeout(silenceTimeoutRef.current);
+
+      let interim = "";
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript + " ";
+        } else {
+          interim += transcript;
+        }
+      }
+
+      const combined = (finalTranscript + interim).trim();
+
+      setInput(combined);
+
+      silenceTimeoutRef.current = setTimeout(async () => {
+        const text = combined.trim();
+
+        if (!text) return;
+
+        recognition.stop();
+
+        setVoiceState("thinking");
+
+        setInput(text);
+
+        setTimeout(async () => {
+          await sendVoiceMessage(text);
+        }, 300);
+      }, 1400);
+    };
+
+    recognition.onerror = () => {
+      setVoiceState("idle");
+    };
+
+    recognition.onend = () => {
+      if (voiceState === "listening") {
+        setVoiceState("idle");
+      }
     };
 
     recognition.start();
   }
+
+  async function sendVoiceMessage(voiceText: string) {
+  if (!voiceText.trim()) return;
+  if (!traits) return;
+
+  setLoadingChat(true);
+
+  setMessages((prev) => [
+    ...prev,
+    {
+      role: "user",
+      content: voiceText,
+    },
+  ]);
+
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        message: voiceText,
+        traits,
+        messages,
+        userId: traits.user_id,
+      }),
+    });
+
+    const data = await res.json();
+
+    const assistantReply = data.reply || "Nessuna risposta.";
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "assistant",
+        content: assistantReply,
+      },
+    ]);
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (user) {
+      await supabase
+        .from("chat_messages")
+        .insert([
+          {
+            user_id: user.id,
+            role: "user",
+            content: voiceText,
+          },
+          {
+            user_id: user.id,
+            role: "assistant",
+            content: assistantReply,
+          },
+        ]);
+
+      await fetch("/api/conversation-summary", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: user.id,
+        }),
+      });
+
+      await loadBrainData(user.id);
+    }
+
+    speak(assistantReply);
+  } catch (err) {
+    console.log(err);
+
+    setVoiceState("idle");
+  }
+
+  setLoadingChat(false);
+}
 
   async function sendMessage() {
     if (!input.trim()) return;
@@ -255,6 +430,7 @@ async function loadBrainData(userId: string) {
 
     const userText = input.trim();
 
+    setVoiceState("thinking");
     setLoadingChat(true);
     setInput("");
 
@@ -341,6 +517,10 @@ async function loadBrainData(userId: string) {
         },
       ]);
     }
+
+    if (mode !== "voce-voce") {
+    setVoiceState("idle");
+  }
 
     setLoadingChat(false);
   }
