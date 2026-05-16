@@ -9,6 +9,7 @@ import {
   detectMemoryCategory,
 } from "@/lib/ghostme/topicDetector";
 import { buildContextualMemory } from "@/lib/ghostme/retrieval";
+import { saveTopicLinks } from "@/lib/ghostme/topicLinks";
 
 
 const openai = new OpenAI({
@@ -331,6 +332,13 @@ console.log("SAVING LIFE TOPIC:", item);
         }
       }
     }
+
+      if (body.userId && detectedTopics.length >= 2) {
+        await saveTopicLinks({
+          userId: body.userId,
+          topics: detectedTopics,
+        });
+      }
 
       if (clarificationQuestion) {
         reply = `${reply}${clarificationQuestion}`;
