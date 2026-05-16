@@ -280,6 +280,42 @@ export function shouldSaveActiveMemory(message: string) {
   return memorySignals.some((signal) => lower.includes(signal));
 }
 
+export function detectImportanceLevel(message: string) {
+  const lower = normalizeText(message);
+
+  const highSignals = [
+    "importantissimo",
+    "molto importante",
+    "fondamentale",
+    "ci tengo",
+    "amo",
+    "adoro",
+    "mi rappresenta",
+    "progetto principale",
+    "voglio davvero",
+    "non voglio perderlo",
+    "fa parte di me",
+  ];
+
+  const mediumSignals = [
+    "mi piace",
+    "interessante",
+    "mi interessa",
+    "vorrei",
+    "sto pensando",
+  ];
+
+  if (highSignals.some((s) => lower.includes(s))) {
+    return 3;
+  }
+
+  if (mediumSignals.some((s) => lower.includes(s))) {
+    return 2;
+  }
+
+  return 1;
+}
+
 export function detectMemoryCategory(message: string) {
   const lower = normalizeText(message);
 
