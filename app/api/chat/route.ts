@@ -1,6 +1,7 @@
 import { OpenAI } from "openai";
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 import {
   detectTopicsFromMessage,
@@ -17,6 +18,26 @@ import { extractEntitiesWithAI } from "@/lib/ghostme/entityExtractor";
 import { applyMemoryDecay } from "@/lib/ghostme/memoryDecay";
 import { detectAndSaveContradictions } from "@/lib/ghostme/contradictions";
 import { updateMentalState } from "@/lib/ghostme/mentalState";
+
+import {
+  getGoalsDesiresContext,
+  detectAndSaveGoalsDesires,
+} from "@/lib/ghostme/goalsDesires";
+
+import {
+  getTimelineContext,
+  detectAndSaveTimelineEvent,
+} from "@/lib/ghostme/timeline";
+
+import {
+  getDynamicSelfProfileContext,
+  updateDynamicSelfProfile,
+} from "@/lib/ghostme/dynamicSelfProfile";
+
+import {
+  getActionIntentContext,
+  detectAndSaveActionIntent,
+} from "@/lib/ghostme/actionLayer";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -73,6 +94,33 @@ Bio: ${userProfile.short_bio || ""}
 `;
 }
 
+async function getMentalStateContext(userId: string) {
+  if (!userId) return "";
+
+  const { data } = await supabaseAdmin
+    .from("mental_states")
+    .select("*")
+    .eq("user_id", userId)
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!data) return "";
+
+  return `
+stress: ${data.stress ?? 0}
+entusiasmo: ${data.entusiasmo ?? 0}
+stanchezza: ${data.stanchezza ?? 0}
+controllo: ${data.controllo ?? 0}
+nostalgia: ${data.nostalgia ?? 0}
+frustrazione: ${data.frustrazione ?? 0}
+focus: ${data.focus ?? 0}
+socialita: ${data.socialita ?? 0}
+note: ${data.notes || ""}
+ultimo trigger: ${data.last_trigger || ""}
+`;
+}
+
 function buildSystemPrompt({
   traits,
   profileContext,
@@ -81,6 +129,11 @@ function buildSystemPrompt({
   episodicContext,
   summaryContext,
   memoryContext,
+  mentalStateContext,
+  goalsContext,
+  timelineContext,
+  dynamicSelfProfileContext,
+  actionIntentContext,
 }: {
   traits: any;
   profileContext: string;
@@ -89,11 +142,18 @@ function buildSystemPrompt({
   episodicContext: string;
   summaryContext: string;
   memoryContext: string;
+  mentalStateContext: string;
+  goalsContext: string;
+  timelineContext: string;
+  dynamicSelfProfileContext: string;
+  actionIntentContext: string;
 }) {
   return `
 Sei GhostMe.
 
-Sei la simulazione mentale dell'utente.
+Sei la simulazione mentale progressiva dell'utente.
+Non sei un normale assistente.
+Sei una mente esterna che ricorda, collega, pesa e interpreta il contesto personale.
 
 Parli come una persona reale.
 NON parlare come un assistente AI.
@@ -116,13 +176,19 @@ Puoi essere:
 - freddo
 - ironico
 
-in base ai traits.
+in base ai traits e allo stato mentale recente.
 
 Traits utente:
 ${JSON.stringify(traits, null, 2)}
 
 Profilo utente:
 ${profileContext}
+
+PROFILO DINAMICO DELL'UTENTE:
+${dynamicSelfProfileContext || "nessun profilo dinamico consolidato"}
+
+STATO MENTALE RECENTE:
+${mentalStateContext || "nessuno stato mentale recente rilevante"}
 
 CONTESTO MENTALE ATTIVO
 
@@ -135,19 +201,33 @@ ${linkedTopicsContext || "nessuna relazione rilevante"}
 Episodi collegati:
 ${episodicContext || "nessun episodio collegato"}
 
+Timeline autobiografica:
+${timelineContext || "nessun evento autobiografico rilevante"}
+
 Archivio conversazioni recenti:
 ${summaryContext || "nessun riassunto recente"}
 
 Memorie importanti:
 ${memoryContext || "nessuna memoria attiva collegata"}
 
-Regola fondamentale:
-Se esistono relazioni mentali tra topic, usale per fare collegamenti naturali.
-Non elencarle.
-Non dire "vedo una relazione".
-Usale come farebbe una persona che ricorda il contesto.
+Obiettivi e desideri attivi:
+${goalsContext || "nessun obiettivo attivo rilevante"}
 
-Quando l'utente chiede informazioni personali, devi rispondere usando ESATTAMENTE i campi del Profilo utente se esistono.
+Azioni future rilevate:
+${actionIntentContext || "nessuna azione futura rilevante"}
+
+Regole cognitive:
+- Usa le relazioni tra topic per fare collegamenti naturali.
+- Non elencare le relazioni.
+- Non dire "vedo una relazione".
+- Usale come farebbe una persona che ricorda il contesto.
+- Se esiste uno stato mentale recente, adatta il tono: più asciutto se stress/stanchezza sono alti, più energico se entusiasmo/focus sono alti.
+- Non nominare numeri dello stato mentale.
+- Se emergono obiettivi o desideri, tienili presenti come direzione personale dell'utente.
+- Se ci sono azioni future rilevate, puoi accennarle con naturalezza, ma NON eseguire nulla.
+- Se l'utente chiede informazioni personali, usa prima il Profilo utente e poi il profilo dinamico.
+
+Quando l'utente chiede dati personali:
 - usa SEMPRE prima il Profilo utente
 - NON riassumere se il dato esiste già
 - NON reinterpretare
@@ -596,6 +676,11 @@ export async function POST(req: Request) {
     let episodicContext = "";
     let summaryContext = "";
     let linkedTopicsContext = "";
+    let mentalStateContext = "";
+    let goalsContext = "";
+    let timelineContext = "";
+    let dynamicSelfProfileContext = "";
+    let actionIntentContext = "";
     let loadedLifeTopics: any[] = [];
 
     if (userId) {
@@ -644,6 +729,12 @@ export async function POST(req: Request) {
       summaryContext = contextualData.summaryContext || "";
       linkedTopicsContext = contextualData.linkedTopicsContext || "";
 
+      mentalStateContext = await getMentalStateContext(userId);
+      goalsContext = await getGoalsDesiresContext(userId);
+      timelineContext = await getTimelineContext(userId);
+      dynamicSelfProfileContext = await getDynamicSelfProfileContext(userId);
+      actionIntentContext = await getActionIntentContext(userId);
+
       const { data: existingTopics } = await supabase
         .from("life_topics")
         .select("*")
@@ -660,6 +751,11 @@ export async function POST(req: Request) {
       episodicContext,
       summaryContext,
       memoryContext,
+      mentalStateContext,
+      goalsContext,
+      timelineContext,
+      dynamicSelfProfileContext,
+      actionIntentContext,
     });
 
     const completion = await openai.chat.completions.create({
@@ -752,6 +848,35 @@ export async function POST(req: Request) {
         });
       } catch (err) {
         log("MENTAL STATE ERROR:", err);
+      }
+    }
+
+    if (userId) {
+      try {
+        await detectAndSaveGoalsDesires({
+          userId,
+          message,
+          detectedTopics,
+        });
+
+        await detectAndSaveTimelineEvent({
+          userId,
+          message,
+          detectedTopics,
+        });
+
+        await updateDynamicSelfProfile({
+          userId,
+          message,
+        });
+
+        await detectAndSaveActionIntent({
+          userId,
+          message,
+          detectedTopics,
+        });
+      } catch (err) {
+        log("COGNITIVE PACKAGE ERROR:", err);
       }
     }
 
