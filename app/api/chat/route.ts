@@ -10,6 +10,7 @@ import {
 } from "@/lib/ghostme/topicDetector";
 import { buildContextualMemory } from "@/lib/ghostme/retrieval";
 import { saveTopicLinks } from "@/lib/ghostme/topicLinks";
+import { extractEntitiesWithAI } from "@/lib/ghostme/entityExtractor";
 
 
 const openai = new OpenAI({
@@ -33,7 +34,19 @@ let linkedTopicsContext = "";
 
 let loadedLifeTopics: any[] = [];
 
-const detectedTopics = detectTopicsFromMessage(message);
+const ruleBasedTopics = detectTopicsFromMessage(message);
+
+const aiTopics = await extractEntitiesWithAI({
+  message,
+  profileContext,
+});
+
+const detectedTopics =
+  aiTopics.length > 0 ? aiTopics : ruleBasedTopics;
+
+console.log("RULE BASED TOPICS:", ruleBasedTopics);
+console.log("AI TOPICS:", aiTopics);
+console.log("FINAL DETECTED TOPICS:", detectedTopics);
 
 if (body.userId) {
   console.log("BODY USER ID:", body.userId);
