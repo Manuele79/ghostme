@@ -67,6 +67,9 @@ Regole:
 - massimo 6 entità.
 - confidence da 0 a 100.
 - needs_clarification true solo per persone/entità ambigue tipo "Ale", non per città famose tipo Tokyo.
+- GhostMe è sempre project/project.
+- AskDJ è sempre project/project.
+- Home Assistant è system/home.
 
 Profilo utente disponibile:
 ${profileContext || "nessun profilo"}
