@@ -11,6 +11,7 @@ import {
 import { buildContextualMemory } from "@/lib/ghostme/retrieval";
 import { saveTopicLinks } from "@/lib/ghostme/topicLinks";
 import { extractEntitiesWithAI } from "@/lib/ghostme/entityExtractor";
+import { applyMemoryDecay } from "@/lib/ghostme/memoryDecay";
 
 
 const openai = new OpenAI({
@@ -49,6 +50,9 @@ console.log("AI TOPICS:", aiTopics);
 console.log("FINAL DETECTED TOPICS:", detectedTopics);
 
 if (body.userId) {
+
+  await applyMemoryDecay(body.userId);
+
   console.log("BODY USER ID:", body.userId);
 
   const { data: userProfile, error: userProfileError } =
