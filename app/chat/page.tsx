@@ -360,139 +360,140 @@ export default function ChatPage() {
     );
   }
 
-  return (
-    <main className="relative min-h-screen overflow-hidden bg-black text-white">
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.16),transparent_34%),radial-gradient(circle_at_bottom,rgba(14,165,233,0.11),transparent_35%)]" />
+return (
+  <main className="relative min-h-screen overflow-hidden bg-black text-white">
+    {/* ENERGIA BACKGROUND */}
+    <div className="pointer-events-none fixed inset-0 overflow-hidden">
+      <div className="absolute left-1/2 top-[28%] h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-400/20 blur-[120px] animate-pulse" />
 
-      <button
-        onClick={() => setBrainOpen(true)}
-        className="fixed left-3 top-1/2 z-40 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-cyan-400/40 bg-black/80 text-cyan-300 shadow-[0_0_25px_rgba(34,211,238,0.25)] backdrop-blur"
-        title="Apri cervello GhostMe"
-      >
-        ◎
-      </button>
+      <div className="absolute left-1/2 top-[28%] h-[320px] w-[320px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-300/20 bg-cyan-300/10 blur-[2px]" />
 
-      {brainOpen && (
-        <div className="fixed inset-0 z-50 flex">
-          <button
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-            onClick={() => setBrainOpen(false)}
-          />
+      <div className="absolute left-1/2 top-[28%] h-[180px] w-[180px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-200/20 shadow-[0_0_80px_rgba(34,211,238,0.55)]" />
+    </div>
 
-          <aside className="relative ml-0 h-full w-[88%] max-w-md overflow-y-auto border-r border-cyan-400/20 bg-zinc-950/95 p-5 shadow-[0_0_80px_rgba(34,211,238,0.12)]">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-[0.35em] text-cyan-400">
-                  GhostMe Systems
-                </p>
-                <h2 className="mt-2 text-2xl font-black">Cervello</h2>
-              </div>
+    {/* DRAWER MEMORIA */}
+    {brainOpen && (
+      <div className="fixed inset-0 z-50 flex">
+        <button
+          className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+          onClick={() => setBrainOpen(false)}
+        />
 
-              <button
-                onClick={() => setBrainOpen(false)}
-                className="rounded-full border border-zinc-700 px-3 py-1 text-sm text-zinc-300"
-              >
-                ✕
-              </button>
-            </div>
+        <aside className="relative h-full w-[92%] max-w-md overflow-y-auto border-r border-cyan-400/20 bg-zinc-950/95 p-5 shadow-[0_0_60px_rgba(34,211,238,0.18)]">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.35em] text-cyan-400">
+                GhostMe Memory
+              </p>
 
-            <div className="mt-6 space-y-3">
-              <div className="rounded-3xl border border-cyan-400/20 bg-cyan-400/5 p-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-cyan-300">
-                  Memoria
-                </p>
-
-                <div className="mt-4 grid grid-cols-2 gap-2">
-                  {[
-                    ["memory", "Memoria"],
-                    ["timeline", "Timeline"],
-                    ["goals", "Goals"],
-                    ["state", "Mental State"],
-                  ].map(([key, label]) => (
-                    <button
-                      key={key}
-                      onClick={() => setActiveBrainTab(key as any)}
-                      className={`rounded-2xl border px-3 py-3 text-sm font-bold ${
-                        activeBrainTab === key
-                          ? "border-cyan-300 bg-cyan-300 text-black"
-                          : "border-zinc-800 bg-black text-zinc-300"
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="rounded-3xl border border-zinc-800 bg-black/60 p-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-zinc-500">
-                  Azioni future
-                </p>
-
-                <div className="mt-4 grid grid-cols-2 gap-2">
-                  {[
-                    "Azioni",
-                    "Calendario",
-                    "Mail",
-                    "Web",
-                    "Home Assistant",
-                  ].map((label) => (
-                    <button
-                      key={label}
-                      onClick={() => setActiveBrainTab("actions")}
-                      className="rounded-2xl border border-zinc-800 bg-zinc-950 px-3 py-3 text-sm font-bold text-zinc-300"
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <BrainPanelContent
-                activeTab={activeBrainTab}
-                brainData={brainData}
-              />
+              <h2 className="mt-2 text-2xl font-black">
+                Memoria viva
+              </h2>
             </div>
 
             <button
-              onClick={logout}
-              className="mt-8 w-full rounded-2xl border border-red-500/30 px-4 py-3 text-sm font-bold text-red-300"
+              onClick={() => setBrainOpen(false)}
+              className="rounded-full border border-zinc-700 px-3 py-1 text-sm text-zinc-300"
             >
-              Esci da GhostMe
+              ✕
             </button>
-          </aside>
-        </div>
-      )}
-
-      <div className="relative mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 pb-4 pt-5 sm:px-6">
-        <header className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-xs uppercase tracking-[0.35em] text-cyan-400">
-              GhostMe
-            </p>
-            <h1 className="mt-1 text-2xl font-black tracking-tight sm:text-4xl">
-              Memoria cognitiva attiva
-            </h1>
           </div>
 
-          <button
-            onClick={() => setProfileOpen((prev) => !prev)}
-            className="rounded-2xl border border-cyan-400/25 bg-black/60 px-4 py-3 text-xs font-bold text-cyan-200"
-          >
-            Profilo
-          </button>
-        </header>
+          <div className="mt-6 grid grid-cols-2 gap-2">
+            {[
+              ["memory", "Memoria"],
+              ["timeline", "Timeline"],
+              ["goals", "Goals"],
+              ["state", "Mental"],
+            ].map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setActiveBrainTab(key as any)}
+                className={`rounded-2xl border px-3 py-3 text-sm font-bold transition ${
+                  activeBrainTab === key
+                    ? "border-cyan-300 bg-cyan-300 text-black"
+                    : "border-zinc-800 bg-black text-zinc-300"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
 
-        {profileOpen && (
-          <section className="mt-4 rounded-3xl border border-cyan-400/20 bg-cyan-400/5 p-4">
-            <p className="text-sm text-zinc-400">
-              Profilo collegato:{" "}
-              <span className="text-cyan-300">{userEmail}</span>
+          <div className="mt-5">
+            <BrainPanelContent
+              activeTab={activeBrainTab}
+              brainData={brainData}
+            />
+          </div>
+        </aside>
+      </div>
+    )}
+
+    {/* DRAWER SERVIZI */}
+    {profileOpen && (
+      <div className="fixed inset-0 z-50 flex justify-end">
+        <button
+          className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+          onClick={() => setProfileOpen(false)}
+        />
+
+        <aside className="relative h-full w-[92%] max-w-md overflow-y-auto border-l border-cyan-400/20 bg-zinc-950/95 p-5 shadow-[0_0_60px_rgba(34,211,238,0.18)]">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.35em] text-cyan-400">
+                GhostMe Systems
+              </p>
+
+              <h2 className="mt-2 text-2xl font-black">
+                Servizi
+              </h2>
+            </div>
+
+            <button
+              onClick={() => setProfileOpen(false)}
+              className="rounded-full border border-zinc-700 px-3 py-1 text-sm text-zinc-300"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className="mt-6 grid grid-cols-2 gap-3">
+            {[
+              "Azioni",
+              "Calendario",
+              "Mail",
+              "Web",
+              "Home Assistant",
+              "Voce",
+              "GPS",
+              "Notifiche",
+            ].map((item) => (
+              <div
+                key={item}
+                className="rounded-2xl border border-zinc-800 bg-black/60 p-4"
+              >
+                <p className="font-bold text-cyan-200">
+                  {item}
+                </p>
+
+                <p className="mt-2 text-xs text-zinc-500">
+                  Offline / coming soon
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-8 rounded-3xl border border-cyan-400/20 bg-cyan-400/5 p-4">
+            <p className="text-xs uppercase tracking-[0.3em] text-cyan-300">
+              Profilo collegato
             </p>
 
-            <p className="mt-4 text-cyan-50">{ghostMessage}</p>
+            <p className="mt-3 text-sm text-zinc-300">
+              {userEmail}
+            </p>
 
-            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+            <div className="mt-5 space-y-2">
               {summary.map((item, index) => (
                 <div
                   key={index}
@@ -502,101 +503,152 @@ export default function ChatPage() {
                 </div>
               ))}
             </div>
-          </section>
-        )}
 
-        <section className="mt-5 rounded-[2rem] border border-cyan-400/20 bg-zinc-950/70 p-5 text-center shadow-[0_0_60px_rgba(34,211,238,0.08)]">
-          <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full border border-cyan-300/40 bg-black shadow-[0_0_55px_rgba(34,211,238,0.22)]">
-            <div className="h-14 w-14 rounded-full bg-cyan-300/20 shadow-[0_0_45px_rgba(34,211,238,0.55)]" />
+            <button
+              onClick={logout}
+              className="mt-5 w-full rounded-2xl border border-red-500/30 px-4 py-3 text-sm font-bold text-red-300"
+            >
+              Logout
+            </button>
           </div>
+        </aside>
+      </div>
+    )}
 
-          <p className="mt-4 text-xs uppercase tracking-[0.35em] text-cyan-300">
-            Core online
-          </p>
+    {/* CONTENUTO */}
+    <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 pb-5 pt-6">
+      
+      {/* HEADER */}
+      <header className="text-center">
+        <p className="text-xs uppercase tracking-[0.45em] text-cyan-400">
+          GhostMe
+        </p>
+
+        <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-6xl">
+          GhostMe
+        </h1>
+
+        <p className="mt-3 text-sm text-zinc-400 sm:text-base">
+          Memoria cognitiva attiva
+        </p>
+
+        {/* TASTI */}
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+          <button
+            onClick={() => setBrainOpen(true)}
+            className="rounded-2xl border border-cyan-400/25 bg-black/50 px-5 py-3 text-sm font-bold text-cyan-200 shadow-[0_0_18px_rgba(34,211,238,0.16)]"
+          >
+            Memoria
+          </button>
+
+          <button
+            onClick={() => setProfileOpen(true)}
+            className="rounded-2xl border border-cyan-400/25 bg-black/50 px-5 py-3 text-sm font-bold text-cyan-200 shadow-[0_0_18px_rgba(34,211,238,0.16)]"
+          >
+            Servizi
+          </button>
 
           <button
             onClick={cycleMode}
-            className="mt-4 rounded-2xl border border-cyan-400/30 bg-black px-5 py-3 text-sm font-black text-cyan-200"
+            className="rounded-2xl border border-cyan-300/30 bg-cyan-400/10 px-5 py-3 text-sm font-black text-cyan-100"
           >
-            Modalità: {currentModeLabel}
+            {currentModeLabel}
           </button>
+        </div>
+      </header>
+
+      {/* CHAT MODE */}
+      {(mode === "chat-chat" || mode === "voce-chat") && (
+        <section className="relative mt-10 flex min-h-0 flex-1 flex-col">
+          
+          {/* CHAT */}
+          <div className="relative flex-1 overflow-hidden rounded-[2rem] border border-cyan-400/10 bg-black/45 backdrop-blur-sm">
+            
+            <div className="max-h-[58vh] min-h-[300px] overflow-y-auto px-4 py-5 sm:px-6">
+              <div className="space-y-5">
+                {messages.map((msg, index) => (
+                  <div
+                    key={index}
+                    className={`rounded-3xl px-5 py-4 text-base leading-relaxed shadow-[0_0_20px_rgba(0,0,0,0.22)] ${
+                      msg.role === "user"
+                        ? "ml-auto max-w-[88%] border border-cyan-400/25 bg-cyan-400/10 text-white"
+                        : "mr-auto max-w-[88%] border border-zinc-800 bg-zinc-900/88 text-zinc-100"
+                    }`}
+                  >
+                    <div className="mb-2 text-[10px] uppercase tracking-[0.3em] text-zinc-500">
+                      {msg.role === "user" ? "Tu" : "GhostMe"}
+                    </div>
+
+                    {msg.content}
+                  </div>
+                ))}
+
+                <div ref={messagesEndRef} />
+              </div>
+            </div>
+
+            {/* INPUT */}
+            <div className="border-t border-cyan-400/10 bg-black/55 p-3">
+              <div className="flex gap-2">
+                
+                {mode === "voce-chat" && (
+                  <button
+                    onClick={startVoiceInput}
+                    className="rounded-2xl border border-cyan-400/25 bg-cyan-400/10 px-4 text-cyan-200"
+                  >
+                    🎙
+                  </button>
+                )}
+
+                <textarea
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      sendMessage();
+                    }
+                  }}
+                  placeholder="Scrivi qualcosa..."
+                  className="h-16 flex-1 resize-none rounded-2xl border border-zinc-800 bg-zinc-950 p-4 text-white outline-none placeholder:text-zinc-600 focus:border-cyan-400"
+                />
+
+                <button
+                  onClick={sendMessage}
+                  disabled={loadingChat}
+                  className="rounded-2xl bg-cyan-300 px-5 font-black text-black shadow-[0_0_25px_rgba(34,211,238,0.28)] disabled:opacity-50"
+                >
+                  ↗
+                </button>
+              </div>
+            </div>
+          </div>
         </section>
+      )}
 
-        <section className="mt-5 flex min-h-0 flex-1 flex-col rounded-[2rem] border border-zinc-800 bg-black/70 p-3 sm:p-5">
-          <div className="flex items-center justify-between px-2">
-            <p className="text-xs uppercase tracking-[0.3em] text-zinc-500">
-              Conversazione
-            </p>
-
-            <p className="text-xs text-zinc-500">{messages.length} messaggi</p>
-          </div>
-
-          <div className="mt-4 max-h-[48vh] min-h-[220px] flex-1 overflow-y-auto space-y-4 pr-1 sm:max-h-[52vh]">
-            {messages.length === 0 && (
-              <div className="rounded-3xl border border-cyan-400/20 bg-cyan-400/5 p-5 text-zinc-300">
-                Scrivi qualcosa. GhostMe ha già il cervello acceso.
-              </div>
-            )}
-
-            {messages.map((msg, index) => (
-              <div
-                key={index}
-                className={`rounded-3xl border px-4 py-3 text-base leading-relaxed sm:px-5 sm:py-4 ${
-                  msg.role === "user"
-                    ? "ml-auto max-w-[86%] border-cyan-400/35 bg-cyan-400/10 text-white"
-                    : "mr-auto max-w-[86%] border-zinc-800 bg-zinc-900/85 text-zinc-100"
-                }`}
-              >
-                <div className="mb-2 text-[10px] uppercase tracking-[0.28em] text-zinc-500">
-                  {msg.role === "user" ? "Tu" : "GhostMe"}
-                </div>
-
-                {msg.content}
-              </div>
-            ))}
-
-            <div ref={messagesEndRef} />
-          </div>
-
-          <div className="mt-4 flex gap-2">
-            {(mode === "voce-chat" || mode === "voce-voce") && (
-              <button
-                onClick={startVoiceInput}
-                className="rounded-2xl border border-cyan-400/30 bg-cyan-400/10 px-4 font-black text-cyan-200"
-              >
-                🎙
-              </button>
-            )}
-
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  sendMessage();
-                }
-              }}
-              placeholder={
-                mode === "chat-chat"
-                  ? "Scrivi qualcosa..."
-                  : "Parla o correggi il testo..."
-              }
-              className="h-20 flex-1 resize-none rounded-2xl border border-zinc-800 bg-zinc-950 p-4 text-white outline-none placeholder:text-zinc-600 focus:border-cyan-400"
-            />
+      {/* SOLO VOCE */}
+      {mode === "voce-voce" && (
+        <section className="relative flex flex-1 items-center justify-center">
+          <div className="relative flex flex-col items-center">
+            
+            <div className="absolute h-[420px] w-[420px] rounded-full bg-cyan-400/10 blur-[120px] animate-pulse" />
 
             <button
-              onClick={sendMessage}
-              disabled={loadingChat}
-              className="rounded-2xl bg-cyan-300 px-5 font-black text-black disabled:opacity-50"
+              onClick={startVoiceInput}
+              className="relative flex h-44 w-44 items-center justify-center rounded-full border border-cyan-300/30 bg-cyan-300/10 shadow-[0_0_120px_rgba(34,211,238,0.45)] transition hover:scale-105"
             >
-              {loadingChat ? "..." : "↗"}
+              <div className="h-24 w-24 rounded-full bg-cyan-200/40 shadow-[0_0_80px_rgba(34,211,238,0.9)] animate-pulse" />
             </button>
+
+            <p className="mt-10 text-lg text-cyan-100">
+              GhostMe è in ascolto
+            </p>
           </div>
         </section>
-      </div>
-    </main>
-  );
+      )}
+    </div>
+  </main>
+);
 }
 
 function BrainPanelContent({
