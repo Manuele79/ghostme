@@ -16,6 +16,7 @@ import { saveTopicLinks } from "@/lib/ghostme/topicLinks";
 import { extractEntitiesWithAI } from "@/lib/ghostme/entityExtractor";
 import { applyMemoryDecay } from "@/lib/ghostme/memoryDecay";
 import { detectAndSaveContradictions } from "@/lib/ghostme/contradictions";
+import { updateMentalState } from "@/lib/ghostme/mentalState";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -740,6 +741,17 @@ export async function POST(req: Request) {
         });
       } catch (err) {
         log("CONTRADICTION ENGINE ERROR:", err);
+      }
+    }
+
+    if (userId) {
+      try {
+        await updateMentalState({
+          userId,
+          message,
+        });
+      } catch (err) {
+        log("MENTAL STATE ERROR:", err);
       }
     }
 
