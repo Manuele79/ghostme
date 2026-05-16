@@ -75,6 +75,12 @@ NON segnalare contraddizioni deboli.
 NON segnalare semplici cambi di umore temporanei.
 NON inventare.
 
+
+confidence deve essere:
+- 90-100 = contraddizione forte e diretta
+- 70-89 = cambiamento molto probabile
+- sotto 70 = dubbio o ambiguo
+
 Rispondi SOLO con JSON valido:
 
 {
@@ -82,7 +88,7 @@ Rispondi SOLO con JSON valido:
   "topic": "nome topic",
   "old_statement": "cosa risultava prima",
   "new_statement": "cosa dice ora l'utente",
-  "confidence": 0,
+  "confidence": 85,
   "description": "breve spiegazione"
 }
 
