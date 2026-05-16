@@ -7,6 +7,7 @@ import {
   detectEmotionalTone,
   shouldSaveActiveMemory,
   detectMemoryCategory,
+  detectImportanceLevel,
 } from "@/lib/ghostme/topicDetector";
 import { buildContextualMemory } from "@/lib/ghostme/retrieval";
 import { saveTopicLinks } from "@/lib/ghostme/topicLinks";
@@ -44,6 +45,9 @@ const aiTopics = await extractEntitiesWithAI({
 
 const detectedTopics =
   aiTopics.length > 0 ? aiTopics : ruleBasedTopics;
+
+
+const importanceLevel = detectImportanceLevel(message);
 
 console.log("RULE BASED TOPICS:", ruleBasedTopics);
 console.log("AI TOPICS:", aiTopics);
@@ -311,8 +315,7 @@ console.log("SAVING LIFE TOPIC:", item);
             detectedTopics.length >= 2 ? 1 : 0;
 
           const nextWeight = Math.min(
-            (existingTopic.weight || 1) +
-              confidenceBoost,
+            (existingTopic.weight || 1) + importanceLevel,
             10
           );
 
