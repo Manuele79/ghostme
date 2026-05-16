@@ -1,41 +1,108 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import {
   buildGhostMeMessage,
   buildPersonalitySummary,
 } from "@/lib/personality";
 
+type ChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
+
+type Mode = "chat-chat" | "voce-chat" | "voce-voce";
+
+type BrainData = {
+  memories: any[];
+  timeline: any[];
+  goals: any[];
+  mentalState: any | null;
+  actions: any[];
+};
+
+const modeLabels: Record<Mode, string> = {
+  "chat-chat": "Chat → Chat",
+  "voce-chat": "Voce → Chat",
+  "voce-voce": "Voce → Voce",
+};
+
 export default function ChatPage() {
+  const router = useRouter();
+
   const [loading, setLoading] = useState(true);
   const [traits, setTraits] = useState<any>(null);
+  const [userEmail, setUserEmail] = useState("");
+
   const [ghostMessage, setGhostMessage] = useState("");
   const [summary, setSummary] = useState<string[]>([]);
+
   const [input, setInput] = useState("");
-  const [reply, setReply] = useState("");
-  const [messages, setMessages] = useState<
-    { role: "user" | "assistant"; content: string }[]
-  >([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loadingChat, setLoadingChat] = useState(false);
-  const [userEmail, setUserEmail] = useState("");
-  const [showProfile, setShowProfile] = useState(false);
+
+  const [mode, setMode] = useState<Mode>("chat-chat");
+  const [brainOpen, setBrainOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [activeBrainTab, setActiveBrainTab] = useState<
+    "memory" | "timeline" | "goals" | "state" | "actions"
+  >("memory");
+
+  const [brainData, setBrainData] = useState<BrainData>({
+    memories: [],
+    timeline: [],
+    goals: [],
+    mentalState: null,
+    actions: [],
+  });
+
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
+  const currentModeLabel = useMemo(() => modeLabels[mode], [mode]);
+
   useEffect(() => {
-    async function loadProfile() {
+    const savedMode =
+      typeof window !== "undefined"
+        ? (localStorage.getItem("ghostme_mode") as Mode | null)
+        : null;
+
+    if (
+      savedMode === "chat-chat" ||
+      savedMode === "voce-chat" ||
+      savedMode === "voce-voce"
+    ) {
+      setMode(savedMode);
+    }
+  }, []);
+
+  useEffect(() => {
+    async function boot() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
       if (!user) {
-        setLoading(false);
+        router.push("/login");
         return;
       }
 
       setUserEmail(user.email || "");
 
-      const { data, error } = await supabase
+      const { data: profile } = await supabase
+        .from("user_profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .limit(1)
+        .maybeSingle();
+
+      if (!profile) {
+        router.push("/setup/profile");
+        return;
+      }
+
+      const { data: traitsData } = await supabase
         .from("traits")
         .select("*")
         .eq("user_id", user.id)
@@ -43,24 +110,21 @@ export default function ChatPage() {
         .limit(1)
         .maybeSingle();
 
-      console.log("CHAT TRAITS:", data);
-      console.log("CHAT ERROR:", error);
-
-      setTraits(data);
-      if (data) {
-        setGhostMessage(buildGhostMeMessage(data));
-        setSummary(buildPersonalitySummary(data));
+      if (!traitsData) {
+        router.push("/setup");
+        return;
       }
 
-      const { data: chatHistory, error: chatError } = await supabase
+      setTraits(traitsData);
+      setGhostMessage(buildGhostMeMessage(traitsData));
+      setSummary(buildPersonalitySummary(traitsData));
+
+      const { data: chatHistory } = await supabase
         .from("chat_messages")
         .select("role, content, created_at, id, message_order")
         .eq("user_id", user.id)
         .order("message_order", { ascending: false })
         .limit(60);
-
-      console.log("CHAT HISTORY:", chatHistory);
-      console.log("CHAT HISTORY ERROR:", chatError);
 
       if (chatHistory) {
         const orderedHistory = [...chatHistory].reverse();
@@ -71,280 +135,560 @@ export default function ChatPage() {
             content: msg.content,
           }))
         );
-
-        const lastAssistant = [...chatHistory]
-          .reverse()
-          .find((msg) => msg.role === "assistant");
-
-        if (lastAssistant) {
-          setReply(lastAssistant.content);
-        }
       }
+
+      await loadBrainData(user.id);
 
       setLoading(false);
     }
 
-    loadProfile();
-  }, []);
+    boot();
+  }, [router]);
 
-    useEffect(() => {
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
       behavior: "smooth",
     });
   }, [messages]);
 
-  if (loading) {
-    return (
-      <main className="min-h-screen bg-black text-white flex items-center justify-center">
-        <p className="text-zinc-400">
-          GhostMe sta leggendo la tua mente...
-        </p>
-      </main>
-    );
+  async function loadBrainData(userId: string) {
+    const [memoriesRes, timelineRes, goalsRes, mentalRes, actionsRes] =
+      await Promise.all([
+        supabase
+          .from("memories_active")
+          .select("*")
+          .eq("user_id", userId)
+          .order("pinned", { ascending: false })
+          .order("importance", { ascending: false })
+          .limit(20),
+
+        supabase
+          .from("autobiographical_timeline")
+          .select("*")
+          .eq("user_id", userId)
+          .order("event_date", { ascending: false })
+          .limit(20),
+
+        supabase
+          .from("goals_desires")
+          .select("*")
+          .eq("user_id", userId)
+          .order("importance", { ascending: false })
+          .limit(20),
+
+        supabase
+          .from("mental_states")
+          .select("*")
+          .eq("user_id", userId)
+          .order("updated_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+
+        supabase
+          .from("action_intents")
+          .select("*")
+          .eq("user_id", userId)
+          .order("priority", { ascending: false })
+          .limit(20),
+      ]);
+
+    setBrainData({
+      memories: memoriesRes.data || [],
+      timeline: timelineRes.data || [],
+      goals: goalsRes.data || [],
+      mentalState: mentalRes.data || null,
+      actions: actionsRes.data || [],
+    });
   }
 
-  if (!traits) {
-    return (
-      <main className="min-h-screen bg-black text-white flex items-center justify-center px-6">
-        <div className="max-w-lg rounded-3xl border border-red-500/30 bg-zinc-950 p-8">
-          <h1 className="text-3xl font-black text-red-400">
-            Nessun profilo trovato.
-          </h1>
+  function cycleMode() {
+    const next: Mode =
+      mode === "chat-chat"
+        ? "voce-chat"
+        : mode === "voce-chat"
+          ? "voce-voce"
+          : "chat-chat";
 
-          <p className="mt-4 text-zinc-300">
-            Prima devi completare il setup psicologico di GhostMe 😄
-          </p>
-        </div>
-      </main>
-    );
+    setMode(next);
+    localStorage.setItem("ghostme_mode", next);
   }
 
+  function speak(text: string) {
+    if (typeof window === "undefined") return;
+    if (!("speechSynthesis" in window)) return;
 
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "it-IT";
+    utterance.rate = 1;
+    utterance.pitch = 1;
+
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+  }
+
+  function startVoiceInput() {
+    const SpeechRecognition =
+      typeof window !== "undefined"
+        ? (window as any).SpeechRecognition ||
+          (window as any).webkitSpeechRecognition
+        : null;
+
+    if (!SpeechRecognition) {
+      alert("Il riconoscimento vocale non è supportato da questo browser.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "it-IT";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results?.[0]?.[0]?.transcript || "";
+      setInput(transcript);
+    };
+
+    recognition.start();
+  }
 
   async function sendMessage() {
-  if (!input.trim()) return;
+    if (!input.trim()) return;
+    if (!traits) return;
 
-  setLoadingChat(true);
+    const userText = input.trim();
 
-  try {
-    const res = await fetch("/api/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        message: input,
-        traits,
-        messages,
-        userId: traits.user_id,
-      }),
-    });
-
-    const data = await res.json();
-
-    console.log("CHAT RESPONSE:", data);
-
-    const assistantReply = data.reply || "Nessuna risposta.";
-
-    setReply(assistantReply);
+    setLoadingChat(true);
+    setInput("");
 
     setMessages((prev) => [
       ...prev,
       {
         role: "user",
-        content: input,
-      },
-      {
-        role: "assistant",
-        content: assistantReply,
+        content: userText,
       },
     ]);
 
-    setInput("");
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-  if (user) {
-    const { error: insertError } = await supabase
-      .from("chat_messages")
-      .insert([
-        {
-          user_id: user.id,
-          role: "user",
-          content: input,
-        },
-        {
-          user_id: user.id,
-          role: "assistant",
-          content: assistantReply,
-        },
-      ]);
-
-    console.log("CHAT INSERT ERROR:", insertError);
-
-    if (!insertError) {
-      await fetch("/api/conversation-summary", {
+    try {
+      const res = await fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userId: user.id,
+          message: userText,
+          traits,
+          messages,
+          userId: traits.user_id,
         }),
       });
+
+      const data = await res.json();
+
+      const assistantReply = data.reply || "Nessuna risposta.";
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: assistantReply,
+        },
+      ]);
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        const { error: insertError } = await supabase
+          .from("chat_messages")
+          .insert([
+            {
+              user_id: user.id,
+              role: "user",
+              content: userText,
+            },
+            {
+              user_id: user.id,
+              role: "assistant",
+              content: assistantReply,
+            },
+          ]);
+
+        if (!insertError) {
+          await fetch("/api/conversation-summary", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              userId: user.id,
+            }),
+          });
+
+          await loadBrainData(user.id);
+        }
+      }
+
+      if (mode === "voce-voce") {
+        speak(assistantReply);
+      }
+    } catch (err) {
+      console.log(err);
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "Errore comunicazione GhostMe.",
+        },
+      ]);
     }
+
+    setLoadingChat(false);
   }
 
-  } catch (err) {
-    console.log(err);
-    setReply("Errore comunicazione GhostMe.");
+  async function logout() {
+    await supabase.auth.signOut();
+    router.push("/login");
   }
 
-  setLoadingChat(false);
-}
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-black text-white flex items-center justify-center">
+        <p className="text-cyan-300">GhostMe si sta riattivando...</p>
+      </main>
+    );
+  }
 
-return (
-  <main className="min-h-screen bg-black text-white px-6 py-10">
-    <div className="mx-auto max-w-4xl">
-      <p className="text-sm uppercase tracking-[0.35em] text-zinc-500">
-        GhostMe Chat
-      </p>
-
-      <h1 className="mt-4 text-5xl font-black">
-        Il tuo GhostMe è pronto.
-      </h1>
-
-      <p className="mt-4 text-zinc-400">
-        Profilo collegato:
-        <span className="ml-2 text-cyan-400">{userEmail}</span>
-      </p>
+  return (
+    <main className="relative min-h-screen overflow-hidden bg-black text-white">
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.16),transparent_34%),radial-gradient(circle_at_bottom,rgba(14,165,233,0.11),transparent_35%)]" />
 
       <button
-        onClick={() => setShowProfile((prev) => !prev)}
-        className="mt-6 rounded-2xl border border-cyan-500/40 px-5 py-3 text-sm font-bold text-cyan-300"
+        onClick={() => setBrainOpen(true)}
+        className="fixed left-3 top-1/2 z-40 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-cyan-400/40 bg-black/80 text-cyan-300 shadow-[0_0_25px_rgba(34,211,238,0.25)] backdrop-blur"
+        title="Apri cervello GhostMe"
       >
-        {showProfile ? "Nascondi profilo" : "Mostra profilo"}
+        ◎
       </button>
 
-      <div className="mt-8 rounded-3xl border border-cyan-500/30 bg-gradient-to-b from-cyan-500/10 to-zinc-950 p-8 text-center">
-      <div className="mx-auto flex h-28 w-28 items-center justify-center rounded-full border border-cyan-400/50 bg-black shadow-[0_0_45px_rgba(34,211,238,0.25)]">
-        <span className="text-4xl font-black text-cyan-300">G</span>
-      </div>
+      {brainOpen && (
+        <div className="fixed inset-0 z-50 flex">
+          <button
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            onClick={() => setBrainOpen(false)}
+          />
 
-      <p className="mt-5 text-sm uppercase tracking-[0.35em] text-cyan-300">
-        GhostMe Core
-      </p>
+          <aside className="relative ml-0 h-full w-[88%] max-w-md overflow-y-auto border-r border-cyan-400/20 bg-zinc-950/95 p-5 shadow-[0_0_80px_rgba(34,211,238,0.12)]">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-[0.35em] text-cyan-400">
+                  GhostMe Systems
+                </p>
+                <h2 className="mt-2 text-2xl font-black">Cervello</h2>
+              </div>
 
-      <p className="mt-3 text-zinc-300">
-        Modalità attiva: chat testuale
-      </p>
-
-      <button
-        className="mt-5 rounded-2xl border border-zinc-700 px-5 py-3 text-sm font-bold text-zinc-300"
-      >
-        Modalità voce — presto
-      </button>
-    </div>
-
-    {showProfile && (
-     <>
-      <div className="mt-10 rounded-3xl border border-cyan-500/30 bg-cyan-500/10 p-8">
-        <h2 className="text-2xl font-black text-cyan-300">
-          Profilo mentale rilevato
-        </h2>
-
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
-          {Object.entries(traits)
-            .filter(([key]) => !["id", "user_id", "created_at"].includes(key))
-            .map(([key, value]) => (
-              <div
-                key={key}
-                className="rounded-2xl border border-zinc-800 bg-black/40 p-4"
+              <button
+                onClick={() => setBrainOpen(false)}
+                className="rounded-full border border-zinc-700 px-3 py-1 text-sm text-zinc-300"
               >
-                <p className="text-sm uppercase tracking-wider text-zinc-500">
-                  {key.replaceAll("_", " ")}
+                ✕
+              </button>
+            </div>
+
+            <div className="mt-6 space-y-3">
+              <div className="rounded-3xl border border-cyan-400/20 bg-cyan-400/5 p-4">
+                <p className="text-xs uppercase tracking-[0.25em] text-cyan-300">
+                  Memoria
                 </p>
 
-                <p className="mt-2 text-3xl font-black text-white">
-                  {String(value)}
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  {[
+                    ["memory", "Memoria"],
+                    ["timeline", "Timeline"],
+                    ["goals", "Goals"],
+                    ["state", "Mental State"],
+                  ].map(([key, label]) => (
+                    <button
+                      key={key}
+                      onClick={() => setActiveBrainTab(key as any)}
+                      className={`rounded-2xl border px-3 py-3 text-sm font-bold ${
+                        activeBrainTab === key
+                          ? "border-cyan-300 bg-cyan-300 text-black"
+                          : "border-zinc-800 bg-black text-zinc-300"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-3xl border border-zinc-800 bg-black/60 p-4">
+                <p className="text-xs uppercase tracking-[0.25em] text-zinc-500">
+                  Azioni future
                 </p>
+
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  {[
+                    "Azioni",
+                    "Calendario",
+                    "Mail",
+                    "Web",
+                    "Home Assistant",
+                  ].map((label) => (
+                    <button
+                      key={label}
+                      onClick={() => setActiveBrainTab("actions")}
+                      className="rounded-2xl border border-zinc-800 bg-zinc-950 px-3 py-3 text-sm font-bold text-zinc-300"
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <BrainPanelContent
+                activeTab={activeBrainTab}
+                brainData={brainData}
+              />
+            </div>
+
+            <button
+              onClick={logout}
+              className="mt-8 w-full rounded-2xl border border-red-500/30 px-4 py-3 text-sm font-bold text-red-300"
+            >
+              Esci da GhostMe
+            </button>
+          </aside>
+        </div>
+      )}
+
+      <div className="relative mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 pb-4 pt-5 sm:px-6">
+        <header className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs uppercase tracking-[0.35em] text-cyan-400">
+              GhostMe
+            </p>
+            <h1 className="mt-1 text-2xl font-black tracking-tight sm:text-4xl">
+              Memoria cognitiva attiva
+            </h1>
+          </div>
+
+          <button
+            onClick={() => setProfileOpen((prev) => !prev)}
+            className="rounded-2xl border border-cyan-400/25 bg-black/60 px-4 py-3 text-xs font-bold text-cyan-200"
+          >
+            Profilo
+          </button>
+        </header>
+
+        {profileOpen && (
+          <section className="mt-4 rounded-3xl border border-cyan-400/20 bg-cyan-400/5 p-4">
+            <p className="text-sm text-zinc-400">
+              Profilo collegato:{" "}
+              <span className="text-cyan-300">{userEmail}</span>
+            </p>
+
+            <p className="mt-4 text-cyan-50">{ghostMessage}</p>
+
+            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              {summary.map((item, index) => (
+                <div
+                  key={index}
+                  className="rounded-2xl border border-zinc-800 bg-black/40 p-3 text-sm text-zinc-300"
+                >
+                  {item}
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <section className="mt-5 rounded-[2rem] border border-cyan-400/20 bg-zinc-950/70 p-5 text-center shadow-[0_0_60px_rgba(34,211,238,0.08)]">
+          <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full border border-cyan-300/40 bg-black shadow-[0_0_55px_rgba(34,211,238,0.22)]">
+            <div className="h-14 w-14 rounded-full bg-cyan-300/20 shadow-[0_0_45px_rgba(34,211,238,0.55)]" />
+          </div>
+
+          <p className="mt-4 text-xs uppercase tracking-[0.35em] text-cyan-300">
+            Core online
+          </p>
+
+          <button
+            onClick={cycleMode}
+            className="mt-4 rounded-2xl border border-cyan-400/30 bg-black px-5 py-3 text-sm font-black text-cyan-200"
+          >
+            Modalità: {currentModeLabel}
+          </button>
+        </section>
+
+        <section className="mt-5 flex min-h-0 flex-1 flex-col rounded-[2rem] border border-zinc-800 bg-black/70 p-3 sm:p-5">
+          <div className="flex items-center justify-between px-2">
+            <p className="text-xs uppercase tracking-[0.3em] text-zinc-500">
+              Conversazione
+            </p>
+
+            <p className="text-xs text-zinc-500">{messages.length} messaggi</p>
+          </div>
+
+          <div className="mt-4 max-h-[48vh] min-h-[220px] flex-1 overflow-y-auto space-y-4 pr-1 sm:max-h-[52vh]">
+            {messages.length === 0 && (
+              <div className="rounded-3xl border border-cyan-400/20 bg-cyan-400/5 p-5 text-zinc-300">
+                Scrivi qualcosa. GhostMe ha già il cervello acceso.
+              </div>
+            )}
+
+            {messages.map((msg, index) => (
+              <div
+                key={index}
+                className={`rounded-3xl border px-4 py-3 text-base leading-relaxed sm:px-5 sm:py-4 ${
+                  msg.role === "user"
+                    ? "ml-auto max-w-[86%] border-cyan-400/35 bg-cyan-400/10 text-white"
+                    : "mr-auto max-w-[86%] border-zinc-800 bg-zinc-900/85 text-zinc-100"
+                }`}
+              >
+                <div className="mb-2 text-[10px] uppercase tracking-[0.28em] text-zinc-500">
+                  {msg.role === "user" ? "Tu" : "GhostMe"}
+                </div>
+
+                {msg.content}
               </div>
             ))}
-        </div>
-      </div>
 
-      <div className="mt-8 rounded-3xl border border-cyan-500/30 bg-cyan-500/10 p-8">
-        <p className="text-sm uppercase tracking-[0.3em] text-cyan-300">
-          GhostMe
-        </p>
+            <div ref={messagesEndRef} />
+          </div>
 
-        <p className="mt-4 text-xl leading-relaxed text-cyan-50">
-          {ghostMessage}
-        </p>
+          <div className="mt-4 flex gap-2">
+            {(mode === "voce-chat" || mode === "voce-voce") && (
+              <button
+                onClick={startVoiceInput}
+                className="rounded-2xl border border-cyan-400/30 bg-cyan-400/10 px-4 font-black text-cyan-200"
+              >
+                🎙
+              </button>
+            )}
 
-        <div className="mt-8 space-y-3">
-          {summary.map((item, index) => (
-            <div
-              key={index}
-              className="rounded-2xl border border-zinc-800 bg-black/30 p-4 text-sm text-zinc-200"
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  sendMessage();
+                }
+              }}
+              placeholder={
+                mode === "chat-chat"
+                  ? "Scrivi qualcosa..."
+                  : "Parla o correggi il testo..."
+              }
+              className="h-20 flex-1 resize-none rounded-2xl border border-zinc-800 bg-zinc-950 p-4 text-white outline-none placeholder:text-zinc-600 focus:border-cyan-400"
+            />
+
+            <button
+              onClick={sendMessage}
+              disabled={loadingChat}
+              className="rounded-2xl bg-cyan-300 px-5 font-black text-black disabled:opacity-50"
             >
-              • {item}
+              {loadingChat ? "..." : "↗"}
+            </button>
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+}
+
+function BrainPanelContent({
+  activeTab,
+  brainData,
+}: {
+  activeTab: "memory" | "timeline" | "goals" | "state" | "actions";
+  brainData: BrainData;
+}) {
+  if (activeTab === "state") {
+    const s = brainData.mentalState;
+
+    if (!s) return <EmptyBrainBox text="Nessuno stato mentale salvato." />;
+
+    return (
+      <div className="rounded-3xl border border-zinc-800 bg-black/60 p-4">
+        <p className="text-lg font-black text-cyan-200">Mental State</p>
+
+        <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
+          {[
+            "stress",
+            "entusiasmo",
+            "stanchezza",
+            "controllo",
+            "nostalgia",
+            "frustrazione",
+            "focus",
+            "socialita",
+          ].map((key) => (
+            <div
+              key={key}
+              className="rounded-2xl border border-zinc-800 bg-zinc-950 p-3"
+            >
+              <p className="text-xs uppercase text-zinc-500">{key}</p>
+              <p className="mt-1 text-2xl font-black text-white">
+                {s[key] ?? 0}
+              </p>
             </div>
           ))}
-        </div>      
-      </div>
-     </>
-  )}
-      <div className="mt-8 rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
-        <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">
-          Chat con GhostMe
-        </p>
-
-        <div className="mt-6 h-[55vh] overflow-y-auto space-y-4 pr-2">
-          {messages.map((msg, index) => (
-            <div
-              key={index}
-              className={`rounded-3xl border px-5 py-4 text-lg leading-relaxed ${
-                msg.role === "user"
-                  ? "ml-auto max-w-[80%] border-cyan-500/40 bg-cyan-500/10 text-white"
-                  : "mr-auto max-w-[80%] border-zinc-800 bg-zinc-900 text-zinc-100"
-              }`}
-            >
-              <div className="mb-2 text-xs uppercase tracking-[0.3em] text-zinc-500">
-                {msg.role === "user" ? "Tu" : "GhostMe"}
-              </div>
-
-              {msg.content}
-            </div>
-          ))}
-
-          <div ref={messagesEndRef} />
         </div>
 
-        <textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              sendMessage();
-            }
-          }}
-          placeholder="Scrivi qualcosa..."
-          className="mt-4 h-28 w-full rounded-2xl border border-zinc-700 bg-black p-4 text-white outline-none"
-        />
+        {s.notes && <p className="mt-4 text-sm text-zinc-300">{s.notes}</p>}
+      </div>
+    );
+  }
 
-        <button
-          onClick={sendMessage}
-          disabled={loadingChat}
-          className="mt-4 ml-auto block rounded-2xl bg-cyan-400 px-8 py-3 font-bold text-black"
+  const list =
+    activeTab === "memory"
+      ? brainData.memories
+      : activeTab === "timeline"
+        ? brainData.timeline
+        : activeTab === "goals"
+          ? brainData.goals
+          : brainData.actions;
+
+  if (!list.length) return <EmptyBrainBox text="Nessun dato ancora." />;
+
+  return (
+    <div className="space-y-3">
+      {list.map((item) => (
+        <div
+          key={item.id}
+          className="rounded-3xl border border-zinc-800 bg-black/60 p-4"
         >
-          {loadingChat ? "GhostMe pensa..." : "Invia"}
-        </button>
-      </div>
+          <p className="text-sm font-black text-cyan-200">
+            {item.title || item.trait || item.intent_type || "Elemento"}
+          </p>
+
+          <p className="mt-2 text-sm leading-relaxed text-zinc-300">
+            {item.content ||
+              item.summary ||
+              item.description ||
+              item.notes ||
+              "Nessuna descrizione"}
+          </p>
+
+          <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-zinc-500">
+            {item.category && <span>{item.category}</span>}
+            {item.status && <span>{item.status}</span>}
+            {item.importance && <span>importanza {item.importance}</span>}
+            {item.emotional_tone && <span>{item.emotional_tone}</span>}
+          </div>
+        </div>
+      ))}
     </div>
-  </main>
-);
+  );
+}
+
+function EmptyBrainBox({ text }: { text: string }) {
+  return (
+    <div className="rounded-3xl border border-zinc-800 bg-black/60 p-5 text-sm text-zinc-400">
+      {text}
+    </div>
+  );
 }
