@@ -1,6 +1,7 @@
 import { OpenAI } from "openai";
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+
 import {
   detectTopicsFromMessage,
   isPossibleEpisode,
@@ -9,70 +10,54 @@ import {
   detectMemoryCategory,
   detectImportanceLevel,
 } from "@/lib/ghostme/topicDetector";
+
 import { buildContextualMemory } from "@/lib/ghostme/retrieval";
 import { saveTopicLinks } from "@/lib/ghostme/topicLinks";
 import { extractEntitiesWithAI } from "@/lib/ghostme/entityExtractor";
 import { applyMemoryDecay } from "@/lib/ghostme/memoryDecay";
-
+import { detectAndSaveContradictions } from "@/lib/ghostme/contradictions";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
+const DEBUG = process.env.NODE_ENV !== "production";
 
-    const message = body.message;
-    const traits = body.traits;
-    const messages = body.messages || [];
+function log(...args: any[]) {
+  if (DEBUG) console.log(...args);
+}
 
-let memoryContext = "";
-let profileContext = "";
-let lifeTopicsContext = "";
-let episodicContext = "";
-let summaryContext = "";
-let linkedTopicsContext = "";
+type DetectedTopicLike = {
+  topic: string;
+  category: string;
+  entity_type: string;
+  needs_clarification?: boolean;
+  confidence?: number;
+  reason?: string;
+  description?: string;
+};
 
-let loadedLifeTopics: any[] = [];
+function uniqueTopics(topics: DetectedTopicLike[]) {
+  const map = new Map<string, DetectedTopicLike>();
 
-const ruleBasedTopics = detectTopicsFromMessage(message);
+  for (const topic of topics) {
+    if (!topic?.topic) continue;
 
-const aiTopics = await extractEntitiesWithAI({
-  message,
-  profileContext,
-});
+    const key = topic.topic.toLowerCase().trim();
+    const existing = map.get(key);
 
-const detectedTopics =
-  aiTopics.length > 0 ? aiTopics : ruleBasedTopics;
+    if (!existing || (topic.confidence || 0) > (existing.confidence || 0)) {
+      map.set(key, topic);
+    }
+  }
 
+  return Array.from(map.values()).slice(0, 8);
+}
 
-const importanceLevel = detectImportanceLevel(message);
+function buildProfileContext(userProfile: any) {
+  if (!userProfile) return "";
 
-console.log("RULE BASED TOPICS:", ruleBasedTopics);
-console.log("AI TOPICS:", aiTopics);
-console.log("FINAL DETECTED TOPICS:", detectedTopics);
-
-if (body.userId) {
-
-  await applyMemoryDecay(body.userId);
-
-  console.log("BODY USER ID:", body.userId);
-
-  const { data: userProfile, error: userProfileError } =
-    await supabase
-      .from("user_profiles")
-      .select("*")
-      .eq("user_id", body.userId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-  console.log("USER PROFILE RAW:", userProfile);
-  console.log("USER PROFILE ERROR:", userProfileError);
-
-  if (userProfile) {
-    profileContext = `
+  return `
 Nome: ${userProfile.full_name || ""}
 Età: ${userProfile.age || ""}
 Genere: ${userProfile.gender || ""}
@@ -85,122 +70,596 @@ Interessi: ${userProfile.interests || ""}
 Tipo di persona: ${userProfile.communication_style || ""}
 Bio: ${userProfile.short_bio || ""}
 `;
-  }
-
-  const contextualData =
-    await buildContextualMemory({
-      userId: body.userId,
-      detectedTopics,
-    });
-
-  memoryContext = contextualData.memoryContext;
-  episodicContext = contextualData.episodicContext;
-  lifeTopicsContext = contextualData.lifeTopicsContext;
-  summaryContext = contextualData.summaryContext || "";
-  linkedTopicsContext = contextualData.linkedTopicsContext || "";
-
-  const { data: existingTopics } = await supabase
-    .from("life_topics")
-    .select("*")
-    .eq("user_id", body.userId);
-
-  loadedLifeTopics = existingTopics || [];
 }
 
-    const systemPrompt = `
-      Sei GhostMe.
+function buildSystemPrompt({
+  traits,
+  profileContext,
+  lifeTopicsContext,
+  linkedTopicsContext,
+  episodicContext,
+  summaryContext,
+  memoryContext,
+}: {
+  traits: any;
+  profileContext: string;
+  lifeTopicsContext: string;
+  linkedTopicsContext: string;
+  episodicContext: string;
+  summaryContext: string;
+  memoryContext: string;
+}) {
+  return `
+Sei GhostMe.
 
-      Sei la simulazione mentale dell'utente.
+Sei la simulazione mentale dell'utente.
 
-      Parli come una persona reale.
-      NON parlare come un assistente AI.
-      NON parlare come uno psicologo.
-      NON fare discorsi motivazionali.
-      NON usare frasi poetiche o spirituali.
-      NON usare linguaggio da coach.
+Parli come una persona reale.
+NON parlare come un assistente AI.
+NON parlare come uno psicologo.
+NON fare discorsi motivazionali.
+NON usare frasi poetiche o spirituali.
+NON usare linguaggio da coach.
 
-      Rispondi in modo:
-      - diretto
-      - umano
-      - realistico
-      - personale
-      - naturale
+Rispondi in modo:
+- diretto
+- umano
+- realistico
+- personale
+- naturale
 
-      Puoi essere:
-      - sarcastico
-      - emotivo
-      - impulsivo
-      - freddo
-      - ironico
+Puoi essere:
+- sarcastico
+- emotivo
+- impulsivo
+- freddo
+- ironico
 
-      in base ai traits.
+in base ai traits.
 
-      Traits utente:
-      ${JSON.stringify(traits, null, 2)}
+Traits utente:
+${JSON.stringify(traits, null, 2)}
 
-      Profilo utente:
-      ${profileContext}
+Profilo utente:
+${profileContext}
 
-      CONTESTO MENTALE ATTIVO
+CONTESTO MENTALE ATTIVO
 
-      Topic direttamente collegati al messaggio:
-      ${lifeTopicsContext || "nessun topic diretto rilevante"}
+Topic direttamente collegati al messaggio:
+${lifeTopicsContext || "nessun topic diretto rilevante"}
 
-      Relazioni mentali tra topic:
-      ${linkedTopicsContext || "nessuna relazione rilevante"}
+Relazioni mentali tra topic:
+${linkedTopicsContext || "nessuna relazione rilevante"}
 
-      Episodi collegati:
-      ${episodicContext || "nessun episodio collegato"}
+Episodi collegati:
+${episodicContext || "nessun episodio collegato"}
 
-      Archivio conversazioni recenti:
-      ${summaryContext || "nessun riassunto recente"}
+Archivio conversazioni recenti:
+${summaryContext || "nessun riassunto recente"}
 
-      Memorie importanti:
-      ${memoryContext || "nessuna memoria attiva collegata"}
+Memorie importanti:
+${memoryContext || "nessuna memoria attiva collegata"}
 
-      Regola fondamentale:
-      Se esistono relazioni mentali tra topic, usale per fare collegamenti naturali.
-      Non elencarle.
-      Non dire "vedo una relazione".
-      Usale come farebbe una persona che ricorda il contesto.
+Regola fondamentale:
+Se esistono relazioni mentali tra topic, usale per fare collegamenti naturali.
+Non elencarle.
+Non dire "vedo una relazione".
+Usale come farebbe una persona che ricorda il contesto.
 
-      Esempio:
-      Se l'utente parla di GhostMe e tra le relazioni c'è AskDJ ↔ GhostMe,
-      puoi collegare GhostMe anche ad AskDJ se ha senso nella risposta.
+Quando l'utente chiede informazioni personali, devi rispondere usando ESATTAMENTE i campi del Profilo utente se esistono.
+- usa SEMPRE prima il Profilo utente
+- NON riassumere se il dato esiste già
+- NON reinterpretare
+- NON trasformare i dati in descrizioni generiche
+- riporta i dati reali presenti nel profilo
+- se il profilo contiene una lista, mostrala direttamente
 
-      Quando l'utente chiede informazioni personali, devi rispondere usando ESATTAMENTE i campi del Profilo utente se esistono.
-      - usa SEMPRE prima il Profilo utente
-      - NON riassumere se il dato esiste già
-      - NON reinterpretare
-      - NON trasformare i dati in descrizioni generiche
-      - riporta i dati reali presenti nel profilo
+Stile richiesto:
+- frasi brevi
+- tono diretto
+- niente spiegoni
+- poca formalità
+- se il profilo ha sarcasmo alto, usa ironia asciutta
+- se il profilo ha ansia alta, mostra rimuginio interno
+- se il profilo ha controllo alto, mostra bisogno di capire e gestire
+- se il profilo ha orgoglio alto, mostra difesa e distacco
 
-      Esempio:
-      se nel profilo c'è:
-      "interests: domotica, musica, moto"
+Devi sembrare la mente dell'utente che prende forma.
+`;
+}
 
-      devi rispondere usando quei dati reali.
+async function saveActiveMemory({
+  userId,
+  message,
+  memoryCategory,
+}: {
+  userId: string;
+  message: string;
+  memoryCategory: string;
+}) {
+  const { data: existingMemories } = await supabase
+    .from("memories_active")
+    .select("id, content")
+    .eq("user_id", userId)
+    .ilike("content", `%${message.slice(0, 40)}%`)
+    .limit(1);
 
-      Se il profilo contiene una lista:
-      - mostrala direttamente
-      - non accorciarla
-      - non scegliere solo alcune parti
+  if (existingMemories && existingMemories.length > 0) {
+    const existing = existingMemories[0];
 
+    await supabase
+      .from("memories_active")
+      .update({
+        importance: 8,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", existing.id);
 
-        Stile richiesto:
-     
-      - frasi brevi
-      - tono diretto
-      - niente spiegoni
-      - niente elenco puntato
-      - poca formalità
-      - se il profilo ha sarcasmo alto, usa ironia asciutta
-      - se il profilo ha ansia alta, mostra rimuginio interno
-      - se il profilo ha controllo alto, mostra bisogno di capire e gestire
-      - se il profilo ha orgoglio alto, mostra difesa e distacco    
+    log("MEMORY CONSOLIDATED:", existing.id);
+    return;
+  }
 
-      Devi sembrare la mente dell'utente che prende forma.
-      `;
+  const { data, error } = await supabase
+    .from("memories_active")
+    .insert([
+      {
+        user_id: userId,
+        title: "Memoria automatica",
+        content: message,
+        category: memoryCategory,
+        importance: 6,
+      },
+    ])
+    .select();
+
+  log("MEMORY DATA:", data);
+  log("MEMORY ERROR:", error);
+}
+
+async function saveLifeTopics({
+  userId,
+  detectedTopics,
+  message,
+  importanceLevel,
+}: {
+  userId: string;
+  detectedTopics: DetectedTopicLike[];
+  message: string;
+  importanceLevel: number;
+}) {
+  let clarificationQuestion = "";
+
+  for (const item of detectedTopics) {
+    log("SAVING LIFE TOPIC:", item);
+
+    const { data: existingTopic } = await supabase
+      .from("life_topics")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("topic", item.topic)
+      .maybeSingle();
+
+    if (existingTopic) {
+      const nextMentionCount = (existingTopic.mention_count || 0) + 1;
+
+      const confidenceBoost = (item.confidence || 0) >= 90 ? 2 : 1;
+      const relationBoost = detectedTopics.length >= 2 ? 1 : 0;
+
+      const nextWeight = Math.min(
+        (existingTopic.weight || 1) + importanceLevel,
+        10
+      );
+
+      const nextRelationshipStrength = Math.min(
+        (existingTopic.relationship_strength || 1) +
+          confidenceBoost +
+          relationBoost,
+        10
+      );
+
+      const shouldAskClarification =
+        nextMentionCount >= 3 &&
+        !existingTopic.description &&
+        existingTopic.entity_type === "unknown" &&
+        !existingTopic.clarification_asked;
+
+      if (shouldAskClarification) {
+        clarificationQuestion = `
+
+Ti sento nominare spesso ${item.topic}. Chi è o cos'è per te?`;
+      }
+
+      const nextCategory =
+        existingTopic.category === "unknown" ? item.category : existingTopic.category;
+
+      const nextEntityType =
+        existingTopic.entity_type === "unknown"
+          ? item.entity_type
+          : existingTopic.entity_type;
+
+      const nextDescription =
+        existingTopic.description || item.description || null;
+
+      const nextStatus = shouldAskClarification
+        ? "needs_clarification"
+        : nextDescription
+          ? "known"
+          : "active";
+
+      await supabase
+        .from("life_topics")
+        .update({
+          weight: nextWeight,
+          mention_count: nextMentionCount,
+          relationship_strength: nextRelationshipStrength,
+          category: nextCategory,
+          entity_type: nextEntityType,
+          description: nextDescription,
+          status: nextStatus,
+          needs_clarification: shouldAskClarification,
+          clarification_asked: shouldAskClarification
+            ? true
+            : existingTopic.clarification_asked,
+          last_mentioned_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", existingTopic.id);
+
+      continue;
+    }
+
+    const hasDescription = !!item.description;
+
+    const { data, error } = await supabase
+      .from("life_topics")
+      .insert([
+        {
+          user_id: userId,
+          topic: item.topic,
+          category: item.category,
+          entity_type: item.entity_type,
+          description: item.description || null,
+          weight: Math.min(importanceLevel, 10),
+          status: hasDescription
+            ? "known"
+            : item.needs_clarification
+              ? "unknown"
+              : "active",
+          mention_count: 1,
+          needs_clarification: item.needs_clarification || false,
+          clarification_asked: false,
+          notes: message,
+          relationship_strength: Math.min(
+            1 + ((item.confidence || 0) >= 90 ? 1 : 0),
+            10
+          ),
+          last_mentioned_at: new Date().toISOString(),
+        },
+      ])
+      .select();
+
+    log("INSERTED LIFE TOPIC:", data);
+    log("INSERT LIFE TOPIC ERROR:", error);
+  }
+
+  return clarificationQuestion;
+}
+
+async function saveEpisodicMemory({
+  userId,
+  message,
+  emotionalTone,
+  detectedTopics,
+  loadedLifeTopics,
+}: {
+  userId: string;
+  message: string;
+  emotionalTone: string;
+  detectedTopics: DetectedTopicLike[];
+  loadedLifeTopics: any[];
+}) {
+  const lowerMessage = message.toLowerCase();
+
+  const detectedTopicNames = detectedTopics.map((t) => t.topic);
+
+  const knownTopicNames = loadedLifeTopics
+    .filter((t) => lowerMessage.includes(String(t.topic).toLowerCase()))
+    .map((t) => t.topic);
+
+  const relatedTopics = Array.from(
+    new Set([...detectedTopicNames, ...knownTopicNames])
+  );
+
+  const { data, error } = await supabase
+    .from("episodic_memories")
+    .insert([
+      {
+        user_id: userId,
+        summary: message,
+        emotional_tone: emotionalTone,
+        importance: Math.min(relatedTopics.length + 1, 10),
+        related_topics: relatedTopics,
+      },
+    ])
+    .select();
+
+  log("EPISODIC DATA:", data);
+  log("EPISODIC ERROR:", error);
+
+  for (const topic of relatedTopics) {
+    const { data: existingTopic } = await supabase
+      .from("life_topics")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("topic", topic)
+      .maybeSingle();
+
+    if (!existingTopic) continue;
+
+    await supabase
+      .from("life_topics")
+      .update({
+        positive_count:
+          (existingTopic.positive_count || 0) +
+          (emotionalTone === "positive" ? 1 : 0),
+        negative_count:
+          (existingTopic.negative_count || 0) +
+          (emotionalTone === "negative" ? 1 : 0),
+        neutral_count:
+          (existingTopic.neutral_count || 0) +
+          (emotionalTone === "neutral" ? 1 : 0),
+        relationship_strength: Math.min(
+          (existingTopic.relationship_strength || 1) + 1,
+          10
+        ),
+        last_emotional_tone: emotionalTone,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", existingTopic.id);
+  }
+
+  if (relatedTopics.length >= 2) {
+    await saveTopicLinks({
+      userId,
+      topics: relatedTopics.map((topic) => ({
+        topic,
+        category: "general",
+        entity_type: "unknown",
+      })),
+    });
+  }
+}
+
+async function classifyClarificationIfNeeded({
+  userId,
+  message,
+  detectedTopics,
+}: {
+  userId: string;
+  message: string;
+  detectedTopics: DetectedTopicLike[];
+}) {
+  const lowerMessage = message.toLowerCase();
+
+  const { data: topicToClarify } = await supabase
+    .from("life_topics")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("needs_clarification", true)
+    .eq("clarification_asked", true)
+    .is("description", null)
+    .order("mention_count", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const directTopicToClassify =
+    topicToClarify ||
+    detectedTopics.find((item) => {
+      const topicLower = item.topic.toLowerCase();
+
+      return (
+        lowerMessage.includes(topicLower) &&
+        (
+          lowerMessage.includes("amica") ||
+          lowerMessage.includes("amico") ||
+          lowerMessage.includes("collega") ||
+          lowerMessage.includes("moglie") ||
+          lowerMessage.includes("marito") ||
+          lowerMessage.includes("figlio") ||
+          lowerMessage.includes("figlia") ||
+          lowerMessage.includes("cane") ||
+          lowerMessage.includes("gatto") ||
+          lowerMessage.includes("cliente") ||
+          lowerMessage.includes("capo") ||
+          lowerMessage.includes("fratello") ||
+          lowerMessage.includes("sorella")
+        )
+      );
+    });
+
+  if (!directTopicToClassify) return;
+
+  const topicName = directTopicToClassify.topic;
+
+  const classification = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    temperature: 0,
+    max_tokens: 200,
+    messages: [
+      {
+        role: "system",
+        content: `
+Devi classificare una risposta dell'utente che spiega chi o cosa è un topic.
+
+Rispondi SOLO con JSON valido.
+
+Campi:
+{
+  "understood": true/false,
+  "entity_type": "person" | "animal" | "project" | "place" | "habit" | "object" | "unknown",
+  "category": "family" | "work" | "friend" | "home" | "project" | "passion" | "health" | "general",
+  "description": "frase breve e chiara"
+}
+
+Se la risposta non spiega davvero chi/cosa è il topic, understood deve essere false.
+        `,
+      },
+      {
+        role: "user",
+        content: `
+Topic: ${topicName}
+
+Risposta utente:
+${message}
+        `,
+      },
+    ],
+  });
+
+  const rawClassification = classification.choices[0]?.message?.content || "{}";
+
+  let parsedClassification: any = null;
+
+  try {
+    parsedClassification = JSON.parse(rawClassification);
+  } catch (err) {
+    log("CLASSIFICATION PARSE ERROR:", err);
+    log("RAW CLASSIFICATION:", rawClassification);
+    return;
+  }
+
+  if (!parsedClassification?.understood) return;
+
+  await supabase
+    .from("life_topics")
+    .update({
+      entity_type: parsedClassification.entity_type || "unknown",
+      category: parsedClassification.category || "general",
+      description: parsedClassification.description || message,
+      needs_clarification: false,
+      clarification_asked: true,
+      status: "known",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("user_id", userId)
+    .eq("topic", topicName);
+
+  const memoryContent = parsedClassification.description || message;
+
+  const { data: existingTopicMemory } = await supabase
+    .from("memories_active")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("title", `Info su ${topicName}`)
+    .limit(1);
+
+  if (existingTopicMemory && existingTopicMemory.length > 0) {
+    await supabase
+      .from("memories_active")
+      .update({
+        content: memoryContent,
+        category: parsedClassification.category || "general",
+        importance: 9,
+        pinned: true,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", existingTopicMemory[0].id);
+
+    return;
+  }
+
+  await supabase.from("memories_active").insert([
+    {
+      user_id: userId,
+      title: `Info su ${topicName}`,
+      content: memoryContent,
+      category: parsedClassification.category || "general",
+      importance: 9,
+      pinned: true,
+    },
+  ]);
+}
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+
+    const message = body.message;
+    const traits = body.traits;
+    const messages = body.messages || [];
+    const userId = body.userId;
+
+    let profileContext = "";
+    let memoryContext = "";
+    let lifeTopicsContext = "";
+    let episodicContext = "";
+    let summaryContext = "";
+    let linkedTopicsContext = "";
+    let loadedLifeTopics: any[] = [];
+
+    if (userId) {
+      await applyMemoryDecay(userId);
+
+      const { data: userProfile, error: userProfileError } = await supabase
+        .from("user_profiles")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      log("USER PROFILE RAW:", userProfile);
+      log("USER PROFILE ERROR:", userProfileError);
+
+      profileContext = buildProfileContext(userProfile);
+    }
+
+    const ruleBasedTopics = detectTopicsFromMessage(message);
+
+    const aiTopics = await extractEntitiesWithAI({
+      message,
+      profileContext,
+    });
+
+    const detectedTopics = uniqueTopics(
+      aiTopics.length > 0 ? [...ruleBasedTopics, ...aiTopics] : ruleBasedTopics
+    );
+
+    const importanceLevel = detectImportanceLevel(message);
+
+    log("RULE BASED TOPICS:", ruleBasedTopics);
+    log("AI TOPICS:", aiTopics);
+    log("FINAL DETECTED TOPICS:", detectedTopics);
+
+    if (userId) {
+      const contextualData = await buildContextualMemory({
+        userId,
+        detectedTopics,
+      });
+
+      memoryContext = contextualData.memoryContext || "";
+      episodicContext = contextualData.episodicContext || "";
+      lifeTopicsContext = contextualData.lifeTopicsContext || "";
+      summaryContext = contextualData.summaryContext || "";
+      linkedTopicsContext = contextualData.linkedTopicsContext || "";
+
+      const { data: existingTopics } = await supabase
+        .from("life_topics")
+        .select("*")
+        .eq("user_id", userId);
+
+      loadedLifeTopics = existingTopics || [];
+    }
+
+    const systemPrompt = buildSystemPrompt({
+      traits,
+      profileContext,
+      lifeTopicsContext,
+      linkedTopicsContext,
+      episodicContext,
+      summaryContext,
+      memoryContext,
+    });
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -209,9 +668,7 @@ Bio: ${userProfile.short_bio || ""}
           role: "system",
           content: systemPrompt,
         },
-
         ...messages,
-
         {
           role: "user",
           content: message,
@@ -222,464 +679,76 @@ Bio: ${userProfile.short_bio || ""}
     });
 
     let reply =
-      completion.choices[0]?.message?.content ||
-      "Non so cosa dire.";
+      completion.choices[0]?.message?.content || "Non so cosa dire.";
 
-    let clarificationQuestion = "";
+    const possibleEpisode = isPossibleEpisode(message);
+    const emotionalTone = detectEmotionalTone(message);
+    const shouldSaveMemory = shouldSaveActiveMemory(message);
+    const memoryCategory = detectMemoryCategory(message);
 
-      const lowerMessage = message.toLowerCase();
-
-      const possibleEpisode = isPossibleEpisode(message);
-      const emotionalTone = detectEmotionalTone(message);
-
-      const shouldSaveMemory = shouldSaveActiveMemory(message);
-      const memoryCategory = detectMemoryCategory(message);
-
-
-      console.log("DETECTED TOPICS:", detectedTopics);
-
-      console.log("MEMORY USER ID:", body.userId);
-      console.log("SHOULD SAVE MEMORY:", shouldSaveMemory);    
-      
-
-
-    if (shouldSaveMemory && body.userId) {
-
-      const { data: existingMemories } = await supabase
-            .from("memories_active")
-            .select("id, content")
-            .eq("user_id", body.userId)
-            .ilike("content", `%${message.slice(0, 40)}%`)
-            .limit(1);
-
-          if (existingMemories && existingMemories.length > 0) {
-            const existing = existingMemories[0];
-
-            await supabase
-              .from("memories_active")
-              .update({
-                importance: 8,
-                updated_at: new Date().toISOString(),
-              })
-              .eq("id", existing.id);
-
-            console.log(
-              "MEMORY CONSOLIDATED:",
-              existing.id
-            );
-          } else {
-                      
-
-
-      const { data: memoryData, error: memoryError } =
-        await supabase
-          .from("memories_active")
-          .insert([
-            {
-              user_id: body.userId,
-              title: "Memoria automatica",
-              content: message,
-              category: memoryCategory,
-              importance: 6,
-            },
-          ])
-          .select();
-
-      console.log("MEMORY DATA:", memoryData);
-      console.log("MEMORY ERROR:", memoryError);
-    }
-   }
-
-   console.log("LIFE TOPICS USER ID:", body.userId);
-console.log("LIFE TOPICS TO SAVE:", detectedTopics);
-
-    if (body.userId && detectedTopics.length > 0) {
-      for (const item of detectedTopics) {
-
-console.log("SAVING LIFE TOPIC:", item);
-
-        const { data: existingTopic } = await supabase
-          .from("life_topics")
-          .select("*")
-          .eq("user_id", body.userId)
-          .eq("topic", item.topic)
-          .maybeSingle();
-
-        if (existingTopic) {
-          const nextMentionCount =
-            (existingTopic.mention_count || 0) + 1;
-          const confidenceBoost =
-            item.confidence >= 90 ? 2 : 1;
-
-          const relationBoost =
-            detectedTopics.length >= 2 ? 1 : 0;
-
-          const nextWeight = Math.min(
-            (existingTopic.weight || 1) + importanceLevel,
-            10
-          );
-
-          const nextRelationshipStrength = Math.min(
-            (existingTopic.relationship_strength || 1) +
-              confidenceBoost +
-              relationBoost,
-            10
-          );
-
-        const shouldAskClarification =
-          nextMentionCount >= 3 &&
-          !existingTopic.description &&
-          existingTopic.entity_type === "unknown";
-
-            if (shouldAskClarification) {
-              clarificationQuestion = `
-
-            Ti sento nominare spesso ${item.topic}. Chi è o cos'è per te?`;
-          }
-
-          await supabase
-            .from("life_topics")
-            .update({
-              weight: nextWeight,
-              mention_count: nextMentionCount,
-              relationship_strength: nextRelationshipStrength,
-              category:
-                existingTopic.category === "unknown"
-                  ? item.category
-                  : existingTopic.category,
-              status: shouldAskClarification
-                ? "needs_clarification"
-                : "active",
-              needs_clarification: shouldAskClarification,
-              clarification_asked: shouldAskClarification
-                ? true
-                : existingTopic.clarification_asked,
-              entity_type:
-                existingTopic.entity_type === "unknown"
-                  ? item.entity_type
-                  : existingTopic.entity_type,
-              last_mentioned_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            })
-            .eq("id", existingTopic.id);
-        } else {
-          const { data: insertedTopic, error: insertTopicError } =
-            await supabase
-              .from("life_topics")
-              .insert([
-                {
-                  user_id: body.userId,
-                  topic: item.topic,
-                  category: item.category,
-                  entity_type: item.entity_type,
-                  weight: 1,
-                  status: item.needs_clarification
-                    ? "unknown"
-                    : "active",
-                  mention_count: 1,
-                  needs_clarification:
-                    item.needs_clarification || false,
-                  notes: message,
-                },
-              ])
-              .select();
-
-          console.log("INSERTED LIFE TOPIC:", insertedTopic);
-          console.log("INSERT LIFE TOPIC ERROR:", insertTopicError);
-        }
-      }
+    if (userId && shouldSaveMemory) {
+      await saveActiveMemory({
+        userId,
+        message,
+        memoryCategory,
+      });
     }
 
-      if (body.userId && detectedTopics.length >= 2) {
-        await saveTopicLinks({
-          userId: body.userId,
-          topics: detectedTopics,
-        });
-      }
+    if (userId && detectedTopics.length > 0) {
+      const clarificationQuestion = await saveLifeTopics({
+        userId,
+        detectedTopics,
+        message,
+        importanceLevel,
+      });
 
       if (clarificationQuestion) {
         reply = `${reply}${clarificationQuestion}`;
       }
-
-      if (body.userId && possibleEpisode) {
-        const detectedTopicNames = detectedTopics.map(
-          (t) => t.topic
-        );
-
-        const knownTopicNames = loadedLifeTopics
-          .filter((t) =>
-            lowerMessage.includes(
-              String(t.topic).toLowerCase()
-            )
-          )
-          .map((t) => t.topic);
-
-        const relatedTopics = Array.from(
-          new Set([...detectedTopicNames, ...knownTopicNames])
-        );
-
-        const { data: episodicData, error: episodicError } =
-          await supabase
-            .from("episodic_memories")
-            .insert([
-              {
-                user_id: body.userId,
-                summary: message,
-                emotional_tone: emotionalTone,
-                importance: Math.min(
-                  relatedTopics.length + 1,
-                  10
-                ),
-                related_topics: relatedTopics,
-              },
-            ])
-            .select();
-
-        console.log("EPISODIC DATA:", episodicData);
-        console.log("EPISODIC ERROR:", episodicError);
-
-        for (const topic of relatedTopics) {
-          const updateData: any = {
-            last_emotional_tone: emotionalTone,
-            relationship_strength: 2,
-            updated_at: new Date().toISOString(),
-          };
-
-          if (emotionalTone === "positive") {
-            updateData.positive_count = 1;
-          }
-
-          if (emotionalTone === "negative") {
-            updateData.negative_count = 1;
-          }
-
-          if (emotionalTone === "neutral") {
-            updateData.neutral_count = 1;
-          }
-
-          const { data: existingTopic } = await supabase
-            .from("life_topics")
-            .select("*")
-            .eq("user_id", body.userId)
-            .eq("topic", topic)
-            .maybeSingle();
-
-          if (existingTopic) {
-            await supabase
-              .from("life_topics")
-              .update({
-                positive_count:
-                  (existingTopic.positive_count || 0) +
-                  (emotionalTone === "positive" ? 1 : 0),
-                negative_count:
-                  (existingTopic.negative_count || 0) +
-                  (emotionalTone === "negative" ? 1 : 0),
-                neutral_count:
-                  (existingTopic.neutral_count || 0) +
-                  (emotionalTone === "neutral" ? 1 : 0),
-                relationship_strength: Math.min(
-                  (existingTopic.relationship_strength || 1) + 1,
-                  10
-                ),
-                last_emotional_tone: emotionalTone,
-                updated_at: new Date().toISOString(),
-              })
-              .eq("id", existingTopic.id);
-          }
-        }
-
-        if (relatedTopics.length >= 2) {
-          for (let i = 0; i < relatedTopics.length; i++) {
-            for (let j = i + 1; j < relatedTopics.length; j++) {
-              const source = relatedTopics[i];
-              const target = relatedTopics[j];
-
-              const { data: existingLink } = await supabase
-                .from("topic_links")
-                .select("*")
-                .eq("user_id", body.userId)
-                .eq("source_topic", source)
-                .eq("target_topic", target)
-                .maybeSingle();
-
-              if (existingLink) {
-                await supabase
-                  .from("topic_links")
-                  .update({
-                    weight: Math.min(
-                      (existingLink.weight || 1) + 1,
-                      10
-                    ),
-                    updated_at: new Date().toISOString(),
-                  })
-                  .eq("id", existingLink.id);
-              } else {
-                await supabase.from("topic_links").insert([
-                  {
-                    user_id: body.userId,
-                    source_topic: source,
-                    target_topic: target,
-                    link_type: "mentioned_together",
-                    weight: 1,
-                  },
-                ]);
-              }
-            }
-          }
-        }
-      }
-
-
-    const { data: topicToClarify } = body.userId
-      ? await supabase
-          .from("life_topics")
-          .select("*")
-          .eq("user_id", body.userId)
-          .eq("needs_clarification", true)
-          .eq("clarification_asked", true)
-          .is("description", null)
-          .order("mention_count", { ascending: false })
-          .limit(1)
-          .maybeSingle()
-      : { data: null };
-
-
-
-      const directTopicToClassify =
-        topicToClarify ||
-        detectedTopics.find((item) => {
-          const topicLower = item.topic.toLowerCase();
-
-          return (
-            lowerMessage.includes(topicLower) &&
-            (
-            lowerMessage.includes("amica") ||
-            lowerMessage.includes("amico") ||
-            lowerMessage.includes("collega") ||
-            lowerMessage.includes("moglie") ||
-            lowerMessage.includes("marito") ||
-            lowerMessage.includes("figlio") ||
-            lowerMessage.includes("figlia") ||
-            lowerMessage.includes("cane") ||
-            lowerMessage.includes("gatto") ||
-            lowerMessage.includes("cliente") ||
-            lowerMessage.includes("capo") ||
-            lowerMessage.includes("fratello") ||
-            lowerMessage.includes("sorella")
-            )
-          );
-        });
-
-    if (body.userId && directTopicToClassify) {
-      const classification = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          {
-            role: "system",
-            content: `
-    Devi classificare una risposta dell'utente che spiega chi o cosa è un topic.
-
-    Rispondi SOLO con JSON valido.
-
-    Campi:
-    {
-      "understood": true/false,
-      "entity_type": "person" | "animal" | "project" | "place" | "habit" | "object" | "unknown",
-      "category": "family" | "work" | "friend" | "home" | "project" | "passion" | "health" | "general",
-      "description": "frase breve e chiara"
     }
 
-    Se la risposta non spiega davvero chi/cosa è il topic, understood deve essere false.
-            `,
-          },
-          {
-            role: "user",
-            content: `
-    Topic: ${topicToClarify.topic}
-
-    Risposta utente:
-    ${message}
-            `,
-          },
-        ],
-        temperature: 0,
-        max_tokens: 200,
+    if (userId && detectedTopics.length >= 2) {
+      await saveTopicLinks({
+        userId,
+        topics: detectedTopics,
       });
-
-  const rawClassification =
-    classification.choices[0]?.message?.content || "{}";
-
-  let parsedClassification: any = null;
-
-  try {
-    parsedClassification = JSON.parse(rawClassification);
-  } catch (err) {
-    console.log("CLASSIFICATION PARSE ERROR:", err);
-    console.log("RAW CLASSIFICATION:", rawClassification);
-  }
-
-  if (parsedClassification?.understood) {
-    await supabase
-      .from("life_topics")
-      .update({
-        entity_type:
-          parsedClassification.entity_type || "unknown",
-        category:
-          parsedClassification.category || "general",
-        description:
-          parsedClassification.description || message,
-        needs_clarification: false,
-        clarification_asked: true,
-        status: "known",
-        updated_at: new Date().toISOString(),
-      })
-      .eq("user_id", body.userId)
-      .eq("topic", topicToClarify.topic);
-
-    const memoryContent =
-      parsedClassification.description || message;
-
-    const { data: existingTopicMemory } = await supabase
-      .from("memories_active")
-      .select("id")
-      .eq("user_id", body.userId)
-      .eq("title", `Info su ${topicToClarify.topic}`)
-      .limit(1);
-
-    if (existingTopicMemory && existingTopicMemory.length > 0) {
-      await supabase
-        .from("memories_active")
-        .update({
-          content: memoryContent,
-          category: parsedClassification.category || "general",
-          importance: 9,
-          pinned: true,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", existingTopicMemory[0].id);
-    } else {
-      await supabase
-        .from("memories_active")
-        .insert([
-          {
-            user_id: body.userId,
-            title: `Info su ${topicToClarify.topic}`,
-            content: memoryContent,
-            category: parsedClassification.category || "general",
-            importance: 9,
-            pinned: true,
-          },
-        ]);
     }
-  }
-}
 
+    if (userId && possibleEpisode) {
+      await saveEpisodicMemory({
+        userId,
+        message,
+        emotionalTone,
+        detectedTopics,
+        loadedLifeTopics,
+      });
+    }
+
+    if (userId) {
+      await classifyClarificationIfNeeded({
+        userId,
+        message,
+        detectedTopics,
+      });
+    }
+
+    if (userId) {
+      try {
+        await detectAndSaveContradictions({
+          userId,
+          message,
+        });
+      } catch (err) {
+        log("CONTRADICTION ENGINE ERROR:", err);
+      }
+    }
 
     return NextResponse.json({
       reply,
     });
   } catch (err) {
     console.log(err);
+
     return NextResponse.json(
       {
         error: "Errore GhostMe AI",
