@@ -27,6 +27,7 @@ let memoryContext = "";
 let profileContext = "";
 let lifeTopicsContext = "";
 let episodicContext = "";
+let summaryContext = "";
 
 let loadedLifeTopics: any[] = [];
 
@@ -71,8 +72,8 @@ Bio: ${userProfile.short_bio || ""}
 
   memoryContext = contextualData.memoryContext;
   episodicContext = contextualData.episodicContext;
-  lifeTopicsContext =
-    contextualData.lifeTopicsContext;
+  lifeTopicsContext = contextualData.lifeTopicsContext;
+  summaryContext = contextualData.summaryContext || "";
 
   const { data: existingTopics } = await supabase
     .from("life_topics")
@@ -121,6 +122,9 @@ Bio: ${userProfile.short_bio || ""}
 
       Episodi recenti:
       ${episodicContext}
+
+      Archivio conversazioni recenti:
+      ${summaryContext}
 
       Memorie conosciute:
       ${memoryContext}
