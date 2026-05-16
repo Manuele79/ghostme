@@ -35,6 +35,8 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(true);
   const [traits, setTraits] = useState<any>(null);
   const [userEmail, setUserEmail] = useState("");
+  const [userName, setUserName] = useState("Tu");
+  const [userProfile, setUserProfile] = useState<any>(null);
 
   const [ghostMessage, setGhostMessage] = useState("");
   const [summary, setSummary] = useState<string[]>([]);
@@ -44,11 +46,17 @@ export default function ChatPage() {
   const [loadingChat, setLoadingChat] = useState(false);
 
   const [mode, setMode] = useState<Mode>("chat-chat");
-  const [brainOpen, setBrainOpen] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
-  const [activeBrainTab, setActiveBrainTab] = useState<
-    "memory" | "timeline" | "goals" | "state" | "actions"
+  const [memoryOpen, setMemoryOpen] = useState(false);
+  const [servicesOpen, setServicesOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+
+  const [activeMemoryTab, setActiveMemoryTab] = useState<
+    "memory" | "timeline" | "goals" | "state"
   >("memory");
+
+  const [activeServiceTab, setActiveServiceTab] = useState<
+    "actions" | "calendar" | "mail" | "web" | "home" | "profile" | "traits"
+  >("actions");
 
   const [brainData, setBrainData] = useState<BrainData>({
     memories: [],
@@ -61,6 +69,11 @@ export default function ChatPage() {
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   const currentModeLabel = useMemo(() => modeLabels[mode], [mode]);
+
+  const lastUserMessage = [...messages].reverse().find((m) => m.role === "user");
+  const lastAssistantMessage = [...messages]
+    .reverse()
+    .find((m) => m.role === "assistant");
 
   useEffect(() => {
     const savedMode =
@@ -92,8 +105,9 @@ export default function ChatPage() {
 
       const { data: profile } = await supabase
         .from("user_profiles")
-        .select("id")
+        .select("*")
         .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
 
@@ -101,6 +115,9 @@ export default function ChatPage() {
         router.push("/setup/profile");
         return;
       }
+
+      setUserProfile(profile);
+      setUserName(profile.full_name || "Tu");
 
       const { data: traitsData } = await supabase
         .from("traits")
@@ -149,7 +166,7 @@ export default function ChatPage() {
     messagesEndRef.current?.scrollIntoView({
       behavior: "smooth",
     });
-  }, [messages]);
+  }, [messages, historyOpen]);
 
   async function loadBrainData(userId: string) {
     const [memoriesRes, timelineRes, goalsRes, mentalRes, actionsRes] =
@@ -160,21 +177,21 @@ export default function ChatPage() {
           .eq("user_id", userId)
           .order("pinned", { ascending: false })
           .order("importance", { ascending: false })
-          .limit(20),
+          .limit(30),
 
         supabase
           .from("autobiographical_timeline")
           .select("*")
           .eq("user_id", userId)
           .order("event_date", { ascending: false })
-          .limit(20),
+          .limit(30),
 
         supabase
           .from("goals_desires")
           .select("*")
           .eq("user_id", userId)
           .order("importance", { ascending: false })
-          .limit(20),
+          .limit(30),
 
         supabase
           .from("mental_states")
@@ -189,7 +206,7 @@ export default function ChatPage() {
           .select("*")
           .eq("user_id", userId)
           .order("priority", { ascending: false })
-          .limit(20),
+          .limit(30),
       ]);
 
     setBrainData({
@@ -360,302 +377,836 @@ export default function ChatPage() {
     );
   }
 
-return (
-  <main className="relative min-h-screen overflow-hidden bg-black text-white">
-    {/* ENERGIA BACKGROUND */}
-    <div className="pointer-events-none fixed inset-0 overflow-hidden">
-      <div className="absolute left-1/2 top-[28%] h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-400/20 blur-[120px] animate-pulse" />
+  return (
+    <main className="relative min-h-screen overflow-hidden bg-black text-white">
+      <style jsx global>{`
+        * {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(34, 211, 238, 0.75) rgba(0, 0, 0, 0.35);
+        }
 
-      <div className="absolute left-1/2 top-[28%] h-[320px] w-[320px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-300/20 bg-cyan-300/10 blur-[2px]" />
+        ::-webkit-scrollbar {
+          width: 8px;
+        }
 
-      <div className="absolute left-1/2 top-[28%] h-[180px] w-[180px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-200/20 shadow-[0_0_80px_rgba(34,211,238,0.55)]" />
-    </div>
+        ::-webkit-scrollbar-track {
+          background: rgba(0, 0, 0, 0.35);
+          border-radius: 999px;
+        }
 
-    {/* DRAWER MEMORIA */}
-    {brainOpen && (
-      <div className="fixed inset-0 z-50 flex">
-        <button
-          className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-          onClick={() => setBrainOpen(false)}
-        />
+        ::-webkit-scrollbar-thumb {
+          background: rgba(34, 211, 238, 0.75);
+          border-radius: 999px;
+          box-shadow: 0 0 18px rgba(34, 211, 238, 0.45);
+        }
 
-        <aside className="relative h-full w-[92%] max-w-md overflow-y-auto border-r border-cyan-400/20 bg-zinc-950/95 p-5 shadow-[0_0_60px_rgba(34,211,238,0.18)]">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.35em] text-cyan-400">
-                GhostMe Memory
-              </p>
+        @keyframes ghostCorePulse {
+          0%,
+          100% {
+            transform: scale(0.96);
+            opacity: 0.72;
+          }
+          50% {
+            transform: scale(1.08);
+            opacity: 1;
+          }
+        }
 
-              <h2 className="mt-2 text-2xl font-black">
-                Memoria viva
-              </h2>
-            </div>
+        @keyframes ghostOrbit {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
 
-            <button
-              onClick={() => setBrainOpen(false)}
-              className="rounded-full border border-zinc-700 px-3 py-1 text-sm text-zinc-300"
-            >
-              ✕
-            </button>
-          </div>
+        @keyframes ghostReverseOrbit {
+          from {
+            transform: rotate(360deg);
+          }
+          to {
+            transform: rotate(0deg);
+          }
+        }
 
-          <div className="mt-6 grid grid-cols-2 gap-2">
-            {[
-              ["memory", "Memoria"],
-              ["timeline", "Timeline"],
-              ["goals", "Goals"],
-              ["state", "Mental"],
-            ].map(([key, label]) => (
-              <button
-                key={key}
-                onClick={() => setActiveBrainTab(key as any)}
-                className={`rounded-2xl border px-3 py-3 text-sm font-bold transition ${
-                  activeBrainTab === key
-                    ? "border-cyan-300 bg-cyan-300 text-black"
-                    : "border-zinc-800 bg-black text-zinc-300"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+        @keyframes ghostFlicker {
+          0%,
+          100% {
+            opacity: 0.35;
+          }
+          50% {
+            opacity: 0.9;
+          }
+        }
+      `}</style>
 
-          <div className="mt-5">
-            <BrainPanelContent
-              activeTab={activeBrainTab}
-              brainData={brainData}
-            />
-          </div>
-        </aside>
-      </div>
-    )}
+      <GhostEnergyBackground mode={mode} />
 
-    {/* DRAWER SERVIZI */}
-    {profileOpen && (
-      <div className="fixed inset-0 z-50 flex justify-end">
-        <button
-          className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-          onClick={() => setProfileOpen(false)}
-        />
+      <MemoryDrawer
+        open={memoryOpen}
+        onClose={() => setMemoryOpen(false)}
+        activeTab={activeMemoryTab}
+        setActiveTab={setActiveMemoryTab}
+        brainData={brainData}
+      />
 
-        <aside className="relative h-full w-[92%] max-w-md overflow-y-auto border-l border-cyan-400/20 bg-zinc-950/95 p-5 shadow-[0_0_60px_rgba(34,211,238,0.18)]">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.35em] text-cyan-400">
-                GhostMe Systems
-              </p>
+      <ServicesDrawer
+        open={servicesOpen}
+        onClose={() => setServicesOpen(false)}
+        activeTab={activeServiceTab}
+        setActiveTab={setActiveServiceTab}
+        userEmail={userEmail}
+        userProfile={userProfile}
+        traits={traits}
+        summary={summary}
+        ghostMessage={ghostMessage}
+        actions={brainData.actions}
+        logout={logout}
+      />
 
-              <h2 className="mt-2 text-2xl font-black">
-                Servizi
-              </h2>
-            </div>
+      <HistoryDrawer
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        messages={messages}
+        userName={userName}
+      />
 
-            <button
-              onClick={() => setProfileOpen(false)}
-              className="rounded-full border border-zinc-700 px-3 py-1 text-sm text-zinc-300"
-            >
-              ✕
-            </button>
-          </div>
-
-          <div className="mt-6 grid grid-cols-2 gap-3">
-            {[
-              "Azioni",
-              "Calendario",
-              "Mail",
-              "Web",
-              "Home Assistant",
-              "Voce",
-              "GPS",
-              "Notifiche",
-            ].map((item) => (
-              <div
-                key={item}
-                className="rounded-2xl border border-zinc-800 bg-black/60 p-4"
-              >
-                <p className="font-bold text-cyan-200">
-                  {item}
-                </p>
-
-                <p className="mt-2 text-xs text-zinc-500">
-                  Offline / coming soon
-                </p>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-8 rounded-3xl border border-cyan-400/20 bg-cyan-400/5 p-4">
-            <p className="text-xs uppercase tracking-[0.3em] text-cyan-300">
-              Profilo collegato
-            </p>
-
-            <p className="mt-3 text-sm text-zinc-300">
-              {userEmail}
-            </p>
-
-            <div className="mt-5 space-y-2">
-              {summary.map((item, index) => (
-                <div
-                  key={index}
-                  className="rounded-2xl border border-zinc-800 bg-black/40 p-3 text-sm text-zinc-300"
-                >
-                  {item}
-                </div>
-              ))}
-            </div>
-
-            <button
-              onClick={logout}
-              className="mt-5 w-full rounded-2xl border border-red-500/30 px-4 py-3 text-sm font-bold text-red-300"
-            >
-              Logout
-            </button>
-          </div>
-        </aside>
-      </div>
-    )}
-
-    {/* CONTENUTO */}
-    <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 pb-5 pt-6">
-      
-      {/* HEADER */}
-      <header className="text-center">
-        <p className="text-xs uppercase tracking-[0.45em] text-cyan-400">
-          GhostMe
-        </p>
-
-        <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-6xl">
-          GhostMe
-        </h1>
-
-        <p className="mt-3 text-sm text-zinc-400 sm:text-base">
-          Memoria cognitiva attiva
-        </p>
-
-        {/* TASTI */}
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 pb-4 pt-6 sm:px-6">
+        <header className="relative mx-auto w-full max-w-5xl text-center">
           <button
-            onClick={() => setBrainOpen(true)}
-            className="rounded-2xl border border-cyan-400/25 bg-black/50 px-5 py-3 text-sm font-bold text-cyan-200 shadow-[0_0_18px_rgba(34,211,238,0.16)]"
+            onClick={() => setMemoryOpen(true)}
+            className="absolute left-0 top-8 hidden rounded-2xl border border-cyan-400/25 bg-black/50 px-5 py-3 text-sm font-bold text-cyan-200 shadow-[0_0_18px_rgba(34,211,238,0.16)] sm:block"
           >
             Memoria
           </button>
 
           <button
-            onClick={() => setProfileOpen(true)}
-            className="rounded-2xl border border-cyan-400/25 bg-black/50 px-5 py-3 text-sm font-bold text-cyan-200 shadow-[0_0_18px_rgba(34,211,238,0.16)]"
+            onClick={() => setServicesOpen(true)}
+            className="absolute right-0 top-8 hidden rounded-2xl border border-cyan-400/25 bg-black/50 px-5 py-3 text-sm font-bold text-cyan-200 shadow-[0_0_18px_rgba(34,211,238,0.16)] sm:block"
           >
             Servizi
           </button>
 
+          <p className="text-xs uppercase tracking-[0.45em] text-cyan-400">
+            GhostMe
+          </p>
+
+          <h1 className="mt-3 text-5xl font-black tracking-tight sm:text-7xl">
+            GhostMe
+          </h1>
+
+          <p className="mt-2 text-sm text-zinc-400 sm:text-base">
+            Memoria cognitiva attiva
+          </p>
+
+          <div className="mt-5 flex items-center justify-center gap-3 sm:hidden">
+            <button
+              onClick={() => setMemoryOpen(true)}
+              className="rounded-2xl border border-cyan-400/25 bg-black/50 px-4 py-3 text-sm font-bold text-cyan-200"
+            >
+              Memoria
+            </button>
+
+            <button
+              onClick={() => setServicesOpen(true)}
+              className="rounded-2xl border border-cyan-400/25 bg-black/50 px-4 py-3 text-sm font-bold text-cyan-200"
+            >
+              Servizi
+            </button>
+          </div>
+        </header>
+
+        {mode === "voce-voce" ? (
+          <VoiceOnlyMode
+            currentModeLabel={currentModeLabel}
+            cycleMode={cycleMode}
+            startVoiceInput={startVoiceInput}
+            openMemory={() => setMemoryOpen(true)}
+            openServices={() => setServicesOpen(true)}
+          />
+        ) : (
+          <ChatMode
+            mode={mode}
+            currentModeLabel={currentModeLabel}
+            cycleMode={cycleMode}
+            input={input}
+            setInput={setInput}
+            sendMessage={sendMessage}
+            loadingChat={loadingChat}
+            startVoiceInput={startVoiceInput}
+            lastUserMessage={lastUserMessage}
+            lastAssistantMessage={lastAssistantMessage}
+            userName={userName}
+            openHistory={() => setHistoryOpen(true)}
+          />
+        )}
+      </div>
+    </main>
+  );
+}
+
+function GhostEnergyBackground({ mode }: { mode: Mode }) {
+  const voiceOnly = mode === "voce-voce";
+
+  return (
+    <div className="pointer-events-none fixed inset-0 overflow-hidden">
+      <div
+        className={`absolute left-1/2 ${
+          voiceOnly ? "top-[46%]" : "top-[45%]"
+        } h-[760px] w-[760px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-400/10 blur-[130px]`}
+        style={{ animation: "ghostCorePulse 5s ease-in-out infinite" }}
+      />
+
+      <div
+        className={`absolute left-1/2 ${
+          voiceOnly ? "top-[47%]" : "top-[47%]"
+        } h-[430px] w-[430px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-300/20 bg-cyan-400/8 shadow-[0_0_120px_rgba(34,211,238,0.20)]`}
+      />
+
+      <div
+        className={`absolute left-1/2 ${
+          voiceOnly ? "top-[47%]" : "top-[47%]"
+        } h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 rounded-full`}
+        style={{ animation: "ghostOrbit 12s linear infinite" }}
+      >
+        <div className="absolute left-1/2 top-0 h-3 w-20 -translate-x-1/2 rounded-full bg-cyan-200/70 blur-[2px] shadow-[0_0_35px_rgba(34,211,238,0.8)]" />
+        <div className="absolute bottom-8 right-6 h-2 w-16 rounded-full bg-cyan-400/60 blur-[2px] shadow-[0_0_28px_rgba(34,211,238,0.7)]" />
+      </div>
+
+      <div
+        className={`absolute left-1/2 ${
+          voiceOnly ? "top-[47%]" : "top-[47%]"
+        } h-[230px] w-[230px] -translate-x-1/2 -translate-y-1/2 rounded-full`}
+        style={{ animation: "ghostReverseOrbit 8s linear infinite" }}
+      >
+        <div className="absolute right-0 top-1/2 h-2 w-14 rounded-full bg-cyan-100/70 blur-[1px] shadow-[0_0_35px_rgba(125,249,255,0.85)]" />
+      </div>
+
+      <div
+        className={`absolute left-1/2 ${
+          voiceOnly ? "top-[47%]" : "top-[47%]"
+        } h-[120px] w-[120px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-100/35 shadow-[0_0_90px_rgba(34,211,238,0.8)]`}
+        style={{ animation: "ghostCorePulse 2.8s ease-in-out infinite" }}
+      />
+
+      <div
+        className="absolute left-[18%] top-[28%] h-1 w-1 rounded-full bg-cyan-200"
+        style={{ animation: "ghostFlicker 3s ease-in-out infinite" }}
+      />
+      <div
+        className="absolute right-[22%] top-[36%] h-1 w-1 rounded-full bg-cyan-200"
+        style={{ animation: "ghostFlicker 4s ease-in-out infinite" }}
+      />
+      <div
+        className="absolute bottom-[22%] left-[34%] h-1 w-1 rounded-full bg-cyan-300"
+        style={{ animation: "ghostFlicker 5s ease-in-out infinite" }}
+      />
+    </div>
+  );
+}
+
+function ChatMode({
+  mode,
+  currentModeLabel,
+  cycleMode,
+  input,
+  setInput,
+  sendMessage,
+  loadingChat,
+  startVoiceInput,
+  lastUserMessage,
+  lastAssistantMessage,
+  userName,
+  openHistory,
+}: {
+  mode: Mode;
+  currentModeLabel: string;
+  cycleMode: () => void;
+  input: string;
+  setInput: (value: string) => void;
+  sendMessage: () => void;
+  loadingChat: boolean;
+  startVoiceInput: () => void;
+  lastUserMessage?: ChatMessage;
+  lastAssistantMessage?: ChatMessage;
+  userName: string;
+  openHistory: () => void;
+}) {
+  return (
+    <section className="relative mx-auto mt-8 flex w-full max-w-4xl flex-1 flex-col justify-end">
+      <div className="relative z-10 flex min-h-[36vh] flex-col justify-end gap-5 pb-5">
+        {lastUserMessage && (
+          <ChatBubble
+            role="user"
+            label={userName}
+            content={lastUserMessage.content}
+          />
+        )}
+
+        {lastAssistantMessage && (
+          <ChatBubble
+            role="assistant"
+            label="GhostMe"
+            content={lastAssistantMessage.content}
+          />
+        )}
+
+        {!lastUserMessage && !lastAssistantMessage && (
+          <div className="mx-auto max-w-xl rounded-3xl border border-cyan-400/20 bg-black/45 p-5 text-center text-zinc-300 backdrop-blur-sm">
+            Scrivi qualcosa. GhostMe ha già il cervello acceso.
+          </div>
+        )}
+      </div>
+
+      <button
+        onClick={openHistory}
+        className="absolute left-[-3.8rem] top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-cyan-400/25 bg-black/70 text-xs font-black text-cyan-200 shadow-[0_0_25px_rgba(34,211,238,0.18)] lg:flex"
+        title="Cronologia"
+      >
+        ↺
+      </button>
+
+      <div className="relative z-20 rounded-[1.6rem] border border-cyan-400/10 bg-black/60 p-2 backdrop-blur-md">
+        <div className="flex gap-2">
           <button
             onClick={cycleMode}
-            className="rounded-2xl border border-cyan-300/30 bg-cyan-400/10 px-5 py-3 text-sm font-black text-cyan-100"
+            className="hidden rounded-2xl border border-cyan-400/25 bg-cyan-400/10 px-4 text-xs font-black text-cyan-100 sm:block"
+          >
+            {currentModeLabel}
+          </button>
+
+          {mode === "voce-chat" && (
+            <button
+              onClick={startVoiceInput}
+              className="rounded-2xl border border-cyan-400/25 bg-cyan-400/10 px-4 text-cyan-200"
+            >
+              🎙
+            </button>
+          )}
+
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+              }
+            }}
+            placeholder="Scrivi qualcosa..."
+            className="h-16 flex-1 resize-none rounded-2xl border border-zinc-800 bg-zinc-950/90 p-4 text-white outline-none placeholder:text-zinc-600 focus:border-cyan-400"
+          />
+
+          <button
+            onClick={sendMessage}
+            disabled={loadingChat}
+            className="rounded-2xl bg-cyan-300 px-5 font-black text-black shadow-[0_0_25px_rgba(34,211,238,0.28)] disabled:opacity-50"
+          >
+            {loadingChat ? "..." : "↗"}
+          </button>
+        </div>
+
+        <div className="mt-2 flex justify-between gap-2 sm:hidden">
+          <button
+            onClick={openHistory}
+            className="rounded-2xl border border-cyan-400/20 px-4 py-2 text-xs font-bold text-cyan-200"
+          >
+            Cronologia
+          </button>
+
+          <button
+            onClick={cycleMode}
+            className="rounded-2xl border border-cyan-400/20 px-4 py-2 text-xs font-bold text-cyan-200"
           >
             {currentModeLabel}
           </button>
         </div>
-      </header>
+      </div>
+    </section>
+  );
+}
 
-      {/* CHAT MODE */}
-      {(mode === "chat-chat" || mode === "voce-chat") && (
-        <section className="relative mt-10 flex min-h-0 flex-1 flex-col">
-          
-          {/* CHAT */}
-          <div className="relative flex-1 overflow-hidden rounded-[2rem] border border-cyan-400/10 bg-black/45 backdrop-blur-sm">
-            
-            <div className="max-h-[58vh] min-h-[300px] overflow-y-auto px-4 py-5 sm:px-6">
-              <div className="space-y-5">
-                {messages.map((msg, index) => (
-                  <div
-                    key={index}
-                    className={`rounded-3xl px-5 py-4 text-base leading-relaxed shadow-[0_0_20px_rgba(0,0,0,0.22)] ${
-                      msg.role === "user"
-                        ? "ml-auto max-w-[88%] border border-cyan-400/25 bg-cyan-400/10 text-white"
-                        : "mr-auto max-w-[88%] border border-zinc-800 bg-zinc-900/88 text-zinc-100"
-                    }`}
-                  >
-                    <div className="mb-2 text-[10px] uppercase tracking-[0.3em] text-zinc-500">
-                      {msg.role === "user" ? "Tu" : "GhostMe"}
-                    </div>
+function VoiceOnlyMode({
+  currentModeLabel,
+  cycleMode,
+  startVoiceInput,
+  openMemory,
+  openServices,
+}: {
+  currentModeLabel: string;
+  cycleMode: () => void;
+  startVoiceInput: () => void;
+  openMemory: () => void;
+  openServices: () => void;
+}) {
+  return (
+    <section className="relative flex flex-1 flex-col items-center justify-center pb-10">
+      <button
+        onClick={startVoiceInput}
+        className="relative z-20 flex h-44 w-44 items-center justify-center rounded-full border border-cyan-300/30 bg-cyan-300/10 shadow-[0_0_120px_rgba(34,211,238,0.45)] transition hover:scale-105"
+      >
+        <div className="h-24 w-24 rounded-full bg-cyan-200/40 shadow-[0_0_80px_rgba(34,211,238,0.9)]" />
+      </button>
 
-                    {msg.content}
-                  </div>
-                ))}
+      <p className="relative z-20 mt-10 text-lg text-cyan-100">
+        GhostMe è in ascolto
+      </p>
 
-                <div ref={messagesEndRef} />
-              </div>
-            </div>
+      <div className="relative z-20 mt-10 grid w-full max-w-md grid-cols-3 gap-3">
+        <button
+          onClick={openMemory}
+          className="rounded-2xl border border-cyan-400/25 bg-black/60 px-4 py-3 text-sm font-bold text-cyan-200"
+        >
+          Memoria
+        </button>
 
-            {/* INPUT */}
-            <div className="border-t border-cyan-400/10 bg-black/55 p-3">
-              <div className="flex gap-2">
-                
-                {mode === "voce-chat" && (
-                  <button
-                    onClick={startVoiceInput}
-                    className="rounded-2xl border border-cyan-400/25 bg-cyan-400/10 px-4 text-cyan-200"
-                  >
-                    🎙
-                  </button>
-                )}
+        <button
+          onClick={cycleMode}
+          className="rounded-2xl border border-cyan-400/25 bg-cyan-400/10 px-4 py-3 text-sm font-black text-cyan-100"
+        >
+          {currentModeLabel}
+        </button>
 
-                <textarea
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      sendMessage();
-                    }
-                  }}
-                  placeholder="Scrivi qualcosa..."
-                  className="h-16 flex-1 resize-none rounded-2xl border border-zinc-800 bg-zinc-950 p-4 text-white outline-none placeholder:text-zinc-600 focus:border-cyan-400"
-                />
+        <button
+          onClick={openServices}
+          className="rounded-2xl border border-cyan-400/25 bg-black/60 px-4 py-3 text-sm font-bold text-cyan-200"
+        >
+          Servizi
+        </button>
+      </div>
+    </section>
+  );
+}
 
-                <button
-                  onClick={sendMessage}
-                  disabled={loadingChat}
-                  className="rounded-2xl bg-cyan-300 px-5 font-black text-black shadow-[0_0_25px_rgba(34,211,238,0.28)] disabled:opacity-50"
-                >
-                  ↗
-                </button>
-              </div>
-            </div>
+function ChatBubble({
+  role,
+  label,
+  content,
+}: {
+  role: "user" | "assistant";
+  label: string;
+  content: string;
+}) {
+  return (
+    <div
+      className={`rounded-3xl px-5 py-4 text-base leading-relaxed shadow-[0_0_20px_rgba(0,0,0,0.22)] ${
+        role === "user"
+          ? "ml-auto max-w-[88%] border border-cyan-400/25 bg-cyan-400/10 text-white"
+          : "mr-auto max-w-[88%] border border-zinc-800 bg-zinc-900/88 text-zinc-100"
+      }`}
+    >
+      <div
+        className={`mb-2 text-[11px] uppercase tracking-[0.32em] ${
+          role === "user" ? "text-cyan-300/90" : "text-cyan-200/85"
+        }`}
+      >
+        {label}
+      </div>
+
+      {content}
+    </div>
+  );
+}
+
+function MemoryDrawer({
+  open,
+  onClose,
+  activeTab,
+  setActiveTab,
+  brainData,
+}: {
+  open: boolean;
+  onClose: () => void;
+  activeTab: "memory" | "timeline" | "goals" | "state";
+  setActiveTab: (tab: "memory" | "timeline" | "goals" | "state") => void;
+  brainData: BrainData;
+}) {
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex">
+      <button
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      <aside className="relative h-full w-[94%] max-w-md overflow-y-auto border-r border-cyan-400/20 bg-zinc-950/95 p-5 shadow-[0_0_60px_rgba(34,211,238,0.18)]">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.35em] text-cyan-400">
+              GhostMe Memory
+            </p>
+
+            <h2 className="mt-2 text-2xl font-black">Memoria viva</h2>
           </div>
-        </section>
-      )}
 
-      {/* SOLO VOCE */}
-      {mode === "voce-voce" && (
-        <section className="relative flex flex-1 items-center justify-center">
-          <div className="relative flex flex-col items-center">
-            
-            <div className="absolute h-[420px] w-[420px] rounded-full bg-cyan-400/10 blur-[120px] animate-pulse" />
+          <button
+            onClick={onClose}
+            className="rounded-full border border-zinc-700 px-3 py-1 text-sm text-zinc-300"
+          >
+            ✕
+          </button>
+        </div>
 
+        <div className="mt-6 grid grid-cols-2 gap-2">
+          {[
+            ["memory", "Memoria"],
+            ["timeline", "Timeline"],
+            ["goals", "Goals"],
+            ["state", "Mental"],
+          ].map(([key, label]) => (
             <button
-              onClick={startVoiceInput}
-              className="relative flex h-44 w-44 items-center justify-center rounded-full border border-cyan-300/30 bg-cyan-300/10 shadow-[0_0_120px_rgba(34,211,238,0.45)] transition hover:scale-105"
+              key={key}
+              onClick={() => setActiveTab(key as any)}
+              className={`rounded-2xl border px-3 py-3 text-sm font-bold transition ${
+                activeTab === key
+                  ? "border-cyan-300 bg-cyan-300 text-black"
+                  : "border-zinc-800 bg-black text-zinc-300"
+              }`}
             >
-              <div className="h-24 w-24 rounded-full bg-cyan-200/40 shadow-[0_0_80px_rgba(34,211,238,0.9)] animate-pulse" />
+              {label}
             </button>
+          ))}
+        </div>
 
-            <p className="mt-10 text-lg text-cyan-100">
-              GhostMe è in ascolto
+        <div className="mt-5">
+          <BrainPanelContent activeTab={activeTab} brainData={brainData} />
+        </div>
+      </aside>
+    </div>
+  );
+}
+
+function ServicesDrawer({
+  open,
+  onClose,
+  activeTab,
+  setActiveTab,
+  userEmail,
+  userProfile,
+  traits,
+  summary,
+  ghostMessage,
+  actions,
+  logout,
+}: {
+  open: boolean;
+  onClose: () => void;
+  activeTab:
+    | "actions"
+    | "calendar"
+    | "mail"
+    | "web"
+    | "home"
+    | "profile"
+    | "traits";
+  setActiveTab: (
+    tab:
+      | "actions"
+      | "calendar"
+      | "mail"
+      | "web"
+      | "home"
+      | "profile"
+      | "traits"
+  ) => void;
+  userEmail: string;
+  userProfile: any;
+  traits: any;
+  summary: string[];
+  ghostMessage: string;
+  actions: any[];
+  logout: () => void;
+}) {
+  if (!open) return null;
+
+  const serviceButtons: {
+    key:
+      | "actions"
+      | "calendar"
+      | "mail"
+      | "web"
+      | "home"
+      | "profile"
+      | "traits";
+    label: string;
+  }[] = [
+    { key: "actions", label: "Azioni" },
+    { key: "calendar", label: "Calendario" },
+    { key: "mail", label: "Mail" },
+    { key: "web", label: "Web" },
+    { key: "home", label: "Home Assistant" },
+    { key: "profile", label: "Profilo" },
+    { key: "traits", label: "Valutazione" },
+  ];
+
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end">
+      <button
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      <aside className="relative h-full w-[94%] max-w-lg overflow-y-auto border-l border-cyan-400/20 bg-zinc-950/95 p-5 shadow-[0_0_60px_rgba(34,211,238,0.18)]">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.35em] text-cyan-400">
+              GhostMe Systems
+            </p>
+
+            <h2 className="mt-2 text-2xl font-black">Servizi</h2>
+
+            <p className="mt-3 text-xs uppercase tracking-[0.25em] text-cyan-300">
+              Profilo collegato
+            </p>
+
+            <p className="mt-1 text-sm text-zinc-300">{userEmail}</p>
+          </div>
+
+          <button
+            onClick={onClose}
+            className="rounded-full border border-zinc-700 px-3 py-1 text-sm text-zinc-300"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="mt-6 grid grid-cols-2 gap-3">
+          {serviceButtons.map((item) => (
+            <button
+              key={item.key}
+              onClick={() => setActiveTab(item.key)}
+              className={`rounded-2xl border p-4 text-left ${
+                activeTab === item.key
+                  ? "border-cyan-300 bg-cyan-300 text-black"
+                  : "border-zinc-800 bg-black/60 text-cyan-100"
+              }`}
+            >
+              <p className="font-bold">{item.label}</p>
+              <p
+                className={`mt-2 text-xs ${
+                  activeTab === item.key ? "text-black/60" : "text-zinc-500"
+                }`}
+              >
+                {["actions", "profile", "traits"].includes(item.key)
+                  ? "Online"
+                  : "Offline / coming soon"}
+              </p>
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-6">
+          <ServicePanelContent
+            activeTab={activeTab}
+            userProfile={userProfile}
+            traits={traits}
+            summary={summary}
+            ghostMessage={ghostMessage}
+            actions={actions}
+          />
+        </div>
+
+        <button
+          onClick={logout}
+          className="mt-8 w-full rounded-2xl border border-red-500/30 px-4 py-3 text-sm font-bold text-red-300"
+        >
+          Logout
+        </button>
+      </aside>
+    </div>
+  );
+}
+
+function ServicePanelContent({
+  activeTab,
+  userProfile,
+  traits,
+  summary,
+  ghostMessage,
+  actions,
+}: {
+  activeTab:
+    | "actions"
+    | "calendar"
+    | "mail"
+    | "web"
+    | "home"
+    | "profile"
+    | "traits";
+  userProfile: any;
+  traits: any;
+  summary: string[];
+  ghostMessage: string;
+  actions: any[];
+}) {
+  if (activeTab === "profile") {
+    return (
+      <div className="rounded-3xl border border-cyan-400/20 bg-cyan-400/5 p-4">
+        <p className="text-lg font-black text-cyan-200">Profilo utente</p>
+
+        <div className="mt-4 space-y-3 text-sm text-zinc-300">
+          {[
+            ["Nome", userProfile?.full_name],
+            ["Età", userProfile?.age],
+            ["Genere", userProfile?.gender],
+            ["Lavoro", userProfile?.job],
+            ["Hobby", userProfile?.hobbies],
+            ["Sport", userProfile?.sports],
+            ["Relazione", userProfile?.relationship_status],
+            ["Figli", userProfile?.children_info],
+            ["Interessi", userProfile?.interests],
+            ["Bio", userProfile?.short_bio],
+          ].map(([label, value]) => (
+            <div key={String(label)} className="rounded-2xl border border-zinc-800 bg-black/45 p-3">
+              <p className="text-xs uppercase tracking-[0.25em] text-zinc-500">
+                {label}
+              </p>
+              <p className="mt-1 text-zinc-100">{String(value || "—")}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (activeTab === "traits") {
+    return (
+      <div className="space-y-4">
+        <div className="rounded-3xl border border-cyan-400/20 bg-cyan-400/5 p-4">
+          <p className="text-lg font-black text-cyan-200">
+            Valutazione profilo
+          </p>
+
+          <p className="mt-3 text-sm leading-relaxed text-zinc-300">
+            {ghostMessage}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          {Object.entries(traits || {})
+            .filter(([key]) => !["id", "user_id", "created_at"].includes(key))
+            .map(([key, value]) => (
+              <div
+                key={key}
+                className="rounded-2xl border border-zinc-800 bg-black/50 p-3"
+              >
+                <p className="text-[10px] uppercase tracking-[0.18em] text-zinc-500">
+                  {key.replaceAll("_", " ")}
+                </p>
+                <p className="mt-1 text-xl font-black text-white">
+                  {String(value)}
+                </p>
+              </div>
+            ))}
+        </div>
+
+        <div className="space-y-2">
+          {summary.map((item, index) => (
+            <div
+              key={index}
+              className="rounded-2xl border border-zinc-800 bg-black/40 p-3 text-sm text-zinc-300"
+            >
+              {item}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (activeTab === "actions") {
+    if (!actions.length) {
+      return <EmptyBrainBox text="Nessuna azione futura rilevata." />;
+    }
+
+    return (
+      <div className="space-y-3">
+        {actions.map((item) => (
+          <div
+            key={item.id}
+            className="rounded-3xl border border-zinc-800 bg-black/60 p-4"
+          >
+            <p className="text-sm font-black text-cyan-200">
+              {item.title || item.intent_type}
+            </p>
+            <p className="mt-2 text-sm text-zinc-300">
+              {item.description || "Nessuna descrizione"}
+            </p>
+            <p className="mt-3 text-xs text-zinc-500">
+              {item.intent_type} · priorità {item.priority}
             </p>
           </div>
-        </section>
-      )}
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <EmptyBrainBox text="Servizio predisposto. Lo colleghiamo quando il cervello è stabile." />
+  );
+}
+
+function HistoryDrawer({
+  open,
+  onClose,
+  messages,
+  userName,
+}: {
+  open: boolean;
+  onClose: () => void;
+  messages: ChatMessage[];
+  userName: string;
+}) {
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end">
+      <button
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      <aside className="relative h-full w-[94%] max-w-lg overflow-y-auto border-l border-cyan-400/20 bg-zinc-950/95 p-5 shadow-[0_0_60px_rgba(34,211,238,0.18)]">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.35em] text-cyan-400">
+              GhostMe Chat
+            </p>
+            <h2 className="mt-2 text-2xl font-black">Cronologia</h2>
+          </div>
+
+          <button
+            onClick={onClose}
+            className="rounded-full border border-zinc-700 px-3 py-1 text-sm text-zinc-300"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="mt-6 space-y-4">
+          {messages.map((msg, index) => (
+            <ChatBubble
+              key={index}
+              role={msg.role}
+              label={msg.role === "user" ? userName : "GhostMe"}
+              content={msg.content}
+            />
+          ))}
+
+          <div />
+        </div>
+      </aside>
     </div>
-  </main>
-);
+  );
 }
 
 function BrainPanelContent({
   activeTab,
   brainData,
 }: {
-  activeTab: "memory" | "timeline" | "goals" | "state" | "actions";
+  activeTab: "memory" | "timeline" | "goals" | "state";
   brainData: BrainData;
 }) {
   if (activeTab === "state") {
@@ -700,9 +1251,7 @@ function BrainPanelContent({
       ? brainData.memories
       : activeTab === "timeline"
         ? brainData.timeline
-        : activeTab === "goals"
-          ? brainData.goals
-          : brainData.actions;
+        : brainData.goals;
 
   if (!list.length) return <EmptyBrainBox text="Nessun dato ancora." />;
 
