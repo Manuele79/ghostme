@@ -717,6 +717,10 @@ if (modeRef.current === "voce-voce") {
 
         {mode === "voce-voce" ? (
           <VoiceOnlyMode
+            voiceState={voiceState}
+            recognitionRef={recognitionRef}
+            speakingRef={speakingRef}
+            setVoiceState={setVoiceState}
             currentModeLabel={currentModeLabel}
             cycleMode={cycleMode}
             startVoiceInput={startVoiceInput}
@@ -962,30 +966,124 @@ function ChatMode({
 }
 
 function VoiceOnlyMode({
+  voiceState,
+  recognitionRef,
+  speakingRef,
+  setVoiceState,
   currentModeLabel,
   cycleMode,
   startVoiceInput,
   openMemory,
   openServices,
 }: {
+  voiceState: VoiceState;
+  recognitionRef: any;
+  speakingRef: any;
+  setVoiceState: any;
   currentModeLabel: string;
   cycleMode: () => void;
   startVoiceInput: () => void;
   openMemory: () => void;
   openServices: () => void;
 }) {
+
+const stateLabel =
+  voiceState === "listening"
+    ? "GhostMe ti sta ascoltando"
+    : voiceState === "thinking"
+      ? "GhostMe sta pensando"
+      : voiceState === "speaking"
+        ? "GhostMe sta parlando"
+        : "GhostMe è pronto";
+
+const stateGlow =
+  voiceState === "listening"
+    ? "shadow-[0_0_140px_rgba(34,211,238,0.9)] scale-110"
+    : voiceState === "thinking"
+      ? "shadow-[0_0_120px_rgba(96,165,250,0.8)] scale-95"
+      : voiceState === "speaking"
+        ? "shadow-[0_0_180px_rgba(125,249,255,1)] scale-125"
+        : "shadow-[0_0_100px_rgba(34,211,238,0.45)] scale-100";
+
   return (
     <section className="relative flex flex-1 flex-col items-center justify-center pb-10">
-      <button
-        onClick={startVoiceInput}
-        className="relative z-20 flex h-44 w-44 items-center justify-center rounded-full border border-cyan-300/30 bg-cyan-300/10 shadow-[0_0_120px_rgba(34,211,238,0.45)] transition hover:scale-105"
-      >
-        <div className="h-24 w-24 rounded-full bg-cyan-200/40 shadow-[0_0_80px_rgba(34,211,238,0.9)]" />
-      </button>
+    <button
+      onClick={startVoiceInput}
+      className={`relative z-20 flex h-44 w-44 items-center justify-center rounded-full border border-cyan-300/30 bg-cyan-300/10 transition-all duration-500 ${stateGlow}`}
+    >
+      <div
+        className="absolute inset-0 rounded-full border border-cyan-200/20"
+        style={{
+          animation:
+            voiceState === "speaking"
+              ? "ghostCorePulse 0.9s ease-in-out infinite"
+              : voiceState === "thinking"
+                ? "ghostCorePulse 1.8s ease-in-out infinite"
+                : "ghostCorePulse 3s ease-in-out infinite",
+        }}
+      />
 
-      <p className="relative z-20 mt-10 text-lg text-cyan-100">
-        GhostMe è in ascolto
+      <div
+        className={`h-24 w-24 rounded-full transition-all duration-500 ${
+          voiceState === "listening"
+            ? "bg-cyan-200/60"
+            : voiceState === "thinking"
+              ? "bg-blue-300/40"
+              : voiceState === "speaking"
+                ? "bg-cyan-100/80"
+                : "bg-cyan-200/35"
+        }`}
+      />
+
+      {voiceState !== "idle" && (
+        <>
+          <div className="absolute h-[170px] w-[170px] rounded-full border border-cyan-300/20 animate-ping" />
+          <div className="absolute h-[210px] w-[210px] rounded-full border border-cyan-300/10 animate-pulse" />
+        </>
+      )}
+    </button>
+
+    <div className="relative z-20 mt-10 flex flex-col items-center">
+      <p className="text-xl font-medium text-cyan-100">
+        {stateLabel}
       </p>
+
+      {voiceState !== "idle" && (
+        <div className="mt-5 flex items-end gap-2 h-10">
+          <div
+            className="w-2 rounded-full bg-cyan-300"
+            style={{
+              height: voiceState === "thinking" ? 18 : 32,
+              animation: "ghostCorePulse 0.9s ease-in-out infinite",
+            }}
+          />
+
+          <div
+            className="w-2 rounded-full bg-cyan-200"
+            style={{
+              height: voiceState === "speaking" ? 38 : 22,
+              animation: "ghostCorePulse 0.7s ease-in-out infinite",
+            }}
+          />
+
+          <div
+            className="w-2 rounded-full bg-cyan-100"
+            style={{
+              height: voiceState === "listening" ? 42 : 16,
+              animation: "ghostCorePulse 1.1s ease-in-out infinite",
+            }}
+          />
+
+          <div
+            className="w-2 rounded-full bg-cyan-300"
+            style={{
+              height: voiceState === "speaking" ? 46 : 28,
+              animation: "ghostCorePulse 0.6s ease-in-out infinite",
+            }}
+          />
+        </div>
+      )}
+    </div>
 
       <div className="relative z-20 mt-10 grid w-full max-w-md grid-cols-3 gap-3">
         <button
@@ -1009,6 +1107,31 @@ function VoiceOnlyMode({
           Servizi
         </button>
       </div>
+
+<button
+  onClick={() => {
+    try {
+      recognitionRef.current?.stop();
+    } catch {}
+
+    recognitionRef.current = null;
+
+    if (
+      typeof window !== "undefined" &&
+      "speechSynthesis" in window
+    ) {
+      window.speechSynthesis.cancel();
+    }
+
+    speakingRef.current = false;
+
+    setVoiceState("idle");
+  }}
+  className="relative z-20 mt-6 rounded-2xl border border-red-500/25 bg-red-500/10 px-6 py-3 text-sm font-bold text-red-300"
+>
+  Stop voce
+</button>
+
     </section>
   );
 }
