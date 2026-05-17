@@ -260,6 +260,8 @@ async function loadBrainData(userId: string) {
   }
 
   function startVoiceInput() {
+
+    if (mode === "chat-chat") return;
     if (speakingRef.current) return;
 
     const SpeechRecognition =
@@ -414,7 +416,11 @@ async function loadBrainData(userId: string) {
       await loadBrainData(user.id);
     }
 
+    if (mode === "voce-voce") {
     speak(assistantReply);
+  } else {
+    setVoiceState("idle");
+  }
   } catch (err) {
     console.log(err);
 
