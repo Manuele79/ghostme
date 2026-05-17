@@ -374,6 +374,7 @@ async function loadBrainData(userId: string) {
     }
   if (!voiceText.trim()) return;
   if (!traits) return;
+  setInput("");
 
   setLoadingChat(true);
 
