@@ -58,6 +58,8 @@ export default function ChatPage() {
   const recognitionRef = useRef<any>(null);
   const silenceTimeoutRef = useRef<any>(null);
   const speakingRef = useRef(false);
+  const modeRef = useRef<Mode>("chat-chat");
+
   const [memoryOpen, setMemoryOpen] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -180,6 +182,28 @@ export default function ChatPage() {
     });
   }, [messages, historyOpen]);
 
+  useEffect(() => {
+    modeRef.current = mode;
+
+    if (mode === "chat-chat") {
+      try {
+        recognitionRef.current?.stop();
+      } catch {}
+
+      recognitionRef.current = null;
+
+      clearTimeout(silenceTimeoutRef.current);
+
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+
+      speakingRef.current = false;
+      setVoiceState("idle");
+    }
+  }, [mode]);
+
+
 async function loadBrainData(userId: string) {
   const res = await fetch("/api/ghostme/brain", {
     method: "POST",
@@ -259,10 +283,9 @@ async function loadBrainData(userId: string) {
     window.speechSynthesis.speak(utterance);
   }
 
-  function startVoiceInput() {
-
-    if (mode === "chat-chat") return;
-    if (speakingRef.current) return;
+    function startVoiceInput() {
+      if (modeRef.current === "chat-chat") return;
+      if (speakingRef.current) return;
 
     const SpeechRecognition =
       typeof window !== "undefined"
@@ -344,6 +367,11 @@ async function loadBrainData(userId: string) {
   }
 
   async function sendVoiceMessage(voiceText: string) {
+
+    if (modeRef.current === "chat-chat") {
+      setVoiceState("idle");
+      return;
+    }
   if (!voiceText.trim()) return;
   if (!traits) return;
 
@@ -416,11 +444,11 @@ async function loadBrainData(userId: string) {
       await loadBrainData(user.id);
     }
 
-    if (mode === "voce-voce") {
-    speak(assistantReply);
-  } else {
-    setVoiceState("idle");
-  }
+if (modeRef.current === "voce-voce") {
+  speak(assistantReply);
+} else {
+  setVoiceState("idle");
+}
   } catch (err) {
     console.log(err);
 
