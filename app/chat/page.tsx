@@ -1118,95 +1118,83 @@ function GhostPlasmaCore({
   onClick?: () => void;
   compact?: boolean;
 }) {
-  const sizeClass = compact
-    ? "h-[220px] w-[220px]"
-    : "h-[340px] w-[340px]";
+  const sizeClass = compact ? "h-[220px] w-[220px]" : "h-[360px] w-[360px]";
+  const innerSizeClass = compact ? "h-24 w-24" : "h-32 w-32";
 
-  const innerSizeClass = compact
-    ? "h-24 w-24"
-    : "h-32 w-32";
-
-  const plasmaIntensity =
-    !micEnabled
-      ? "opacity-45 grayscale"
-      : voiceState === "thinking"
-        ? "opacity-100 scale-105"
-        : voiceState === "speaking"
-          ? "opacity-100 scale-110"
-          : voiceState === "listening"
-            ? "opacity-100 scale-105"
-            : "opacity-85 scale-100";
-
-  const coreColor =
-    !micEnabled
-      ? "from-red-400/35 via-red-300/20 to-transparent"
-      : voiceState === "thinking"
-        ? "from-blue-300/70 via-cyan-300/35 to-transparent"
-        : voiceState === "speaking"
-          ? "from-cyan-100/90 via-cyan-300/45 to-transparent"
-          : "from-cyan-200/75 via-cyan-400/35 to-transparent";
+  const active = micEnabled;
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`relative flex ${sizeClass} items-center justify-center rounded-full outline-none transition-all duration-700 ${plasmaIntensity}`}
+      className={`relative flex ${sizeClass} items-center justify-center rounded-full outline-none transition-all duration-700 ${
+        active ? "opacity-100" : "opacity-55 grayscale"
+      }`}
     >
-      {/* alone morbido */}
-      <div className="absolute inset-[-18%] rounded-full bg-cyan-400/10 blur-[80px]" />
-
-      {/* sfera plasma */}
+      {/* alone esterno morbido */}
       <div
-        className={`absolute inset-0 rounded-full bg-[radial-gradient(circle_at_center,rgba(34,211,238,0.22),rgba(8,145,178,0.08)_42%,transparent_70%)]`}
-        style={{
-          animation: "ghostPlasmaBreath 4.5s ease-in-out infinite",
-        }}
+        className={`absolute inset-[-20%] rounded-full blur-[90px] ${
+          active ? "bg-cyan-400/18" : "bg-red-400/10"
+        }`}
+        style={{ animation: "ghostPlasmaBreath 5s ease-in-out infinite" }}
       />
 
-      {/* corona energetica esterna */}
+      {/* campo energetico grande */}
       <div
-        className={`absolute inset-[8%] rounded-full bg-gradient-to-br ${coreColor} blur-[10px]`}
+        className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_center,rgba(125,249,255,0.28),rgba(34,211,238,0.12)_36%,rgba(8,47,73,0.10)_58%,transparent_74%)]"
+        style={{ animation: "ghostPlasmaBreath 4.6s ease-in-out infinite" }}
+      />
+
+      {/* corona plasma morbida */}
+      <div
+        className="absolute inset-[8%] rounded-full bg-[conic-gradient(from_20deg,transparent,rgba(34,211,238,0.85),rgba(125,249,255,0.25),transparent,rgba(59,130,246,0.55),transparent,rgba(34,211,238,0.75),transparent)] blur-[8px]"
         style={{
-          clipPath:
-            "polygon(50% 0%, 60% 8%, 72% 5%, 79% 17%, 92% 22%, 89% 38%, 100% 50%, 90% 63%, 93% 78%, 76% 82%, 68% 95%, 52% 90%, 38% 100%, 28% 87%, 11% 82%, 14% 65%, 0% 50%, 12% 37%, 8% 20%, 25% 15%, 34% 3%)",
           animation:
             voiceState === "thinking"
-              ? "ghostPlasmaSpin 7s linear infinite, ghostPlasmaBreath 1.8s ease-in-out infinite"
+              ? "ghostPlasmaSpin 6s linear infinite"
               : voiceState === "speaking"
-                ? "ghostPlasmaSpin 5s linear infinite, ghostPlasmaBreath 1.1s ease-in-out infinite"
-                : "ghostPlasmaSpin 14s linear infinite, ghostPlasmaBreath 3.6s ease-in-out infinite",
+                ? "ghostPlasmaSpin 4s linear infinite"
+                : "ghostPlasmaSpin 14s linear infinite",
         }}
       />
 
-      {/* corona interna opposta */}
+      {/* fiamma / nube irregolare, ma morbida */}
       <div
-        className="absolute inset-[16%] rounded-full bg-[conic-gradient(from_90deg,transparent,rgba(125,249,255,0.15),rgba(34,211,238,0.75),transparent,rgba(96,165,250,0.45),transparent)] blur-[3px]"
+        className="absolute inset-[5%] rounded-full bg-[radial-gradient(circle_at_30%_35%,rgba(125,249,255,0.55),transparent_18%),radial-gradient(circle_at_70%_42%,rgba(34,211,238,0.48),transparent_20%),radial-gradient(circle_at_45%_78%,rgba(59,130,246,0.45),transparent_18%),radial-gradient(circle_at_50%_50%,transparent_42%,rgba(34,211,238,0.34)_55%,transparent_72%)] blur-[10px]"
         style={{
           animation:
             voiceState === "speaking"
-              ? "ghostPlasmaSpinReverse 4s linear infinite"
-              : "ghostPlasmaSpinReverse 12s linear infinite",
+              ? "ghostPlasmaBreath 1.1s ease-in-out infinite"
+              : "ghostPlasmaBreath 3.2s ease-in-out infinite",
         }}
       />
 
-      {/* scariche leggere */}
-      {Array.from({ length: 12 }).map((_, i) => (
+      {/* anello interno fine */}
+      <div className="absolute inset-[26%] rounded-full border border-cyan-200/18" />
+      <div className="absolute inset-[36%] rounded-full border border-cyan-100/12" />
+
+      {/* scariche corte, non lame */}
+      {Array.from({ length: 18 }).map((_, i) => (
         <span
           key={i}
-          className="absolute left-1/2 top-1/2 h-[2px] rounded-full bg-cyan-100/70 shadow-[0_0_18px_rgba(34,211,238,0.9)]"
+          className="absolute left-1/2 top-1/2 h-[2px] rounded-full bg-cyan-100/70 shadow-[0_0_14px_rgba(34,211,238,0.9)]"
           style={{
-            width: `${34 + (i % 4) * 14}px`,
-            transform: `rotate(${i * 31}deg) translateX(${compact ? 78 : 122}px)`,
+            width: `${14 + (i % 4) * 8}px`,
+            transform: `rotate(${i * 23}deg) translateX(${compact ? 88 : 145}px)`,
             transformOrigin: "0 0",
-            opacity: micEnabled ? 0.25 + (i % 3) * 0.18 : 0.08,
-            animation: `ghostPlasmaSpark ${1.8 + (i % 5) * 0.35}s ease-in-out infinite`,
+            opacity: active ? 0.18 + (i % 3) * 0.15 : 0.05,
+            animation: `ghostPlasmaSpark ${1.7 + (i % 5) * 0.35}s ease-in-out infinite`,
           }}
         />
       ))}
 
       {/* nucleo centrale */}
       <div
-        className={`relative z-20 flex ${innerSizeClass} items-center justify-center rounded-full bg-[radial-gradient(circle_at_center,rgba(224,242,254,0.85),rgba(34,211,238,0.32)_45%,rgba(0,0,0,0.7)_100%)] shadow-[0_0_60px_rgba(34,211,238,0.75)]`}
+        className={`relative z-20 flex ${innerSizeClass} items-center justify-center rounded-full ${
+          active
+            ? "bg-[radial-gradient(circle_at_center,rgba(224,242,254,0.95),rgba(34,211,238,0.38)_45%,rgba(0,0,0,0.70)_100%)]"
+            : "bg-[radial-gradient(circle_at_center,rgba(248,113,113,0.55),rgba(0,0,0,0.75)_100%)]"
+        } shadow-[0_0_70px_rgba(34,211,238,0.7)]`}
         style={{
           animation:
             voiceState === "speaking"
@@ -1218,9 +1206,9 @@ function GhostPlasmaCore({
       >
         <span
           className={`text-5xl ${
-            micEnabled
+            active
               ? "drop-shadow-[0_0_18px_rgba(34,211,238,0.9)]"
-              : "grayscale opacity-70 drop-shadow-[0_0_18px_rgba(248,113,113,0.8)]"
+              : "grayscale opacity-75 drop-shadow-[0_0_18px_rgba(248,113,113,0.8)]"
           }`}
         >
           🎙️
