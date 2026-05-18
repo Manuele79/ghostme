@@ -13,104 +13,125 @@ export default function GhostCore({
   onClick?: () => void;
   compact?: boolean;
 }) {
-  const sizeClass = compact
-    ? "h-[220px] w-[220px]"
-    : "h-[360px] w-[360px]";
-
-  const innerSizeClass = compact
-    ? "h-24 w-24"
-    : "h-32 w-32";
+  const size = compact ? "h-[220px] w-[220px]" : "h-[340px] w-[340px]";
+  const core = compact ? "h-24 w-24" : "h-32 w-32";
 
   const active = micEnabled;
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`relative flex ${sizeClass} items-center justify-center rounded-full outline-none transition-all duration-700 ${
-        active ? "opacity-100" : "opacity-55 grayscale"
-      }`}
-    >
-      <div
-        className={`absolute inset-[-20%] rounded-full blur-[90px] ${
-          active ? "bg-cyan-400/18" : "bg-red-400/10"
+    <>
+      <style jsx global>{`
+        @keyframes ghostPlasmaBreathe {
+          0%, 100% { transform: scale(0.96); opacity: 0.78; }
+          50% { transform: scale(1.08); opacity: 1; }
+        }
+
+        @keyframes ghostPlasmaSlowSpin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+
+        @keyframes ghostPlasmaPulseFast {
+          0%, 100% { transform: scale(0.92); opacity: 0.55; }
+          50% { transform: scale(1.18); opacity: 1; }
+        }
+
+        @keyframes ghostSpark {
+          0%, 100% { opacity: 0.12; transform: scale(0.7); }
+          50% { opacity: 0.85; transform: scale(1.25); }
+        }
+      `}</style>
+
+      <button
+        type="button"
+        onClick={onClick}
+        className={`relative flex ${size} items-center justify-center rounded-full outline-none transition-all duration-700 ${
+          active ? "opacity-100" : "opacity-55 grayscale"
         }`}
-        style={{
-          animation: "ghostPlasmaBreath 5s ease-in-out infinite",
-        }}
-      />
+      >
+        {/* plasma morbido esterno */}
+        <div
+          className={`absolute inset-[-18%] rounded-full blur-[80px] ${
+            active ? "bg-cyan-500/20" : "bg-red-500/10"
+          }`}
+          style={{ animation: "ghostPlasmaBreathe 5s ease-in-out infinite" }}
+        />
 
-      <div
-        className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_center,rgba(125,249,255,0.28),rgba(34,211,238,0.12)_36%,rgba(8,47,73,0.10)_58%,transparent_74%)]"
-        style={{
-          animation: "ghostPlasmaBreath 4.6s ease-in-out infinite",
-        }}
-      />
+        {/* corpo plasma scuro */}
+        <div
+          className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_50%_50%,rgba(34,211,238,0.28)_0%,rgba(8,145,178,0.18)_28%,rgba(8,47,73,0.18)_52%,transparent_72%)]"
+          style={{ animation: "ghostPlasmaBreathe 4s ease-in-out infinite" }}
+        />
 
-      <div
-        className="absolute inset-[8%] rounded-full bg-[conic-gradient(from_20deg,transparent,rgba(34,211,238,0.85),rgba(125,249,255,0.25),transparent,rgba(59,130,246,0.55),transparent,rgba(34,211,238,0.75),transparent)] blur-[8px]"
-        style={{
-          animation:
-            voiceState === "thinking"
-              ? "ghostPlasmaSpin 6s linear infinite"
-              : voiceState === "speaking"
-                ? "ghostPlasmaSpin 4s linear infinite"
-                : "ghostPlasmaSpin 14s linear infinite",
-        }}
-      />
-
-      <div
-        className="absolute inset-[5%] rounded-full bg-[radial-gradient(circle_at_30%_35%,rgba(125,249,255,0.55),transparent_18%),radial-gradient(circle_at_70%_42%,rgba(34,211,238,0.48),transparent_20%),radial-gradient(circle_at_45%_78%,rgba(59,130,246,0.45),transparent_18%),radial-gradient(circle_at_50%_50%,transparent_42%,rgba(34,211,238,0.34)_55%,transparent_72%)] blur-[10px]"
-        style={{
-          animation:
-            voiceState === "speaking"
-              ? "ghostPlasmaBreath 1.1s ease-in-out infinite"
-              : "ghostPlasmaBreath 3.2s ease-in-out infinite",
-        }}
-      />
-
-      <div className="absolute inset-[26%] rounded-full border border-cyan-200/18" />
-      <div className="absolute inset-[36%] rounded-full border border-cyan-100/12" />
-
-      {Array.from({ length: 18 }).map((_, i) => (
-        <span
-          key={i}
-          className="absolute left-1/2 top-1/2 h-[2px] rounded-full bg-cyan-100/70 shadow-[0_0_14px_rgba(34,211,238,0.9)]"
+        {/* movimento interno, senza effetto sega circolare */}
+        <div
+          className="absolute inset-[12%] rounded-full bg-[conic-gradient(from_120deg,transparent,rgba(34,211,238,0.18),rgba(125,249,255,0.42),rgba(37,99,235,0.18),transparent,rgba(34,211,238,0.32),transparent)] blur-[18px]"
           style={{
-            width: `${14 + (i % 4) * 8}px`,
-            transform: `rotate(${i * 23}deg) translateX(${compact ? 88 : 145}px)`,
-            transformOrigin: "0 0",
-            opacity: active ? 0.18 + (i % 3) * 0.15 : 0.05,
-            animation: `ghostPlasmaSpark ${1.7 + (i % 5) * 0.35}s ease-in-out infinite`,
+            animation:
+              voiceState === "thinking"
+                ? "ghostPlasmaSlowSpin 5s linear infinite"
+                : voiceState === "speaking"
+                  ? "ghostPlasmaSlowSpin 3.5s linear infinite"
+                  : "ghostPlasmaSlowSpin 13s linear infinite",
           }}
         />
-      ))}
 
-      <div
-        className={`relative z-20 flex ${innerSizeClass} items-center justify-center rounded-full ${
-          active
-            ? "bg-[radial-gradient(circle_at_center,rgba(224,242,254,0.95),rgba(34,211,238,0.38)_45%,rgba(0,0,0,0.70)_100%)]"
-            : "bg-[radial-gradient(circle_at_center,rgba(248,113,113,0.55),rgba(0,0,0,0.75)_100%)]"
-        } shadow-[0_0_70px_rgba(34,211,238,0.7)]`}
-        style={{
-          animation:
-            voiceState === "speaking"
-              ? "ghostPlasmaBreath 0.9s ease-in-out infinite"
-              : voiceState === "thinking"
-                ? "ghostPlasmaBreath 1.5s ease-in-out infinite"
-                : "ghostPlasmaBreath 3s ease-in-out infinite",
-        }}
-      >
-        <span
-          className={`text-5xl ${
+        {/* macchie energia, tipo sole/plasma */}
+        <div
+          className="absolute inset-[10%] rounded-full bg-[radial-gradient(circle_at_35%_35%,rgba(34,211,238,0.42),transparent_24%),radial-gradient(circle_at_68%_38%,rgba(59,130,246,0.34),transparent_25%),radial-gradient(circle_at_48%_72%,rgba(125,249,255,0.26),transparent_28%)] blur-[16px]"
+          style={{
+            animation:
+              voiceState === "speaking"
+                ? "ghostPlasmaPulseFast 1s ease-in-out infinite"
+                : "ghostPlasmaBreathe 3.4s ease-in-out infinite",
+          }}
+        />
+
+        {/* bordo contenuto */}
+        <div className="absolute inset-[18%] rounded-full border border-cyan-300/15" />
+        <div className="absolute inset-[30%] rounded-full border border-cyan-200/10" />
+
+        {/* particelle piccole */}
+        {Array.from({ length: 14 }).map((_, i) => (
+          <span
+            key={i}
+            className="absolute h-1 w-1 rounded-full bg-cyan-100 shadow-[0_0_12px_rgba(34,211,238,0.9)]"
+            style={{
+              left: `${18 + ((i * 19) % 64)}%`,
+              top: `${16 + ((i * 31) % 68)}%`,
+              animation: `ghostSpark ${1.8 + (i % 5) * 0.35}s ease-in-out infinite`,
+              opacity: active ? 0.7 : 0.18,
+            }}
+          />
+        ))}
+
+        {/* nucleo */}
+        <div
+          className={`relative z-20 flex ${core} items-center justify-center rounded-full ${
             active
-              ? "drop-shadow-[0_0_18px_rgba(34,211,238,0.9)]"
-              : "grayscale opacity-75 drop-shadow-[0_0_18px_rgba(248,113,113,0.8)]"
-          }`}
+              ? "bg-[radial-gradient(circle_at_center,rgba(125,249,255,0.72),rgba(34,211,238,0.28)_42%,rgba(2,6,23,0.88)_100%)]"
+              : "bg-[radial-gradient(circle_at_center,rgba(248,113,113,0.38),rgba(2,6,23,0.9)_100%)]"
+          } shadow-[0_0_70px_rgba(34,211,238,0.55)]`}
+          style={{
+            animation:
+              voiceState === "speaking"
+                ? "ghostPlasmaPulseFast 0.9s ease-in-out infinite"
+                : voiceState === "thinking"
+                  ? "ghostPlasmaBreathe 1.6s ease-in-out infinite"
+                  : "ghostPlasmaBreathe 3s ease-in-out infinite",
+          }}
         >
-          🎙️
-        </span>
-      </div>
-    </button>
+          <span
+            className={`text-5xl ${
+              active
+                ? "drop-shadow-[0_0_16px_rgba(34,211,238,0.85)]"
+                : "grayscale opacity-75 drop-shadow-[0_0_14px_rgba(248,113,113,0.65)]"
+            }`}
+          >
+            🎙️
+          </span>
+        </div>
+      </button>
+    </>
   );
 }
