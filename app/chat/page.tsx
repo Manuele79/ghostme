@@ -55,6 +55,9 @@ export default function ChatPage() {
   const [voiceState, setVoiceState] =
   useState<VoiceState>("idle");
 
+  const [micEnabled, setMicEnabled] = useState(false);
+  const autoMicOffRef = useRef<any>(null);
+
   const recognitionRef = useRef<any>(null);
   const silenceTimeoutRef = useRef<any>(null);
   const speakingRef = useRef(false);
@@ -724,6 +727,9 @@ if (modeRef.current === "voce-voce") {
         {mode === "voce-voce" ? (
           <VoiceOnlyMode
             voiceState={voiceState}
+            micEnabled={micEnabled}
+            setMicEnabled={setMicEnabled}
+            autoMicOffRef={autoMicOffRef}
             recognitionRef={recognitionRef}
             speakingRef={speakingRef}
             setVoiceState={setVoiceState}
@@ -1018,6 +1024,9 @@ function ChatMode({
 
 function VoiceOnlyMode({
   voiceState,
+  micEnabled,
+  setMicEnabled,
+  autoMicOffRef,
   recognitionRef,
   speakingRef,
   setVoiceState,
@@ -1028,6 +1037,9 @@ function VoiceOnlyMode({
   openServices,
 }: {
   voiceState: VoiceState;
+  micEnabled: boolean;
+  setMicEnabled: any;
+  autoMicOffRef: any;
   recognitionRef: any;
   speakingRef: any;
   setVoiceState: any;
@@ -1039,13 +1051,15 @@ function VoiceOnlyMode({
 }) {
 
 const stateLabel =
-  voiceState === "listening"
-    ? "GhostMe ti sta ascoltando"
-    : voiceState === "thinking"
-      ? "GhostMe sta pensando"
-      : voiceState === "speaking"
-        ? "GhostMe sta parlando"
-        : "GhostMe è pronto";
+  !micEnabled
+    ? "Microfono spento"
+    : voiceState === "listening"
+      ? "GhostMe ti sta ascoltando"
+      : voiceState === "thinking"
+        ? "GhostMe sta pensando"
+        : voiceState === "speaking"
+          ? "GhostMe sta parlando"
+          : "GhostMe è pronto";
 
 const stateGlow =
   voiceState === "listening"
@@ -1061,7 +1075,43 @@ const stateGlow =
 
       {/* CORE */}
       <div
-        onClick={startVoiceInput}
+       onClick={() => {
+        if (micEnabled) {
+          try {
+            recognitionRef.current?.stop();
+          } catch {}
+
+          recognitionRef.current = null;
+          clearTimeout(autoMicOffRef.current);
+
+          if (
+            typeof window !== "undefined" &&
+            "speechSynthesis" in window
+          ) {
+            window.speechSynthesis.cancel();
+          }
+
+          speakingRef.current = false;
+          setVoiceState("idle");
+          setMicEnabled(false);
+          return;
+        }
+
+        setMicEnabled(true);
+        startVoiceInput();
+
+        clearTimeout(autoMicOffRef.current);
+        autoMicOffRef.current = setTimeout(() => {
+          try {
+            recognitionRef.current?.stop();
+          } catch {}
+
+          recognitionRef.current = null;
+          speakingRef.current = false;
+          setVoiceState("idle");
+          setMicEnabled(false);
+        }, 30000);
+      }}
         className={`relative mt-6 flex h-[300px] w-[300px] cursor-pointer items-center justify-center rounded-full transition-all duration-700 ${stateGlow}`}
       >
 
@@ -1090,7 +1140,9 @@ const stateGlow =
         {/* nucleo */}
         <div
           className={`relative z-20 flex h-28 w-28 items-center justify-center rounded-full transition-all duration-500 ${
-            voiceState === "listening"
+          !micEnabled
+            ? "bg-red-400/25"
+            : voiceState === "listening"
               ? "bg-cyan-200/70"
               : voiceState === "thinking"
                 ? "bg-blue-300/50"
@@ -1109,9 +1161,15 @@ const stateGlow =
                     : "ghostCorePulse 3s ease-in-out infinite",
           }}
         >
-          <span className="text-5xl drop-shadow-[0_0_18px_rgba(34,211,238,0.9)]">
-            🎙️
-          </span>
+        <span
+          className={`text-5xl ${
+            micEnabled
+              ? "drop-shadow-[0_0_18px_rgba(34,211,238,0.9)]"
+              : "grayscale opacity-80 drop-shadow-[0_0_18px_rgba(248,113,113,0.8)]"
+          }`}
+        >
+          🎙️
+        </span>
         </div>
 
         {/* particelle orbitanti */}
@@ -1179,27 +1237,10 @@ const stateGlow =
         </button>
 
         <button
-          onClick={() => {
-            try {
-              recognitionRef.current?.stop();
-            } catch {}
-
-            recognitionRef.current = null;
-
-            if (
-              typeof window !== "undefined" &&
-              "speechSynthesis" in window
-            ) {
-              window.speechSynthesis.cancel();
-            }
-
-            speakingRef.current = false;
-
-            setVoiceState("idle");
-          }}
-          className="rounded-2xl border border-red-500/25 bg-red-500/10 px-4 py-4 text-sm font-bold text-red-300 transition hover:scale-105"
+          onClick={cycleMode}
+          className="rounded-2xl border border-cyan-400/25 bg-cyan-400/10 px-4 py-4 text-sm font-black text-cyan-100 transition hover:scale-105"
         >
-          STOP
+          {currentModeLabel}
         </button>
 
         <button
@@ -1209,14 +1250,6 @@ const stateGlow =
           SERVIZI
         </button>
       </div>
-
-      <button
-        onClick={cycleMode}
-        className="relative z-20 mt-4 rounded-2xl border border-cyan-400/25 bg-cyan-400/10 px-8 py-3 text-sm font-black text-cyan-100 transition hover:scale-105"
-      >
-        {currentModeLabel}
-      </button>
-
     </section>
   );
 }
