@@ -674,14 +674,14 @@ if (modeRef.current === "voce-voce") {
         <header className="relative mx-auto w-full max-w-5xl text-center">
           <button
             onClick={() => setMemoryOpen(true)}
-            className="absolute left-0 top-8 hidden rounded-2xl border border-cyan-400/25 bg-black/50 px-5 py-3 text-sm font-bold text-cyan-200 shadow-[0_0_18px_rgba(34,211,238,0.16)] sm:block"
+            className="absolute left-8 top-14 hidden rounded-2xl border border-cyan-400/20 bg-black/45 px-5 py-3 text-sm font-bold text-cyan-100 shadow-[0_0_18px_rgba(34,211,238,0.12)] backdrop-blur-sm transition hover:scale-105 sm:block"
           >
             Memoria
           </button>
 
           <button
             onClick={() => setServicesOpen(true)}
-            className="absolute right-0 top-8 hidden rounded-2xl border border-cyan-400/25 bg-black/50 px-5 py-3 text-sm font-bold text-cyan-200 shadow-[0_0_18px_rgba(34,211,238,0.16)] sm:block"
+            className="absolute right-8 top-14 hidden rounded-2xl border border-cyan-400/20 bg-black/45 px-5 py-3 text-sm font-bold text-cyan-100 shadow-[0_0_18px_rgba(34,211,238,0.12)] backdrop-blur-sm transition hover:scale-105 sm:block"
           >
             Servizi
           </button>
@@ -873,21 +873,43 @@ function ChatMode({
 }) {
   return (
     <section className="relative mx-auto mt-8 flex w-full max-w-4xl flex-1 flex-col justify-end">
-      <div className="relative z-10 flex min-h-[36vh] flex-col justify-end gap-5 pb-5">
-        {lastUserMessage && (
-          <ChatBubble
-            role="user"
-            label={userName}
-            content={lastUserMessage.content}
-          />
-        )}
+      <div className="relative z-10 flex min-h-[42vh] flex-col justify-end gap-5 pb-5">
+        {loadingChat ? (
+          <>
+            {lastAssistantMessage && (
+              <ChatBubble
+                role="assistant"
+                label="GhostMe"
+                content={lastAssistantMessage.content}
+              />
+            )}
 
-        {lastAssistantMessage && (
-          <ChatBubble
-            role="assistant"
-            label="GhostMe"
-            content={lastAssistantMessage.content}
-          />
+            {lastUserMessage && (
+              <ChatBubble
+                role="user"
+                label={userName}
+                content={lastUserMessage.content}
+              />
+            )}
+          </>
+        ) : (
+          <>
+            {lastUserMessage && (
+              <ChatBubble
+                role="user"
+                label={userName}
+                content={lastUserMessage.content}
+              />
+            )}
+
+            {lastAssistantMessage && (
+              <ChatBubble
+                role="assistant"
+                label="GhostMe"
+                content={lastAssistantMessage.content}
+              />
+            )}
+          </>
         )}
 
         {!lastUserMessage && !lastAssistantMessage && (
@@ -1006,7 +1028,7 @@ const stateGlow =
         : "shadow-[0_0_100px_rgba(34,211,238,0.45)] scale-100";
 
   return (
-    <section className="relative flex flex-1 flex-col items-center justify-center pb-10">
+    <section className="relative flex flex-1 flex-col items-center justify-center pb-24">
     <button
       onClick={startVoiceInput}
       className={`relative z-20 flex h-44 w-44 items-center justify-center rounded-full border border-cyan-300/30 bg-cyan-300/10 transition-all duration-500 ${stateGlow}`}
@@ -1085,7 +1107,7 @@ const stateGlow =
       )}
     </div>
 
-      <div className="relative z-20 mt-10 grid w-full max-w-md grid-cols-3 gap-3">
+      <div className="relative z-20 mt-16 grid w-full max-w-md grid-cols-3 gap-3">
         <button
           onClick={openMemory}
           className="rounded-2xl border border-cyan-400/25 bg-black/60 px-4 py-3 text-sm font-bold text-cyan-200"
