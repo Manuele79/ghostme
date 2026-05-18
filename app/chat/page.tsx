@@ -672,22 +672,26 @@ if (modeRef.current === "voce-voce") {
 
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 pb-4 pt-6 sm:px-6">
         <header className="relative mx-auto w-full max-w-5xl text-center">
-          <button
-            onClick={() => setMemoryOpen(true)}
-            className="absolute left-8 top-14 hidden rounded-2xl border border-cyan-400/20 bg-black/45 px-5 py-3 text-sm font-bold text-cyan-100 shadow-[0_0_18px_rgba(34,211,238,0.12)] backdrop-blur-sm transition hover:scale-105 sm:block"
-          >
-            Memoria
-          </button>
+          {mode !== "voce-voce" && (
+            <>
+              <button
+                onClick={() => setMemoryOpen(true)}
+                className="absolute left-20 top-20 hidden rounded-2xl border border-cyan-400/20 bg-black/45 px-5 py-3 text-sm font-bold text-cyan-100 shadow-[0_0_18px_rgba(34,211,238,0.12)] backdrop-blur-sm transition hover:scale-105 sm:block"
+              >
+                Memoria
+              </button>
 
-          <button
-            onClick={() => setServicesOpen(true)}
-            className="absolute right-8 top-14 hidden rounded-2xl border border-cyan-400/20 bg-black/45 px-5 py-3 text-sm font-bold text-cyan-100 shadow-[0_0_18px_rgba(34,211,238,0.12)] backdrop-blur-sm transition hover:scale-105 sm:block"
-          >
-            Servizi
-          </button>
+              <button
+                onClick={() => setServicesOpen(true)}
+                className="absolute right-20 top-20 hidden rounded-2xl border border-cyan-400/20 bg-black/45 px-5 py-3 text-sm font-bold text-cyan-100 shadow-[0_0_18px_rgba(34,211,238,0.12)] backdrop-blur-sm transition hover:scale-105 sm:block"
+              >
+                Servizi
+              </button>
+            </>
+          )}
 
           <p className="text-xs uppercase tracking-[0.45em] text-cyan-400">
-            GhostMe
+            - GhostMe -
           </p>
 
           <h1 className="mt-3 text-5xl font-black tracking-tight sm:text-7xl">
@@ -695,24 +699,26 @@ if (modeRef.current === "voce-voce") {
           </h1>
 
           <p className="mt-2 text-sm text-zinc-400 sm:text-base">
-            Memoria cognitiva attiva
+            Memoria Cognitiva Attiva: {userName}
           </p>
 
-          <div className="mt-5 flex items-center justify-center gap-3 sm:hidden">
-            <button
-              onClick={() => setMemoryOpen(true)}
-              className="rounded-2xl border border-cyan-400/25 bg-black/50 px-4 py-3 text-sm font-bold text-cyan-200"
-            >
-              Memoria
-            </button>
+          {mode !== "voce-voce" && (
+            <div className="mt-5 flex items-center justify-center gap-3 sm:hidden">
+              <button
+                onClick={() => setMemoryOpen(true)}
+                className="rounded-2xl border border-cyan-400/25 bg-black/50 px-4 py-3 text-sm font-bold text-cyan-200"
+              >
+                Memoria
+              </button>
 
-            <button
-              onClick={() => setServicesOpen(true)}
-              className="rounded-2xl border border-cyan-400/25 bg-black/50 px-4 py-3 text-sm font-bold text-cyan-200"
-            >
-              Servizi
-            </button>
-          </div>
+              <button
+                onClick={() => setServicesOpen(true)}
+                className="rounded-2xl border border-cyan-400/25 bg-black/50 px-4 py-3 text-sm font-bold text-cyan-200"
+              >
+                Servizi
+              </button>
+            </div>
+          )}
         </header>
 
         {mode === "voce-voce" ? (
@@ -924,7 +930,7 @@ function ChatMode({
         className="absolute left-[-3.8rem] top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-cyan-400/25 bg-black/70 text-xs font-black text-cyan-200 shadow-[0_0_25px_rgba(34,211,238,0.18)] lg:flex"
         title="Cronologia"
       >
-        ↺
+        ↺ Chat
       </button>
 
       <div className="relative z-20 rounded-[1.6rem] border border-cyan-400/10 bg-black/60 p-2 backdrop-blur-md">
@@ -939,9 +945,11 @@ function ChatMode({
           {mode === "voce-chat" && (
             <button
               onClick={startVoiceInput}
-              className="rounded-2xl border border-cyan-400/25 bg-cyan-400/10 px-4 text-cyan-200"
+              className="group flex h-16 w-16 items-center justify-center rounded-2xl border border-cyan-400/25 bg-cyan-400/10 text-3xl text-cyan-200 shadow-[0_0_30px_rgba(34,211,238,0.18)] transition-all duration-300 hover:scale-110 hover:bg-cyan-400/20"
             >
-              🎙
+              <span className="transition-transform duration-300 group-hover:scale-110">
+                🎙️
+              </span>
             </button>
           )}
 
@@ -963,7 +971,7 @@ function ChatMode({
             disabled={loadingChat}
             className="rounded-2xl bg-cyan-300 px-5 font-black text-black shadow-[0_0_25px_rgba(34,211,238,0.28)] disabled:opacity-50"
           >
-            {loadingChat ? "..." : "↗"}
+            {loadingChat ? "..." : "INVIA"}
           </button>
         </div>
 
@@ -1020,139 +1028,173 @@ const stateLabel =
 
 const stateGlow =
   voiceState === "listening"
-    ? "shadow-[0_0_140px_rgba(34,211,238,0.9)] scale-110"
+    ? "shadow-[0_0_180px_rgba(34,211,238,1)] scale-110"
     : voiceState === "thinking"
-      ? "shadow-[0_0_120px_rgba(96,165,250,0.8)] scale-95"
+      ? "shadow-[0_0_160px_rgba(96,165,250,0.9)] scale-[1.03]"
       : voiceState === "speaking"
-        ? "shadow-[0_0_180px_rgba(125,249,255,1)] scale-125"
-        : "shadow-[0_0_100px_rgba(34,211,238,0.45)] scale-100";
+        ? "shadow-[0_0_240px_rgba(125,249,255,1)] scale-125"
+        : "shadow-[0_0_140px_rgba(34,211,238,0.45)] scale-100";
 
   return (
-    <section className="relative flex flex-1 flex-col items-center justify-center pb-24">
-    <button
-      onClick={startVoiceInput}
-      className={`relative z-20 flex h-44 w-44 items-center justify-center rounded-full border border-cyan-300/30 bg-cyan-300/10 transition-all duration-500 ${stateGlow}`}
-    >
+    <section className="relative flex flex-1 flex-col items-center justify-center pb-32">
+
+      {/* CORE */}
       <div
-        className="absolute inset-0 rounded-full border border-cyan-200/20"
-        style={{
-          animation:
+        onClick={startVoiceInput}
+        className={`relative mt-16 flex h-[300px] w-[300px] cursor-pointer items-center justify-center rounded-full transition-all duration-700 ${stateGlow}`}
+      >
+
+        {/* alone esterno */}
+        <div className="absolute inset-0 rounded-full border border-cyan-300/10" />
+
+        {/* alone medio */}
+        <div className="absolute inset-[32px] rounded-full border border-cyan-300/15" />
+
+        {/* alone interno */}
+        <div className="absolute inset-[72px] rounded-full border border-cyan-200/20" />
+
+        {/* glow centrale */}
+        <div
+          className={`absolute h-40 w-40 rounded-full blur-3xl transition-all duration-700 ${
             voiceState === "speaking"
-              ? "ghostCorePulse 0.9s ease-in-out infinite"
+              ? "bg-cyan-300/40 scale-125"
               : voiceState === "thinking"
-                ? "ghostCorePulse 1.8s ease-in-out infinite"
-                : "ghostCorePulse 3s ease-in-out infinite",
-        }}
-      />
+                ? "bg-blue-300/30 scale-110"
+                : voiceState === "listening"
+                  ? "bg-cyan-200/35 scale-115"
+                  : "bg-cyan-300/20 scale-100"
+          }`}
+        />
 
-      <div
-        className={`h-24 w-24 rounded-full transition-all duration-500 ${
-          voiceState === "listening"
-            ? "bg-cyan-200/60"
-            : voiceState === "thinking"
-              ? "bg-blue-300/40"
-              : voiceState === "speaking"
-                ? "bg-cyan-100/80"
-                : "bg-cyan-200/35"
-        }`}
-      />
+        {/* nucleo */}
+        <div
+          className={`relative z-20 h-28 w-28 rounded-full transition-all duration-500 ${
+            voiceState === "listening"
+              ? "bg-cyan-200/70"
+              : voiceState === "thinking"
+                ? "bg-blue-300/50"
+                : voiceState === "speaking"
+                  ? "bg-cyan-100/90"
+                  : "bg-cyan-200/40"
+          }`}
+          style={{
+            animation:
+              voiceState === "speaking"
+                ? "ghostCorePulse 0.7s ease-in-out infinite"
+                : voiceState === "thinking"
+                  ? "ghostCorePulse 1.4s ease-in-out infinite"
+                  : voiceState === "listening"
+                    ? "ghostCorePulse 1.1s ease-in-out infinite"
+                    : "ghostCorePulse 3s ease-in-out infinite",
+          }}
+        />
 
-      {voiceState !== "idle" && (
-        <>
-          <div className="absolute h-[170px] w-[170px] rounded-full border border-cyan-300/20 animate-ping" />
-          <div className="absolute h-[210px] w-[210px] rounded-full border border-cyan-300/10 animate-pulse" />
-        </>
-      )}
-    </button>
-
-    <div className="relative z-20 mt-10 flex flex-col items-center">
-      <p className="text-xl font-medium text-cyan-100">
-        {stateLabel}
-      </p>
-
-      {voiceState !== "idle" && (
-        <div className="mt-5 flex items-end gap-2 h-10">
-          <div
-            className="w-2 rounded-full bg-cyan-300"
-            style={{
-              height: voiceState === "thinking" ? 18 : 32,
-              animation: "ghostCorePulse 0.9s ease-in-out infinite",
-            }}
-          />
-
-          <div
-            className="w-2 rounded-full bg-cyan-200"
-            style={{
-              height: voiceState === "speaking" ? 38 : 22,
-              animation: "ghostCorePulse 0.7s ease-in-out infinite",
-            }}
-          />
-
-          <div
-            className="w-2 rounded-full bg-cyan-100"
-            style={{
-              height: voiceState === "listening" ? 42 : 16,
-              animation: "ghostCorePulse 1.1s ease-in-out infinite",
-            }}
-          />
-
-          <div
-            className="w-2 rounded-full bg-cyan-300"
-            style={{
-              height: voiceState === "speaking" ? 46 : 28,
-              animation: "ghostCorePulse 0.6s ease-in-out infinite",
-            }}
-          />
+        {/* particelle orbitanti */}
+        <div className="absolute h-full w-full animate-spin">
+          <div className="absolute left-[50%] top-0 h-16 w-3 rounded-full bg-cyan-200/90 blur-[2px]" />
         </div>
-      )}
-    </div>
 
-      <div className="relative z-20 mt-16 grid w-full max-w-md grid-cols-3 gap-3">
+        <div
+          className="absolute h-full w-full animate-spin"
+          style={{ animationDuration: "8s" }}
+        >
+          <div className="absolute bottom-0 left-[50%] h-20 w-3 rounded-full bg-cyan-300/70 blur-[2px]" />
+        </div>
+
+        <div
+          className="absolute h-full w-full animate-spin"
+          style={{
+            animationDirection: "reverse",
+            animationDuration: "10s",
+          }}
+        >
+          <div className="absolute right-0 top-[50%] h-14 w-3 rounded-full bg-blue-200/80 blur-[2px]" />
+        </div>
+
+        <div
+          className="absolute h-full w-full animate-spin"
+          style={{
+            animationDuration: "14s",
+          }}
+        >
+          <div className="absolute left-0 top-[50%] h-20 w-2 rounded-full bg-cyan-100/80 blur-[2px]" />
+        </div>
+      </div>
+
+      {/* STATO */}
+      <div className="relative z-20 mt-10 flex flex-col items-center">
+        <p className="text-3xl font-light tracking-tight text-cyan-50">
+          {stateLabel}
+        </p>
+
+        <p className="mt-3 text-sm text-cyan-200/60">
+          Modalità cognitiva vocale
+        </p>
+
+        {voiceState !== "idle" && (
+          <div className="mt-7 flex items-end gap-2 h-12">
+            {[1,2,3,4,5].map((i) => (
+              <div
+                key={i}
+                className="w-2 rounded-full bg-cyan-200"
+                style={{
+                  height: `${18 + Math.random() * 40}px`,
+                  animation: `ghostCorePulse ${0.6 + i * 0.2}s ease-in-out infinite`,
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* CONTROLLI */}
+      <div className="relative z-20 mt-24 grid w-full max-w-lg grid-cols-3 gap-4">
         <button
           onClick={openMemory}
-          className="rounded-2xl border border-cyan-400/25 bg-black/60 px-4 py-3 text-sm font-bold text-cyan-200"
+          className="rounded-2xl border border-cyan-400/25 bg-black/60 px-4 py-4 text-sm font-bold text-cyan-200 transition hover:scale-105"
         >
-          Memoria
+          MEMORIA
         </button>
 
         <button
           onClick={cycleMode}
-          className="rounded-2xl border border-cyan-400/25 bg-cyan-400/10 px-4 py-3 text-sm font-black text-cyan-100"
+          className="rounded-2xl border border-cyan-400/25 bg-cyan-400/10 px-4 py-4 text-sm font-black text-cyan-100 transition hover:scale-105"
         >
           {currentModeLabel}
         </button>
 
         <button
           onClick={openServices}
-          className="rounded-2xl border border-cyan-400/25 bg-black/60 px-4 py-3 text-sm font-bold text-cyan-200"
+          className="rounded-2xl border border-cyan-400/25 bg-black/60 px-4 py-4 text-sm font-bold text-cyan-200 transition hover:scale-105"
         >
-          Servizi
+          SERVIZI
         </button>
       </div>
 
-<button
-  onClick={() => {
-    try {
-      recognitionRef.current?.stop();
-    } catch {}
+      {/* STOP */}
+      <button
+        onClick={() => {
+          try {
+            recognitionRef.current?.stop();
+          } catch {}
 
-    recognitionRef.current = null;
+          recognitionRef.current = null;
 
-    if (
-      typeof window !== "undefined" &&
-      "speechSynthesis" in window
-    ) {
-      window.speechSynthesis.cancel();
-    }
+          if (
+            typeof window !== "undefined" &&
+            "speechSynthesis" in window
+          ) {
+            window.speechSynthesis.cancel();
+          }
 
-    speakingRef.current = false;
+          speakingRef.current = false;
 
-    setVoiceState("idle");
-  }}
-  className="relative z-20 mt-6 rounded-2xl border border-red-500/25 bg-red-500/10 px-6 py-3 text-sm font-bold text-red-300"
->
-  Stop voce
-</button>
+          setVoiceState("idle");
+        }}
+        className="relative z-20 mt-10 rounded-2xl border border-red-500/25 bg-red-500/10 px-8 py-4 text-sm font-bold text-red-300 transition hover:scale-105"
+      >
+        STOP VOCE
+      </button>
 
     </section>
   );
