@@ -640,6 +640,43 @@ if (modeRef.current === "voce-voce") {
             opacity: 0.9;
           }
         }
+
+        @keyframes ghostBreath {
+          0%,
+          100% {
+            transform: scale(0.96);
+            opacity: 0.72;
+          }
+          50% {
+            transform: scale(1.08);
+            opacity: 1;
+          }
+        }
+
+        @keyframes ghostFluidOrbit {
+          from {
+            transform: rotate(0deg) scale(1);
+          }
+          50% {
+            transform: rotate(180deg) scale(1.05);
+          }
+          to {
+            transform: rotate(360deg) scale(1);
+          }
+        }
+
+        @keyframes ghostFluidOrbitReverse {
+          from {
+            transform: rotate(360deg) scale(1.02);
+          }
+          50% {
+            transform: rotate(180deg) scale(0.96);
+          }
+          to {
+            transform: rotate(0deg) scale(1.02);
+          }
+        }
+
       `}</style>
 
       <GhostEnergyBackground mode={mode} voiceState={voiceState} />
