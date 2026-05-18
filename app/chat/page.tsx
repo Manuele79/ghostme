@@ -763,6 +763,27 @@ function GhostEnergyBackground({
 }) {
   const voiceOnly = mode === "voce-voce";
 
+  if (voiceOnly) {
+  return (
+    <div className="pointer-events-none fixed inset-0 overflow-hidden">
+      <div className="absolute left-1/2 top-1/2 h-[680px] w-[680px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-400/10 blur-[150px]" />
+
+      {Array.from({ length: 22 }).map((_, i) => (
+        <div
+          key={i}
+          className="absolute h-1 w-1 rounded-full bg-cyan-200 shadow-[0_0_12px_rgba(34,211,238,0.9)]"
+          style={{
+            left: `${10 + ((i * 37) % 80)}%`,
+            top: `${15 + ((i * 29) % 70)}%`,
+            animation: `ghostFlicker ${2.4 + (i % 5)}s ease-in-out infinite`,
+            opacity: voiceState === "idle" ? 0.35 : 0.8,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
   const stateClass =
     voiceState === "listening"
       ? "scale-110 opacity-100"
@@ -1126,14 +1147,11 @@ const stateGlow =
       </div>
 
       {/* STATO */}
-      <div className="relative z-20 mt-10 flex flex-col items-center">
+      <div className="relative z-20 mt-6 flex flex-col items-center">
         <p className="text-xl sm:text-2xl font-light tracking-tight text-cyan-50">
           {stateLabel}
         </p>
 
-        <p className="mt-3 text-sm text-cyan-200/60">
-          Modalità cognitiva vocale
-        </p>
 
         {voiceState !== "idle" && (
           <div className="mt-7 flex items-end gap-2 h-12">
@@ -1152,7 +1170,7 @@ const stateGlow =
       </div>
 
       {/* CONTROLLI */}
-      <div className="relative z-20 mt-14 grid w-full max-w-lg grid-cols-3 gap-4">
+      <div className="relative z-20 mt-8 grid w-full max-w-lg grid-cols-3 gap-4">
         <button
           onClick={openMemory}
           className="rounded-2xl border border-cyan-400/25 bg-black/60 px-4 py-4 text-sm font-bold text-cyan-200 transition hover:scale-105"
@@ -1161,10 +1179,27 @@ const stateGlow =
         </button>
 
         <button
-          onClick={cycleMode}
-          className="rounded-2xl border border-cyan-400/25 bg-cyan-400/10 px-4 py-4 text-sm font-black text-cyan-100 transition hover:scale-105"
+          onClick={() => {
+            try {
+              recognitionRef.current?.stop();
+            } catch {}
+
+            recognitionRef.current = null;
+
+            if (
+              typeof window !== "undefined" &&
+              "speechSynthesis" in window
+            ) {
+              window.speechSynthesis.cancel();
+            }
+
+            speakingRef.current = false;
+
+            setVoiceState("idle");
+          }}
+          className="rounded-2xl border border-red-500/25 bg-red-500/10 px-4 py-4 text-sm font-bold text-red-300 transition hover:scale-105"
         >
-          {currentModeLabel}
+          STOP
         </button>
 
         <button
@@ -1175,29 +1210,11 @@ const stateGlow =
         </button>
       </div>
 
-      {/* STOP */}
       <button
-        onClick={() => {
-          try {
-            recognitionRef.current?.stop();
-          } catch {}
-
-          recognitionRef.current = null;
-
-          if (
-            typeof window !== "undefined" &&
-            "speechSynthesis" in window
-          ) {
-            window.speechSynthesis.cancel();
-          }
-
-          speakingRef.current = false;
-
-          setVoiceState("idle");
-        }}
-        className="relative z-20 mt-6 rounded-2xl border border-red-500/25 bg-red-500/10 px-8 py-4 text-sm font-bold text-red-300 transition hover:scale-105"
+        onClick={cycleMode}
+        className="relative z-20 mt-4 rounded-2xl border border-cyan-400/25 bg-cyan-400/10 px-8 py-3 text-sm font-black text-cyan-100 transition hover:scale-105"
       >
-        STOP VOCE
+        {currentModeLabel}
       </button>
 
     </section>
