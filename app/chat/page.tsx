@@ -9,6 +9,7 @@ import {
 } from "@/lib/personality";
 
 import GhostCore from "@/components/ghost/GhostCore";
+import GhostHeader from "@/components/ghost/GhostHeader";
 
 type ChatMessage = {
   role: "user" | "assistant";
@@ -762,55 +763,12 @@ if (modeRef.current === "voce-voce") {
       />
 
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 pb-4 pt-6 sm:px-6">
-        <header className="relative mx-auto w-full max-w-5xl text-center">
-          {mode !== "voce-voce" && (
-            <>
-              <button
-                onClick={() => setMemoryOpen(true)}
-                className="absolute left-20 top-20 hidden rounded-2xl border border-cyan-400/20 bg-black/45 px-5 py-3 text-sm font-bold text-cyan-100 shadow-[0_0_18px_rgba(34,211,238,0.12)] backdrop-blur-sm transition hover:scale-105 sm:block"
-              >
-                MEMORIA
-              </button>
-
-              <button
-                onClick={() => setServicesOpen(true)}
-                className="absolute right-20 top-20 hidden rounded-2xl border border-cyan-400/20 bg-black/45 px-5 py-3 text-sm font-bold text-cyan-100 shadow-[0_0_18px_rgba(34,211,238,0.12)] backdrop-blur-sm transition hover:scale-105 sm:block"
-              >
-                SERVIZI
-              </button>
-            </>
-          )}
-
-          <p className="text-xs uppercase tracking-[0.45em] text-cyan-400">
-            - GhostMe -
-          </p>
-
-          <h1 className="mt-3 text-5xl font-black tracking-tight sm:text-7xl">
-            GhostMe
-          </h1>
-
-          <p className="mt-2 text-sm text-zinc-400 sm:text-base">
-            Memoria Cognitiva Attiva Di {userName}
-          </p>
-
-          {mode !== "voce-voce" && (
-            <div className="mt-5 flex items-center justify-center gap-3 sm:hidden">
-              <button
-                onClick={() => setMemoryOpen(true)}
-                className="rounded-2xl border border-cyan-400/25 bg-black/50 px-4 py-3 text-sm font-bold text-cyan-200"
-              >
-                MEMORIA
-              </button>
-
-              <button
-                onClick={() => setServicesOpen(true)}
-                className="rounded-2xl border border-cyan-400/25 bg-black/50 px-4 py-3 text-sm font-bold text-cyan-200"
-              >
-                SERVIZI
-              </button>
-            </div>
-          )}
-        </header>
+        <GhostHeader
+          mode={mode}
+          userName={userName}
+          openMemory={() => setMemoryOpen(true)}
+          openServices={() => setServicesOpen(true)}
+        />
 
         {mode === "voce-voce" ? (
           <VoiceOnlyMode
