@@ -8,6 +8,8 @@ import {
   buildPersonalitySummary,
 } from "@/lib/personality";
 
+import GhostCore from "@/components/ghost/GhostCore";
+
 type ChatMessage = {
   role: "user" | "assistant";
   content: string;
@@ -1273,7 +1275,7 @@ const stateGlow =
 
 {/* CORE */}
 <div className="relative z-20 mt-4">
-  <GhostPlasmaCore
+  <GhostCore
     voiceState={voiceState}
     micEnabled={micEnabled}
     onClick={() => {
