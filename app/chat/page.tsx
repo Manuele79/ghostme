@@ -726,8 +726,9 @@ if (modeRef.current === "voce-voce") {
         }        
 
       `}</style>
-
-      <GhostEnergyBackground mode={mode} voiceState={voiceState} />
+      {mode !== "voce-voce" && (
+        <GhostEnergyBackground mode={mode} voiceState={voiceState} />
+      )}
 
       <MemoryDrawer
         open={memoryOpen}
