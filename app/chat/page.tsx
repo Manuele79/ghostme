@@ -1073,9 +1073,9 @@ const stateGlow =
   return (
     <section className="relative flex flex-1 flex-col items-center justify-start overflow-hidden pt-6 pb-6">
 
-      {/* CORE */}
-      <div
-       onClick={() => {
+    {/* CORE */}
+    <div
+      onClick={() => {
         if (micEnabled) {
           try {
             recognitionRef.current?.stop();
@@ -1112,34 +1112,97 @@ const stateGlow =
           setMicEnabled(false);
         }, 30000);
       }}
-        className={`relative mt-6 flex h-[300px] w-[300px] cursor-pointer items-center justify-center rounded-full transition-all duration-700 ${stateGlow}`}
+      className={`relative mt-6 flex h-[300px] w-[300px] cursor-pointer items-center justify-center rounded-full transition-all duration-700 ${stateGlow}`}
+    >
+      {/* alone organico */}
+      <div
+        className={`absolute h-[340px] w-[340px] rounded-full blur-[90px] transition-all duration-700 ${
+          micEnabled
+            ? "bg-cyan-400/18"
+            : "bg-red-400/8"
+        }`}
+        style={{
+          animation: "ghostBreath 5s ease-in-out infinite",
+        }}
+      />
+
+      {/* membrana esterna */}
+      <div
+        className={`absolute h-[285px] w-[285px] rounded-full border transition-all duration-700 ${
+          micEnabled
+            ? "border-cyan-300/20 bg-cyan-400/5"
+            : "border-red-300/15 bg-red-500/5"
+        }`}
+        style={{
+          animation: "ghostBreath 6s ease-in-out infinite",
+        }}
+      />
+
+      {/* orbita fluida 1 */}
+      <div
+        className="absolute h-[260px] w-[260px] rounded-full"
+        style={{
+          animation:
+            voiceState === "thinking"
+              ? "ghostFluidOrbit 5s linear infinite"
+              : "ghostFluidOrbit 13s linear infinite",
+        }}
       >
+        <div className="absolute left-1/2 top-0 h-3 w-24 -translate-x-1/2 rounded-full bg-gradient-to-r from-transparent via-cyan-200/80 to-transparent blur-[1.5px] shadow-[0_0_25px_rgba(34,211,238,0.65)]" />
+      </div>
 
-        {/* alone esterno */}
-        <div className="absolute inset-0 rounded-full border border-cyan-300/10" />
-
-        {/* alone medio */}
-        <div className="absolute inset-[32px] rounded-full border border-cyan-300/15" />
-
-        {/* alone interno */}
-        <div className="absolute inset-[72px] rounded-full border border-cyan-200/20" />
-
-        {/* glow centrale */}
-        <div
-          className={`absolute h-40 w-40 rounded-full blur-3xl transition-all duration-700 ${
+      {/* orbita fluida 2 */}
+      <div
+        className="absolute h-[220px] w-[220px] rounded-full"
+        style={{
+          animation:
             voiceState === "speaking"
-              ? "bg-cyan-300/40 scale-125"
-              : voiceState === "thinking"
-                ? "bg-blue-300/30 scale-110"
-                : voiceState === "listening"
-                  ? "bg-cyan-200/35 scale-115"
-                  : "bg-cyan-300/20 scale-100"
-          }`}
-        />
+              ? "ghostFluidOrbitReverse 4s linear infinite"
+              : "ghostFluidOrbitReverse 11s linear infinite",
+        }}
+      >
+        <div className="absolute bottom-2 left-1/2 h-2 w-20 -translate-x-1/2 rounded-full bg-gradient-to-r from-transparent via-blue-200/70 to-transparent blur-[1.5px] shadow-[0_0_22px_rgba(125,249,255,0.65)]" />
+      </div>
 
-        {/* nucleo */}
-        <div
-          className={`relative z-20 flex h-28 w-28 items-center justify-center rounded-full transition-all duration-500 ${
+      {/* filamenti interni */}
+      <div
+        className="absolute h-[180px] w-[180px] rounded-full border border-cyan-200/10"
+        style={{
+          animation: "ghostBreath 4.5s ease-in-out infinite",
+        }}
+      />
+
+      <div
+        className="absolute h-[135px] w-[135px] rounded-full border border-cyan-200/10"
+        style={{
+          animation: "ghostBreath 3.8s ease-in-out infinite reverse",
+        }}
+      />
+
+      {/* nucleo glow */}
+      <div
+        className={`absolute h-36 w-36 rounded-full blur-2xl transition-all duration-700 ${
+          !micEnabled
+            ? "bg-red-400/18"
+            : voiceState === "speaking"
+              ? "bg-cyan-100/45"
+              : voiceState === "thinking"
+                ? "bg-blue-300/35"
+                : voiceState === "listening"
+                  ? "bg-cyan-200/40"
+                  : "bg-cyan-300/24"
+        }`}
+        style={{
+          animation:
+            voiceState === "speaking"
+              ? "ghostBreath 1.2s ease-in-out infinite"
+              : "ghostBreath 3s ease-in-out infinite",
+        }}
+      />
+
+      {/* nucleo */}
+      <div
+        className={`relative z-20 flex h-28 w-28 items-center justify-center rounded-full transition-all duration-500 ${
           !micEnabled
             ? "bg-red-400/25"
             : voiceState === "listening"
@@ -1149,18 +1212,18 @@ const stateGlow =
                 : voiceState === "speaking"
                   ? "bg-cyan-100/90"
                   : "bg-cyan-200/40"
-          }`}
-          style={{
-            animation:
-              voiceState === "speaking"
-                ? "ghostCorePulse 0.7s ease-in-out infinite"
-                : voiceState === "thinking"
-                  ? "ghostCorePulse 1.4s ease-in-out infinite"
-                  : voiceState === "listening"
-                    ? "ghostCorePulse 1.1s ease-in-out infinite"
-                    : "ghostCorePulse 3s ease-in-out infinite",
-          }}
-        >
+        }`}
+        style={{
+          animation:
+            voiceState === "speaking"
+              ? "ghostBreath 0.8s ease-in-out infinite"
+              : voiceState === "thinking"
+                ? "ghostBreath 1.6s ease-in-out infinite"
+                : voiceState === "listening"
+                  ? "ghostBreath 1.2s ease-in-out infinite"
+                  : "ghostBreath 3.5s ease-in-out infinite",
+        }}
+      >
         <span
           className={`text-5xl ${
             micEnabled
@@ -1170,39 +1233,22 @@ const stateGlow =
         >
           🎙️
         </span>
-        </div>
-
-        {/* particelle orbitanti */}
-        <div className="absolute h-full w-full animate-spin">
-          <div className="absolute left-[50%] top-0 h-16 w-3 rounded-full bg-cyan-200/90 blur-[2px]" />
-        </div>
-
-        <div
-          className="absolute h-full w-full animate-spin"
-          style={{ animationDuration: "8s" }}
-        >
-          <div className="absolute bottom-0 left-[50%] h-20 w-3 rounded-full bg-cyan-300/70 blur-[2px]" />
-        </div>
-
-        <div
-          className="absolute h-full w-full animate-spin"
-          style={{
-            animationDirection: "reverse",
-            animationDuration: "10s",
-          }}
-        >
-          <div className="absolute right-0 top-[50%] h-14 w-3 rounded-full bg-blue-200/80 blur-[2px]" />
-        </div>
-
-        <div
-          className="absolute h-full w-full animate-spin"
-          style={{
-            animationDuration: "14s",
-          }}
-        >
-          <div className="absolute left-0 top-[50%] h-20 w-2 rounded-full bg-cyan-100/80 blur-[2px]" />
-        </div>
       </div>
+
+      {/* particelle vicine */}
+      {Array.from({ length: 10 }).map((_, i) => (
+        <div
+          key={i}
+          className="absolute h-1 w-1 rounded-full bg-cyan-100 shadow-[0_0_12px_rgba(34,211,238,0.9)]"
+          style={{
+            left: `${24 + ((i * 17) % 54)}%`,
+            top: `${22 + ((i * 23) % 56)}%`,
+            animation: `ghostFlicker ${2.2 + (i % 4)}s ease-in-out infinite`,
+            opacity: micEnabled ? 0.85 : 0.25,
+          }}
+        />
+      ))}
+    </div>
 
       {/* STATO */}
       <div className="relative z-20 mt-6 flex flex-col items-center">
