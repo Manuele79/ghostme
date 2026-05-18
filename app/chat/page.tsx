@@ -678,14 +678,14 @@ if (modeRef.current === "voce-voce") {
                 onClick={() => setMemoryOpen(true)}
                 className="absolute left-20 top-20 hidden rounded-2xl border border-cyan-400/20 bg-black/45 px-5 py-3 text-sm font-bold text-cyan-100 shadow-[0_0_18px_rgba(34,211,238,0.12)] backdrop-blur-sm transition hover:scale-105 sm:block"
               >
-                Memoria
+                MEMORIA
               </button>
 
               <button
                 onClick={() => setServicesOpen(true)}
                 className="absolute right-20 top-20 hidden rounded-2xl border border-cyan-400/20 bg-black/45 px-5 py-3 text-sm font-bold text-cyan-100 shadow-[0_0_18px_rgba(34,211,238,0.12)] backdrop-blur-sm transition hover:scale-105 sm:block"
               >
-                Servizi
+                SERVIZI
               </button>
             </>
           )}
@@ -699,7 +699,7 @@ if (modeRef.current === "voce-voce") {
           </h1>
 
           <p className="mt-2 text-sm text-zinc-400 sm:text-base">
-            Memoria Cognitiva Attiva: {userName}
+            Memoria Cognitiva Attiva Di {userName}
           </p>
 
           {mode !== "voce-voce" && (
@@ -708,14 +708,14 @@ if (modeRef.current === "voce-voce") {
                 onClick={() => setMemoryOpen(true)}
                 className="rounded-2xl border border-cyan-400/25 bg-black/50 px-4 py-3 text-sm font-bold text-cyan-200"
               >
-                Memoria
+                MEMORIA
               </button>
 
               <button
                 onClick={() => setServicesOpen(true)}
                 className="rounded-2xl border border-cyan-400/25 bg-black/50 px-4 py-3 text-sm font-bold text-cyan-200"
               >
-                Servizi
+                SERVIZI
               </button>
             </div>
           )}
@@ -971,7 +971,7 @@ function ChatMode({
             disabled={loadingChat}
             className="rounded-2xl bg-cyan-300 px-5 font-black text-black shadow-[0_0_25px_rgba(34,211,238,0.28)] disabled:opacity-50"
           >
-            {loadingChat ? "..." : "INVIA"}
+            {loadingChat ? "..." : "Invia"}
           </button>
         </div>
 
@@ -1036,12 +1036,12 @@ const stateGlow =
         : "shadow-[0_0_140px_rgba(34,211,238,0.45)] scale-100";
 
   return (
-    <section className="relative flex flex-1 flex-col items-center justify-center pb-32">
+    <section className="relative flex flex-1 flex-col items-center justify-start overflow-hidden pt-6 pb-6">
 
       {/* CORE */}
       <div
         onClick={startVoiceInput}
-        className={`relative mt-16 flex h-[300px] w-[300px] cursor-pointer items-center justify-center rounded-full transition-all duration-700 ${stateGlow}`}
+        className={`relative mt-6 flex h-[300px] w-[300px] cursor-pointer items-center justify-center rounded-full transition-all duration-700 ${stateGlow}`}
       >
 
         {/* alone esterno */}
@@ -1068,7 +1068,7 @@ const stateGlow =
 
         {/* nucleo */}
         <div
-          className={`relative z-20 h-28 w-28 rounded-full transition-all duration-500 ${
+          className={`relative z-20 flex h-28 w-28 items-center justify-center rounded-full transition-all duration-500 ${
             voiceState === "listening"
               ? "bg-cyan-200/70"
               : voiceState === "thinking"
@@ -1087,7 +1087,11 @@ const stateGlow =
                     ? "ghostCorePulse 1.1s ease-in-out infinite"
                     : "ghostCorePulse 3s ease-in-out infinite",
           }}
-        />
+        >
+          <span className="text-5xl drop-shadow-[0_0_18px_rgba(34,211,238,0.9)]">
+            🎙️
+          </span>
+        </div>
 
         {/* particelle orbitanti */}
         <div className="absolute h-full w-full animate-spin">
@@ -1123,7 +1127,7 @@ const stateGlow =
 
       {/* STATO */}
       <div className="relative z-20 mt-10 flex flex-col items-center">
-        <p className="text-3xl font-light tracking-tight text-cyan-50">
+        <p className="text-xl sm:text-2xl font-light tracking-tight text-cyan-50">
           {stateLabel}
         </p>
 
@@ -1148,7 +1152,7 @@ const stateGlow =
       </div>
 
       {/* CONTROLLI */}
-      <div className="relative z-20 mt-24 grid w-full max-w-lg grid-cols-3 gap-4">
+      <div className="relative z-20 mt-14 grid w-full max-w-lg grid-cols-3 gap-4">
         <button
           onClick={openMemory}
           className="rounded-2xl border border-cyan-400/25 bg-black/60 px-4 py-4 text-sm font-bold text-cyan-200 transition hover:scale-105"
@@ -1191,7 +1195,7 @@ const stateGlow =
 
           setVoiceState("idle");
         }}
-        className="relative z-20 mt-10 rounded-2xl border border-red-500/25 bg-red-500/10 px-8 py-4 text-sm font-bold text-red-300 transition hover:scale-105"
+        className="relative z-20 mt-6 rounded-2xl border border-red-500/25 bg-red-500/10 px-8 py-4 text-sm font-bold text-red-300 transition hover:scale-105"
       >
         STOP VOCE
       </button>
