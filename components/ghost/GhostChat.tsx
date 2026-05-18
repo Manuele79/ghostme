@@ -29,8 +29,15 @@ export default function GhostChat({
   sendMessage: () => void;
   loadingChat: boolean;
   startVoiceInput: () => void;
-  lastUserMessage: string;
-  lastAssistantMessage: string;
+    lastUserMessage?: {
+    role: "user" | "assistant";
+    content: string;
+    };
+
+    lastAssistantMessage?: {
+    role: "user" | "assistant";
+    content: string;
+    };
   userName: string;
   openHistory: () => void;
 }) {
@@ -53,7 +60,7 @@ export default function GhostChat({
           </p>
 
           <p className="whitespace-pre-wrap text-zinc-100">
-            {lastAssistantMessage}
+            {lastAssistantMessage.content}
           </p>
         </div>
       )}
@@ -66,7 +73,7 @@ export default function GhostChat({
           </p>
 
           <p className="whitespace-pre-wrap text-zinc-100">
-            {lastUserMessage}
+            {lastUserMessage.content}
           </p>
         </div>
       )}

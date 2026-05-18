@@ -10,6 +10,7 @@ import {
 
 import GhostCore from "@/components/ghost/GhostCore";
 import GhostHeader from "@/components/ghost/GhostHeader";
+import GhostChat from "@/components/ghost/GhostChat";
 
 type ChatMessage = {
   role: "user" | "assistant";
@@ -786,8 +787,10 @@ if (modeRef.current === "voce-voce") {
             openServices={() => setServicesOpen(true)}
           />
         ) : (
-          <ChatMode
+          <GhostChat
             mode={mode}
+            voiceState={voiceState}
+            micEnabled={micEnabled}
             currentModeLabel={currentModeLabel}
             cycleMode={cycleMode}
             input={input}
