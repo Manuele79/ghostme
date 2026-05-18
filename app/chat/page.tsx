@@ -677,6 +677,54 @@ if (modeRef.current === "voce-voce") {
           }
         }
 
+        @keyframes ghostPlasmaBreath {
+          0%,
+          100% {
+            transform: scale(0.96);
+            opacity: 0.72;
+          }
+          50% {
+            transform: scale(1.08);
+            opacity: 1;
+          }
+        }
+
+        @keyframes ghostPlasmaSpin {
+          from {
+            transform: rotate(0deg) scale(1);
+          }
+          50% {
+            transform: rotate(180deg) scale(1.08);
+          }
+          to {
+            transform: rotate(360deg) scale(1);
+          }
+        }
+
+        @keyframes ghostPlasmaSpinReverse {
+          from {
+            transform: rotate(360deg) scale(1);
+          }
+          50% {
+            transform: rotate(180deg) scale(0.96);
+          }
+          to {
+            transform: rotate(0deg) scale(1);
+          }
+        }
+
+        @keyframes ghostPlasmaSpark {
+          0%,
+          100% {
+            opacity: 0.12;
+            filter: blur(3px);
+          }
+          50% {
+            opacity: 0.9;
+            filter: blur(0px);
+          }
+        }        
+
       `}</style>
 
       <GhostEnergyBackground mode={mode} voiceState={voiceState} />
@@ -1059,6 +1107,130 @@ function ChatMode({
   );
 }
 
+function GhostPlasmaCore({
+  voiceState,
+  micEnabled,
+  onClick,
+  compact = false,
+}: {
+  voiceState: VoiceState;
+  micEnabled: boolean;
+  onClick?: () => void;
+  compact?: boolean;
+}) {
+  const sizeClass = compact
+    ? "h-[220px] w-[220px]"
+    : "h-[340px] w-[340px]";
+
+  const innerSizeClass = compact
+    ? "h-24 w-24"
+    : "h-32 w-32";
+
+  const plasmaIntensity =
+    !micEnabled
+      ? "opacity-45 grayscale"
+      : voiceState === "thinking"
+        ? "opacity-100 scale-105"
+        : voiceState === "speaking"
+          ? "opacity-100 scale-110"
+          : voiceState === "listening"
+            ? "opacity-100 scale-105"
+            : "opacity-85 scale-100";
+
+  const coreColor =
+    !micEnabled
+      ? "from-red-400/35 via-red-300/20 to-transparent"
+      : voiceState === "thinking"
+        ? "from-blue-300/70 via-cyan-300/35 to-transparent"
+        : voiceState === "speaking"
+          ? "from-cyan-100/90 via-cyan-300/45 to-transparent"
+          : "from-cyan-200/75 via-cyan-400/35 to-transparent";
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`relative flex ${sizeClass} items-center justify-center rounded-full outline-none transition-all duration-700 ${plasmaIntensity}`}
+    >
+      {/* alone morbido */}
+      <div className="absolute inset-[-18%] rounded-full bg-cyan-400/10 blur-[80px]" />
+
+      {/* sfera plasma */}
+      <div
+        className={`absolute inset-0 rounded-full bg-[radial-gradient(circle_at_center,rgba(34,211,238,0.22),rgba(8,145,178,0.08)_42%,transparent_70%)]`}
+        style={{
+          animation: "ghostPlasmaBreath 4.5s ease-in-out infinite",
+        }}
+      />
+
+      {/* corona energetica esterna */}
+      <div
+        className={`absolute inset-[8%] rounded-full bg-gradient-to-br ${coreColor} blur-[10px]`}
+        style={{
+          clipPath:
+            "polygon(50% 0%, 60% 8%, 72% 5%, 79% 17%, 92% 22%, 89% 38%, 100% 50%, 90% 63%, 93% 78%, 76% 82%, 68% 95%, 52% 90%, 38% 100%, 28% 87%, 11% 82%, 14% 65%, 0% 50%, 12% 37%, 8% 20%, 25% 15%, 34% 3%)",
+          animation:
+            voiceState === "thinking"
+              ? "ghostPlasmaSpin 7s linear infinite, ghostPlasmaBreath 1.8s ease-in-out infinite"
+              : voiceState === "speaking"
+                ? "ghostPlasmaSpin 5s linear infinite, ghostPlasmaBreath 1.1s ease-in-out infinite"
+                : "ghostPlasmaSpin 14s linear infinite, ghostPlasmaBreath 3.6s ease-in-out infinite",
+        }}
+      />
+
+      {/* corona interna opposta */}
+      <div
+        className="absolute inset-[16%] rounded-full bg-[conic-gradient(from_90deg,transparent,rgba(125,249,255,0.15),rgba(34,211,238,0.75),transparent,rgba(96,165,250,0.45),transparent)] blur-[3px]"
+        style={{
+          animation:
+            voiceState === "speaking"
+              ? "ghostPlasmaSpinReverse 4s linear infinite"
+              : "ghostPlasmaSpinReverse 12s linear infinite",
+        }}
+      />
+
+      {/* scariche leggere */}
+      {Array.from({ length: 12 }).map((_, i) => (
+        <span
+          key={i}
+          className="absolute left-1/2 top-1/2 h-[2px] rounded-full bg-cyan-100/70 shadow-[0_0_18px_rgba(34,211,238,0.9)]"
+          style={{
+            width: `${34 + (i % 4) * 14}px`,
+            transform: `rotate(${i * 31}deg) translateX(${compact ? 78 : 122}px)`,
+            transformOrigin: "0 0",
+            opacity: micEnabled ? 0.25 + (i % 3) * 0.18 : 0.08,
+            animation: `ghostPlasmaSpark ${1.8 + (i % 5) * 0.35}s ease-in-out infinite`,
+          }}
+        />
+      ))}
+
+      {/* nucleo centrale */}
+      <div
+        className={`relative z-20 flex ${innerSizeClass} items-center justify-center rounded-full bg-[radial-gradient(circle_at_center,rgba(224,242,254,0.85),rgba(34,211,238,0.32)_45%,rgba(0,0,0,0.7)_100%)] shadow-[0_0_60px_rgba(34,211,238,0.75)]`}
+        style={{
+          animation:
+            voiceState === "speaking"
+              ? "ghostPlasmaBreath 0.9s ease-in-out infinite"
+              : voiceState === "thinking"
+                ? "ghostPlasmaBreath 1.5s ease-in-out infinite"
+                : "ghostPlasmaBreath 3s ease-in-out infinite",
+        }}
+      >
+        <span
+          className={`text-5xl ${
+            micEnabled
+              ? "drop-shadow-[0_0_18px_rgba(34,211,238,0.9)]"
+              : "grayscale opacity-70 drop-shadow-[0_0_18px_rgba(248,113,113,0.8)]"
+          }`}
+        >
+          🎙️
+        </span>
+      </div>
+    </button>
+  );
+}
+
+
 function VoiceOnlyMode({
   voiceState,
   micEnabled,
@@ -1110,182 +1282,50 @@ const stateGlow =
   return (
     <section className="relative flex flex-1 flex-col items-center justify-start overflow-hidden pt-6 pb-6">
 
-    {/* CORE */}
-    <div
-      onClick={() => {
-        if (micEnabled) {
-          try {
-            recognitionRef.current?.stop();
-          } catch {}
+{/* CORE */}
+<div className="relative z-20 mt-4">
+  <GhostPlasmaCore
+    voiceState={voiceState}
+    micEnabled={micEnabled}
+    onClick={() => {
+      if (micEnabled) {
+        try {
+          recognitionRef.current?.stop();
+        } catch {}
 
-          recognitionRef.current = null;
-          clearTimeout(autoMicOffRef.current);
+        recognitionRef.current = null;
+        clearTimeout(autoMicOffRef.current);
 
-          if (
-            typeof window !== "undefined" &&
-            "speechSynthesis" in window
-          ) {
-            window.speechSynthesis.cancel();
-          }
-
-          speakingRef.current = false;
-          setVoiceState("idle");
-          setMicEnabled(false);
-          return;
+        if (
+          typeof window !== "undefined" &&
+          "speechSynthesis" in window
+        ) {
+          window.speechSynthesis.cancel();
         }
 
-        setMicEnabled(true);
-        startVoiceInput();
+        speakingRef.current = false;
+        setVoiceState("idle");
+        setMicEnabled(false);
+        return;
+      }
 
-        clearTimeout(autoMicOffRef.current);
-        autoMicOffRef.current = setTimeout(() => {
-          try {
-            recognitionRef.current?.stop();
-          } catch {}
+      setMicEnabled(true);
+      startVoiceInput();
 
-          recognitionRef.current = null;
-          speakingRef.current = false;
-          setVoiceState("idle");
-          setMicEnabled(false);
-        }, 30000);
-      }}
-      className={`relative mt-6 flex h-[300px] w-[300px] cursor-pointer items-center justify-center rounded-full transition-all duration-700 ${stateGlow}`}
-    >
-      {/* alone organico */}
-      <div
-        className={`absolute h-[340px] w-[340px] rounded-full blur-[90px] transition-all duration-700 ${
-          micEnabled
-            ? "bg-cyan-400/18"
-            : "bg-red-400/8"
-        }`}
-        style={{
-          animation: "ghostBreath 5s ease-in-out infinite",
-        }}
-      />
+      clearTimeout(autoMicOffRef.current);
+      autoMicOffRef.current = setTimeout(() => {
+        try {
+          recognitionRef.current?.stop();
+        } catch {}
 
-      {/* membrana esterna */}
-      <div
-        className={`absolute h-[285px] w-[285px] rounded-full border transition-all duration-700 ${
-          micEnabled
-            ? "border-cyan-300/20 bg-cyan-400/5"
-            : "border-red-300/15 bg-red-500/5"
-        }`}
-        style={{
-          animation: "ghostBreath 6s ease-in-out infinite",
-        }}
-      />
-
-      {/* orbita fluida 1 */}
-      <div
-        className="absolute h-[260px] w-[260px] rounded-full"
-        style={{
-          animation:
-            voiceState === "thinking"
-              ? "ghostFluidOrbit 5s linear infinite"
-              : "ghostFluidOrbit 13s linear infinite",
-        }}
-      >
-        <div className="absolute left-1/2 top-0 h-3 w-24 -translate-x-1/2 rounded-full bg-gradient-to-r from-transparent via-cyan-200/80 to-transparent blur-[1.5px] shadow-[0_0_25px_rgba(34,211,238,0.65)]" />
-      </div>
-
-      {/* orbita fluida 2 */}
-      <div
-        className="absolute h-[220px] w-[220px] rounded-full"
-        style={{
-          animation:
-            voiceState === "speaking"
-              ? "ghostFluidOrbitReverse 4s linear infinite"
-              : "ghostFluidOrbitReverse 11s linear infinite",
-        }}
-      >
-        <div className="absolute bottom-2 left-1/2 h-2 w-20 -translate-x-1/2 rounded-full bg-gradient-to-r from-transparent via-blue-200/70 to-transparent blur-[1.5px] shadow-[0_0_22px_rgba(125,249,255,0.65)]" />
-      </div>
-
-      {/* filamenti interni */}
-      <div
-        className="absolute h-[180px] w-[180px] rounded-full border border-cyan-200/10"
-        style={{
-          animation: "ghostBreath 4.5s ease-in-out infinite",
-        }}
-      />
-
-      <div
-        className="absolute h-[135px] w-[135px] rounded-full border border-cyan-200/10"
-        style={{
-          animation: "ghostBreath 3.8s ease-in-out infinite reverse",
-        }}
-      />
-
-      {/* nucleo glow */}
-      <div
-        className={`absolute h-36 w-36 rounded-full blur-2xl transition-all duration-700 ${
-          !micEnabled
-            ? "bg-red-400/18"
-            : voiceState === "speaking"
-              ? "bg-cyan-100/45"
-              : voiceState === "thinking"
-                ? "bg-blue-300/35"
-                : voiceState === "listening"
-                  ? "bg-cyan-200/40"
-                  : "bg-cyan-300/24"
-        }`}
-        style={{
-          animation:
-            voiceState === "speaking"
-              ? "ghostBreath 1.2s ease-in-out infinite"
-              : "ghostBreath 3s ease-in-out infinite",
-        }}
-      />
-
-      {/* nucleo */}
-      <div
-        className={`relative z-20 flex h-28 w-28 items-center justify-center rounded-full transition-all duration-500 ${
-          !micEnabled
-            ? "bg-red-400/25"
-            : voiceState === "listening"
-              ? "bg-cyan-200/70"
-              : voiceState === "thinking"
-                ? "bg-blue-300/50"
-                : voiceState === "speaking"
-                  ? "bg-cyan-100/90"
-                  : "bg-cyan-200/40"
-        }`}
-        style={{
-          animation:
-            voiceState === "speaking"
-              ? "ghostBreath 0.8s ease-in-out infinite"
-              : voiceState === "thinking"
-                ? "ghostBreath 1.6s ease-in-out infinite"
-                : voiceState === "listening"
-                  ? "ghostBreath 1.2s ease-in-out infinite"
-                  : "ghostBreath 3.5s ease-in-out infinite",
-        }}
-      >
-        <span
-          className={`text-5xl ${
-            micEnabled
-              ? "drop-shadow-[0_0_18px_rgba(34,211,238,0.9)]"
-              : "grayscale opacity-80 drop-shadow-[0_0_18px_rgba(248,113,113,0.8)]"
-          }`}
-        >
-          🎙️
-        </span>
-      </div>
-
-      {/* particelle vicine */}
-      {Array.from({ length: 10 }).map((_, i) => (
-        <div
-          key={i}
-          className="absolute h-1 w-1 rounded-full bg-cyan-100 shadow-[0_0_12px_rgba(34,211,238,0.9)]"
-          style={{
-            left: `${24 + ((i * 17) % 54)}%`,
-            top: `${22 + ((i * 23) % 56)}%`,
-            animation: `ghostFlicker ${2.2 + (i % 4)}s ease-in-out infinite`,
-            opacity: micEnabled ? 0.85 : 0.25,
-          }}
-        />
-      ))}
-    </div>
+        recognitionRef.current = null;
+        speakingRef.current = false;
+        setVoiceState("idle");
+        setMicEnabled(false);
+      }, 30000);
+    }}
+  />
+</div>
 
       {/* STATO */}
       <div className="relative z-20 mt-6 flex flex-col items-center">
