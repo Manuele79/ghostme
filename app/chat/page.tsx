@@ -14,6 +14,7 @@ import GhostChat from "@/components/ghost/GhostChat";
 import GhostVoiceMode from "@/components/ghost/GhostVoiceMode";
 import GhostLayout from "@/components/ghost/GhostLayout";
 import GhostBackground from "@/components/ghost/GhostBackground";
+import { useGhostVoice } from "@/hooks/useGhostVoice";
 
 import {
   MemoryDrawer,
@@ -75,6 +76,7 @@ export default function ChatPage() {
   const silenceTimeoutRef = useRef<any>(null);
   const speakingRef = useRef(false);
   const modeRef = useRef<Mode>("chat-chat");
+  const ghostVoice = useGhostVoice();
 
   const [memoryOpen, setMemoryOpen] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
@@ -464,7 +466,11 @@ async function loadBrainData(userId: string) {
     }
 
 if (modeRef.current === "voce-voce") {
-  speak(assistantReply);
+  ghostVoice.speak(
+  assistantReply,
+  mode,
+  startVoiceInput
+);
 } else {
   setVoiceState("idle");
 }
@@ -559,7 +565,11 @@ if (modeRef.current === "voce-voce") {
       }
 
       if (mode === "voce-voce") {
-        speak(assistantReply);
+        ghostVoice.speak(
+        assistantReply,
+        mode,
+        startVoiceInput
+      );
       }
     } catch (err) {
       console.log(err);
