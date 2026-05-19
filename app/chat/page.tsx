@@ -8,13 +8,19 @@ import {
   buildPersonalitySummary,
 } from "@/lib/personality";
 
-import GhostCore from "@/components/ghost/GhostCore";
+import {
+  BrainData,
+  GhostMode,
+  modeLabels,
+} from "@/components/ghost/types";
+
 import GhostHeader from "@/components/ghost/GhostHeader";
 import GhostChat from "@/components/ghost/GhostChat";
 import GhostVoiceMode from "@/components/ghost/GhostVoiceMode";
 import GhostLayout from "@/components/ghost/GhostLayout";
 import GhostBackground from "@/components/ghost/GhostBackground";
 import { useGhostVoice } from "@/hooks/useGhostVoice";
+import { useGhostChat } from "@/hooks/useGhostChat";
 
 import {
   MemoryDrawer,
@@ -22,32 +28,6 @@ import {
   HistoryDrawer,
 } from "@/components/ghost/GhostDrawers";
 
-type ChatMessage = {
-  role: "user" | "assistant";
-  content: string;
-};
-
-type Mode = "chat-chat" | "voce-chat" | "voce-voce";
-
-type VoiceState =
-  | "idle"
-  | "listening"
-  | "thinking"
-  | "speaking";
-
-type BrainData = {
-  memories: any[];
-  timeline: any[];
-  goals: any[];
-  mentalState: any | null;
-  actions: any[];
-};
-
-const modeLabels: Record<Mode, string> = {
-  "chat-chat": "Chat → Chat",
-  "voce-chat": "Voce → Chat",
-  "voce-voce": "Voce → Voce",
-};
 
 export default function ChatPage() {
   const router = useRouter();
@@ -61,22 +41,31 @@ export default function ChatPage() {
   const [ghostMessage, setGhostMessage] = useState("");
   const [summary, setSummary] = useState<string[]>([]);
 
-  const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [loadingChat, setLoadingChat] = useState(false);
-
-  const [mode, setMode] = useState<Mode>("chat-chat");
-  const [voiceState, setVoiceState] =
-  useState<VoiceState>("idle");
-
-  const [micEnabled, setMicEnabled] = useState(false);
-  const autoMicOffRef = useRef<any>(null);
-
-  const recognitionRef = useRef<any>(null);
-  const silenceTimeoutRef = useRef<any>(null);
-  const speakingRef = useRef(false);
-  const modeRef = useRef<Mode>("chat-chat");
   const ghostVoice = useGhostVoice();
+  const ghostChat = useGhostChat();
+
+  const {
+    voiceState,
+    setVoiceState,
+    micEnabled,
+    setMicEnabled,
+    recognitionRef,
+    silenceTimeoutRef,
+    autoMicOffRef,
+    speakingRef,
+    modeRef,
+  } = ghostVoice;
+
+  const {
+    input,
+    setInput,
+    messages,
+    setMessages,
+    loadingChat,
+    setLoadingChat,
+  } = ghostChat;
+
+  const [mode, setMode] = useState<GhostMode>("chat-chat");
 
   const [memoryOpen, setMemoryOpen] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
@@ -110,7 +99,7 @@ export default function ChatPage() {
   useEffect(() => {
     const savedMode =
       typeof window !== "undefined"
-        ? (localStorage.getItem("ghostme_mode") as Mode | null)
+        ? (localStorage.getItem("ghostme_mode") as GhostMode | null)
         : null;
 
     if (
@@ -254,7 +243,7 @@ async function loadBrainData(userId: string) {
 }
 
   function cycleMode() {
-    const next: Mode =
+    const next: GhostMode =
       mode === "chat-chat"
         ? "voce-chat"
         : mode === "voce-chat"
