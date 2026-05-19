@@ -265,41 +265,6 @@ async function loadBrainData(userId: string) {
     localStorage.setItem("ghostme_mode", next);
   }
 
-  function speak(text: string) {
-    if (typeof window === "undefined") return;
-
-    if (!("speechSynthesis" in window)) return;
-
-    setVoiceState("speaking");
-
-    const utterance = new SpeechSynthesisUtterance(text);
-
-    utterance.lang = "it-IT";
-    utterance.rate = 1;
-    utterance.pitch = 1;
-
-    speakingRef.current = true;
-
-    utterance.onend = () => {
-      speakingRef.current = false;
-
-      setVoiceState("idle");
-
-      if (mode === "voce-voce") {
-        setTimeout(() => {
-          startVoiceInput();
-        }, 600);
-      }
-    };
-
-    utterance.onerror = () => {
-      speakingRef.current = false;
-      setVoiceState("idle");
-    };
-
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
-  }
 
     function startVoiceInput() {
       if (modeRef.current === "chat-chat") return;
