@@ -413,6 +413,8 @@ async function loadBrainData(userId: string) {
 
     const assistantReply = data.reply || "Nessuna risposta.";
 
+    setLoadingChat(false);
+
     setMessages((prev) => [
       ...prev,
       {
@@ -464,8 +466,6 @@ if (modeRef.current === "voce-voce") {
 
     setVoiceState("idle");
   }
-
-  setLoadingChat(false);
 }
 
   async function sendMessage() {
@@ -505,6 +505,8 @@ if (modeRef.current === "voce-voce") {
       const data = await res.json();
 
       const assistantReply = data.reply || "Nessuna risposta.";
+
+      setLoadingChat(false);
 
       setMessages((prev) => [
         ...prev,
@@ -568,7 +570,6 @@ if (modeRef.current === "voce-voce") {
     setVoiceState("idle");
   }
 
-    setLoadingChat(false);
   }
 
   async function logout() {
