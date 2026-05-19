@@ -567,6 +567,15 @@ if (modeRef.current === "voce-voce") {
     );
   }
 
+  function startGhostVoiceInput() {
+  ghostVoice.startVoiceInput({
+    mode,
+    traits,
+    setInput,
+    sendVoiceMessage,
+  });
+}
+
   return (
     <GhostLayout>
 
@@ -622,7 +631,7 @@ if (modeRef.current === "voce-voce") {
             setVoiceState={setVoiceState}
             currentModeLabel={currentModeLabel}
             cycleMode={cycleMode}
-            startVoiceInput={startVoiceInput}
+            startVoiceInput={startGhostVoiceInput}
             openMemory={() => setMemoryOpen(true)}
             openServices={() => setServicesOpen(true)}
           />
@@ -637,7 +646,7 @@ if (modeRef.current === "voce-voce") {
             setInput={setInput}
             sendMessage={sendMessage}
             loadingChat={loadingChat}
-            startVoiceInput={startVoiceInput}
+            startVoiceInput={startGhostVoiceInput}
             lastUserMessage={lastUserMessage}
             lastAssistantMessage={lastAssistantMessage}
             userName={userName}

@@ -47,8 +47,101 @@ function speak(text: string, mode: GhostMode, startVoiceInput?: () => void) {
   window.speechSynthesis.speak(utterance);
 }
 
+function startVoiceInput({
+  mode,
+  traits,
+  setInput,
+  sendVoiceMessage,
+}: {
+  mode: GhostMode;
+  traits: any;
+  setInput: (value: string) => void;
+  sendVoiceMessage: (text: string) => Promise<void>;
+}) {
+  modeRef.current = mode;
+
+  if (modeRef.current === "chat-chat") return;
+  if (speakingRef.current) return;
+
+  const SpeechRecognition =
+    typeof window !== "undefined"
+      ? (window as any).SpeechRecognition ||
+        (window as any).webkitSpeechRecognition
+      : null;
+
+  if (!SpeechRecognition) {
+    alert("Riconoscimento vocale non supportato.");
+    return;
+  }
+
+  if (!traits) return;
+
+  if (recognitionRef.current) {
+    try {
+      recognitionRef.current.stop();
+    } catch {}
+  }
+
+  const recognition = new SpeechRecognition();
+  recognitionRef.current = recognition;
+
+  recognition.lang = "it-IT";
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.maxAlternatives = 1;
+
+  let finalTranscript = "";
+
+  setVoiceState("listening");
+
+  recognition.onresult = (event: any) => {
+    clearTimeout(silenceTimeoutRef.current);
+
+    let interim = "";
+
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const transcript = event.results[i][0].transcript;
+
+      if (event.results[i].isFinal) {
+        finalTranscript += transcript + " ";
+      } else {
+        interim += transcript;
+      }
+    }
+
+    const combined = (finalTranscript + interim).trim();
+    setInput(combined);
+
+    silenceTimeoutRef.current = setTimeout(async () => {
+      const text = combined.trim();
+      if (!text) return;
+
+      recognition.stop();
+      setVoiceState("thinking");
+      setInput(text);
+
+      setTimeout(async () => {
+        await sendVoiceMessage(text);
+      }, 300);
+    }, 1400);
+  };
+
+  recognition.onerror = () => {
+    setVoiceState("idle");
+  };
+
+  recognition.onend = () => {
+    setVoiceState((current) =>
+      current === "listening" ? "idle" : current
+    );
+  };
+
+  recognition.start();
+}
+
   return {
     speak,
+    startVoiceInput,
     voiceState,
     setVoiceState,
     micEnabled,
