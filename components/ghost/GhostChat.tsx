@@ -42,9 +42,9 @@ export default function GhostChat({
   openHistory: () => void;
 }) {
   return (
-    <div className="relative z-20 mt-6 flex w-full max-w-5xl flex-1 flex-col items-center">
+    <div className="relative z-20 mt-2 flex w-full max-w-5xl flex-1 flex-col items-center justify-end">
       {/* core centrale */}
-      <div className="mb-4">
+      <div className="pointer-events-none absolute left-1/2 top-[-70px] -translate-x-1/2 opacity-70">
         <GhostCore
           voiceState={voiceState}
           micEnabled={micEnabled}
