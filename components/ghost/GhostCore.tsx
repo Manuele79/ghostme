@@ -34,131 +34,139 @@ export default function GhostCore({
           ? "opacity-95 brightness-110"
           : "opacity-85";
 
-  return (
-    <>
-      <style jsx global>{`
-        @keyframes ghostRotate {
-          from {
-            transform: rotate(0deg);
-          }
-          to {
-            transform: rotate(360deg);
-          }
+return (
+  <>
+    <style jsx global>{`
+      @keyframes ghostRotate {
+        from {
+          transform: rotate(0deg);
         }
-
-        @keyframes ghostPulse {
-          0%,
-          100% {
-            transform: scale(0.96);
-          }
-          50% {
-            transform: scale(1.06);
-          }
+        to {
+          transform: rotate(360deg);
         }
+      }
 
-        @keyframes ghostPulseFast {
-          0%,
-          100% {
-            transform: scale(0.92);
-          }
-          50% {
-            transform: scale(1.12);
-          }
+      @keyframes ghostPulse {
+        0%,
+        100% {
+          transform: scale(0.96);
+          opacity: 0.7;
         }
-
-        @keyframes ghostParticles {
-          0%,
-          100% {
-            opacity: 0.25;
-          }
-          50% {
-            opacity: 1;
-          }
+        50% {
+          transform: scale(1.08);
+          opacity: 1;
         }
-      `}</style>
+      }
 
-      <button
-        type="button"
-        onClick={onClick}
-        className={`relative flex items-center justify-center rounded-full transition-all duration-700 ${stateScale}`}
+      @keyframes ghostBreath {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.03);
+        }
+      }
+
+      @keyframes ghostParticles {
+        0%,
+        100% {
+          opacity: 0.15;
+          transform: scale(0.8);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1.4);
+        }
+      }
+    `}</style>
+
+    <button
+      type="button"
+      onClick={onClick}
+      className={`relative flex items-center justify-center rounded-full transition-all duration-700 ${stateScale}`}
+      style={{
+        width: size,
+        height: size,
+      }}
+    >
+      {/* alone enorme */}
+      <div
+        className="absolute inset-[-28%] rounded-full bg-cyan-400/25 blur-[160px]"
         style={{
-          width: size,
-          height: size,
+          animation: "ghostPulse 5s ease-in-out infinite",
+        }}
+      />
+
+      {/* anello plasma */}
+      <div
+        className={`absolute inset-[6%] rounded-full opacity-90 mix-blend-screen ${stateGlow}`}
+        style={{
+          animation:
+            voiceState === "speaking"
+              ? "ghostRotate 4s linear infinite"
+              : voiceState === "thinking"
+              ? "ghostRotate 9s linear infinite"
+              : "ghostRotate 18s linear infinite",
         }}
       >
-        {/* alone generale */}
-        <div
-          className="absolute inset-[-22%] rounded-full bg-cyan-400/30 blur-[120px]"
+        <Image
+          src="/ghost/ghost-plasma-core1.png"
+          alt="ghost plasma"
+          fill
+          className="object-contain scale-[1.18] opacity-95"
+          priority
+        />
+      </div>
+
+      {/* glow interno */}
+      <div className="absolute inset-[24%] rounded-full bg-cyan-300/10 blur-[35px]" />
+
+      {/* cerchi */}
+      <div className="absolute inset-[14%] rounded-full border border-cyan-200/10" />
+      <div className="absolute inset-[28%] rounded-full border border-cyan-200/10" />
+
+      {/* particelle */}
+      {Array.from({ length: 32 }).map((_, i) => (
+        <span
+          key={i}
+          className="absolute rounded-full bg-cyan-100"
           style={{
-            animation:
-              voiceState === "speaking"
-                ? "ghostPulseFast 1s ease-in-out infinite"
-                : "ghostPulse 4s ease-in-out infinite",
+            width: `${1 + (i % 3)}px`,
+            height: `${1 + (i % 3)}px`,
+            left: `${10 + ((i * 19) % 80)}%`,
+            top: `${10 + ((i * 23) % 80)}%`,
+            opacity: micEnabled ? 0.8 : 0.2,
+            boxShadow: "0 0 12px rgba(34,211,238,0.9)",
+            animation: `ghostParticles ${1.8 + (i % 5)}s ease-in-out infinite`,
           }}
         />
+      ))}
 
-        {/* plasma texture */}
-        <div
-          className={`absolute inset-[-12%] mix-blend-screen contrast-125 saturate-150 ${stateGlow}`}
-          style={{
-            animation:
-              voiceState === "speaking"
-                ? "ghostRotate 5s linear infinite, ghostPulseFast 1s ease-in-out infinite"
-                : voiceState === "thinking"
-                  ? "ghostRotate 8s linear infinite, ghostPulse 2s ease-in-out infinite"
-                  : "ghostRotate 18s linear infinite, ghostPulse 5s ease-in-out infinite",
-          }}
-        >
-          <Image
-            src="/ghost/ghost-plasma-core1.png"
-            alt="ghost plasma"
-            fill
-            className="object-contain"
-            priority
-          />
-        </div>
-
-        {/* cerchi overlay */}
-        <div className="absolute inset-[12%] rounded-full border border-cyan-200/10" />
-        <div className="absolute inset-[24%] rounded-full border border-cyan-200/10" />
-
-        {/* particelle */}
-        {Array.from({ length: 18 }).map((_, i) => (
-          <span
-            key={i}
-            className="absolute h-1 w-1 rounded-full bg-cyan-100 shadow-[0_0_10px_rgba(34,211,238,0.9)]"
-            style={{
-              left: `${18 + ((i * 17) % 64)}%`,
-              top: `${14 + ((i * 31) % 72)}%`,
-              animation: `ghostParticles ${1.2 + (i % 4) * 0.4}s ease-in-out infinite`,
-              opacity: micEnabled ? 0.8 : 0.2,
-            }}
-          />
-        ))}
-
-        {/* nucleo */}
-        <div
-          className={`relative z-20 flex items-center justify-center rounded-full ${
+      {/* nucleo */}
+      <div
+        className={`relative z-20 flex items-center justify-center rounded-full border border-white/10 backdrop-blur-xl ${
+          micEnabled ? "bg-cyan-300/15" : "bg-red-400/10"
+        }`}
+        style={{
+          width: compact ? 100 : 140,
+          height: compact ? 100 : 140,
+          boxShadow:
+            "0 0 60px rgba(34,211,238,0.35), inset 0 0 30px rgba(255,255,255,0.05)",
+          animation: "ghostBreath 4s ease-in-out infinite",
+        }}
+      >
+        <span
+          className={`text-5xl ${
             micEnabled
-              ? "bg-cyan-300/15"
-              : "bg-red-400/10"
-          } backdrop-blur-md border border-white/10 shadow-[0_0_50px_rgba(34,211,238,0.55)]`}
-          style={{
-            width: compact ? 90 : 120,
-            height: compact ? 90 : 120,
-          }}
+              ? "drop-shadow-[0_0_20px_rgba(34,211,238,0.9)]"
+              : "opacity-40 grayscale"
+          }`}
         >
-          <span
-            className={`text-5xl ${
-              micEnabled
-                ? "drop-shadow-[0_0_16px_rgba(34,211,238,0.9)]"
-                : "grayscale opacity-60"
-            }`}
-          >
-            🎙️
-          </span>
-        </div>
-      </button>
-    </>
-  );
+          🎙️
+        </span>
+      </div>
+    </button>
+  </>
+);
 }
