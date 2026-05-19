@@ -1,6 +1,7 @@
 "use client";
 
 import { ReactNode } from "react";
+import GhostGlobalStyles from "./GhostGlobalStyles";
 
 export default function GhostLayout({
   children,
@@ -9,6 +10,7 @@ export default function GhostLayout({
 }) {
   return (
     <main className="relative min-h-screen overflow-hidden bg-black text-white">
+       <GhostGlobalStyles />
       {/* glow globale */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(34,211,238,0.12),transparent_60%)]" />
 
@@ -28,6 +30,8 @@ export default function GhostLayout({
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-6xl flex-col items-center px-4 pb-10 pt-6">
         {children}
       </div>
-    </main>
+    </main>   
+   
   );
+  
 }
