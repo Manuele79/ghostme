@@ -94,7 +94,7 @@ return (
         className="absolute left-[-4.5rem] bottom-[1.1rem] z-20 hidden h-14 w-14 items-center justify-center rounded-2xl border border-cyan-400/25 bg-black/70 text-lg text-cyan-200 shadow-[0_0_25px_rgba(34,211,238,0.18)] transition hover:scale-105 hover:bg-cyan-400/10 lg:flex"
         title="Cronologia chat"
       >
-        ↺ Chat
+        ↺
       </button>
 
     <div className="relative z-20 rounded-[1.6rem] border border-cyan-400/10 bg-black/60 p-2 backdrop-blur-md">
