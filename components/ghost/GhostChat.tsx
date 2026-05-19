@@ -89,13 +89,13 @@ return (
       )}
     </div>
 
-    <button
-      onClick={openHistory}
-      className="absolute left-[-3.8rem] top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-cyan-400/25 bg-black/70 text-xs font-black text-cyan-200 shadow-[0_0_25px_rgba(34,211,238,0.18)] lg:flex"
-      title="Cronologia"
-    >
-      ↺ Chat
-    </button>
+      <button
+        onClick={openHistory}
+        className="absolute left-[-4.5rem] bottom-[1.1rem] z-20 hidden h-14 w-14 items-center justify-center rounded-2xl border border-cyan-400/25 bg-black/70 text-lg text-cyan-200 shadow-[0_0_25px_rgba(34,211,238,0.18)] transition hover:scale-105 hover:bg-cyan-400/10 lg:flex"
+        title="Cronologia chat"
+      >
+        ↺ Chat
+      </button>
 
     <div className="relative z-20 rounded-[1.6rem] border border-cyan-400/10 bg-black/60 p-2 backdrop-blur-md">
       <div className="flex gap-2">
