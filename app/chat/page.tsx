@@ -931,35 +931,7 @@ function GhostEnergyBackground({
 
 
 
-function ChatBubble({
-  role,
-  label,
-  content,
-}: {
-  role: "user" | "assistant";
-  label: string;
-  content: string;
-}) {
-  return (
-    <div
-      className={`rounded-3xl px-5 py-4 text-base leading-relaxed shadow-[0_0_20px_rgba(0,0,0,0.22)] ${
-        role === "user"
-          ? "ml-auto max-w-[88%] border border-cyan-400/25 bg-cyan-400/10 text-white"
-          : "mr-auto max-w-[88%] border border-zinc-800 bg-zinc-900/88 text-zinc-100"
-      }`}
-    >
-      <div
-        className={`mb-2 text-[11px] uppercase tracking-[0.32em] ${
-          role === "user" ? "text-cyan-300/90" : "text-cyan-200/85"
-        }`}
-      >
-        {label}
-      </div>
 
-      {content}
-    </div>
-  );
-}
 
 function MemoryDrawer({
   open,
@@ -1339,7 +1311,7 @@ function HistoryDrawer({
 
         <div className="mt-6 space-y-4">
           {messages.map((msg, index) => (
-            <ChatBubble
+            <HistoryBubble
               key={index}
               role={msg.role}
               label={msg.role === "user" ? userName : "GhostMe"}
@@ -1442,6 +1414,36 @@ function EmptyBrainBox({ text }: { text: string }) {
   return (
     <div className="rounded-3xl border border-zinc-800 bg-black/60 p-5 text-sm text-zinc-400">
       {text}
+    </div>
+  );
+}
+
+function HistoryBubble({
+  role,
+  label,
+  content,
+}: {
+  role: "user" | "assistant";
+  label: string;
+  content: string;
+}) {
+  return (
+    <div
+      className={`rounded-3xl px-5 py-4 text-base leading-relaxed shadow-[0_0_20px_rgba(0,0,0,0.22)] ${
+        role === "user"
+          ? "ml-auto max-w-[88%] border border-cyan-400/25 bg-cyan-400/10 text-white"
+          : "mr-auto max-w-[88%] border border-zinc-800 bg-zinc-900/88 text-zinc-100"
+      }`}
+    >
+      <div
+        className={`mb-2 text-[11px] uppercase tracking-[0.32em] ${
+          role === "user" ? "text-cyan-300/90" : "text-cyan-200/85"
+        }`}
+      >
+        {label}
+      </div>
+
+      {content}
     </div>
   );
 }
