@@ -12,6 +12,7 @@ import GhostCore from "@/components/ghost/GhostCore";
 import GhostHeader from "@/components/ghost/GhostHeader";
 import GhostChat from "@/components/ghost/GhostChat";
 import GhostVoiceMode from "@/components/ghost/GhostVoiceMode";
+import GhostLayout from "@/components/ghost/GhostLayout";
 
 type ChatMessage = {
   role: "user" | "assistant";
@@ -584,7 +585,7 @@ if (modeRef.current === "voce-voce") {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-black text-white">
+    <GhostLayout>
       <style jsx global>{`
         * {
           scrollbar-width: thin;
@@ -806,7 +807,7 @@ if (modeRef.current === "voce-voce") {
           />
         )}
       </div>
-    </main>
+    </GhostLayout>
   );
 }
 
