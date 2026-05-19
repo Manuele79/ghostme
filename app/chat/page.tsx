@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import {
@@ -9,7 +9,6 @@ import {
 } from "@/lib/personality";
 
 import {
-  BrainData,
   GhostMode,
   modeLabels,
 } from "@/components/ghost/types";
@@ -19,15 +18,16 @@ import GhostChat from "@/components/ghost/GhostChat";
 import GhostVoiceMode from "@/components/ghost/GhostVoiceMode";
 import GhostLayout from "@/components/ghost/GhostLayout";
 import GhostBackground from "@/components/ghost/GhostBackground";
+
 import { useGhostVoice } from "@/hooks/useGhostVoice";
 import { useGhostChat } from "@/hooks/useGhostChat";
+import { useGhostBrain } from "@/hooks/useGhostBrain";
 
 import {
   MemoryDrawer,
   ServicesDrawer,
   HistoryDrawer,
 } from "@/components/ghost/GhostDrawers";
-
 
 export default function ChatPage() {
   const router = useRouter();
@@ -41,8 +41,23 @@ export default function ChatPage() {
   const [ghostMessage, setGhostMessage] = useState("");
   const [summary, setSummary] = useState<string[]>([]);
 
+  const [mode, setMode] = useState<GhostMode>("chat-chat");
+
+  const [memoryOpen, setMemoryOpen] = useState(false);
+  const [servicesOpen, setServicesOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+
+  const [activeMemoryTab, setActiveMemoryTab] = useState<
+    "memory" | "timeline" | "goals" | "state"
+  >("memory");
+
+  const [activeServiceTab, setActiveServiceTab] = useState<
+    "actions" | "calendar" | "mail" | "web" | "home" | "profile" | "traits"
+  >("actions");
+
   const ghostVoice = useGhostVoice();
   const ghostChat = useGhostChat();
+  const ghostBrain = useGhostBrain();
 
   const {
     voiceState,
@@ -65,36 +80,73 @@ export default function ChatPage() {
     setLoadingChat,
   } = ghostChat;
 
-  const [mode, setMode] = useState<GhostMode>("chat-chat");
-
-  const [memoryOpen, setMemoryOpen] = useState(false);
-  const [servicesOpen, setServicesOpen] = useState(false);
-  const [historyOpen, setHistoryOpen] = useState(false);
-
-  const [activeMemoryTab, setActiveMemoryTab] = useState<
-    "memory" | "timeline" | "goals" | "state"
-  >("memory");
-
-  const [activeServiceTab, setActiveServiceTab] = useState<
-    "actions" | "calendar" | "mail" | "web" | "home" | "profile" | "traits"
-  >("actions");
-
-  const [brainData, setBrainData] = useState<BrainData>({
-    memories: [],
-    timeline: [],
-    goals: [],
-    mentalState: null,
-    actions: [],
-  });
-
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const { brainData, loadBrainData } = ghostBrain;
 
   const currentModeLabel = useMemo(() => modeLabels[mode], [mode]);
 
-  const lastUserMessage = [...messages].reverse().find((m) => m.role === "user");
+  const lastUserMessage = [...messages]
+    .reverse()
+    .find((m) => m.role === "user");
+
   const lastAssistantMessage = [...messages]
     .reverse()
     .find((m) => m.role === "assistant");
+
+  async function refreshBrain(userId: string) {
+    await loadBrainData({
+      userId,
+      setUserProfile,
+      setUserName,
+      setTraits,
+      setGhostMessage,
+      setSummary,
+    });
+  }
+
+  async function saveConversationInBackground({
+    userText,
+    assistantReply,
+  }: {
+    userText: string;
+    assistantReply: string;
+  }) {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) return;
+
+      const { error } = await supabase.from("chat_messages").insert([
+        {
+          user_id: user.id,
+          role: "user",
+          content: userText,
+        },
+        {
+          user_id: user.id,
+          role: "assistant",
+          content: assistantReply,
+        },
+      ]);
+
+      if (error) return;
+
+      await fetch("/api/conversation-summary", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: user.id,
+        }),
+      });
+
+      await refreshBrain(user.id);
+    } catch (err) {
+      console.log("GhostMe background save error:", err);
+    }
+  }
 
   useEffect(() => {
     const savedMode =
@@ -175,19 +227,13 @@ export default function ChatPage() {
         );
       }
 
-      await loadBrainData(user.id);
-
+      await refreshBrain(user.id);
       setLoading(false);
     }
 
     boot();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({
-      behavior: "smooth",
-    });
-  }, [messages, historyOpen]);
 
   useEffect(() => {
     modeRef.current = mode;
@@ -198,7 +244,6 @@ export default function ChatPage() {
       } catch {}
 
       recognitionRef.current = null;
-
       clearTimeout(silenceTimeoutRef.current);
 
       if (typeof window !== "undefined" && "speechSynthesis" in window) {
@@ -208,39 +253,14 @@ export default function ChatPage() {
       speakingRef.current = false;
       setVoiceState("idle");
     }
-  }, [mode]);
-
-
-async function loadBrainData(userId: string) {
-  const res = await fetch("/api/ghostme/brain", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ userId }),
-  });
-
-  const data = await res.json();
-
-  setBrainData({
-    memories: data.memories || [],
-    timeline: data.timeline || [],
-    goals: data.goals || [],
-    mentalState: data.mentalState || null,
-    actions: data.actions || [],
-  });
-
-  if (data.profile) {
-    setUserProfile(data.profile);
-    setUserName(data.profile.full_name || "Tu");
-  }
-
-  if (data.traits) {
-    setTraits(data.traits);
-    setGhostMessage(buildGhostMeMessage(data.traits));
-    setSummary(buildPersonalitySummary(data.traits));
-  }
-}
+  }, [
+    mode,
+    modeRef,
+    recognitionRef,
+    silenceTimeoutRef,
+    speakingRef,
+    setVoiceState,
+  ]);
 
   function cycleMode() {
     const next: GhostMode =
@@ -254,104 +274,80 @@ async function loadBrainData(userId: string) {
     localStorage.setItem("ghostme_mode", next);
   }
 
-
-
   async function sendVoiceMessage(voiceText: string) {
-
     if (modeRef.current === "chat-chat") {
       setVoiceState("idle");
       return;
     }
-  if (!voiceText.trim()) return;
-  if (!traits) return;
-  setInput("");
 
-  setLoadingChat(true);
+    if (!voiceText.trim()) return;
+    if (!traits) return;
 
-  setMessages((prev) => [
-    ...prev,
-    {
-      role: "user",
-      content: voiceText,
-    },
-  ]);
+    const userText = voiceText.trim();
 
-  try {
-    const res = await fetch("/api/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        message: voiceText,
-        traits,
-        messages,
-        userId: traits.user_id,
-      }),
-    });
-
-    const data = await res.json();
-
-    const assistantReply = data.reply || "Nessuna risposta.";
-
-    setLoadingChat(false);
+    setInput("");
+    setLoadingChat(true);
 
     setMessages((prev) => [
       ...prev,
       {
-        role: "assistant",
-        content: assistantReply,
+        role: "user",
+        content: userText,
       },
     ]);
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (user) {
-      await supabase
-        .from("chat_messages")
-        .insert([
-          {
-            user_id: user.id,
-            role: "user",
-            content: voiceText,
-          },
-          {
-            user_id: user.id,
-            role: "assistant",
-            content: assistantReply,
-          },
-        ]);
-
-      await fetch("/api/conversation-summary", {
+    try {
+      const res = await fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userId: user.id,
+          message: userText,
+          traits,
+          messages,
+          userId: traits.user_id,
         }),
       });
 
-      await loadBrainData(user.id);
-    }
+      const data = await res.json();
+      const assistantReply = data.reply || "Nessuna risposta.";
 
-  if (modeRef.current === "voce-voce") {
-    ghostVoice.speak(
-      assistantReply,
-      mode,
-      startGhostVoiceInput
-    );
-    } else {
-      setVoiceState("idle");
-    }
-      } catch (err) {
-        console.log(err);
+      setLoadingChat(false);
 
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: assistantReply,
+        },
+      ]);
+
+      if (modeRef.current === "voce-voce") {
+        ghostVoice.speak(assistantReply, mode, startGhostVoiceInput);
+      } else {
         setVoiceState("idle");
       }
+
+      void saveConversationInBackground({
+        userText,
+        assistantReply,
+      });
+    } catch (err) {
+      console.log(err);
+
+      setLoadingChat(false);
+      setVoiceState("idle");
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "Errore comunicazione GhostMe.",
+        },
+      ]);
     }
+  }
 
   async function sendMessage() {
     if (!input.trim()) return;
@@ -362,6 +358,7 @@ async function loadBrainData(userId: string) {
     if (mode !== "chat-chat") {
       setVoiceState("thinking");
     }
+
     setLoadingChat(true);
     setInput("");
 
@@ -388,7 +385,6 @@ async function loadBrainData(userId: string) {
       });
 
       const data = await res.json();
-
       const assistantReply = data.reply || "Nessuna risposta.";
 
       setLoadingChat(false);
@@ -401,50 +397,22 @@ async function loadBrainData(userId: string) {
         },
       ]);
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (user) {
-        const { error: insertError } = await supabase
-          .from("chat_messages")
-          .insert([
-            {
-              user_id: user.id,
-              role: "user",
-              content: userText,
-            },
-            {
-              user_id: user.id,
-              role: "assistant",
-              content: assistantReply,
-            },
-          ]);
-
-        if (!insertError) {
-          await fetch("/api/conversation-summary", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              userId: user.id,
-            }),
-          });
-
-          await loadBrainData(user.id);
-        }
-      }
-
       if (mode === "voce-voce") {
-        ghostVoice.speak(
-          assistantReply,
-          mode,
-          startGhostVoiceInput
-        );
+        ghostVoice.speak(assistantReply, mode, startGhostVoiceInput);
       }
+
+      if (mode !== "voce-voce") {
+        setVoiceState("idle");
+      }
+
+      void saveConversationInBackground({
+        userText,
+        assistantReply,
+      });
     } catch (err) {
       console.log(err);
+
+      setLoadingChat(false);
 
       setMessages((prev) => [
         ...prev,
@@ -453,12 +421,11 @@ async function loadBrainData(userId: string) {
           content: "Errore comunicazione GhostMe.",
         },
       ]);
+
+      if (mode !== "voce-voce") {
+        setVoiceState("idle");
+      }
     }
-
-    if (mode !== "voce-voce") {
-    setVoiceState("idle");
-  }
-
   }
 
   async function logout() {
@@ -466,26 +433,25 @@ async function loadBrainData(userId: string) {
     router.push("/login");
   }
 
+  function startGhostVoiceInput() {
+    ghostVoice.startVoiceInput({
+      mode,
+      traits,
+      setInput,
+      sendVoiceMessage,
+    });
+  }
+
   if (loading) {
     return (
-      <main className="min-h-screen bg-black text-white flex items-center justify-center">
+      <main className="flex min-h-screen items-center justify-center bg-black text-white">
         <p className="text-cyan-300">GhostMe si sta riattivando...</p>
       </main>
     );
   }
 
-  function startGhostVoiceInput() {
-  ghostVoice.startVoiceInput({
-    mode,
-    traits,
-    setInput,
-    sendVoiceMessage,
-  });
-}
-
   return (
     <GhostLayout>
-
       {mode !== "voce-voce" && (
         <GhostBackground mode={mode} voiceState={voiceState} />
       )}
@@ -564,6 +530,3 @@ async function loadBrainData(userId: string) {
     </GhostLayout>
   );
 }
-
-
-
