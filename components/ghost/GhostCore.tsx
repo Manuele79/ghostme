@@ -88,7 +88,7 @@ export default function GhostCore({
       >
         {/* alone generale */}
         <div
-          className="absolute inset-[-12%] rounded-full bg-cyan-400/20 blur-[90px]"
+          className="absolute inset-[-22%] rounded-full bg-cyan-400/30 blur-[120px]"
           style={{
             animation:
               voiceState === "speaking"
@@ -99,7 +99,7 @@ export default function GhostCore({
 
         {/* plasma texture */}
         <div
-          className={`absolute inset-0 ${stateGlow}`}
+          className={`absolute inset-[-12%] mix-blend-screen contrast-125 saturate-150 ${stateGlow}`}
           style={{
             animation:
               voiceState === "speaking"
@@ -110,7 +110,7 @@ export default function GhostCore({
           }}
         >
           <Image
-            src="/ghost/ghost-plasma-core.png"
+            src="/ghost/ghost-plasma-core1.png"
             alt="ghost plasma"
             fill
             className="object-contain"
