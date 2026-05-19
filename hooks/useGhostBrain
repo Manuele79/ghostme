@@ -1,10 +1,20 @@
 "use client";
+
 import { useState } from "react";
 import { BrainData } from "../components/ghost/types";
 import {
   buildGhostMeMessage,
   buildPersonalitySummary,
 } from "../lib/personality";
+
+type LoadBrainArgs = {
+  userId: string;
+  setUserProfile: (value: any) => void;
+  setUserName: (value: string) => void;
+  setTraits: (value: any) => void;
+  setGhostMessage: (value: string) => void;
+  setSummary: (value: string[]) => void;
+};
 
 export function useGhostBrain() {
   const [brainData, setBrainData] = useState<BrainData>({
@@ -15,21 +25,16 @@ export function useGhostBrain() {
     actions: [],
   });
 
-  async function loadBrainData({
-    userId,
-    setUserProfile,
-    setUserName,
-    setTraits,
-    setGhostMessage,
-    setSummary,
-  }: {
-    userId: string;
-    setUserProfile: (value: any) => void;
-    setUserName: (value: string) => void;
-    setTraits: (value: any) => void;
-    setGhostMessage: (value: string) => void;
-    setSummary: (value: string[]) => void;
-  }) {
+  async function loadBrainData(args: LoadBrainArgs) {
+    const {
+      userId,
+      setUserProfile,
+      setUserName,
+      setTraits,
+      setGhostMessage,
+      setSummary,
+    } = args;
+
     const res = await fetch("/api/ghostme/brain", {
       method: "POST",
       headers: {
