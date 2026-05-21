@@ -78,11 +78,16 @@ const relatedTopicNames = Array.from(
     .order("weight", { ascending: false })
     .limit(100);
 
+  const searchTopics = [
+    ...topicNames,
+    ...relatedTopicNames.map((t) => t.toLowerCase()),
+  ];
+
   const relevantTopics =
     allTopics?.filter((topic) => {
       const topicLower = String(topic.topic).toLowerCase();
 
-      return topicNames.some(
+      return searchTopics.some(
         (name) =>
           topicLower.includes(name) ||
           name.includes(topicLower)
@@ -123,7 +128,7 @@ const relatedTopicNames = Array.from(
       const text =
         `${memory.title} ${memory.content}`.toLowerCase();
 
-      return topicNames.some((topic) =>
+      return searchTopics.some((topic) =>
         text.includes(topic)
       );
     }) || [];
