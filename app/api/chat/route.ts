@@ -1,5 +1,5 @@
 import { OpenAI } from "openai";
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
@@ -843,7 +843,8 @@ export async function POST(req: Request) {
       });
     }
 
-    if (userId) {
+  if (userId) {
+    after(async () => {
       try {
         await detectAndSaveContradictions({
           userId,
@@ -852,9 +853,7 @@ export async function POST(req: Request) {
       } catch (err) {
         log("CONTRADICTION ENGINE ERROR:", err);
       }
-    }
 
-    if (userId) {
       try {
         await updateMentalState({
           userId,
@@ -863,9 +862,7 @@ export async function POST(req: Request) {
       } catch (err) {
         log("MENTAL STATE ERROR:", err);
       }
-    }
 
-    if (userId) {
       try {
         await detectAndSaveGoalsDesires({
           userId,
@@ -892,7 +889,8 @@ export async function POST(req: Request) {
       } catch (err) {
         log("COGNITIVE PACKAGE ERROR:", err);
       }
-    }
+    });
+  }
 
     return NextResponse.json({
       reply,
