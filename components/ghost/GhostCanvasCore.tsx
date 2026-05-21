@@ -20,8 +20,10 @@ export default function GhostCanvasCore({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    const context = canvas.getContext("2d");
+    if (!context) return;
+
+    const ctx: CanvasRenderingContext2D = context;
 
     let frame = 0;
     let animationId = 0;
@@ -34,7 +36,7 @@ export default function GhostCanvasCore({
     canvas.style.width = `${size}px`;
     canvas.style.height = `${size}px`;
 
-    ctx.scale(dpr, dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     function draw() {
       frame += 0.018;
@@ -48,14 +50,13 @@ export default function GhostCanvasCore({
         voiceState === "speaking"
           ? 1.22
           : voiceState === "thinking"
-          ? 1.12
-          : voiceState === "listening"
-          ? 1.08
-          : 1;
+            ? 1.12
+            : voiceState === "listening"
+              ? 1.08
+              : 1;
 
       const micPower = micEnabled ? 1 : 0.45;
 
-      // glow esterno
       const outer = ctx.createRadialGradient(cx, cy, 20, cx, cy, size * 0.48);
       outer.addColorStop(0, `rgba(80, 240, 255, ${0.32 * micPower})`);
       outer.addColorStop(0.38, `rgba(0, 180, 255, ${0.18 * micPower})`);
@@ -66,9 +67,13 @@ export default function GhostCanvasCore({
       ctx.arc(cx, cy, size * 0.48, 0, Math.PI * 2);
       ctx.fill();
 
-      // plasma vivo
-      for (let i = 0; i < 42; i++) {
-        const angle = (Math.PI * 2 * i) / 42 + frame * (0.35 + (i % 4) * 0.08);
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+
+      for (let i = 0; i < 46; i++) {
+        const angle =
+          (Math.PI * 2 * i) / 46 + frame * (0.35 + (i % 4) * 0.08);
+
         const wave =
           Math.sin(frame * 4 + i * 1.7) * 18 +
           Math.cos(frame * 2.2 + i * 0.9) * 12;
@@ -77,54 +82,42 @@ export default function GhostCanvasCore({
         const x = cx + Math.cos(angle) * r;
         const y = cy + Math.sin(angle) * r;
 
-        const radius = 18 + Math.sin(frame * 3 + i) * 8;
+        const radius = 14 + Math.sin(frame * 3 + i) * 7;
 
-        const g = ctx.createRadialGradient(x, y, 0, x, y, radius);
-        g.addColorStop(0, `rgba(160, 250, 255, ${0.75 * micPower})`);
-        g.addColorStop(0.45, `rgba(0, 210, 255, ${0.28 * micPower})`);
-        g.addColorStop(1, "rgba(0, 0, 0, 0)");
+        const glow = ctx.createRadialGradient(x, y, 0, x, y, radius);
+        glow.addColorStop(0, `rgba(180, 255, 255, ${0.85 * micPower})`);
+        glow.addColorStop(0.42, `rgba(0, 220, 255, ${0.36 * micPower})`);
+        glow.addColorStop(1, "rgba(0, 0, 0, 0)");
 
-        ctx.fillStyle = g;
+        ctx.fillStyle = glow;
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
         ctx.fill();
       }
 
-      // scariche elettriche morbide
-      ctx.save();
-      ctx.globalCompositeOperation = "lighter";
-
-      for (let i = 0; i < 9; i++) {
-        const a = frame * 0.8 + i * 0.7;
+      for (let i = 0; i < 12; i++) {
+        const a = frame * 0.9 + i * 0.55;
         const startR = size * 0.12;
-        const endR = size * (0.28 + Math.sin(frame + i) * 0.035);
+        const endR = size * (0.28 + Math.sin(frame + i) * 0.04);
 
         ctx.beginPath();
-        ctx.moveTo(
-          cx + Math.cos(a) * startR,
-          cy + Math.sin(a) * startR
-        );
+        ctx.moveTo(cx + Math.cos(a) * startR, cy + Math.sin(a) * startR);
 
-        for (let j = 1; j <= 5; j++) {
-          const rr = startR + ((endR - startR) / 5) * j;
-          const aa = a + Math.sin(frame * 3 + i + j) * 0.16;
-
-          ctx.lineTo(
-            cx + Math.cos(aa) * rr,
-            cy + Math.sin(aa) * rr
-          );
+        for (let j = 1; j <= 6; j++) {
+          const rr = startR + ((endR - startR) / 6) * j;
+          const aa = a + Math.sin(frame * 3 + i + j) * 0.18;
+          ctx.lineTo(cx + Math.cos(aa) * rr, cy + Math.sin(aa) * rr);
         }
 
-        ctx.strokeStyle = `rgba(130, 245, 255, ${0.22 * micPower})`;
+        ctx.strokeStyle = `rgba(140, 250, 255, ${0.25 * micPower})`;
         ctx.lineWidth = 1.4;
-        ctx.shadowBlur = 18;
-        ctx.shadowColor = "rgba(60, 220, 255, 0.9)";
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = "rgba(60, 220, 255, 0.95)";
         ctx.stroke();
       }
 
       ctx.restore();
 
-      // nucleo
       const pulse =
         voiceState === "speaking"
           ? Math.sin(frame * 12) * 7
