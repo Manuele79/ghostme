@@ -39,6 +39,11 @@ import {
   detectAndSaveActionIntent,
 } from "@/lib/ghostme/actionLayer";
 
+import {
+  removeGenericRelationshipTopics,
+  resolveNamedRelationship,
+} from "@/lib/ghostme/relationshipResolver";
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -707,11 +712,20 @@ export async function POST(req: Request) {
       profileContext,
     });
 
-    const detectedTopics = uniqueTopics(
-      aiTopics.length > 0 ? [...ruleBasedTopics, ...aiTopics] : ruleBasedTopics
+    const detectedTopics = removeGenericRelationshipTopics(
+      uniqueTopics(
+        aiTopics.length > 0 ? [...ruleBasedTopics, ...aiTopics] : ruleBasedTopics
+      )
     );
 
     const importanceLevel = detectImportanceLevel(message);
+
+    if (userId) {
+      await resolveNamedRelationship({
+        userId,
+        message,
+      });
+    }
 
     log("RULE BASED TOPICS:", ruleBasedTopics);
     log("AI TOPICS:", aiTopics);
