@@ -2,6 +2,7 @@
 
 import GhostCore from "./GhostCore";
 import { VoiceState } from "./types";
+import GhostCanvasCore from "./GhostCanvasCore";
 
 
 export default function GhostVoiceMode({
@@ -57,7 +58,7 @@ const stateGlow =
 
 {/* CORE */}
 <div className="relative z-20 mt-4">
-  <GhostCore
+  <GhostCanvasCore
     voiceState={voiceState}
     micEnabled={micEnabled}
     onClick={() => {
