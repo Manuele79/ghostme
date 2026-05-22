@@ -12,6 +12,8 @@ import {
   detectImportanceLevel,
 } from "@/lib/ghostme/topicDetector";
 
+import { decideGhostService } from "@/lib/ghostme/services/serviceRouter";
+
 import { buildContextualMemory } from "@/lib/ghostme/retrieval";
 import { saveTopicLinks } from "@/lib/ghostme/topicLinks";
 import { extractEntitiesWithAI } from "@/lib/ghostme/entityExtractor";
@@ -757,6 +759,10 @@ export async function POST(req: Request) {
       loadedLifeTopics = existingTopics || [];
     }
 
+    const serviceDecision = decideGhostService(message);
+
+    log("SERVICE DECISION:", serviceDecision);
+ 
     const systemPrompt = buildSystemPrompt({
       traits,
       profileContext,
