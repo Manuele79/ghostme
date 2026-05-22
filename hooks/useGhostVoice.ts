@@ -44,7 +44,10 @@ function speak(text: string, mode: GhostMode, startVoiceInput?: () => void) {
   };
 
   window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(utterance);
+
+  setTimeout(() => {
+    window.speechSynthesis.speak(utterance);
+  }, 150);
 }
 
 function startVoiceInput({
