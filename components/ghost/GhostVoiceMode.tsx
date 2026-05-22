@@ -104,8 +104,8 @@ const stateGlow =
     className="absolute inset-0 h-full w-full object-contain animate-[ghostFloat_8s_ease-in-out_infinite]"
   />
 
-  <div className="absolute inset-0 flex items-center justify-center text-6xl">
-    🎤
+  <div className="absolute inset-0 flex items-center justify-center">
+    <div className="h-16 w-16 rounded-full border border-cyan-200/40 bg-black/45 shadow-[0_0_35px_rgba(34,211,238,0.8)]" />
   </div>
 </div>
 </div>
