@@ -52,7 +52,7 @@ export function decideGhostService(message: string): GhostServiceDecision {
     return {
       service: "weather",
       query: message,
-      reason: "La richiesta sembra riguardare meteo o condizioni esterne.",
+      reason: "Richiesta meteo.",
     };
   }
 

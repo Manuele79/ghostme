@@ -14,6 +14,7 @@ import {
 
 import { decideGhostService } from "@/lib/ghostme/services/serviceRouter";
 import { runWebSearch } from "@/lib/ghostme/services/webSearchService";
+import { runWeatherSearch } from "@/lib/ghostme/services/weatherService";
 
 import { buildContextualMemory } from "@/lib/ghostme/retrieval";
 import { saveTopicLinks } from "@/lib/ghostme/topicLinks";
@@ -231,15 +232,16 @@ ${serviceContext || "nessun servizio esterno usato"}
 
 Regole servizi esterni:
 - Se Servizi esterni contiene un risultato, usalo come fonte principale.
-- Non dire "non posso cercare su internet".
-- Non dire "ho già trovato informazioni".
 - Rispondi direttamente.
+- Considera i dati del servizio come appena ottenuti in tempo reale.
+- Presenta il risultato come una verifica appena effettuata.
+- Non dire "non posso cercare su internet".
+- Non dire "ho già fatto una ricerca".
+- Non dire "ho già trovato informazioni".
+- Non fingere di conoscere già dati ottenuti dal servizio.
+- Non presentare il risultato come memoria personale.
 - Se i dati sono variabili, dillo chiaramente.
 - Se ci sono prezzi, date o notizie, specifica che possono cambiare.
-- Se il servizio esterno contiene informazioni aggiornate, considera quelle informazioni come appena ottenute.
-- Non dire "ho già fatto una ricerca".
-- Non fingere di conoscere già dati ottenuti dal servizio.
-- Presenta il risultato come informazione appena verificata.
 
 Regole cognitive:
 - Usa le relazioni tra topic per fare collegamenti naturali.
@@ -803,7 +805,28 @@ export async function POST(req: Request) {
       `;
         }
       }
- 
+
+      if (serviceDecision.service === "weather") {
+        try {
+          const weatherResult = await runWeatherSearch(
+            serviceDecision.query
+          );
+
+          serviceContext = `
+      SERVIZIO METEO ATTIVO:
+
+      ${weatherResult.summary}
+      `;
+        } catch (err) {
+          console.log("WEATHER ERROR:", err);
+
+          serviceContext = `
+      SERVIZIO METEO:
+      Impossibile recuperare le previsioni.
+      `;
+        }
+      }
+      
     const systemPrompt = buildSystemPrompt({
       traits,
       profileContext,
