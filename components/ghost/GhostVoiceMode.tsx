@@ -57,7 +57,7 @@ const stateGlow =
     <section className="relative flex flex-1 flex-col items-center justify-start overflow-hidden pt-6 pb-6">
 
 {/* CORE */}
-<div className="relative z-20 -mt-12 scale-[0.72]">
+<div className="relative z-20 -mt-4 scale-100 md:-mt-12 md:scale-[0.72]">
   <GhostCanvasCore
     voiceState={voiceState}
     micEnabled={micEnabled}
@@ -103,7 +103,7 @@ const stateGlow =
 
 
       {/* STATO */}
-      <div className="relative z-20 -mt-8 flex h-24 flex-col items-center justify-start">
+      <div className="relative z-20 mt-2 md:-mt-8 flex h-24 flex-col items-center justify-start">
         <p className="text-xl sm:text-2xl font-light tracking-tight text-cyan-50">
           {stateLabel}
         </p>
