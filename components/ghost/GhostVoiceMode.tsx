@@ -57,7 +57,7 @@ const stateGlow =
    <section className="relative flex flex-1 flex-col items-center justify-start overflow-hidden pt-0 pb-2">
 
 {/* CORE */}
-<div className="relative z-20 -mt-12 scale-100 md:-mt-12 md:scale-[0.72]">
+<div className="relative z-20 mt-4">
   <GhostCanvasCore
     voiceState={voiceState}
     micEnabled={micEnabled}
@@ -103,7 +103,7 @@ const stateGlow =
 
 
       {/* STATO */}
-     <div className="relative z-20 -mt-8 md:-mt-8 flex h-20 flex-col items-center justify-start">
+     <div className="relative z-20 mt-4 flex h-28 flex-col items-center justify-start">
         <p className="text-xl sm:text-2xl font-light tracking-tight text-cyan-50">
           {stateLabel}
         </p>
@@ -126,7 +126,7 @@ const stateGlow =
       </div>
 
       {/* CONTROLLI */}
-      <div className="relative z-20 mt-0 grid w-full max-w-lg grid-cols-3 gap-4">
+      <div className="relative z-20 mt-8 grid w-full max-w-lg grid-cols-3 gap-4">
         <button
           onClick={openMemory}
           className="rounded-2xl border border-cyan-400/25 bg-black/60 px-4 py-4 text-sm font-bold text-cyan-200 transition hover:scale-105"

@@ -27,7 +27,7 @@ export default function GhostLayout({
         />
       ))}
 
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-5xl flex-col items-center overflow-x-hidden px-4 pb-4 pt-3">
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-6xl flex-col items-center px-4 pb-10 pt-6">
         {children}
       </div>
     </main>   
