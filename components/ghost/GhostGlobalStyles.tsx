@@ -152,6 +152,23 @@ export default function GhostGlobalStyles() {
             opacity: 0.9;
             filter: blur(0px);
           }
-        }        
+        }    
+          
+        @keyframes ghostFloat {
+          0% {
+            transform: scale(0.95);
+            filter: brightness(0.9);
+          }
+
+          50% {
+            transform: scale(1.05);
+            filter: brightness(1.2);
+          }
+
+          100% {
+            transform: scale(0.95);
+            filter: brightness(0.9);
+          }
+        }
 
       `}</style>
