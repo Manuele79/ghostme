@@ -101,6 +101,7 @@ const stateGlow =
   />
 </div>
 
+
       {/* STATO */}
       <div className="relative z-20 mt-4 flex h-28 flex-col items-center justify-start">
         <p className="text-xl sm:text-2xl font-light tracking-tight text-cyan-50">
