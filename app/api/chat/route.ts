@@ -13,6 +13,7 @@ import {
 } from "@/lib/ghostme/topicDetector";
 
 import { decideGhostService } from "@/lib/ghostme/services/serviceRouter";
+import { runWebSearch } from "@/lib/ghostme/services/webSearchService";
 
 import { buildContextualMemory } from "@/lib/ghostme/retrieval";
 import { saveTopicLinks } from "@/lib/ghostme/topicLinks";
@@ -141,6 +142,7 @@ function buildSystemPrompt({
   timelineContext,
   dynamicSelfProfileContext,
   actionIntentContext,
+  serviceContext,
 }: {
   traits: any;
   profileContext: string;
@@ -154,6 +156,7 @@ function buildSystemPrompt({
   timelineContext: string;
   dynamicSelfProfileContext: string;
   actionIntentContext: string;
+  serviceContext: string;
 }) {
   return `
 Sei GhostMe.
@@ -222,6 +225,9 @@ ${goalsContext || "nessun obiettivo attivo rilevante"}
 
 Azioni future rilevate:
 ${actionIntentContext || "nessuna azione futura rilevante"}
+
+Servizi esterni:
+${serviceContext || "nessun servizio esterno usato"}
 
 Regole cognitive:
 - Usa le relazioni tra topic per fare collegamenti naturali.
@@ -669,6 +675,7 @@ ${message}
 }
 
 export async function POST(req: Request) {
+  
   try {
     const body = await req.json();
 
@@ -689,6 +696,7 @@ export async function POST(req: Request) {
     let dynamicSelfProfileContext = "";
     let actionIntentContext = "";
     let loadedLifeTopics: any[] = [];
+    let serviceContext = "";
 
     if (userId) {
       await applyMemoryDecay(userId);
@@ -759,14 +767,30 @@ export async function POST(req: Request) {
       loadedLifeTopics = existingTopics || [];
     }
 
-const serviceDecision = decideGhostService(message);
+      const serviceDecision = decideGhostService(message);
 
-console.log("================================");
-console.log("MESSAGE:", message);
-console.log("SERVICE:", serviceDecision);
-console.log("================================");
+      if (serviceDecision.service === "web_search") {
+        try {
+          const webResult = await runWebSearch(serviceDecision.query);
 
-    console.log("SERVICE DECISION TEST:", serviceDecision);
+          serviceContext = `
+      SERVIZIO INTERNET ATTIVO:
+      Tipo: web_search
+      Motivo: ${serviceDecision.reason}
+
+      Risultato ricerca:
+      ${webResult.summary}
+      `;
+        } catch (err) {
+          console.log("WEB SEARCH ERROR:", err);
+
+          serviceContext = `
+      SERVIZIO INTERNET:
+      La ricerca web era richiesta, ma è fallita.
+      Rispondi dicendo chiaramente che non sei riuscito a cercare online.
+      `;
+        }
+      }
  
     const systemPrompt = buildSystemPrompt({
       traits,
@@ -781,6 +805,7 @@ console.log("================================");
       timelineContext,
       dynamicSelfProfileContext,
       actionIntentContext,
+       serviceContext,
     });
 
     const completion = await openai.chat.completions.create({
