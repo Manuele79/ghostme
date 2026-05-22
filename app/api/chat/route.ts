@@ -762,6 +762,8 @@ export async function POST(req: Request) {
     const serviceDecision = decideGhostService(message);
 
     log("SERVICE DECISION:", serviceDecision);
+
+    console.log("SERVICE DECISION TEST:", serviceDecision);
  
     const systemPrompt = buildSystemPrompt({
       traits,
