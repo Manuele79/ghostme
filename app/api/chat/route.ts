@@ -840,11 +840,16 @@ export async function POST(req: Request) {
 
       if (userId) {
         try {
+
+          console.log("📅 CALENDAR FLOW START");
+
           const calendarIntent = await parseCalendarIntent({
             message,
             nowIso: new Date().toISOString(),
             location: userLocation,
           });
+
+          console.log("📅 CALENDAR INTENT:", calendarIntent);
 
           if (calendarIntent.has_calendar_intent && calendarIntent.title) {
             const savedEvent = await createCalendarEvent({
@@ -857,6 +862,8 @@ export async function POST(req: Request) {
               remindAt: calendarIntent.remind_at || null,
               source: "ghostme",
             });
+
+            console.log("📅 CALENDAR SAVED EVENT:", savedEvent);
 
             if (savedEvent) {
               calendarCreatedText = `
@@ -894,7 +901,7 @@ export async function POST(req: Request) {
       timelineContext,
       dynamicSelfProfileContext,
       actionIntentContext,
-       serviceContext,
+      serviceContext,
     });
 
     const completion = await openai.chat.completions.create({
