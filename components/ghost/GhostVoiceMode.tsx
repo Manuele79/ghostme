@@ -102,30 +102,30 @@ const stateGlow =
 </div>
 
       {/* STATO */}
-      <div className="relative z-20 mt-6 flex flex-col items-center">
+      <div className="relative z-20 mt-4 flex h-28 flex-col items-center justify-start">
         <p className="text-xl sm:text-2xl font-light tracking-tight text-cyan-50">
           {stateLabel}
         </p>
 
-
-        {voiceState !== "idle" && (
-          <div className="mt-7 flex items-end gap-2 h-12">
-            {[1,2,3,4,5].map((i) => (
+        <div className="mt-5 flex h-12 items-end gap-2">
+          {voiceState !== "idle" &&
+            [1, 2, 3, 4, 5].map((i) => (
               <div
                 key={i}
                 className="w-2 rounded-full bg-cyan-200"
                 style={{
                   height: `${18 + Math.random() * 40}px`,
-                  animation: `ghostCorePulse ${0.6 + i * 0.2}s ease-in-out infinite`,
+                  animation: `ghostCorePulse ${
+                    0.6 + i * 0.2
+                  }s ease-in-out infinite`,
                 }}
               />
             ))}
-          </div>
-        )}
+        </div>
       </div>
 
       {/* CONTROLLI */}
-      <div className="relative z-20 mt-8 grid w-full max-w-lg grid-cols-3 gap-4">
+      <div className="relative z-20 mt-2 grid w-full max-w-lg grid-cols-3 gap-4">
         <button
           onClick={openMemory}
           className="rounded-2xl border border-cyan-400/25 bg-black/60 px-4 py-4 text-sm font-bold text-cyan-200 transition hover:scale-105"
