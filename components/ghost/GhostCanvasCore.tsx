@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { VoiceState } from "./types";
 
 export default function GhostCanvasCore({
@@ -16,14 +15,23 @@ export default function GhostCanvasCore({
 }) {
   const size = compact ? 280 : 470;
 
-  const pulse =
-    voiceState === "speaking"
-      ? "scale-110 brightness-125"
-      : voiceState === "listening"
-        ? "scale-105 brightness-110"
-        : voiceState === "thinking"
-          ? "scale-105 brightness-105"
-          : "scale-100";
+  const stateClass =
+    voiceState === "listening"
+      ? "scale-105 opacity-100"
+      : voiceState === "thinking"
+        ? "scale-95 opacity-80"
+        : voiceState === "speaking"
+          ? "scale-105 opacity-100"
+          : "scale-100 opacity-75";
+
+  const coreColor =
+    voiceState === "listening"
+      ? "bg-cyan-200/55"
+      : voiceState === "thinking"
+        ? "bg-blue-400/35"
+        : voiceState === "speaking"
+          ? "bg-cyan-100/70"
+          : "bg-cyan-300/30";
 
   return (
     <button
@@ -32,32 +40,59 @@ export default function GhostCanvasCore({
       className="relative flex shrink-0 items-center justify-center rounded-full outline-none"
       style={{ width: size, height: size }}
     >
-      <div className="absolute inset-0 rounded-full bg-cyan-400/10 blur-[80px]" />
+      <div
+        className={`absolute inset-0 rounded-full bg-cyan-400/10 blur-[90px] transition-all duration-700 ${stateClass}`}
+        style={{ animation: "ghostCorePulse 5s ease-in-out infinite" }}
+      />
 
       <div
-        className={`absolute inset-0 transition-all duration-500 ${pulse}`}
+        className={`absolute inset-[8%] rounded-full border border-cyan-300/20 bg-cyan-400/8 shadow-[0_0_130px_rgba(34,211,238,0.22)] transition-all duration-700 ${stateClass}`}
+      />
+
+      <div
+        className="absolute inset-[18%] rounded-full"
         style={{
-          animation: "ghostPlasmaSpin 18s linear infinite",
+          animation:
+            voiceState === "thinking"
+              ? "ghostOrbit 4s linear infinite"
+              : "ghostOrbit 11s linear infinite",
         }}
       >
-        <Image
-          src="/ghost/ghost-plasma-final.png"
-          alt="Ghost plasma"
-          fill
-          priority
-          className="object-contain opacity-95"
-        />
+        <div className="absolute left-1/2 top-0 h-3 w-24 -translate-x-1/2 rounded-full bg-cyan-200/80 blur-[2px] shadow-[0_0_40px_rgba(34,211,238,0.9)]" />
+        <div className="absolute bottom-10 right-8 h-2 w-20 rounded-full bg-blue-300/70 blur-[2px] shadow-[0_0_32px_rgba(34,211,238,0.75)]" />
+        <div className="absolute left-5 top-1/3 h-2 w-14 rounded-full bg-cyan-100/65 blur-[1px] shadow-[0_0_28px_rgba(125,249,255,0.8)]" />
       </div>
 
       <div
-        className="absolute inset-[18%] rounded-full border border-cyan-200/20"
-        style={{ animation: "ghostReverseOrbit 10s linear infinite" }}
-      />
+        className="absolute inset-[28%] rounded-full"
+        style={{
+          animation:
+            voiceState === "speaking"
+              ? "ghostReverseOrbit 3.5s linear infinite"
+              : "ghostReverseOrbit 8s linear infinite",
+        }}
+      >
+        <div className="absolute right-0 top-1/2 h-2 w-20 rounded-full bg-cyan-100/80 blur-[1px] shadow-[0_0_42px_rgba(125,249,255,0.9)]" />
+        <div className="absolute bottom-2 left-10 h-2 w-14 rounded-full bg-cyan-400/70 blur-[1px] shadow-[0_0_30px_rgba(34,211,238,0.8)]" />
+      </div>
 
       <div
-        className="absolute inset-[28%] rounded-full bg-cyan-300/10 blur-xl"
-        style={{ animation: "ghostCorePulse 2.5s ease-in-out infinite" }}
+        className={`absolute left-1/2 top-1/2 h-[135px] w-[135px] -translate-x-1/2 -translate-y-1/2 rounded-full ${coreColor} shadow-[0_0_100px_rgba(34,211,238,0.9)] transition-all duration-500 ${stateClass}`}
+        style={{ animation: "ghostCorePulse 2.4s ease-in-out infinite" }}
       />
+
+      {Array.from({ length: 18 }).map((_, i) => (
+        <div
+          key={i}
+          className="absolute h-1 w-1 rounded-full bg-cyan-200 shadow-[0_0_12px_rgba(34,211,238,0.9)]"
+          style={{
+            left: `${15 + ((i * 37) % 70)}%`,
+            top: `${18 + ((i * 29) % 62)}%`,
+            animation: `ghostFlicker ${2.4 + (i % 5)}s ease-in-out infinite`,
+            opacity: voiceState === "idle" ? 0.35 : 0.8,
+          }}
+        />
+      ))}
 
       <span
         className={`relative z-10 text-5xl ${
