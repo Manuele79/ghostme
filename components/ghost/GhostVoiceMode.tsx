@@ -103,12 +103,12 @@ const stateGlow =
 
 
       {/* STATO */}
-      <div className="relative z-20 -mt-6 flex h-24 flex-col items-center justify-start">
+      <div className="relative z-20 -mt-8 flex h-24 flex-col items-center justify-start">
         <p className="text-xl sm:text-2xl font-light tracking-tight text-cyan-50">
           {stateLabel}
         </p>
 
-        <div className="mt-5 flex h-12 items-end gap-2">
+        <div className="mt-2 flex h-10 items-end gap-2">
           {voiceState !== "idle" &&
             [1, 2, 3, 4, 5].map((i) => (
               <div
