@@ -94,6 +94,7 @@ Età: ${userProfile.age || ""}
 Genere: ${userProfile.gender || ""}
 Lavoro: ${userProfile.job || ""}
 Hobby: ${userProfile.hobbies || ""}
+Località: ${userProfile.location || ""}
 Sport: ${userProfile.sports || ""}
 Relazione: ${userProfile.relationship_status || ""}
 Figli: ${userProfile.children_info || ""}
@@ -711,6 +712,7 @@ export async function POST(req: Request) {
     let actionIntentContext = "";
     let loadedLifeTopics: any[] = [];
     let serviceContext = "";
+    let userLocation = "";
 
     if (userId) {
       await applyMemoryDecay(userId);
@@ -727,6 +729,7 @@ export async function POST(req: Request) {
       log("USER PROFILE ERROR:", userProfileError);
 
       profileContext = buildProfileContext(userProfile);
+      userLocation = userProfile?.location || "";
     }
 
     const ruleBasedTopics = detectTopicsFromMessage(message);
@@ -808,13 +811,16 @@ export async function POST(req: Request) {
 
       if (serviceDecision.service === "weather") {
         try {
-          const weatherResult = await runWeatherSearch(
-            serviceDecision.query
-          );
+          const weatherResult = await runWeatherSearch({
+            query: serviceDecision.query,
+            location: userLocation,
+          });
 
           serviceContext = `
       SERVIZIO METEO ATTIVO:
+      Località usata: ${userLocation || "non specificata"}
 
+      Risultato meteo:
       ${weatherResult.summary}
       `;
         } catch (err) {

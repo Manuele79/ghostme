@@ -13,6 +13,7 @@ export default function SetupProfilePage() {
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
   const [job, setJob] = useState("");
+  const [location, setLocation] = useState("");
   const [hobbies, setHobbies] = useState("");
   const [sports, setSports] = useState("");
   const [relationshipStatus, setRelationshipStatus] =
@@ -46,6 +47,7 @@ export default function SetupProfilePage() {
           age: Number(age),
           gender,
           job,
+          location,
           hobbies,
           sports,
           relationship_status: relationshipStatus,
@@ -116,6 +118,15 @@ export default function SetupProfilePage() {
               setJob(e.target.value)
             }
             placeholder="Lavoro"
+            className="w-full rounded-2xl border border-zinc-800 bg-zinc-950 p-4 outline-none"
+          />
+
+          <input
+            value={location}
+            onChange={(e) =>
+              setLocation(e.target.value)
+            }
+            placeholder="Località (es. Udine, Italia)"
             className="w-full rounded-2xl border border-zinc-800 bg-zinc-950 p-4 outline-none"
           />
 
