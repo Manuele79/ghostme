@@ -28,7 +28,7 @@ export default function GhostCanvasCore({
     let frame = 0;
     let animationId = 0;
 
-    const size = compact ? 280 : 600;
+    const size = compact ? 280 : 470;
     const dpr = window.devicePixelRatio || 1;
 
     canvas.width = size * dpr;
@@ -295,7 +295,7 @@ export default function GhostCanvasCore({
     return () => cancelAnimationFrame(animationId);
   }, [voiceState, micEnabled, compact]);
 
-  const size = compact ? 280 : 600;
+  const size = compact ? 280 : 470;
 
   return (
     <button
