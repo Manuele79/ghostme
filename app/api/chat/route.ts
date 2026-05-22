@@ -759,9 +759,12 @@ export async function POST(req: Request) {
       loadedLifeTopics = existingTopics || [];
     }
 
-    const serviceDecision = decideGhostService(message);
+const serviceDecision = decideGhostService(message);
 
-    log("SERVICE DECISION:", serviceDecision);
+console.log("================================");
+console.log("MESSAGE:", message);
+console.log("SERVICE:", serviceDecision);
+console.log("================================");
 
     console.log("SERVICE DECISION TEST:", serviceDecision);
  
