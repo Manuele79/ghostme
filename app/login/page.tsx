@@ -63,7 +63,7 @@ export default function LoginPage() {
     const redirectUrl =
       typeof window !== "undefined"
         ? `${window.location.origin}/chat`
-        : "https://ghostme-five.vercel.app/chat";
+        : "http://localhost:3000/chat";
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
