@@ -16,6 +16,9 @@ import { decideGhostService } from "@/lib/ghostme/services/serviceRouter";
 import { runWebSearch } from "@/lib/ghostme/services/webSearchService";
 import { runWeatherSearch } from "@/lib/ghostme/services/weatherService";
 
+import { parseCalendarIntent } from "@/lib/ghostme/calendar/calendarIntent";
+import { createCalendarEvent } from "@/lib/ghostme/calendar/calendarService";
+
 import { buildContextualMemory } from "@/lib/ghostme/retrieval";
 import { saveTopicLinks } from "@/lib/ghostme/topicLinks";
 import { extractEntitiesWithAI } from "@/lib/ghostme/entityExtractor";
@@ -831,6 +834,51 @@ export async function POST(req: Request) {
       Impossibile recuperare le previsioni.
       `;
         }
+      }
+
+    let calendarCreatedText = "";
+
+      if (userId) {
+        try {
+          const calendarIntent = await parseCalendarIntent({
+            message,
+            nowIso: new Date().toISOString(),
+            location: userLocation,
+          });
+
+          if (calendarIntent.has_calendar_intent && calendarIntent.title) {
+            const savedEvent = await createCalendarEvent({
+              userId,
+              type: calendarIntent.type || "appointment",
+              title: calendarIntent.title,
+              description: calendarIntent.description || "",
+              startAt: calendarIntent.start_at || null,
+              endAt: calendarIntent.end_at || null,
+              remindAt: calendarIntent.remind_at || null,
+              source: "ghostme",
+            });
+
+            if (savedEvent) {
+              calendarCreatedText = `
+      CALENDARIO:
+      Evento creato correttamente.
+      Tipo: ${calendarIntent.type}
+      Titolo: ${calendarIntent.title}
+      Data inizio: ${calendarIntent.start_at || "non specificata"}
+      Promemoria: ${calendarIntent.remind_at || "non specificato"}
+      `;
+            }
+          }
+        } catch (err) {
+          console.log("CALENDAR CREATE FLOW ERROR:", err);
+        }
+      }
+
+      if (calendarCreatedText) {
+        serviceContext += `
+
+      ${calendarCreatedText}
+      `;
       }
       
     const systemPrompt = buildSystemPrompt({
