@@ -58,47 +58,56 @@ const stateGlow =
 
 {/* CORE */}
 <div className="relative z-20 mt-4">
-  <GhostCanvasCore
-    voiceState={voiceState}
-    micEnabled={micEnabled}
-    onClick={() => {
-      if (micEnabled) {
-        try {
-          recognitionRef.current?.stop();
-        } catch {}
+<div
+  className="relative h-[420px] w-[420px] cursor-pointer"
+  onClick={() => {
+    if (micEnabled) {
+      try {
+        recognitionRef.current?.stop();
+      } catch {}
 
-        recognitionRef.current = null;
-        clearTimeout(autoMicOffRef.current);
+      recognitionRef.current = null;
+      clearTimeout(autoMicOffRef.current);
 
-        if (
-          typeof window !== "undefined" &&
-          "speechSynthesis" in window
-        ) {
-          window.speechSynthesis.cancel();
-        }
-
-        speakingRef.current = false;
-        setVoiceState("idle");
-        setMicEnabled(false);
-        return;
+      if (
+        typeof window !== "undefined" &&
+        "speechSynthesis" in window
+      ) {
+        window.speechSynthesis.cancel();
       }
 
-      setMicEnabled(true);
-      startVoiceInput();
+      speakingRef.current = false;
+      setVoiceState("idle");
+      setMicEnabled(false);
+      return;
+    }
 
-      clearTimeout(autoMicOffRef.current);
-      autoMicOffRef.current = setTimeout(() => {
-        try {
-          recognitionRef.current?.stop();
-        } catch {}
+    setMicEnabled(true);
+    startVoiceInput();
 
-        recognitionRef.current = null;
-        speakingRef.current = false;
-        setVoiceState("idle");
-        setMicEnabled(false);
-      }, 30000);
-    }}
+    clearTimeout(autoMicOffRef.current);
+    autoMicOffRef.current = setTimeout(() => {
+      try {
+        recognitionRef.current?.stop();
+      } catch {}
+
+      recognitionRef.current = null;
+      speakingRef.current = false;
+      setVoiceState("idle");
+      setMicEnabled(false);
+    }, 30000);
+  }}
+>
+  <img
+    src="/ghost/plasma-core.png"
+    alt="Ghost Plasma"
+    className="absolute inset-0 h-full w-full object-contain animate-[ghostFloat_8s_ease-in-out_infinite]"
   />
+
+  <div className="absolute inset-0 flex items-center justify-center text-6xl">
+    🎤
+  </div>
+</div>
 </div>
 
       {/* STATO */}
