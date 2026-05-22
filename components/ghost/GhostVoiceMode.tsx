@@ -57,82 +57,49 @@ const stateGlow =
     <section className="relative flex flex-1 flex-col items-center justify-start overflow-hidden pt-6 pb-6">
 
 {/* CORE */}
-{/* CORE */}
-<div
-  className="relative z-20 mt-1 h-[360px] w-[360px] cursor-pointer"
-  onClick={() => {
-    if (micEnabled) {
-      try {
-        recognitionRef.current?.stop();
-      } catch {}
+<div className="relative z-20 mt-4">
+  <GhostCanvasCore
+    voiceState={voiceState}
+    micEnabled={micEnabled}
+    onClick={() => {
+      if (micEnabled) {
+        try {
+          recognitionRef.current?.stop();
+        } catch {}
 
-      recognitionRef.current = null;
-      clearTimeout(autoMicOffRef.current);
+        recognitionRef.current = null;
+        clearTimeout(autoMicOffRef.current);
 
-      if (
-        typeof window !== "undefined" &&
-        "speechSynthesis" in window
-      ) {
-        window.speechSynthesis.cancel();
+        if (
+          typeof window !== "undefined" &&
+          "speechSynthesis" in window
+        ) {
+          window.speechSynthesis.cancel();
+        }
+
+        speakingRef.current = false;
+        setVoiceState("idle");
+        setMicEnabled(false);
+        return;
       }
 
-      speakingRef.current = false;
-      setVoiceState("idle");
-      setMicEnabled(false);
-      return;
-    }
+      setMicEnabled(true);
+      startVoiceInput();
 
-    setMicEnabled(true);
-    startVoiceInput();
+      clearTimeout(autoMicOffRef.current);
+      autoMicOffRef.current = setTimeout(() => {
+        try {
+          recognitionRef.current?.stop();
+        } catch {}
 
-    clearTimeout(autoMicOffRef.current);
-    autoMicOffRef.current = setTimeout(() => {
-      try {
-        recognitionRef.current?.stop();
-      } catch {}
-
-      recognitionRef.current = null;
-      speakingRef.current = false;
-      setVoiceState("idle");
-      setMicEnabled(false);
-    }, 30000);
-  }}
->
-  <img
-    src="/ghost/plasma-core.png"
-    alt="Ghost Plasma"
-    className={`absolute inset-0 h-full w-full object-contain transition-all duration-500 ${
-      voiceState === "idle"
-        ? "opacity-80 brightness-90"
-        : voiceState === "listening"
-          ? "opacity-100 brightness-125 scale-105"
-          : voiceState === "thinking"
-            ? "opacity-95 brightness-110 scale-100"
-            : "opacity-100 brightness-150 scale-110"
-    }`}
-    style={{
-      animation:
-        voiceState === "idle"
-          ? "ghostFloat 7s ease-in-out infinite"
-          : "ghostFloatActive 2.8s ease-in-out infinite",
+        recognitionRef.current = null;
+        speakingRef.current = false;
+        setVoiceState("idle");
+        setMicEnabled(false);
+      }, 30000);
     }}
   />
-
-  <div className="absolute inset-0 rounded-full bg-cyan-400/10 blur-[70px]" />
-
-  <div
-    className={`absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full border ${
-      micEnabled
-        ? "border-cyan-200/70 bg-cyan-300/20 shadow-[0_0_45px_rgba(34,211,238,1)]"
-        : "border-cyan-200/25 bg-black/55 shadow-[0_0_25px_rgba(34,211,238,0.35)]"
-    }`}
-  />
-
-  <div className="absolute left-1/2 top-[88%] -translate-x-1/2 rounded-full border border-cyan-400/30 bg-black/70 px-4 py-2 text-xs font-bold tracking-widest text-cyan-200">
-    {micEnabled ? "TOCCA PER SPEGNERE" : "TOCCA PER PARLARE"}
-  </div>
 </div>
-
 
       {/* STATO */}
       <div className="relative z-20 mt-4 flex h-28 flex-col items-center justify-start">
