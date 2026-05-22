@@ -9,7 +9,7 @@ export default function GhostLayout({
   children: ReactNode;
 }) {
   return (
-    <main className="relative min-h-screen overflow-hidden bg-black text-white">
+    <main className="relative min-h-screen w-screen max-w-full overflow-x-hidden overflow-y-auto bg-black text-white">
        <GhostGlobalStyles />
       {/* glow globale */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(34,211,238,0.12),transparent_60%)]" />
@@ -27,7 +27,7 @@ export default function GhostLayout({
         />
       ))}
 
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-5xl flex-col items-center px-4 pb-4 pt-3">
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-5xl flex-col items-center overflow-x-hidden px-4 pb-4 pt-3">
         {children}
       </div>
     </main>   
