@@ -229,6 +229,14 @@ ${actionIntentContext || "nessuna azione futura rilevante"}
 Servizi esterni:
 ${serviceContext || "nessun servizio esterno usato"}
 
+Regole servizi esterni:
+- Se Servizi esterni contiene un risultato, usalo come fonte principale.
+- Non dire "non posso cercare su internet".
+- Non dire "ho già trovato informazioni".
+- Rispondi direttamente.
+- Se i dati sono variabili, dillo chiaramente.
+- Se ci sono prezzi, date o notizie, specifica che possono cambiare.
+
 Regole cognitive:
 - Usa le relazioni tra topic per fare collegamenti naturali.
 - Non elencare le relazioni.
