@@ -171,4 +171,38 @@ export default function GhostGlobalStyles() {
           }
         }
 
+        @keyframes ghostFloat {
+          0% {
+            transform: scale(0.96);
+            filter: brightness(0.9);
+          }
+
+          50% {
+            transform: scale(1.04);
+            filter: brightness(1.15);
+          }
+
+          100% {
+            transform: scale(0.96);
+            filter: brightness(0.9);
+          }
+        }
+
+        @keyframes ghostFloatActive {
+          0% {
+            transform: scale(0.98);
+            filter: brightness(1.1);
+          }
+
+          50% {
+            transform: scale(1.12);
+            filter: brightness(1.55);
+          }
+
+          100% {
+            transform: scale(0.98);
+            filter: brightness(1.1);
+          }
+        }
+
       `}</style>
