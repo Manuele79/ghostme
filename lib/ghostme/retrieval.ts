@@ -6,6 +6,19 @@ type DetectedTopic = {
   entity_type: string;
 };
 
+function norm(value: string) {
+  return String(value || "").toLowerCase().trim();
+}
+
+function uniq(values: string[]) {
+  return Array.from(new Set(values.filter(Boolean)));
+}
+
+function includesAny(text: string, terms: string[]) {
+  const lower = norm(text);
+  return terms.some((term) => lower.includes(norm(term)));
+}
+
 export async function buildContextualMemory({
   userId,
   detectedTopics,
@@ -18,49 +31,79 @@ export async function buildContextualMemory({
       memoryContext: "",
       episodicContext: "",
       lifeTopicsContext: "",
+      summaryContext: "",
+      linkedTopicsContext: "",
     };
   }
 
-  const topicNames = detectedTopics.map((t) =>
-    t.topic.toLowerCase()
+  const directTopics = uniq(
+    detectedTopics.map((t) => t.topic).filter(Boolean)
   );
 
-  const { data: linkedTopics } = await supabase
-  .from("topic_links")
-  .select("*")
-  .eq("user_id", userId)
-  .or(
-    topicNames
-      .map(
-        (t) =>
-          `source_topic.ilike.%${t}%,target_topic.ilike.%${t}%`
-      )
-      .join(",")
-  )
-  .order("weight", { ascending: false })
-  .limit(20);
+  const directLower = directTopics.map(norm);
 
-const linkedTopicsContext =
-  linkedTopics
-    ?.map(
-      (l) =>
-        `${l.source_topic} ↔ ${l.target_topic} (${l.weight})`
+  const { data: allLinks } = await supabase
+    .from("topic_links")
+    .select("*")
+    .eq("user_id", userId)
+    .order("weight", { ascending: false })
+    .limit(300);
+
+  const firstLevelLinks =
+    allLinks?.filter((link) => {
+      const source = norm(link.source_topic);
+      const target = norm(link.target_topic);
+
+      return directLower.some(
+        (topic) =>
+          source.includes(topic) ||
+          target.includes(topic) ||
+          topic.includes(source) ||
+          topic.includes(target)
+      );
+    }) || [];
+
+  const firstLevelTopics = uniq(
+    firstLevelLinks.flatMap((link) => [
+      link.source_topic,
+      link.target_topic,
+    ])
+  );
+
+  const firstLevelLower = firstLevelTopics.map(norm);
+
+  const secondLevelLinks =
+    allLinks?.filter((link) => {
+      const source = norm(link.source_topic);
+      const target = norm(link.target_topic);
+
+      return firstLevelLower.some(
+        (topic) =>
+          source.includes(topic) ||
+          target.includes(topic) ||
+          topic.includes(source) ||
+          topic.includes(target)
+      );
+    }) || [];
+
+  const networkTopics = uniq([
+    ...directTopics,
+    ...firstLevelTopics,
+    ...secondLevelLinks.flatMap((link) => [
+      link.source_topic,
+      link.target_topic,
+    ]),
+  ]).slice(0, 18);
+
+  const searchTerms = networkTopics.map(norm);
+
+  const linkedTopicsContext = [...firstLevelLinks, ...secondLevelLinks]
+    .slice(0, 25)
+    .map(
+      (link) =>
+        `${link.source_topic} ↔ ${link.target_topic} | peso ${link.weight || 1}`
     )
-    .join("\n") || "";
-
-
-const relatedTopicNames = Array.from(
-  new Set(
-    linkedTopics?.flatMap((l) => [
-      l.source_topic,
-      l.target_topic,
-    ]) || []
-  )
-).filter(Boolean);
-
-  // =========================================================
-  // LIFE TOPICS
-  // =========================================================
+    .join("\n");
 
   const { data: allTopics } = await supabase
     .from("life_topics")
@@ -72,41 +115,48 @@ const relatedTopicNames = Array.from(
       weight,
       mention_count,
       relationship_strength,
-      updated_at
+      status,
+      updated_at,
+      last_mentioned_at
     `)
     .eq("user_id", userId)
     .order("weight", { ascending: false })
-    .limit(100);
-
-  const searchTopics = [
-    ...topicNames,
-    ...relatedTopicNames.map((t) => t.toLowerCase()),
-  ];
+    .limit(200);
 
   const relevantTopics =
-    allTopics?.filter((topic) => {
-      const topicLower = String(topic.topic).toLowerCase();
+    allTopics
+      ?.filter((topic) =>
+        searchTerms.some((term) => {
+          const t = norm(topic.topic);
+          return t.includes(term) || term.includes(t);
+        })
+      )
+      .map((topic) => {
+        const directBoost = directLower.some((d) =>
+          norm(topic.topic).includes(d)
+        )
+          ? 20
+          : 0;
 
-      return searchTopics.some(
-        (name) =>
-          topicLower.includes(name) ||
-          name.includes(topicLower)
-      );
-    }) || [];
+        const score =
+          directBoost +
+          (topic.weight || 0) * 3 +
+          (topic.relationship_strength || 0) * 2 +
+          (topic.mention_count || 0);
+
+        return { ...topic, score };
+      })
+      .sort((a, b) => b.score - a.score) || [];
 
   const lifeTopicsContext = relevantTopics
-    .slice(0, 10)
+    .slice(0, 14)
     .map(
       (t) =>
-        `${t.topic} | ${t.entity_type} | ${t.category} | ${
-          t.description || "nessuna descrizione"
-        }`
+        `${t.topic} | ${t.entity_type} | ${t.category} | peso ${t.weight || 0} | forza ${
+          t.relationship_strength || 0
+        } | ${t.description || "nessuna descrizione"}`
     )
     .join("\n");
-
-  // =========================================================
-  // MEMORIES ACTIVE
-  // =========================================================
 
   const { data: allMemories } = await supabase
     .from("memories_active")
@@ -121,43 +171,29 @@ const relatedTopicNames = Array.from(
     .eq("user_id", userId)
     .order("pinned", { ascending: false })
     .order("importance", { ascending: false })
-    .limit(100);
+    .limit(200);
 
-  const relevantMemories =
-    allMemories?.filter((memory) => {
-      const text =
-        `${memory.title} ${memory.content}`.toLowerCase();
+  const memoryContext =
+    allMemories
+      ?.filter((memory) =>
+        includesAny(`${memory.title} ${memory.content} ${memory.category}`, searchTerms)
+      )
+      .map((memory) => {
+        const score =
+          (memory.importance || 0) * 3 +
+          (memory.pinned ? 20 : 0);
 
-      return searchTopics.some((topic) =>
-        text.includes(topic)
-      );
-    }) || [];
-
-  const sortedMemories = [...relevantMemories].sort(
-    (a, b) => {
-      const aScore =
-        (a.importance || 0) + (a.pinned ? 5 : 0);
-
-      const bScore =
-        (b.importance || 0) + (b.pinned ? 5 : 0);
-
-      return bScore - aScore;
-    }
-  );
-
-  const memoryContext = sortedMemories
-    .slice(0, 10)
-    .map(
-      (m) =>
-        `${m.pinned ? "[PINNED]" : ""} [${
-          m.category
-        }] (${m.importance}) ${m.content}`
-    )
-    .join("\n");
-
-  // =========================================================
-  // EPISODIC MEMORIES
-  // =========================================================
+        return { ...memory, score };
+      })
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 12)
+      .map(
+        (m) =>
+          `${m.pinned ? "[PINNED]" : ""} [${m.category}] (${m.importance}) ${
+            m.title ? `${m.title}: ` : ""
+          }${m.content}`
+      )
+      .join("\n") || "";
 
   const { data: allEpisodes } = await supabase
     .from("episodic_memories")
@@ -170,60 +206,55 @@ const relatedTopicNames = Array.from(
     `)
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
-    .limit(100);
+    .limit(150);
 
-    const relevantEpisodes =
-    allEpisodes?.filter((episode) => {
-        const related =
-        episode.related_topics?.map((t: string) =>
-            t.toLowerCase()
-        ) || [];
+  const episodicContext =
+    allEpisodes
+      ?.filter((episode) => {
+        const related = episode.related_topics || [];
+        const text = `${episode.summary} ${related.join(" ")}`;
+        return includesAny(text, searchTerms);
+      })
+      .slice(0, 10)
+      .map(
+        (e) =>
+          `${e.summary} | tono: ${e.emotional_tone} | topics: ${
+            e.related_topics?.join(", ") || ""
+          }`
+      )
+      .join("\n") || "";
 
-        return (
-        topicNames.some((topic) =>
-            related.includes(topic)
-        ) ||
-        relatedTopicNames.some((topic) =>
-            related.includes(topic.toLowerCase())
-        )
-        );
-    }) || [];
-
-  const episodicContext = relevantEpisodes
-    .slice(0, 8)
-    .map(
-      (e) =>
-        `${e.summary} | tono: ${
-          e.emotional_tone
-        } | topics: ${e.related_topics?.join(", ")}`
-    )
-    .join("\n");
-
-    const { data: summaries } = await supabase
+  const { data: summaries } = await supabase
     .from("conversation_summaries")
     .select(`
-        title,
-        summary,
-        topics,
-        emotional_tone,
-        period_start,
-        period_end,
-        updated_at
+      title,
+      summary,
+      topics,
+      emotional_tone,
+      period_start,
+      period_end,
+      updated_at
     `)
     .eq("user_id", userId)
     .order("updated_at", { ascending: false })
-    .limit(5);
+    .limit(20);
 
-    const summaryContext =
+  const summaryContext =
     summaries
-        ?.map(
+      ?.filter((summary) => {
+        const text = `${summary.title} ${summary.summary} ${
+          summary.topics?.join(" ") || ""
+        }`;
+        return includesAny(text, searchTerms);
+      })
+      .slice(0, 6)
+      .map(
         (s) =>
-            `${s.title || "Riassunto"} | tono: ${s.emotional_tone} | topics: ${
+          `${s.title || "Riassunto"} | tono: ${s.emotional_tone} | topics: ${
             s.topics?.join(", ") || ""
-            } | ${s.summary}`
-        )
-        .join("\n") || "";
-
+          } | ${s.summary}`
+      )
+      .join("\n") || "";
 
   return {
     memoryContext,

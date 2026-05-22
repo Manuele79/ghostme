@@ -9,6 +9,54 @@ export type ExtractedEntity = DetectedTopic & {
   description?: string;
 };
 
+const BLOCKED_ENTITY_TOPICS = new Set(
+  [
+    "front",
+    "frontend",
+    "vediamo",
+    "prova",
+    "test",
+    "codice",
+    "codici",
+    "file",
+    "funzione",
+    "pagina",
+    "tasto",
+    "bottone",
+    "schermata",
+    "tabella",
+    "errore",
+    "errori",
+    "layout",
+    "css",
+    "html",
+    "tsx",
+    "typescript",
+    "javascript",
+    "react",
+    "next",
+    "nextjs",
+    "vercel",
+    "github",
+    "supabase",
+  ].map((x) => x.toLowerCase())
+);
+
+function normalizeExtractedTopic(topic: string) {
+  const clean = topic.trim();
+  const lower = clean.toLowerCase();
+
+  if (lower === "ghost me") return "GhostMe";
+  if (lower === "ask dj") return "AskDJ";
+  if (lower === "home assistant") return "Home Assistant";
+
+  return clean;
+}
+
+function isBlockedEntityTopic(topic: string) {
+  return BLOCKED_ENTITY_TOPICS.has(topic.trim().toLowerCase());
+}
+
 export async function extractEntitiesWithAI({
   message,
   profileContext,
@@ -57,11 +105,12 @@ Categorie category:
 Regole:
 - NON salvare parole comuni.
 - NON salvare concetti generici se non sono importanti.
+- NON salvare parole tecniche generiche del codice come front, file, tasto, pagina, errore, layout.
 - Città, regioni, paesi, montagne, zone, località turistiche = place.
 - Persone nominate per nome = person.
 - Se il messaggio dice "mia moglie X", X è person/family.
 - Se dice "mio amico X", X è person/friend.
-- Progetti/app/sistemi software = project o system.
+- Progetti/app/sistemi software specifici = project o system.
 - Hobby/passioni/sport = passion.
 - Se non sei sicuro, usa unknown ma solo se sembra davvero ricorrente/importante.
 - massimo 6 entità.
@@ -69,7 +118,7 @@ Regole:
 - needs_clarification true solo per persone/entità ambigue tipo "Ale", non per città famose tipo Tokyo.
 - GhostMe è sempre project/project.
 - AskDJ è sempre project/project.
-- Home Assistant è system/home.
+- Home Assistant è sempre system/home.
 
 Profilo utente disponibile:
 ${profileContext || "nessun profilo"}
@@ -113,6 +162,11 @@ Rispondi SOLO con JSON valido:
 
     return parsed.entities
       .filter((item: any) => item?.topic && item?.confidence >= 60)
+      .map((item: any) => ({
+        ...item,
+        topic: normalizeExtractedTopic(String(item.topic)),
+      }))
+      .filter((item: any) => !isBlockedEntityTopic(item.topic))
       .slice(0, 6)
       .map((item: any) => ({
         topic: String(item.topic).trim(),
