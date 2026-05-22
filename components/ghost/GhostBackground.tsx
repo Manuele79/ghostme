@@ -35,11 +35,11 @@ export default function GhostBackground({
 
   const stateClass =
     voiceState === "listening"
-      ? "scale-105 opacity-100"
+      ? "scale-110 opacity-100"
       : voiceState === "thinking"
         ? "scale-95 opacity-80"
         : voiceState === "speaking"
-          ? "scale-105 opacity-100"
+          ? "scale-125 opacity-100"
           : "scale-100 opacity-75";
 
   const coreColor =
