@@ -789,6 +789,7 @@ export async function POST(req: Request) {
 
       const serviceDecision = decideGhostService(message);
 
+
       if (serviceDecision.service === "web_search") {
         try {
           const webResult = await runWebSearch(serviceDecision.query);
@@ -851,11 +852,13 @@ export async function POST(req: Request) {
 
           console.log("📅 CALENDAR INTENT:", calendarIntent);
 
-          if (calendarIntent.has_calendar_intent && calendarIntent.title) {
+          const calendarTitle = calendarIntent.title?.trim();
+
+          if (calendarIntent.has_calendar_intent && calendarTitle) {
             const savedEvent = await createCalendarEvent({
               userId,
               type: calendarIntent.type || "appointment",
-              title: calendarIntent.title,
+              title: calendarTitle,
               description: calendarIntent.description || "",
               startAt: calendarIntent.start_at || null,
               endAt: calendarIntent.end_at || null,
@@ -870,7 +873,7 @@ export async function POST(req: Request) {
       CALENDARIO:
       Evento creato correttamente.
       Tipo: ${calendarIntent.type}
-      Titolo: ${calendarIntent.title}
+      Titolo: ${calendarTitle}
       Data inizio: ${calendarIntent.start_at || "non specificata"}
       Promemoria: ${calendarIntent.remind_at || "non specificato"}
       `;
