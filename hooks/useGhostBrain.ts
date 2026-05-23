@@ -23,6 +23,7 @@ export function useGhostBrain() {
     goals: [],
     mentalState: null,
     actions: [],
+     calendarEvents: [],
   });
 
   async function loadBrainData(args: LoadBrainArgs) {
@@ -51,6 +52,7 @@ export function useGhostBrain() {
       goals: data.goals || [],
       mentalState: data.mentalState || null,
       actions: data.actions || [],
+      calendarEvents: data.calendarEvents || [],
     });
 
     if (data.profile) {

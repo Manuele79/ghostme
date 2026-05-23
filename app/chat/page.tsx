@@ -475,6 +475,7 @@ export default function ChatPage() {
         summary={summary}
         ghostMessage={ghostMessage}
         actions={brainData.actions}
+        calendarEvents={brainData.calendarEvents}
         logout={logout}
       />
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { BrainData, ChatMessage } from "./types";
+import { BrainData, ChatMessage, CalendarEvent } from "./types";
 
 
 
@@ -84,6 +84,7 @@ export function ServicesDrawer ({
   summary,
   ghostMessage,
   actions,
+  calendarEvents,
   logout,
 }: {
   open: boolean;
@@ -112,6 +113,7 @@ export function ServicesDrawer ({
   summary: string[];
   ghostMessage: string;
   actions: any[];
+  calendarEvents: CalendarEvent[];
   logout: () => void;
 }) {
   if (!open) return null;
@@ -196,10 +198,12 @@ export function ServicesDrawer ({
           <ServicePanelContent
             activeTab={activeTab}
             userProfile={userProfile}
+            calendarEvents={calendarEvents}
             traits={traits}
             summary={summary}
             ghostMessage={ghostMessage}
             actions={actions}
+            
           />
         </div>
 
@@ -217,6 +221,7 @@ export function ServicesDrawer ({
 function ServicePanelContent({
   activeTab,
   userProfile,
+  calendarEvents,
   traits,
   summary,
   ghostMessage,
@@ -225,12 +230,14 @@ function ServicePanelContent({
   activeTab:
     | "actions"
     | "calendar"
+     
     | "mail"
     | "web"
     | "home"
     | "profile"
     | "traits";
   userProfile: any;
+  calendarEvents: CalendarEvent[];
   traits: any;
   summary: string[];
   ghostMessage: string;
@@ -312,7 +319,7 @@ function ServicePanelContent({
     );
   }
 
-  if (activeTab === "calendar") {
+if (activeTab === "calendar") {
   return (
     <div className="space-y-3">
       <div className="rounded-3xl border border-cyan-400/20 bg-cyan-400/5 p-4">
@@ -320,24 +327,45 @@ function ServicePanelContent({
           Calendario GhostMe
         </p>
 
-        <p className="mt-3 text-sm text-zinc-300">
-          Calendario interno attivo.
-        </p>
-
-        <p className="mt-2 text-sm text-zinc-400">
-          Gli appuntamenti e i promemoria vengono salvati in calendar_events.
-        </p>
-      </div>
-
-      <div className="rounded-3xl border border-zinc-800 bg-black/60 p-4">
-        <p className="text-sm font-black text-cyan-200">
-          Prossimo step
-        </p>
-
         <p className="mt-2 text-sm text-zinc-300">
-          Qui mostreremo promemoria, appuntamenti e note ordinati per data.
+          Eventi salvati: {calendarEvents.length}
         </p>
       </div>
+
+      {calendarEvents.length === 0 ? (
+        <div className="rounded-3xl border border-zinc-800 bg-black/50 p-4 text-sm text-zinc-400">
+          Nessun appuntamento presente.
+        </div>
+      ) : (
+        calendarEvents.map((event) => (
+          <div
+            key={event.id}
+            className="rounded-3xl border border-zinc-800 bg-black/50 p-4"
+          >
+            <p className="font-bold text-cyan-200">
+              {event.title}
+            </p>
+
+            <p className="mt-1 text-xs uppercase tracking-widest text-zinc-500">
+              {event.type}
+            </p>
+
+            {event.description && (
+              <p className="mt-2 text-sm text-zinc-300">
+                {event.description}
+              </p>
+            )}
+
+            {(event.remind_at || event.start_at) && (
+              <p className="mt-2 text-sm text-yellow-300">
+                {new Date(
+                  event.remind_at || event.start_at || ""
+                ).toLocaleString("it-IT")}
+              </p>
+            )}
+          </div>
+        ))
+      )}
     </div>
   );
 }

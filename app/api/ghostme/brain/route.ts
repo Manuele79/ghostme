@@ -18,6 +18,7 @@ export async function POST(req: Request) {
       goalsRes,
       mentalRes,
       actionsRes,
+      calendarEventsRes,
     ] = await Promise.all([
       supabaseAdmin
         .from("user_profiles")
@@ -71,6 +72,14 @@ export async function POST(req: Request) {
         .eq("user_id", userId)
         .order("priority", { ascending: false })
         .limit(40),
+
+      supabaseAdmin
+        .from("calendar_events")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("status", "active")
+        .order("remind_at", { ascending: true })
+        .limit(80),
     ]);
 
     return NextResponse.json({
@@ -81,6 +90,7 @@ export async function POST(req: Request) {
       goals: goalsRes.data || [],
       mentalState: mentalRes.data || null,
       actions: actionsRes.data || [],
+      calendarEvents: calendarEventsRes.data || [],
     });
   } catch (err) {
     console.log("BRAIN API ERROR:", err);

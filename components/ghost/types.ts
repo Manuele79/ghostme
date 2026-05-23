@@ -17,10 +17,25 @@ export type BrainData = {
   goals: any[];
   mentalState: any | null;
   actions: any[];
+  calendarEvents: CalendarEvent[];
 };
 
 export const modeLabels: Record<GhostMode, string> = {
   "chat-chat": "Chat → Chat",
   "voce-chat": "Voce → Chat",
   "voce-voce": "Voce → Voce",
+};
+
+export type CalendarEvent = {
+  id: string;
+  user_id: string;
+  type: "appointment" | "reminder" | "note" | "voice_note";
+  title: string;
+  description?: string | null;
+  start_at?: string | null;
+  end_at?: string | null;
+  remind_at?: string | null;
+  status: string;
+  source?: string | null;
+  created_at?: string;
 };
