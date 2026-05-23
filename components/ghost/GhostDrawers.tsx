@@ -258,6 +258,7 @@ function ServicePanelContent({
   const [newTime, setNewTime] = useState("09:00");
   const [saving, setSaving] = useState(false);
   const [savedMessage, setSavedMessage] = useState("");
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
 
   useEffect(() => {
     setLocalEvents(calendarEvents || []);
@@ -329,6 +330,7 @@ function ServicePanelContent({
     }
 
     const payload = {
+      id: editingEventId,
       userId,
       type: newType,
       title: newTitle.trim(),
@@ -338,7 +340,7 @@ function ServicePanelContent({
     };
 
     const res = await fetch("/api/calendar-events", {
-      method: "POST",
+      method: editingEventId ? "PATCH" : "POST",
       headers: {
         "Content-Type": "application/json",
       },
@@ -349,18 +351,32 @@ function ServicePanelContent({
 
     setSaving(false);
 
-    if (data.event) {
-      setLocalEvents((prev) => [...prev, data.event]);
-      setNewTitle("");
-      setNewDescription("");
-      setNewTime("09:00");
-      setSavedMessage("✅ Salvato nel calendario");
+  if (data.event) {
+    if (editingEventId) {
+      setLocalEvents((prev) =>
+        prev.map((e) =>
+          e.id === editingEventId ? data.event : e
+        )
+      );
 
-      setTimeout(() => {
-        setSavedMessage("");
-      }, 2500);
+      setEditingEventId(null);
+
+      setSavedMessage("✅ Evento modificato");
+    } else {
+      setLocalEvents((prev) => [...prev, data.event]);
+
+      setSavedMessage("✅ Evento creato");
     }
+
+    setNewTitle("");
+    setNewDescription("");
+    setNewTime("09:00");
+
+    setTimeout(() => {
+      setSavedMessage("");
+    }, 2500);
   }
+}
 
   if (activeTab === "profile") {
     return (
@@ -535,37 +551,106 @@ function ServicePanelContent({
               Nessun evento in questo giorno.
             </p>
           ) : (
-            <div className="mt-3 space-y-2">
-              {selectedEvents.map((event) => (
-                <div key={event.id} className="rounded-2xl border border-zinc-800 bg-zinc-950 p-3">
-                  <p className="text-sm font-bold text-cyan-200">
-                    {event.title}
-                  </p>
-                  <p className="mt-1 text-xs uppercase tracking-widest text-zinc-500">
-                    {event.type}
-                  </p>
-                    {event.start_at && (
-                      <p className="mt-1 text-sm text-yellow-300">
-                        Appuntamento:{" "}
-                        {new Date(event.start_at).toLocaleTimeString("it-IT", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </p>
-                    )}
+        <div className="mt-3 space-y-2">
+          {selectedEvents.map((event) => (
+            <div
+              key={event.id}
+              className="rounded-2xl border border-zinc-800 bg-zinc-950 p-3"
+            >
+              <p className="text-sm font-bold text-cyan-200">
+                {event.title}
+              </p>
 
-                    {event.remind_at && (
-                      <p className="mt-1 text-xs text-cyan-300">
-                        Promemoria:{" "}
-                        {new Date(event.remind_at).toLocaleTimeString("it-IT", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </p>
-                    )}
-                </div>
-              ))}
+              <p className="mt-1 text-xs uppercase tracking-widest text-zinc-500">
+                {event.type}
+              </p>
+
+              {event.start_at && (
+                <p className="mt-1 text-sm text-yellow-300">
+                  Appuntamento:{" "}
+                  {new Date(event.start_at).toLocaleTimeString("it-IT", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
+              )}
+
+              {event.remind_at && (
+                <p className="mt-1 text-xs text-cyan-300">
+                  Promemoria:{" "}
+                  {new Date(event.remind_at).toLocaleTimeString("it-IT", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
+              )}
+
+              <div className="mt-3 flex gap-2">
+                <button
+                  onClick={() => {
+                    setEditingEventId(event.id);
+
+                    setNewType(
+                      event.type === "appointment"
+                        ? "appointment"
+                        : "note"
+                    );
+
+                    setNewTitle(event.title || "");
+                    setNewDescription(event.description || "");
+
+                    const sourceDate =
+                      event.start_at || event.remind_at;
+
+                    if (sourceDate) {
+                      setNewTime(
+                        new Date(sourceDate)
+                          .toLocaleTimeString("it-IT", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: false,
+                          })
+                      );
+                    }
+                  }}
+                  className="rounded-xl border border-cyan-400/30 px-3 py-2 text-xs font-bold text-cyan-300"
+                >
+                  Modifica
+                </button>
+
+                <button
+                  onClick={async () => {
+                    if (!confirm("Eliminare questo evento?")) return;
+
+                    const userId =
+                      userProfile?.user_id ||
+                      traits?.user_id ||
+                      localEvents[0]?.user_id;
+
+                    await fetch("/api/calendar-events", {
+                      method: "DELETE",
+                      headers: {
+                        "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify({
+                        id: event.id,
+                        userId,
+                      }),
+                    });
+
+                    setLocalEvents((prev) =>
+                      prev.filter((e) => e.id !== event.id)
+                    );
+                  }}
+                  className="rounded-xl border border-red-500/30 px-3 py-2 text-xs font-bold text-red-300"
+                >
+                  Elimina
+                </button>
+              </div>
             </div>
+          ))}
+        </div>
+
           )}
         </div>
 
