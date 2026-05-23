@@ -12,13 +12,14 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "GhostMe",
   description: "Memoria Cognitiva Attiva",
+  manifest: "/manifest.json",
   icons: {
-  icon: "/ghost-icon-512.png",
-},
-
+    icon: "/ghost-icon-512.png",
+    apple: "/ghost-icon-512.png",
+  },
 };
 
 export const viewport = {
