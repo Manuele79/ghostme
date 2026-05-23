@@ -2,6 +2,8 @@
 
 import { BrainData, ChatMessage, CalendarEvent } from "./types";
 
+import { useEffect, useMemo, useState } from "react";
+
 
 
 export function MemoryDrawer({
@@ -221,28 +223,129 @@ export function ServicesDrawer ({
 function ServicePanelContent({
   activeTab,
   userProfile,
-  calendarEvents,
   traits,
   summary,
   ghostMessage,
   actions,
+  calendarEvents,
 }: {
   activeTab:
     | "actions"
     | "calendar"
-     
     | "mail"
     | "web"
     | "home"
     | "profile"
     | "traits";
   userProfile: any;
-  calendarEvents: CalendarEvent[];
   traits: any;
   summary: string[];
   ghostMessage: string;
   actions: any[];
+  calendarEvents: CalendarEvent[];
 }) {
+  const today = new Date();
+
+  const [localEvents, setLocalEvents] = useState<CalendarEvent[]>(calendarEvents || []);
+  const [selectedDay, setSelectedDay] = useState(today.getDate());
+  const [newType, setNewType] = useState<"note" | "appointment">("note");
+  const [newTitle, setNewTitle] = useState("");
+  const [newDescription, setNewDescription] = useState("");
+  const [newTime, setNewTime] = useState("09:00");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setLocalEvents(calendarEvents || []);
+  }, [calendarEvents]);
+
+  const year = today.getFullYear();
+  const month = today.getMonth();
+
+  const monthName = today.toLocaleDateString("it-IT", {
+    month: "long",
+    year: "numeric",
+  });
+
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const daysInMonth = lastDay.getDate();
+  const startOffset = (firstDay.getDay() + 6) % 7;
+
+  const calendarDays = useMemo(() => {
+    return [
+      ...Array.from({ length: startOffset }, () => null),
+      ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+    ];
+  }, [startOffset, daysInMonth]);
+
+  function getEventDate(event: CalendarEvent) {
+    return event.remind_at || event.start_at || null;
+  }
+
+  function eventsForDay(day: number) {
+    return localEvents.filter((event) => {
+      const dateValue = getEventDate(event);
+      if (!dateValue) return false;
+
+      const d = new Date(dateValue);
+
+      return (
+        d.getFullYear() === year &&
+        d.getMonth() === month &&
+        d.getDate() === day
+      );
+    });
+  }
+
+  const selectedEvents = eventsForDay(selectedDay);
+
+  async function saveCalendarItem() {
+    if (!newTitle.trim()) return;
+
+    const userId =
+      userProfile?.user_id ||
+      traits?.user_id ||
+      localEvents[0]?.user_id;
+
+    if (!userId) {
+      alert("User ID mancante. GhostMe non sa a chi salvare l'evento.");
+      return;
+    }
+
+    setSaving(true);
+
+    const [hour, minute] = newTime.split(":").map(Number);
+    const eventDate = new Date(year, month, selectedDay, hour || 9, minute || 0);
+
+    const payload = {
+      userId,
+      type: newType,
+      title: newTitle.trim(),
+      description: newDescription.trim(),
+      startAt: eventDate.toISOString(),
+      remindAt: newType === "appointment" ? eventDate.toISOString() : null,
+    };
+
+    const res = await fetch("/api/calendar-events", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+
+    setSaving(false);
+
+    if (data.event) {
+      setLocalEvents((prev) => [...prev, data.event]);
+      setNewTitle("");
+      setNewDescription("");
+      setNewTime("09:00");
+    }
+  }
+
   if (activeTab === "profile") {
     return (
       <div className="rounded-3xl border border-cyan-400/20 bg-cyan-400/5 p-4">
@@ -269,6 +372,150 @@ function ServicePanelContent({
               <p className="mt-1 text-zinc-100">{String(value || "—")}</p>
             </div>
           ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (activeTab === "calendar") {
+    return (
+      <div className="space-y-4">
+        <div className="rounded-3xl border border-cyan-400/20 bg-cyan-400/5 p-4">
+          <p className="text-lg font-black capitalize text-cyan-200">
+            {monthName}
+          </p>
+          <p className="mt-2 text-sm text-zinc-400">
+            Eventi salvati: {localEvents.length}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-7 gap-2 text-center text-xs font-bold text-zinc-500">
+          {["L", "M", "M", "G", "V", "S", "D"].map((d, i) => (
+            <div key={`${d}-${i}`}>{d}</div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-7 gap-2">
+          {calendarDays.map((day, index) => {
+            const dayEvents = day ? eventsForDay(day) : [];
+            const selected = day === selectedDay;
+
+            return (
+              <button
+                key={index}
+                disabled={!day}
+                onClick={() => day && setSelectedDay(day)}
+                className={`min-h-14 rounded-2xl border p-2 text-left text-sm ${
+                  !day
+                    ? "border-transparent"
+                    : selected
+                      ? "border-cyan-300 bg-cyan-300 text-black"
+                      : "border-zinc-800 bg-black/50 text-zinc-200"
+                }`}
+              >
+                {day && (
+                  <>
+                    <p className="font-bold">{day}</p>
+                    {dayEvents.length > 0 && (
+                      <div className="mt-1 h-2 w-2 rounded-full bg-yellow-300" />
+                    )}
+                  </>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="rounded-3xl border border-zinc-800 bg-black/60 p-4">
+          <p className="font-black text-cyan-200">
+            Giorno {selectedDay}
+          </p>
+
+          {selectedEvents.length === 0 ? (
+            <p className="mt-2 text-sm text-zinc-500">
+              Nessun evento in questo giorno.
+            </p>
+          ) : (
+            <div className="mt-3 space-y-2">
+              {selectedEvents.map((event) => (
+                <div key={event.id} className="rounded-2xl border border-zinc-800 bg-zinc-950 p-3">
+                  <p className="text-sm font-bold text-cyan-200">
+                    {event.title}
+                  </p>
+                  <p className="mt-1 text-xs uppercase tracking-widest text-zinc-500">
+                    {event.type}
+                  </p>
+                  {(event.remind_at || event.start_at) && (
+                    <p className="mt-1 text-sm text-yellow-300">
+                      {new Date(event.remind_at || event.start_at || "").toLocaleTimeString("it-IT", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-3xl border border-cyan-400/20 bg-black/60 p-4">
+          <p className="text-sm font-black text-cyan-200">
+            Aggiungi al giorno {selectedDay}
+          </p>
+
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <button
+              onClick={() => setNewType("note")}
+              className={`rounded-2xl border px-3 py-2 text-sm font-bold ${
+                newType === "note"
+                  ? "border-cyan-300 bg-cyan-300 text-black"
+                  : "border-zinc-800 text-zinc-300"
+              }`}
+            >
+              Nota
+            </button>
+
+            <button
+              onClick={() => setNewType("appointment")}
+              className={`rounded-2xl border px-3 py-2 text-sm font-bold ${
+                newType === "appointment"
+                  ? "border-cyan-300 bg-cyan-300 text-black"
+                  : "border-zinc-800 text-zinc-300"
+              }`}
+            >
+              Appuntamento
+            </button>
+          </div>
+
+          <input
+            value={newTitle}
+            onChange={(e) => setNewTitle(e.target.value)}
+            placeholder="Titolo"
+            className="mt-3 w-full rounded-2xl border border-zinc-800 bg-zinc-950 p-3 text-sm text-white outline-none"
+          />
+
+          <textarea
+            value={newDescription}
+            onChange={(e) => setNewDescription(e.target.value)}
+            placeholder="Descrizione"
+            className="mt-3 h-24 w-full rounded-2xl border border-zinc-800 bg-zinc-950 p-3 text-sm text-white outline-none"
+          />
+
+          <input
+            value={newTime}
+            onChange={(e) => setNewTime(e.target.value)}
+            type="time"
+            className="mt-3 w-full rounded-2xl border border-zinc-800 bg-zinc-950 p-3 text-sm text-white outline-none"
+          />
+
+          <button
+            onClick={saveCalendarItem}
+            disabled={saving}
+            className="mt-3 w-full rounded-2xl bg-cyan-300 px-4 py-3 text-sm font-black text-black disabled:opacity-50"
+          >
+            {saving ? "Salvataggio..." : "Salva nel calendario"}
+          </button>
         </div>
       </div>
     );
@@ -318,57 +565,6 @@ function ServicePanelContent({
       </div>
     );
   }
-
-if (activeTab === "calendar") {
-  return (
-    <div className="space-y-3">
-      <div className="rounded-3xl border border-cyan-400/20 bg-cyan-400/5 p-4">
-        <p className="text-lg font-black text-cyan-200">
-          Calendario GhostMe
-        </p>
-
-        <p className="mt-2 text-sm text-zinc-300">
-          Eventi salvati: {calendarEvents.length}
-        </p>
-      </div>
-
-      {calendarEvents.length === 0 ? (
-        <div className="rounded-3xl border border-zinc-800 bg-black/50 p-4 text-sm text-zinc-400">
-          Nessun appuntamento presente.
-        </div>
-      ) : (
-        calendarEvents.map((event) => (
-          <div
-            key={event.id}
-            className="rounded-3xl border border-zinc-800 bg-black/50 p-4"
-          >
-            <p className="font-bold text-cyan-200">
-              {event.title}
-            </p>
-
-            <p className="mt-1 text-xs uppercase tracking-widest text-zinc-500">
-              {event.type}
-            </p>
-
-            {event.description && (
-              <p className="mt-2 text-sm text-zinc-300">
-                {event.description}
-              </p>
-            )}
-
-            {(event.remind_at || event.start_at) && (
-              <p className="mt-2 text-sm text-yellow-300">
-                {new Date(
-                  event.remind_at || event.start_at || ""
-                ).toLocaleString("it-IT")}
-              </p>
-            )}
-          </div>
-        ))
-      )}
-    </div>
-  );
-}
 
   if (activeTab === "actions") {
     if (!actions.length) {
