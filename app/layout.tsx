@@ -15,6 +15,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "GhostMe",
   description: "Memoria Cognitiva Attiva",
+  icons: {
+  icon: "/ghost-icon-512.png",
+},
 
 };
 
