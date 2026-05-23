@@ -147,6 +147,7 @@ function buildSystemPrompt({
   timelineContext,
   dynamicSelfProfileContext,
   actionIntentContext,
+  calendarContext,
   serviceContext,
 }: {
   traits: any;
@@ -161,6 +162,7 @@ function buildSystemPrompt({
   timelineContext: string;
   dynamicSelfProfileContext: string;
   actionIntentContext: string;
+  calendarContext: string;
   serviceContext: string;
 }) {
   return `
@@ -233,6 +235,16 @@ ${actionIntentContext || "nessuna azione futura rilevante"}
 
 Servizi esterni:
 ${serviceContext || "nessun servizio esterno usato"}
+
+Calendario reale:
+${calendarContext || "nessun appuntamento o promemoria salvato"}
+
+Regole calendario:
+- Se l'utente chiede appuntamenti, promemoria, note o calendario, usa SOLO Calendario reale.
+- Non usare Timeline autobiografica per rispondere sugli appuntamenti.
+- Timeline racconta eventi vissuti, non appuntamenti futuri.
+- Se Calendario reale è vuoto, di' che non risultano appuntamenti salvati.
+
 
 Regole servizi esterni:
 - Se Servizi esterni contiene un risultato, usalo come fonte principale.
@@ -714,6 +726,7 @@ export async function POST(req: Request) {
     let dynamicSelfProfileContext = "";
     let actionIntentContext = "";
     let loadedLifeTopics: any[] = [];
+    let calendarContext = "";
     let serviceContext = "";
     let userLocation = "";
 
@@ -778,6 +791,23 @@ export async function POST(req: Request) {
       timelineContext = await getTimelineContext(userId);
       dynamicSelfProfileContext = await getDynamicSelfProfileContext(userId);
       actionIntentContext = await getActionIntentContext(userId);
+
+      const { data: calendarEvents } = await supabaseAdmin
+        .from("calendar_events")
+        .select("type, title, description, start_at, remind_at, status")
+        .eq("user_id", userId)
+        .eq("status", "active")
+        .order("start_at", { ascending: true })
+        .limit(30);
+
+      calendarContext =
+        calendarEvents
+          ?.map((event) => {
+            const date = event.start_at || event.remind_at || "";
+            return `${event.type} | ${event.title} | ${date} | ${event.description || ""}`;
+          })
+          .join("\n") || "";
+
 
       const { data: existingTopics } = await supabase
         .from("life_topics")
@@ -904,6 +934,7 @@ export async function POST(req: Request) {
       timelineContext,
       dynamicSelfProfileContext,
       actionIntentContext,
+      calendarContext,
       serviceContext,
     });
 
