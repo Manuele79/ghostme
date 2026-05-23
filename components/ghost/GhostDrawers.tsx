@@ -253,6 +253,7 @@ function ServicePanelContent({
   const [newDescription, setNewDescription] = useState("");
   const [newTime, setNewTime] = useState("09:00");
   const [saving, setSaving] = useState(false);
+  const [savedMessage, setSavedMessage] = useState("");
 
   useEffect(() => {
     setLocalEvents(calendarEvents || []);
@@ -317,13 +318,19 @@ function ServicePanelContent({
     const [hour, minute] = newTime.split(":").map(Number);
     const eventDate = new Date(year, month, selectedDay, hour || 9, minute || 0);
 
+    const remindDate = new Date(eventDate);
+
+    if (newType === "appointment") {
+      remindDate.setHours(remindDate.getHours() - 1);
+    }
+
     const payload = {
       userId,
       type: newType,
       title: newTitle.trim(),
       description: newDescription.trim(),
       startAt: eventDate.toISOString(),
-      remindAt: newType === "appointment" ? eventDate.toISOString() : null,
+      remindAt: newType === "appointment" ? remindDate.toISOString() : eventDate.toISOString(),
     };
 
     const res = await fetch("/api/calendar-events", {
@@ -343,6 +350,11 @@ function ServicePanelContent({
       setNewTitle("");
       setNewDescription("");
       setNewTime("09:00");
+      setSavedMessage("✅ Salvato nel calendario");
+
+      setTimeout(() => {
+        setSavedMessage("");
+      }, 2500);
     }
   }
 
@@ -428,7 +440,11 @@ function ServicePanelContent({
 
         <div className="rounded-3xl border border-zinc-800 bg-black/60 p-4">
           <p className="font-black text-cyan-200">
-            Giorno {selectedDay}
+            {new Date(year, month, selectedDay).toLocaleDateString("it-IT", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
           </p>
 
           {selectedEvents.length === 0 ? (
@@ -445,14 +461,25 @@ function ServicePanelContent({
                   <p className="mt-1 text-xs uppercase tracking-widest text-zinc-500">
                     {event.type}
                   </p>
-                  {(event.remind_at || event.start_at) && (
-                    <p className="mt-1 text-sm text-yellow-300">
-                      {new Date(event.remind_at || event.start_at || "").toLocaleTimeString("it-IT", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
-                  )}
+                    {event.start_at && (
+                      <p className="mt-1 text-sm text-yellow-300">
+                        Appuntamento:{" "}
+                        {new Date(event.start_at).toLocaleTimeString("it-IT", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    )}
+
+                    {event.remind_at && (
+                      <p className="mt-1 text-xs text-cyan-300">
+                        Promemoria:{" "}
+                        {new Date(event.remind_at).toLocaleTimeString("it-IT", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    )}
                 </div>
               ))}
             </div>
@@ -516,6 +543,13 @@ function ServicePanelContent({
           >
             {saving ? "Salvataggio..." : "Salva nel calendario"}
           </button>
+
+          {savedMessage && (
+            <p className="mt-3 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-3 text-sm font-bold text-emerald-300">
+              {savedMessage}
+            </p>
+          )}
+
         </div>
       </div>
     );
