@@ -394,8 +394,49 @@ function ServicePanelContent({
   }
 
   if (activeTab === "calendar") {
+
+      const upcomingReminders = localEvents.filter((event) => {
+        if (!event.remind_at) return false;
+
+        const remindDate = new Date(event.remind_at);
+
+        const diffMinutes =
+          (remindDate.getTime() - Date.now()) / 60000;
+
+        return diffMinutes >= 0 && diffMinutes <= 60;
+      });
+
     return (
       <div className="space-y-4">
+
+        {upcomingReminders.length > 0 && (
+          <div className="rounded-3xl border border-yellow-400/20 bg-yellow-400/10 p-4">
+            <p className="font-black text-yellow-300">
+              🔔 Promemoria imminenti
+            </p>
+
+            <div className="mt-3 space-y-2">
+              {upcomingReminders.map((event) => (
+                <div key={event.id}>
+                  <p className="text-sm font-bold text-white">
+                    {event.title}
+                  </p>
+
+                  <p className="text-xs text-yellow-300">
+                    {new Date(event.remind_at!).toLocaleTimeString(
+                      "it-IT",
+                      {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      }
+                    )}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="rounded-3xl border border-cyan-400/20 bg-cyan-400/5 p-4">
           <div className="flex items-center justify-between gap-3">
           <button
@@ -440,6 +481,12 @@ function ServicePanelContent({
             const dayEvents = day ? eventsForDay(day) : [];
             const selected = day === selectedDay;
 
+            const isToday =
+              day &&
+              today.getFullYear() === year &&
+              today.getMonth() === month &&
+              today.getDate() === day;
+
             return (
               <button
                 key={index}
@@ -450,14 +497,22 @@ function ServicePanelContent({
                     ? "border-transparent"
                     : selected
                       ? "border-cyan-300 bg-cyan-300 text-black"
-                      : "border-zinc-800 bg-black/50 text-zinc-200"
+                      : isToday
+                        ? "border-yellow-400 bg-yellow-400/10 text-yellow-200"
+                        : "border-zinc-800 bg-black/50 text-zinc-200"
                 }`}
               >
                 {day && (
                   <>
                     <p className="font-bold">{day}</p>
                     {dayEvents.length > 0 && (
-                      <div className="mt-1 h-2 w-2 rounded-full bg-yellow-300" />
+                      <div className="mt-1 flex items-center gap-1">
+                        <div className="h-2 w-2 rounded-full bg-yellow-300" />
+
+                        <span className="text-[10px] font-black text-cyan-300">
+                          {dayEvents.length}
+                        </span>
+                      </div>
                     )}
                   </>
                 )}
