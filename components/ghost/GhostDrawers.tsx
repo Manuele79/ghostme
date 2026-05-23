@@ -246,6 +246,10 @@ function ServicePanelContent({
 }) {
   const today = new Date();
 
+  const [visibleMonth, setVisibleMonth] = useState(
+    new Date(today.getFullYear(), today.getMonth(), 1)
+  );
+
   const [localEvents, setLocalEvents] = useState<CalendarEvent[]>(calendarEvents || []);
   const [selectedDay, setSelectedDay] = useState(today.getDate());
   const [newType, setNewType] = useState<"note" | "appointment">("note");
@@ -259,8 +263,8 @@ function ServicePanelContent({
     setLocalEvents(calendarEvents || []);
   }, [calendarEvents]);
 
-  const year = today.getFullYear();
-  const month = today.getMonth();
+  const year = visibleMonth.getFullYear();
+  const month = visibleMonth.getMonth();
 
   const monthName = today.toLocaleDateString("it-IT", {
     month: "long",
@@ -393,9 +397,33 @@ function ServicePanelContent({
     return (
       <div className="space-y-4">
         <div className="rounded-3xl border border-cyan-400/20 bg-cyan-400/5 p-4">
+          <div className="flex items-center justify-between gap-3">
+          <button
+            onClick={() => {
+              const previous = new Date(year, month - 1, 1);
+              setVisibleMonth(previous);
+              setSelectedDay(1);
+            }}
+            className="rounded-2xl border border-zinc-800 px-3 py-2 text-sm font-black text-cyan-200"
+          >
+            ←
+          </button>
+
           <p className="text-lg font-black capitalize text-cyan-200">
             {monthName}
           </p>
+
+          <button
+            onClick={() => {
+              const next = new Date(year, month + 1, 1);
+              setVisibleMonth(next);
+              setSelectedDay(1);
+            }}
+            className="rounded-2xl border border-zinc-800 px-3 py-2 text-sm font-black text-cyan-200"
+          >
+            →
+          </button>
+        </div>
           <p className="mt-2 text-sm text-zinc-400">
             Eventi salvati: {localEvents.length}
           </p>
