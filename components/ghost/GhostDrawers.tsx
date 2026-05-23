@@ -184,7 +184,7 @@ export function ServicesDrawer ({
                   activeTab === item.key ? "text-black/60" : "text-zinc-500"
                 }`}
               >
-                {["actions", "profile", "traits"].includes(item.key)
+                {["actions", "calendar", "web", "profile", "traits"].includes(item.key)
                   ? "Online"
                   : "Offline / coming soon"}
               </p>
@@ -247,6 +247,7 @@ function ServicePanelContent({
             ["Età", userProfile?.age],
             ["Genere", userProfile?.gender],
             ["Lavoro", userProfile?.job],
+            ["Località", userProfile?.location],
             ["Hobby", userProfile?.hobbies],
             ["Sport", userProfile?.sports],
             ["Relazione", userProfile?.relationship_status],
@@ -310,6 +311,36 @@ function ServicePanelContent({
       </div>
     );
   }
+
+  if (activeTab === "calendar") {
+  return (
+    <div className="space-y-3">
+      <div className="rounded-3xl border border-cyan-400/20 bg-cyan-400/5 p-4">
+        <p className="text-lg font-black text-cyan-200">
+          Calendario GhostMe
+        </p>
+
+        <p className="mt-3 text-sm text-zinc-300">
+          Calendario interno attivo.
+        </p>
+
+        <p className="mt-2 text-sm text-zinc-400">
+          Gli appuntamenti e i promemoria vengono salvati in calendar_events.
+        </p>
+      </div>
+
+      <div className="rounded-3xl border border-zinc-800 bg-black/60 p-4">
+        <p className="text-sm font-black text-cyan-200">
+          Prossimo step
+        </p>
+
+        <p className="mt-2 text-sm text-zinc-300">
+          Qui mostreremo promemoria, appuntamenti e note ordinati per data.
+        </p>
+      </div>
+    </div>
+  );
+}
 
   if (activeTab === "actions") {
     if (!actions.length) {
