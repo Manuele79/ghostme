@@ -1,7 +1,6 @@
 {
   "name": "GhostMe",
   "short_name": "GhostMe",
-  "description": "Memoria Cognitiva Attiva",
   "start_url": "/chat",
   "display": "standalone",
   "background_color": "#000000",
