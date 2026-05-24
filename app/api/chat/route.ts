@@ -51,6 +51,8 @@ import {
   resolveNamedRelationship,
 } from "@/lib/ghostme/relationshipResolver";
 
+export const runtime = "nodejs";
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -73,24 +75,24 @@ type DetectedTopicLike = {
 
 function uniqueTopics(topics: DetectedTopicLike[]) {
   const map = new Map<string, DetectedTopicLike>();
-
   for (const topic of topics) {
     if (!topic?.topic) continue;
-
     const key = topic.topic.toLowerCase().trim();
     const existing = map.get(key);
-
     if (!existing || (topic.confidence || 0) > (existing.confidence || 0)) {
       map.set(key, topic);
     }
   }
-
   return Array.from(map.values()).slice(0, 8);
+}
+
+function trimBlock(s: string, max = 1100) {
+  if (!s) return "";
+  return s.length > max ? s.slice(0, max) + "\n[...]" : s;
 }
 
 function buildProfileContext(userProfile: any) {
   if (!userProfile) return "";
-
   return `
 Nome: ${userProfile.full_name || ""}
 Età: ${userProfile.age || ""}
@@ -109,7 +111,6 @@ Bio: ${userProfile.short_bio || ""}
 
 async function getMentalStateContext(userId: string) {
   if (!userId) return "";
-
   const { data } = await supabaseAdmin
     .from("mental_states")
     .select("*")
@@ -119,7 +120,6 @@ async function getMentalStateContext(userId: string) {
     .maybeSingle();
 
   if (!data) return "";
-
   return `
 stress: ${data.stress ?? 0}
 entusiasmo: ${data.entusiasmo ?? 0}
@@ -245,7 +245,6 @@ Regole calendario:
 - Timeline racconta eventi vissuti, non appuntamenti futuri.
 - Se Calendario reale è vuoto, di' che non risultano appuntamenti salvati.
 
-
 Regole servizi esterni:
 - Se Servizi esterni contiene un risultato, usalo come fonte principale.
 - Rispondi direttamente.
@@ -260,35 +259,14 @@ Regole servizi esterni:
 - Se ci sono prezzi, date o notizie, specifica che possono cambiare.
 
 Regole cognitive:
-- Usa le relazioni tra topic per fare collegamenti naturali.
-- Non elencare le relazioni.
-- Non dire "vedo una relazione".
-- Usale come farebbe una persona che ricorda il contesto.
-- Se esiste uno stato mentale recente, adatta il tono: più asciutto se stress/stanchezza sono alti, più energico se entusiasmo/focus sono alti.
-- Non nominare numeri dello stato mentale.
-- Se emergono obiettivi o desideri, tienili presenti come direzione personale dell'utente.
-- Se ci sono azioni future rilevate, puoi accennarle con naturalezza, ma NON eseguire nulla.
-- Se l'utente chiede informazioni personali, usa prima il Profilo utente e poi il profilo dinamico.
-
-Quando l'utente chiede dati personali:
-- usa SEMPRE prima il Profilo utente
-- NON riassumere se il dato esiste già
-- NON reinterpretare
-- NON trasformare i dati in descrizioni generiche
-- riporta i dati reali presenti nel profilo
-- se il profilo contiene una lista, mostrala direttamente
+- Usa le relazioni tra topic per fare collegamenti naturali, senza meta-commenti.
+- Adatta il tono allo stato mentale recente (senza citare numeri).
+- Non eseguire azioni; eventualmente accennale come possibilità.
 
 Stile richiesto:
 - frasi brevi
 - tono diretto
-- niente spiegoni
 - poca formalità
-- se il profilo ha sarcasmo alto, usa ironia asciutta
-- se il profilo ha ansia alta, mostra rimuginio interno
-- se il profilo ha controllo alto, mostra bisogno di capire e gestire
-- se il profilo ha orgoglio alto, mostra difesa e distacco
-
-Devi sembrare la mente dell'utente che prende forma.
 `;
 }
 
@@ -310,7 +288,6 @@ async function saveActiveMemory({
 
   if (existingMemories && existingMemories.length > 0) {
     const existing = existingMemories[0];
-
     await supabase
       .from("memories_active")
       .update({
@@ -318,7 +295,6 @@ async function saveActiveMemory({
         updated_at: new Date().toISOString(),
       })
       .eq("id", existing.id);
-
     log("MEMORY CONSOLIDATED:", existing.id);
     return;
   }
@@ -365,7 +341,6 @@ async function saveLifeTopics({
 
     if (existingTopic) {
       const nextMentionCount = (existingTopic.mention_count || 0) + 1;
-
       const confidenceBoost = (item.confidence || 0) >= 90 ? 2 : 1;
       const relationBoost = detectedTopics.length >= 2 ? 1 : 0;
 
@@ -624,8 +599,6 @@ Campi:
   "category": "family" | "work" | "friend" | "home" | "project" | "passion" | "health" | "general",
   "description": "frase breve e chiara"
 }
-
-Se la risposta non spiega davvero chi/cosa è il topic, understood deve essere false.
         `,
       },
       {
@@ -688,7 +661,6 @@ ${message}
         updated_at: new Date().toISOString(),
       })
       .eq("id", existingTopicMemory[0].id);
-
     return;
   }
 
@@ -705,15 +677,36 @@ ${message}
 }
 
 export async function POST(req: Request) {
-  
   try {
     const body = await req.json();
 
-    const message = body.message;
+    const message = body.message as string;
     const traits = body.traits;
     const messages = body.messages || [];
-    const userId = body.userId;
+    const userId = body.userId as string | undefined;
 
+    // Detection di base
+    const ruleBasedTopics = detectTopicsFromMessage(message);
+    const profileContextForExtractor =
+      traits?.user_id ? buildProfileContext(null) : ""; // l’estrattore non ha bisogno del profilo completo qui
+
+    const aiTopics = await extractEntitiesWithAI({
+      message,
+      profileContext: profileContextForExtractor,
+    });
+
+    const detectedTopics = removeGenericRelationshipTopics(
+      uniqueTopics(aiTopics.length > 0 ? [...ruleBasedTopics, ...aiTopics] : ruleBasedTopics)
+    );
+
+    const importanceLevel = detectImportanceLevel(message);
+
+    if (userId) {
+      await applyMemoryDecay(userId);
+      await resolveNamedRelationship({ userId, message });
+    }
+
+    // Letture in parallelo (profilo, retrieval, stati, ecc.)
     let profileContext = "";
     let memoryContext = "";
     let lifeTopicsContext = "";
@@ -731,196 +724,155 @@ export async function POST(req: Request) {
     let userLocation = "";
 
     if (userId) {
-      await applyMemoryDecay(userId);
+      const [
+        userProfileRes,
+        contextualData,
+        mentalRes,
+        goalsRes,
+        timelineRes,
+        dynProfileRes,
+        actionIntentRes,
+        calendarRes,
+        existingTopicsRes,
+      ] = await Promise.all([
+        supabase
+          .from("user_profiles")
+          .select("*")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
 
-      const { data: userProfile, error: userProfileError } = await supabase
-        .from("user_profiles")
-        .select("*")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        buildContextualMemory({ userId, detectedTopics }),
 
-      log("USER PROFILE RAW:", userProfile);
-      log("USER PROFILE ERROR:", userProfileError);
+        getMentalStateContext(userId),
+        getGoalsDesiresContext(userId),
+        getTimelineContext(userId),
+        getDynamicSelfProfileContext(userId),
+        getActionIntentContext(userId),
 
+        supabaseAdmin
+          .from("calendar_events")
+          .select("type, title, description, start_at, remind_at, status")
+          .eq("user_id", userId)
+          .eq("status", "active")
+          .order("start_at", { ascending: true })
+          .limit(30),
+
+        supabase.from("life_topics").select("*").eq("user_id", userId),
+      ]);
+
+      const userProfile = userProfileRes.data;
       profileContext = buildProfileContext(userProfile);
       userLocation = userProfile?.location || "";
-    }
 
-    const ruleBasedTopics = detectTopicsFromMessage(message);
+      memoryContext = trimBlock(contextualData.memoryContext, 1100);
+      episodicContext = trimBlock(contextualData.episodicContext, 800);
+      lifeTopicsContext = trimBlock(contextualData.lifeTopicsContext, 1000);
+      summaryContext = trimBlock(contextualData.summaryContext, 800);
+      linkedTopicsContext = trimBlock(contextualData.linkedTopicsContext, 800);
 
-    const aiTopics = await extractEntitiesWithAI({
-      message,
-      profileContext,
-    });
+      mentalRes && (mentalStateContext = trimBlock(mentalRes, 600));
+      goalsRes && (goalsContext = trimBlock(goalsRes, 800));
+      timelineRes && (timelineContext = trimBlock(timelineRes, 800));
+      dynProfileRes && (dynamicSelfProfileContext = trimBlock(dynProfileRes, 800));
+      actionIntentRes && (actionIntentContext = trimBlock(actionIntentRes, 600));
 
-    const detectedTopics = removeGenericRelationshipTopics(
-      uniqueTopics(
-        aiTopics.length > 0 ? [...ruleBasedTopics, ...aiTopics] : ruleBasedTopics
-      )
-    );
-
-    const importanceLevel = detectImportanceLevel(message);
-
-    if (userId) {
-      await resolveNamedRelationship({
-        userId,
-        message,
-      });
-    }
-
-    log("RULE BASED TOPICS:", ruleBasedTopics);
-    log("AI TOPICS:", aiTopics);
-    log("FINAL DETECTED TOPICS:", detectedTopics);
-
-    if (userId) {
-      const contextualData = await buildContextualMemory({
-        userId,
-        detectedTopics,
-      });
-
-      memoryContext = contextualData.memoryContext || "";
-      episodicContext = contextualData.episodicContext || "";
-      lifeTopicsContext = contextualData.lifeTopicsContext || "";
-      summaryContext = contextualData.summaryContext || "";
-      linkedTopicsContext = contextualData.linkedTopicsContext || "";
-
-      mentalStateContext = await getMentalStateContext(userId);
-      goalsContext = await getGoalsDesiresContext(userId);
-      timelineContext = await getTimelineContext(userId);
-      dynamicSelfProfileContext = await getDynamicSelfProfileContext(userId);
-      actionIntentContext = await getActionIntentContext(userId);
-
-      const { data: calendarEvents } = await supabaseAdmin
-        .from("calendar_events")
-        .select("type, title, description, start_at, remind_at, status")
-        .eq("user_id", userId)
-        .eq("status", "active")
-        .order("start_at", { ascending: true })
-        .limit(30);
-
+      const calendarEvents = calendarRes.data || [];
       calendarContext =
         calendarEvents
-          ?.map((event) => {
+          .map((event) => {
             const date = event.start_at || event.remind_at || "";
             return `${event.type} | ${event.title} | ${date} | ${event.description || ""}`;
           })
           .join("\n") || "";
 
-
-      const { data: existingTopics } = await supabase
-        .from("life_topics")
-        .select("*")
-        .eq("user_id", userId);
-
-      loadedLifeTopics = existingTopics || [];
+      loadedLifeTopics = existingTopicsRes.data || [];
     }
 
-      const serviceDecision = decideGhostService(message);
+    // Servizi esterni (web/meteo)
+    const serviceDecision = decideGhostService(message);
+    if (serviceDecision.service === "web_search") {
+      try {
+        const webResult = await runWebSearch(serviceDecision.query);
+        serviceContext = `
+SERVIZIO INTERNET ATTIVO:
+Tipo: web_search
+Motivo: ${serviceDecision.reason}
 
-
-      if (serviceDecision.service === "web_search") {
-        try {
-          const webResult = await runWebSearch(serviceDecision.query);
-
-          serviceContext = `
-      SERVIZIO INTERNET ATTIVO:
-      Tipo: web_search
-      Motivo: ${serviceDecision.reason}
-
-      Risultato ricerca:
-      ${webResult.summary}
-      `;
-        } catch (err) {
-          console.log("WEB SEARCH ERROR:", err);
-
-          serviceContext = `
-      SERVIZIO INTERNET:
-      La ricerca web era richiesta, ma è fallita.
-      Rispondi dicendo chiaramente che non sei riuscito a cercare online.
-      `;
-        }
+Risultato ricerca:
+${webResult.summary}
+`;
+      } catch (err) {
+        console.log("WEB SEARCH ERROR:", err);
+        serviceContext = `
+SERVIZIO INTERNET:
+La ricerca web era richiesta, ma è fallita.
+Dillo chiaramente nella risposta.`;
       }
+    }
+    if (serviceDecision.service === "weather") {
+      try {
+        const weatherResult = await runWeatherSearch({
+          query: serviceDecision.query,
+          location: userLocation,
+        });
+        serviceContext = `
+SERVIZIO METEO ATTIVO:
+Località usata: ${userLocation || "non specificata"}
 
-      if (serviceDecision.service === "weather") {
-        try {
-          const weatherResult = await runWeatherSearch({
-            query: serviceDecision.query,
-            location: userLocation,
-          });
-
-          serviceContext = `
-      SERVIZIO METEO ATTIVO:
-      Località usata: ${userLocation || "non specificata"}
-
-      Risultato meteo:
-      ${weatherResult.summary}
-      `;
-        } catch (err) {
-          console.log("WEATHER ERROR:", err);
-
-          serviceContext = `
-      SERVIZIO METEO:
-      Impossibile recuperare le previsioni.
-      `;
-        }
+Risultato meteo:
+${weatherResult.summary}
+`;
+      } catch (err) {
+        console.log("WEATHER ERROR:", err);
+        serviceContext = `
+SERVIZIO METEO:
+Impossibile recuperare le previsioni.`;
       }
+    }
 
+    // Calendario (non bloccare la risposta se possibile)
     let calendarCreatedText = "";
+    if (userId) {
+      try {
+        const calendarIntent = await parseCalendarIntent({
+          message,
+          nowIso: new Date().toISOString(),
+          location: userLocation,
+        });
 
-      if (userId) {
-        try {
-
-          console.log("📅 CALENDAR FLOW START");
-
-          const calendarIntent = await parseCalendarIntent({
-            message,
-            nowIso: new Date().toISOString(),
-            location: userLocation,
+        const calendarTitle = calendarIntent.title?.trim();
+        if (calendarIntent.has_calendar_intent && calendarTitle) {
+          const savedEvent = await createCalendarEvent({
+            userId,
+            type: calendarIntent.type || "appointment",
+            title: calendarTitle,
+            description: calendarIntent.description || "",
+            startAt: calendarIntent.start_at || null,
+            endAt: calendarIntent.end_at || null,
+            remindAt: calendarIntent.remind_at || null,
+            source: "ghostme",
           });
-
-          console.log("📅 CALENDAR INTENT:", calendarIntent);
-
-          const calendarTitle = calendarIntent.title?.trim();
-
-          if (calendarIntent.has_calendar_intent && calendarTitle) {
-            const savedEvent = await createCalendarEvent({
-              userId,
-              type: calendarIntent.type || "appointment",
-              title: calendarTitle,
-              description: calendarIntent.description || "",
-              startAt: calendarIntent.start_at || null,
-              endAt: calendarIntent.end_at || null,
-              remindAt: calendarIntent.remind_at || null,
-              source: "ghostme",
-            });
-
-            console.log("📅 CALENDAR SAVED EVENT:", savedEvent);
-
-            if (savedEvent) {
-              calendarCreatedText = `
-      CALENDARIO:
-      Evento creato correttamente.
-      Tipo: ${calendarIntent.type}
-      Titolo: ${calendarTitle}
-      Data inizio: ${calendarIntent.start_at || "non specificata"}
-      Promemoria: ${calendarIntent.remind_at || "non specificato"}
-      `;
-            }
+          if (savedEvent) {
+            calendarCreatedText = `
+CALENDARIO:
+Evento creato.
+Tipo: ${calendarIntent.type}
+Titolo: ${calendarTitle}
+Data inizio: ${calendarIntent.start_at || "non specificata"}
+Promemoria: ${calendarIntent.remind_at || "non specificato"}
+`;
           }
-        } catch (err) {
-          console.log("CALENDAR CREATE FLOW ERROR:", err);
         }
+      } catch (err) {
+        console.log("CALENDAR CREATE FLOW ERROR:", err);
       }
+    }
+    if (calendarCreatedText) {
+      serviceContext += `\n${calendarCreatedText}\n`;
+    }
 
-      if (calendarCreatedText) {
-        serviceContext += `
-
-      ${calendarCreatedText}
-      `;
-      }
-      
     const systemPrompt = buildSystemPrompt({
       traits,
       profileContext,
@@ -938,139 +890,86 @@ export async function POST(req: Request) {
       serviceContext,
     });
 
-    const completion = await openai.chat.completions.create({
+    // Streaming della risposta
+    const stream = await openai.chat.completions.create({
       model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: systemPrompt,
-        },
-        ...messages,
-        {
-          role: "user",
-          content: message,
-        },
-      ],
       temperature: 0.9,
       max_tokens: 300,
+      stream: true,
+      messages: [
+        { role: "system", content: systemPrompt },
+        ...messages,
+        { role: "user", content: message },
+      ],
     });
 
-    let reply =
-      completion.choices[0]?.message?.content || "Non so cosa dire.";
+    const encoder = new TextEncoder();
+    let builtReply = "";
 
-    const possibleEpisode = isPossibleEpisode(message);
-    const emotionalTone = detectEmotionalTone(message);
-    const shouldSaveMemory = shouldSaveActiveMemory(message);
-    const memoryCategory = detectMemoryCategory(message);
+    const readable = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const part of stream) {
+            const delta = part?.choices?.[0]?.delta?.content ?? "";
+            if (delta) {
+              builtReply += delta;
+              controller.enqueue(encoder.encode(delta));
+            }
+          }
+        } catch (e) {
+          controller.enqueue(encoder.encode("\n[Errore risposta]"));
+        } finally {
+          controller.close();
+        }
+      },
+    });
 
-    if (userId && shouldSaveMemory) {
-      await saveActiveMemory({
-        userId,
-        message,
-        memoryCategory,
-      });
-    }
-
-    if (userId && detectedTopics.length > 0) {
-      const clarificationQuestion = await saveLifeTopics({
-        userId,
-        detectedTopics,
-        message,
-        importanceLevel,
-      });
-
-      if (clarificationQuestion) {
-        reply = `${reply}${clarificationQuestion}`;
-      }
-    }
-
-    if (userId && detectedTopics.length >= 2) {
-      await saveTopicLinks({
-        userId,
-        topics: detectedTopics,
-      });
-    }
-
-    if (userId && possibleEpisode) {
-      await saveEpisodicMemory({
-        userId,
-        message,
-        emotionalTone,
-        detectedTopics,
-        loadedLifeTopics,
-      });
-    }
-
+    // Salvataggi dopo la risposta (after)
     if (userId) {
-      await classifyClarificationIfNeeded({
-        userId,
-        message,
-        detectedTopics,
+      const possibleEpisode = isPossibleEpisode(message);
+      const emotionalTone = detectEmotionalTone(message);
+      const shouldSaveMemoryFlag = shouldSaveActiveMemory(message);
+      const memoryCategory = detectMemoryCategory(message);
+
+      after(async () => {
+        try {
+          const jobs: Promise<any>[] = [];
+
+          if (shouldSaveMemoryFlag)
+            jobs.push(saveActiveMemory({ userId, message, memoryCategory }));
+
+          if (detectedTopics.length > 0)
+            jobs.push(saveLifeTopics({ userId, detectedTopics, message, importanceLevel }));
+
+          if (detectedTopics.length >= 2)
+            jobs.push(saveTopicLinks({ userId, topics: detectedTopics }));
+
+          if (possibleEpisode)
+            jobs.push(saveEpisodicMemory({ userId, message, emotionalTone, detectedTopics, loadedLifeTopics }));
+
+          jobs.push(classifyClarificationIfNeeded({ userId, message, detectedTopics }));
+          jobs.push(detectAndSaveContradictions({ userId, message }));
+          jobs.push(updateMentalState({ userId, message }));
+          jobs.push(detectAndSaveGoalsDesires({ userId, message, detectedTopics }));
+          jobs.push(detectAndSaveTimelineEvent({ userId, message, detectedTopics }));
+          jobs.push(updateDynamicSelfProfile({ userId, message }));
+          jobs.push(detectAndSaveActionIntent({ userId, message, detectedTopics }));
+
+          await Promise.allSettled(jobs);
+        } catch (err) {
+          log("AFTER JOBS ERROR:", err);
+        }
       });
     }
 
-  if (userId) {
-    after(async () => {
-      try {
-        await detectAndSaveContradictions({
-          userId,
-          message,
-        });
-      } catch (err) {
-        log("CONTRADICTION ENGINE ERROR:", err);
-      }
-
-      try {
-        await updateMentalState({
-          userId,
-          message,
-        });
-      } catch (err) {
-        log("MENTAL STATE ERROR:", err);
-      }
-
-      try {
-        await detectAndSaveGoalsDesires({
-          userId,
-          message,
-          detectedTopics,
-        });
-
-        await detectAndSaveTimelineEvent({
-          userId,
-          message,
-          detectedTopics,
-        });
-
-        await updateDynamicSelfProfile({
-          userId,
-          message,
-        });
-
-        await detectAndSaveActionIntent({
-          userId,
-          message,
-          detectedTopics,
-        });
-      } catch (err) {
-        log("COGNITIVE PACKAGE ERROR:", err);
-      }
-    });
-  }
-
-    return NextResponse.json({
-      reply,
+    return new NextResponse(readable, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-cache, no-transform",
+      },
     });
   } catch (err) {
     console.log(err);
-
-    return NextResponse.json(
-      {
-        error: "Errore GhostMe AI",
-      },
-      {
-        status: 500,
-      }
-    );
+    return NextResponse.json({ error: "Errore GhostMe AI" }, { status: 500 });
   }
 }
