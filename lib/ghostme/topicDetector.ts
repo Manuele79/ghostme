@@ -19,7 +19,7 @@ const ignoredWords = new Set(
     "mattina", "pomeriggio", "notte", "bene", "male", "grazie", "ok",
     "home", "assistant", "san", "santo", "santa", "friulano", "friuli",
     "collio", "cormons", "zona", "ristorante", "friggitoria", "fritto",
-    "frittura", "pesce", "moto", "vespa", "piaggio", "ghost", "ghostme",
+    "frittura", "pesce", "ghost", "ghostme",
     "askdj",
   ].map((w) => w.toLowerCase())
 );

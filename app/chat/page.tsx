@@ -299,9 +299,7 @@ export default function ChatPage() {
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: userText,
           traits,
@@ -310,28 +308,49 @@ export default function ChatPage() {
         }),
       });
 
-      const data = await res.json();
-      const assistantReply = data.reply || "Nessuna risposta.";
-
       setLoadingChat(false);
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: assistantReply,
-        },
-      ]);
+      // Crea subito un messaggio assistant vuoto da riempire a chunk
+      let assistant = { role: "assistant" as const, content: "" };
+      setMessages((prev) => [...prev, assistant]);
+
+      const reader = res.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (reader) {
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          assistant.content += chunk;
+
+          setMessages((prev) => {
+            const copy = [...prev];
+            copy[copy.length - 1] = { ...assistant };
+            return copy;
+          });
+        }
+      } else {
+        // fallback non-streaming
+        const data = await res.json();
+        assistant.content = data.reply || "Nessuna risposta.";
+        setMessages((prev) => {
+          const copy = [...prev];
+          copy[copy.length - 1] = { ...assistant };
+          return copy;
+        });
+      }
 
       if (modeRef.current === "voce-voce") {
-        ghostVoice.speak(assistantReply, mode, startGhostVoiceInput);
+        ghostVoice.speak(assistant.content, "voce-voce", startGhostVoiceInput);
       } else {
         setVoiceState("idle");
       }
 
       void saveConversationInBackground({
         userText,
-        assistantReply,
+        assistantReply: assistant.content,
       });
     } catch (err) {
       console.log(err);
@@ -347,6 +366,7 @@ export default function ChatPage() {
         },
       ]);
     }
+
   }
 
   async function sendMessage() {
@@ -370,63 +390,78 @@ export default function ChatPage() {
       },
     ]);
 
-    try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: userText,
-          traits,
-          messages,
-          userId: traits.user_id,
-        }),
-      });
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: userText,
+        traits,
+        messages,
+        userId: traits.user_id,
+      }),
+    });
 
+    setLoadingChat(false);
+
+    // Crea subito un messaggio assistant vuoto da riempire a chunk
+    let assistant = { role: "assistant" as const, content: "" };
+    setMessages((prev) => [...prev, assistant]);
+
+    const reader = res.body?.getReader();
+    const decoder = new TextDecoder();
+
+    if (reader) {
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        assistant.content += chunk;
+
+        // aggiorna l’ultimo messaggio con il nuovo contenuto
+        setMessages((prev) => {
+          const copy = [...prev];
+          copy[copy.length - 1] = { ...assistant };
+          return copy;
+        });
+      }
+    } else {
+      // fallback non-streaming
       const data = await res.json();
-      const assistantReply = data.reply || "Nessuna risposta.";
-
-      setLoadingChat(false);
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: assistantReply,
-        },
-      ]);
-
-      if (mode === "voce-voce") {
-        ghostVoice.speak(assistantReply, mode, startGhostVoiceInput);
-      }
-
-      if (mode !== "voce-voce") {
-        setVoiceState("idle");
-      }
-
-      void saveConversationInBackground({
-        userText,
-        assistantReply,
+      assistant.content = data.reply || "Nessuna risposta.";
+      setMessages((prev) => {
+        const copy = [...prev];
+        copy[copy.length - 1] = { ...assistant };
+        return copy;
       });
-    } catch (err) {
-      console.log(err);
-
-      setLoadingChat(false);
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: "Errore comunicazione GhostMe.",
-        },
-      ]);
-
-      if (mode !== "voce-voce") {
-        setVoiceState("idle");
-      }
     }
+
+    if (mode === "voce-voce") {
+      ghostVoice.speak(assistant.content, mode, startGhostVoiceInput);
+    } else {
+      setVoiceState("idle");
+    }
+
+    void saveConversationInBackground({
+      userText,
+      assistantReply: assistant.content,
+    });
+  } catch (err) {
+    console.log(err);
+
+    setLoadingChat(false);
+    setVoiceState("idle");
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "assistant",
+        content: "Errore comunicazione GhostMe.",
+      },
+    ]);
   }
+}
 
   async function logout() {
     await supabase.auth.signOut();

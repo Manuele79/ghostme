@@ -118,7 +118,8 @@ export async function resolveNamedRelationship({
   const { name, relation } = extracted;
   const classification = classifyRelation(relation);
 
-  const description = `${name} è ${relation.replace(/^mia |^mio |^il mio |^la mia /i, "")} di Manuele.`;
+  const description = `${name} è ${relation.replace(/^mia |^mio |^il mio |^la mia /i, "")} dell'utente.`;
+
 
   const { data: existingTopic } = await supabase
     .from("life_topics")
