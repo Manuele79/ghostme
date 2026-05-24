@@ -89,8 +89,8 @@ function startVoiceInput({
   recognitionRef.current = recognition;
 
   recognition.lang = "it-IT";
-  recognition.continuous = true;
-  recognition.interimResults = true;
+  recognition.continuous = false;
+  recognition.interimResults = false;
   recognition.maxAlternatives = 1;
 
   let finalTranscript = "";
