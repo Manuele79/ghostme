@@ -93,7 +93,7 @@ export default function ChatPage() {
     .find((m) => m.role === "assistant");
 
   async function refreshBrain(userId: string) {
-    await loadBrainData({
+    const freshBrainData = await loadBrainData({
       userId,
       setUserProfile,
       setUserName,
@@ -101,6 +101,24 @@ export default function ChatPage() {
       setGhostMessage,
       setSummary,
     });
+
+    if (freshBrainData?.proactiveMessage?.message) {
+      setMessages((prev) => {
+        const alreadyExists = prev.some(
+          (m) => m.content === freshBrainData.proactiveMessage.message
+        );
+
+        if (alreadyExists) return prev;
+
+        return [
+          {
+            role: "assistant",
+            content: freshBrainData.proactiveMessage.message,
+          },
+          ...prev,
+        ];
+      });
+    }
   }
 
   async function saveConversationInBackground({

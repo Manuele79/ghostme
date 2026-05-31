@@ -18,6 +18,7 @@ export type BrainData = {
   mentalState: any | null;
   actions: any[];
   calendarEvents: CalendarEvent[];
+  proactiveMessage: ProactiveMessage | null;
 };
 
 export const modeLabels: Record<GhostMode, string> = {
@@ -37,5 +38,16 @@ export type CalendarEvent = {
   remind_at?: string | null;
   status: string;
   source?: string | null;
+  created_at?: string;
+};
+
+export type ProactiveMessage = {
+  id: string;
+  user_id: string;
+  title?: string | null;
+  message: string;
+  category?: string | null;
+  status: string;
+  priority?: number | null;
   created_at?: string;
 };

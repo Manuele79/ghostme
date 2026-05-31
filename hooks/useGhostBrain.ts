@@ -24,6 +24,7 @@ export function useGhostBrain() {
     mentalState: null,
     actions: [],
      calendarEvents: [],
+     proactiveMessage: null,
   });
 
   async function loadBrainData(args: LoadBrainArgs) {
@@ -53,6 +54,7 @@ export function useGhostBrain() {
       mentalState: data.mentalState || null,
       actions: data.actions || [],
       calendarEvents: data.calendarEvents || [],
+      proactiveMessage: data.proactiveMessage || null,
     });
 
     if (data.profile) {
@@ -65,6 +67,9 @@ export function useGhostBrain() {
       setGhostMessage(buildGhostMeMessage(data.traits));
       setSummary(buildPersonalitySummary(data.traits));
     }
+
+    return data;
+
   }
 
   return {
