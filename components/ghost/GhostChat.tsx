@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import GhostCore from "./GhostCore";
 import { GhostMode, VoiceState } from "./types";
 
@@ -43,19 +44,34 @@ export default function GhostChat({
   userName: string;
   openHistory: () => void;
 }) {
+
+const [briefingCollapsed, setBriefingCollapsed] = useState(false);
+
 return (
   <section className="relative mx-auto mt-8 flex w-full max-w-4xl flex-1 flex-col justify-end">
     <div className="relative z-10 flex min-h-[42vh] flex-col justify-end gap-5 pb-5">
 
     {proactiveMessage && (
       <div className="mx-auto mb-4 w-full max-w-3xl rounded-3xl border border-cyan-400/20 bg-cyan-400/5 p-5 text-cyan-100 backdrop-blur-sm">
-        <div className="mb-2 text-xs font-black uppercase tracking-[0.3em] text-cyan-300">
-          Daily Briefing
+
+        <div className="mb-3 flex items-center justify-between">
+          <div className="text-xs font-black uppercase tracking-[0.3em] text-cyan-300">
+            Daily Briefing
+          </div>
+
+          <button
+            onClick={() => setBriefingCollapsed(!briefingCollapsed)}
+            className="rounded-lg px-2 py-1 text-cyan-300 hover:bg-cyan-400/10"
+          >
+            {briefingCollapsed ? "▼" : "▲"}
+          </button>
         </div>
 
-        <div className="whitespace-pre-line text-sm leading-relaxed">
-          {proactiveMessage}
-        </div>
+        {!briefingCollapsed && (
+          <div className="whitespace-pre-line text-sm leading-relaxed">
+            {proactiveMessage}
+          </div>
+        )}
       </div>
     )}
 
