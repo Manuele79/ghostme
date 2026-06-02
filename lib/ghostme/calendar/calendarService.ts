@@ -82,21 +82,49 @@ export async function getUpcomingCalendarEvents(userId: string) {
 export async function refreshAgendaMessage(userId: string) {
   if (!userId) return;
 
+  await cleanupExpiredEvents(userId);
+
   const situation = await buildGhostSituation(userId);
   const agendaMessage = buildAgendaMessage(situation);
 
-  await supabaseAdmin
+  const { data: existing } = await supabaseAdmin
     .from("ghost_proactive_messages")
-    .update({
-      status: "read",
-      read_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
+    .select("id")
     .eq("user_id", userId)
     .eq("category", "agenda")
-    .eq("status", "unread");
+    .eq("status", "unread")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
-  if (!agendaMessage) return;
+  if (!agendaMessage) {
+    if (existing?.id) {
+      await supabaseAdmin
+        .from("ghost_proactive_messages")
+        .update({
+          status: "read",
+          read_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", existing.id);
+    }
+    return;
+  }
+
+  if (existing?.id) {
+    await supabaseAdmin
+      .from("ghost_proactive_messages")
+      .update({
+        title: "Agenda di oggi",
+        message: agendaMessage,
+        priority: 5,
+        scheduled_for: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", existing.id);
+
+    return;
+  }
 
   await supabaseAdmin.from("ghost_proactive_messages").insert({
     user_id: userId,
@@ -107,4 +135,20 @@ export async function refreshAgendaMessage(userId: string) {
     priority: 5,
     scheduled_for: new Date().toISOString(),
   });
+}
+
+export async function cleanupExpiredEvents(userId: string) {
+  if (!userId) return;
+
+  const now = new Date().toISOString();
+
+  await supabaseAdmin
+    .from("calendar_events")
+    .update({
+      status: "completed",
+      updated_at: now,
+    })
+    .eq("user_id", userId)
+    .eq("status", "active")
+    .lt("start_at", now);
 }

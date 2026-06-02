@@ -265,7 +265,7 @@ function ServicePanelContent({
   const [newType, setNewType] = useState<"note" | "appointment">("note");
   const [newTitle, setNewTitle] = useState("");
   const [newDescription, setNewDescription] = useState("");
-  const [newTime, setNewTime] = useState("09:00");
+  const [newTime, setNewTime] = useState("00:00");
   const [saving, setSaving] = useState(false);
   const [savedMessage, setSavedMessage] = useState("");
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
@@ -300,6 +300,8 @@ function ServicePanelContent({
 
   function eventsForDay(day: number) {
     return localEvents.filter((event) => {
+      if (event.status && event.status !== "active") return false;
+
       const dateValue = getEventDate(event);
       if (!dateValue) return false;
 
@@ -384,7 +386,7 @@ function ServicePanelContent({
 
     setNewTitle("");
     setNewDescription("");
-    setNewTime("09:00");
+    setNewTime("00:00");
 
     setTimeout(() => {
       setSavedMessage("");
