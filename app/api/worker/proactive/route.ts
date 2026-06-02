@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { OpenAI } from "openai";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
+import { buildCurrentContext } from "@/lib/ghostme/context/contextBuilder";
+import { generateButlerMessage } from "@/lib/ghostme/butler/butlerEngine";
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -29,6 +32,13 @@ export async function GET() {
 
     for (const user of users) {
       const userId = user.user_id;
+
+      const currentContext = await buildCurrentContext(userId);
+
+      const butlerMessage = await generateButlerMessage({
+        userName: user.full_name,
+        currentContext,
+      });      
 
       const [
         calendarRes,
@@ -152,6 +162,7 @@ ${JSON.stringify(topicsRes.data || [], null, 2)}
       });
 
       const message =
+        butlerMessage ||
         completion.choices[0]?.message?.content ||
         `Buongiorno ${user.full_name || ""}. Non ho abbastanza dati per un briefing utile oggi.`;
 
