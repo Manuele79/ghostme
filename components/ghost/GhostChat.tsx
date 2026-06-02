@@ -55,10 +55,7 @@ export default function GhostChat({
 
 const [briefingCollapsed, setBriefingCollapsed] = useState(false);
 
-useEffect(() => {
-  if (!proactiveMessage?.id) return;
-  onProactiveSeen?.(proactiveMessage.id);
-}, [proactiveMessage?.id, onProactiveSeen]);
+
 
 return (
   <section className="relative mx-auto mt-8 flex w-full max-w-4xl flex-1 flex-col justify-end">
@@ -77,7 +74,13 @@ return (
           </div>
 
           <button
-            onClick={() => setBriefingCollapsed(!briefingCollapsed)}
+            onClick={() => {
+              if (!briefingCollapsed && proactiveMessage?.id) {
+                onProactiveSeen?.(proactiveMessage.id);
+              }
+
+              setBriefingCollapsed(!briefingCollapsed);
+            }}
             className="rounded-lg px-2 py-1 text-cyan-300 hover:bg-cyan-400/10"
           >
             {briefingCollapsed ? "▼" : "▲"}
