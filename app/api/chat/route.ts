@@ -877,6 +877,7 @@ Impossibile recuperare le previsioni.`;
         console.log("CALENDAR CREATE FLOW ERROR:", err);
       }
     }
+    
     if (calendarCreatedText) {
       const encoder = new TextEncoder();
 
@@ -896,28 +897,6 @@ Impossibile recuperare le previsioni.`;
         }
       );
     }
-
-    if (calendarCreatedText) {
-  const encoder = new TextEncoder();
-
-  return new Response(
-    new ReadableStream({
-      start(controller) {
-        controller.enqueue(
-          encoder.encode(
-            calendarCreatedText
-          )
-        );
-        controller.close();
-      },
-    }),
-    {
-      headers: {
-        "Content-Type": "text/plain; charset=utf-8",
-      },
-    }
-  );
-}
 
 
     const systemPrompt = buildSystemPrompt({
