@@ -87,6 +87,8 @@ export function ServicesDrawer ({
   ghostMessage,
   actions,
   calendarEvents,
+  refreshBrain,
+  currentUserId,
   logout,
 }: {
   open: boolean;
@@ -116,6 +118,8 @@ export function ServicesDrawer ({
   ghostMessage: string;
   actions: any[];
   calendarEvents: CalendarEvent[];
+  refreshBrain: (userId: string) => Promise<void>;
+  currentUserId: string;
   logout: () => void;
 }) {
   if (!open) return null;
@@ -205,6 +209,8 @@ export function ServicesDrawer ({
             summary={summary}
             ghostMessage={ghostMessage}
             actions={actions}
+            refreshBrain={refreshBrain}
+            currentUserId={currentUserId}
             
           />
         </div>
@@ -228,6 +234,8 @@ function ServicePanelContent({
   ghostMessage,
   actions,
   calendarEvents,
+  refreshBrain,
+  currentUserId,
 }: {
   activeTab:
     | "actions"
@@ -243,6 +251,8 @@ function ServicePanelContent({
   ghostMessage: string;
   actions: any[];
   calendarEvents: CalendarEvent[];
+  refreshBrain: (userId: string) => Promise<void>;
+  currentUserId: string;
 }) {
   const today = new Date();
 
@@ -366,6 +376,10 @@ function ServicePanelContent({
       setLocalEvents((prev) => [...prev, data.event]);
 
       setSavedMessage("✅ Evento creato");
+    }
+
+    if (currentUserId) {
+      await refreshBrain(currentUserId);
     }
 
     setNewTitle("");
@@ -641,6 +655,11 @@ function ServicePanelContent({
                     setLocalEvents((prev) =>
                       prev.filter((e) => e.id !== event.id)
                     );
+
+                    if (currentUserId) {
+                      await refreshBrain(currentUserId);
+                    }
+
                   }}
                   className="rounded-xl border border-red-500/30 px-3 py-2 text-xs font-bold text-red-300"
                 >

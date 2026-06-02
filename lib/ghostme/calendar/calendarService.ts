@@ -1,4 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { buildGhostSituation } from "@/lib/ghostme/situation/situationEngine";
+import { buildAgendaMessage } from "@/lib/ghostme/agenda/agendaEngine";
 
 export type GhostCalendarEventType =
   | "appointment"
@@ -50,6 +52,8 @@ export async function createCalendarEvent({
     return null;
   }
 
+  await refreshAgendaMessage(userId);
+
   return data;
 }
 
@@ -73,4 +77,34 @@ export async function getUpcomingCalendarEvents(userId: string) {
   }
 
   return data || [];
+}
+
+export async function refreshAgendaMessage(userId: string) {
+  if (!userId) return;
+
+  const situation = await buildGhostSituation(userId);
+  const agendaMessage = buildAgendaMessage(situation);
+
+  await supabaseAdmin
+    .from("ghost_proactive_messages")
+    .update({
+      status: "read",
+      read_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("user_id", userId)
+    .eq("category", "agenda")
+    .eq("status", "unread");
+
+  if (!agendaMessage) return;
+
+  await supabaseAdmin.from("ghost_proactive_messages").insert({
+    user_id: userId,
+    title: "Agenda di oggi",
+    message: agendaMessage,
+    category: "agenda",
+    status: "unread",
+    priority: 5,
+    scheduled_for: new Date().toISOString(),
+  });
 }

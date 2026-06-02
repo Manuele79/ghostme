@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { createCalendarEvent } from "@/lib/ghostme/calendar/calendarService";
+import {
+  createCalendarEvent,
+  refreshAgendaMessage,
+} from "@/lib/ghostme/calendar/calendarService";
 
 export async function POST(req: Request) {
   try {
@@ -56,6 +59,8 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Evento non modificato" }, { status: 500 });
     }
 
+     await refreshAgendaMessage(body.userId);
+
     return NextResponse.json({ event: data });
   } catch (err) {
     console.log("PATCH CALENDAR API ERROR:", err);
@@ -84,6 +89,8 @@ export async function DELETE(req: Request) {
       console.log("DELETE CALENDAR ERROR:", error);
       return NextResponse.json({ error: "Evento non eliminato" }, { status: 500 });
     }
+
+    await refreshAgendaMessage(body.userId);
 
     return NextResponse.json({ ok: true });
   } catch (err) {
