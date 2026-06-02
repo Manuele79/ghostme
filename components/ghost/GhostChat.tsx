@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import GhostCore from "./GhostCore";
 import { GhostMode, VoiceState } from "./types";
 
@@ -18,6 +18,7 @@ export default function GhostChat({
   lastUserMessage,
   lastAssistantMessage,
   proactiveMessage,
+  onProactiveSeen,
   userName,
   openHistory,
 }: {
@@ -41,15 +42,23 @@ export default function GhostChat({
     content: string;
     };
     proactiveMessage?: {
+      id: string;
       title?: string | null;
       message: string;
       category?: string | null;
     } | null;
+
+    onProactiveSeen?: (messageId?: string) => void;
   userName: string;
   openHistory: () => void;
 }) {
 
 const [briefingCollapsed, setBriefingCollapsed] = useState(false);
+
+useEffect(() => {
+  if (!proactiveMessage?.id) return;
+  onProactiveSeen?.(proactiveMessage.id);
+}, [proactiveMessage?.id, onProactiveSeen]);
 
 return (
   <section className="relative mx-auto mt-8 flex w-full max-w-4xl flex-1 flex-col justify-end">

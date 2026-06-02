@@ -37,6 +37,7 @@ export default function ChatPage() {
   const [userEmail, setUserEmail] = useState("");
   const [userName, setUserName] = useState("Tu");
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [currentUserId, setCurrentUserId] = useState("");
 
   const [ghostMessage, setGhostMessage] = useState("");
   const [summary, setSummary] = useState<string[]>([]);
@@ -101,24 +102,21 @@ export default function ChatPage() {
       setGhostMessage,
       setSummary,
     });
+  }
 
-    if (freshBrainData?.proactiveMessage?.message) {
-      setMessages((prev) => {
-        const alreadyExists = prev.some(
-          (m) => m.content === freshBrainData.proactiveMessage.message
-        );
+  async function markProactiveAsRead(messageId?: string) {
+    if (!messageId || !currentUserId) return;
 
-        if (alreadyExists) return prev;
-
-        return [
-          {
-            role: "assistant",
-            content: freshBrainData.proactiveMessage.message,
-          },
-          ...prev,
-        ];
-      });
-    }
+    await fetch("/api/ghostme/proactive/read", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        id: messageId,
+        userId: currentUserId,
+      }),
+    });
   }
 
   async function saveConversationInBackground({
@@ -191,6 +189,8 @@ export default function ChatPage() {
         router.push("/login");
         return;
       }
+
+      setCurrentUserId(user.id);
 
       setUserEmail(user.email || "");
 
@@ -577,6 +577,7 @@ export default function ChatPage() {
             lastUserMessage={lastUserMessage}
             lastAssistantMessage={lastAssistantMessage}
             proactiveMessage={brainData.proactiveMessage}
+            onProactiveSeen={markProactiveAsRead}
             userName={userName}
             openHistory={() => setHistoryOpen(true)}
           />
