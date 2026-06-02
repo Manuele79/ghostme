@@ -5,6 +5,8 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { buildCurrentContext } from "@/lib/ghostme/context/contextBuilder";
 import { generateButlerMessage } from "@/lib/ghostme/butler/butlerEngine";
 import { generateCuriosityMessage } from "@/lib/ghostme/curiosity/curiosityEngine";
+import { buildGhostSituation } from "@/lib/ghostme/situation/situationEngine";
+import { buildAgendaMessage } from "@/lib/ghostme/agenda/agendaEngine";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -33,6 +35,9 @@ export async function GET() {
 
     for (const user of users) {
       const userId = user.user_id;
+
+      const situation = await buildGhostSituation(userId);
+      const agendaMessage = buildAgendaMessage(situation);
 
       const currentContext = await buildCurrentContext(userId);
 
@@ -99,60 +104,60 @@ export async function GET() {
       ]);
 
       const systemPrompt = `
-Sei GhostMe.
+        Sei GhostMe.
 
-Devi creare un briefing proattivo personale per l'utente.
+        Devi creare un briefing proattivo personale per l'utente.
 
-Non devi fare un elenco freddo.
-Devi sembrare una mente personale che conosce il contesto.
+        Non devi fare un elenco freddo.
+        Devi sembrare una mente personale che conosce il contesto.
 
-Tono:
-- diretto
-- pratico
-- umano
-- leggermente ironico se serve
-- niente frasi motivazionali da coach
-- niente poesia
-- niente "come assistente AI"
+        Tono:
+        - diretto
+        - pratico
+        - umano
+        - leggermente ironico se serve
+        - niente frasi motivazionali da coach
+        - niente poesia
+        - niente "come assistente AI"
 
-Struttura consigliata:
-1. Saluto breve
-2. Cose concrete di oggi o prossime
-3. Collegamento intelligente con memoria/progetti/stato mentale
-4. Suggerimento pratico su cosa conviene fare
-5. Una domanda finale utile
+        Struttura consigliata:
+        1. Saluto breve
+        2. Cose concrete di oggi o prossime
+        3. Collegamento intelligente con memoria/progetti/stato mentale
+        4. Suggerimento pratico su cosa conviene fare
+        5. Una domanda finale utile
 
-Regole:
-- Se ci sono appuntamenti, cita quelli.
-- Se ci sono obiettivi o azioni aperte, collegali.
-- Non inventare dati mancanti.
-- Se il calendario è vuoto, non dire che ci sono appuntamenti.
-- Se i dati sono pochi, fai un briefing breve.
-- Massimo 130 parole.
-`;
+        Regole:
+        - Se ci sono appuntamenti, cita quelli.
+        - Se ci sono obiettivi o azioni aperte, collegali.
+        - Non inventare dati mancanti.
+        - Se il calendario è vuoto, non dire che ci sono appuntamenti.
+        - Se i dati sono pochi, fai un briefing breve.
+        - Massimo 130 parole.
+        `;
 
       const userPrompt = `
-UTENTE:
-${JSON.stringify(user, null, 2)}
+        UTENTE:
+        ${JSON.stringify(user, null, 2)}
 
-CALENDARIO:
-${JSON.stringify(calendarRes.data || [], null, 2)}
+        CALENDARIO:
+        ${JSON.stringify(calendarRes.data || [], null, 2)}
 
-OBIETTIVI:
-${JSON.stringify(goalsRes.data || [], null, 2)}
+        OBIETTIVI:
+        ${JSON.stringify(goalsRes.data || [], null, 2)}
 
-AZIONI APERTE:
-${JSON.stringify(actionsRes.data || [], null, 2)}
+        AZIONI APERTE:
+        ${JSON.stringify(actionsRes.data || [], null, 2)}
 
-STATO MENTALE:
-${JSON.stringify(mentalRes.data || null, null, 2)}
+        STATO MENTALE:
+        ${JSON.stringify(mentalRes.data || null, null, 2)}
 
-TIMELINE RECENTE:
-${JSON.stringify(timelineRes.data || [], null, 2)}
+        TIMELINE RECENTE:
+        ${JSON.stringify(timelineRes.data || [], null, 2)}
 
-TOPIC IMPORTANTI:
-${JSON.stringify(topicsRes.data || [], null, 2)}
-`;
+        TOPIC IMPORTANTI:
+        ${JSON.stringify(topicsRes.data || [], null, 2)}
+        `;
 
       const completion = await openai.chat.completions.create({
         model: "gpt-4o-mini",
@@ -167,6 +172,18 @@ ${JSON.stringify(topicsRes.data || [], null, 2)}
       const message =
         completion.choices[0]?.message?.content ||
         `Buongiorno ${user.full_name || ""}. Non ho abbastanza dati per un briefing utile oggi.`;
+
+        if (agendaMessage) {
+          await supabaseAdmin.from("ghost_proactive_messages").insert({
+            user_id: userId,
+            title: "Agenda di oggi",
+            message: agendaMessage,
+            category: "agenda",
+            status: "unread",
+            priority: 5,
+            scheduled_for: new Date().toISOString(),
+          });
+        }
 
       const { error: insertError } = await supabaseAdmin
         .from("ghost_proactive_messages")

@@ -117,6 +117,7 @@ export default function ChatPage() {
         userId: currentUserId,
       }),
     });
+    await refreshBrain(currentUserId);
   }
 
   async function saveConversationInBackground({
