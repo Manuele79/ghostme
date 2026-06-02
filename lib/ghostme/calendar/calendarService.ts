@@ -1,6 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { buildGhostSituation } from "@/lib/ghostme/situation/situationEngine";
 import { buildAgendaMessage } from "@/lib/ghostme/agenda/agendaEngine";
+import { refreshReminderMessage } from "@/lib/ghostme/agenda/reminderEngine";
 
 export type GhostCalendarEventType =
   | "appointment"
@@ -83,6 +84,7 @@ export async function refreshAgendaMessage(userId: string) {
   if (!userId) return;
 
   await cleanupExpiredEvents(userId);
+  await refreshReminderMessage(userId);
 
   const situation = await buildGhostSituation(userId);
   const agendaMessage = buildAgendaMessage(situation);
