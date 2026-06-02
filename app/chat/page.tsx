@@ -576,7 +576,7 @@ export default function ChatPage() {
             startVoiceInput={startGhostVoiceInput}
             lastUserMessage={lastUserMessage}
             lastAssistantMessage={lastAssistantMessage}
-            proactiveMessage={brainData.proactiveMessage?.message}
+            proactiveMessage={brainData.proactiveMessage}
             userName={userName}
             openHistory={() => setHistoryOpen(true)}
           />

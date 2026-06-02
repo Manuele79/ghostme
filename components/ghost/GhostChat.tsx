@@ -40,7 +40,11 @@ export default function GhostChat({
     role: "user" | "assistant";
     content: string;
     };
-    proactiveMessage?: string;
+    proactiveMessage?: {
+      title?: string | null;
+      message: string;
+      category?: string | null;
+    } | null;
   userName: string;
   openHistory: () => void;
 }) {
@@ -56,7 +60,11 @@ return (
 
         <div className="mb-3 flex items-center justify-between">
           <div className="text-xs font-black uppercase tracking-[0.3em] text-cyan-300">
-            Daily Briefing
+            {proactiveMessage.category === "curiosity"
+              ? "Curiosità GhostMe"
+              : proactiveMessage.category === "observation"
+              ? "Osservazione GhostMe"
+              : "Daily Briefing"}
           </div>
 
           <button
@@ -69,7 +77,7 @@ return (
 
         {!briefingCollapsed && (
           <div className="whitespace-pre-line text-sm leading-relaxed">
-            {proactiveMessage}
+            {proactiveMessage.message}
           </div>
         )}
       </div>
