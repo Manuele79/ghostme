@@ -859,24 +859,66 @@ Impossibile recuperare le previsioni.`;
             remindAt: calendarIntent.remind_at || null,
             source: "ghostme",
           });
-          if (savedEvent) {
-            calendarCreatedText = `
-CALENDARIO:
-Evento creato.
-Tipo: ${calendarIntent.type}
-Titolo: ${calendarTitle}
-Data inizio: ${calendarIntent.start_at || "non specificata"}
-Promemoria: ${calendarIntent.remind_at || "non specificato"}
-`;
-          }
+        if (savedEvent) {
+          calendarCreatedText =
+            `✅ Fatto. Ho aggiunto "${calendarTitle}" al calendario.` +
+            (calendarIntent.start_at
+              ? `\n📅 ${new Date(calendarIntent.start_at).toLocaleString("it-IT", {
+                  dateStyle: "short",
+                  timeStyle: "short",
+                })}`
+              : "") +
+            (calendarIntent.remind_at
+              ? `\n🔔 Promemoria impostato`
+              : "");
+        }
         }
       } catch (err) {
         console.log("CALENDAR CREATE FLOW ERROR:", err);
       }
     }
     if (calendarCreatedText) {
-      serviceContext += `\n${calendarCreatedText}\n`;
+      const encoder = new TextEncoder();
+
+      return new Response(
+        new ReadableStream({
+          start(controller) {
+            controller.enqueue(
+              encoder.encode(calendarCreatedText)
+            );
+            controller.close();
+          },
+        }),
+        {
+          headers: {
+            "Content-Type": "text/plain; charset=utf-8",
+          },
+        }
+      );
     }
+
+    if (calendarCreatedText) {
+  const encoder = new TextEncoder();
+
+  return new Response(
+    new ReadableStream({
+      start(controller) {
+        controller.enqueue(
+          encoder.encode(
+            calendarCreatedText
+          )
+        );
+        controller.close();
+      },
+    }),
+    {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+      },
+    }
+  );
+}
+
 
     const systemPrompt = buildSystemPrompt({
       traits,

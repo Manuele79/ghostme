@@ -45,8 +45,9 @@ export async function refreshReminderMessage(userId: string) {
     reminders
       .map((event) => {
         const time = new Date(event.remind_at).toLocaleTimeString("it-IT", {
-          hour: "2-digit",
-          minute: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "Europe/Rome",
         });
 
         return `• ${time} — ${event.title}`;

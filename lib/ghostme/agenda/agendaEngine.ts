@@ -6,6 +6,7 @@ function formatTime(value?: string | null) {
   return new Date(value).toLocaleTimeString("it-IT", {
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "Europe/Rome",
   });
 }
 
@@ -15,6 +16,7 @@ function formatDate(value?: string | null) {
   return new Date(value).toLocaleDateString("it-IT", {
     day: "2-digit",
     month: "2-digit",
+    timeZone: "Europe/Rome",
   });
 }
 
