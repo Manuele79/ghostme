@@ -42,7 +42,7 @@ export async function GET() {
       });  
       
       const curiosityMessage = await generateCuriosityMessage(userId);
-
+      console.log("CURIOSITY:", curiosityMessage);
       const [
         calendarRes,
         goalsRes,
