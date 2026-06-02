@@ -2,7 +2,7 @@ import { OpenAI } from "openai";
 import { NextResponse, after } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-
+import { classifyGhostMessage } from "@/lib/ghostme/core/messageClassifier";
 import {
   detectTopicsFromMessage,
   isPossibleEpisode,
@@ -681,19 +681,24 @@ export async function POST(req: Request) {
     const body = await req.json();
 
     const message = body.message as string;
+    const messageClass = classifyGhostMessage(message);
     const traits = body.traits;
     const messages = body.messages || [];
     const userId = body.userId as string | undefined;
 
     // Detection di base
-    const ruleBasedTopics = detectTopicsFromMessage(message);
+    const ruleBasedTopics = messageClass.shouldRunHeavyEngines
+  ? detectTopicsFromMessage(message)
+  : [];
     const profileContextForExtractor =
       traits?.user_id ? buildProfileContext(null) : ""; // l’estrattore non ha bisogno del profilo completo qui
 
-    const aiTopics = await extractEntitiesWithAI({
-      message,
-      profileContext: profileContextForExtractor,
-    });
+    const aiTopics = messageClass.shouldRunHeavyEngines
+      ? await extractEntitiesWithAI({
+          message,
+          profileContext: profileContextForExtractor,
+        })
+      : [];
 
     const detectedTopics = removeGenericRelationshipTopics(
       uniqueTopics(aiTopics.length > 0 ? [...ruleBasedTopics, ...aiTopics] : ruleBasedTopics)
@@ -934,6 +939,10 @@ Promemoria: ${calendarIntent.remind_at || "non specificato"}
       after(async () => {
         try {
           const jobs: Promise<any>[] = [];
+
+          if (!messageClass.shouldRunHeavyEngines) {
+              return;
+            }
 
           if (shouldSaveMemoryFlag)
             jobs.push(saveActiveMemory({ userId, message, memoryCategory }));
