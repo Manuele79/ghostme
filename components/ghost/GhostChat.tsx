@@ -66,7 +66,9 @@ return (
 
         <div className="mb-3 flex items-center justify-between">
           <div className="text-xs font-black uppercase tracking-[0.3em] text-cyan-300">
-            {proactiveMessage.category === "curiosity"
+            {proactiveMessage.category === "agenda"
+              ? "Agenda di Oggi"
+              : proactiveMessage.category === "curiosity"
               ? "Curiosità GhostMe"
               : proactiveMessage.category === "observation"
               ? "Osservazione GhostMe"
