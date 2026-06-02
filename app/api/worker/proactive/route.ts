@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 import { buildCurrentContext } from "@/lib/ghostme/context/contextBuilder";
 import { generateButlerMessage } from "@/lib/ghostme/butler/butlerEngine";
+import { generateCuriosityMessage } from "@/lib/ghostme/curiosity/curiosityEngine";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -38,7 +39,9 @@ export async function GET() {
       const butlerMessage = await generateButlerMessage({
         userName: user.full_name,
         currentContext,
-      });      
+      });  
+      
+      const curiosityMessage = await generateCuriosityMessage(userId);
 
       const [
         calendarRes,
@@ -183,6 +186,19 @@ ${JSON.stringify(topicsRes.data || [], null, 2)}
       } else {
         created++;
       }
+
+      if (curiosityMessage) {
+        await supabaseAdmin.from("ghost_proactive_messages").insert({
+          user_id: userId,
+          title: "Curiosità GhostMe",
+          message: curiosityMessage,
+          category: "curiosity",
+          status: "unread",
+          priority: 2,
+          scheduled_for: new Date().toISOString(),
+        });
+      }
+
     }
 
     return NextResponse.json({
