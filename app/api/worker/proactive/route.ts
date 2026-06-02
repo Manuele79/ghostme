@@ -165,7 +165,6 @@ ${JSON.stringify(topicsRes.data || [], null, 2)}
       });
 
       const message =
-        butlerMessage ||
         completion.choices[0]?.message?.content ||
         `Buongiorno ${user.full_name || ""}. Non ho abbastanza dati per un briefing utile oggi.`;
 
@@ -185,6 +184,18 @@ ${JSON.stringify(topicsRes.data || [], null, 2)}
         console.log("PROACTIVE INSERT ERROR:", insertError);
       } else {
         created++;
+      }
+
+      if (butlerMessage) {
+        await supabaseAdmin.from("ghost_proactive_messages").insert({
+          user_id: userId,
+          title: "Osservazione GhostMe",
+          message: butlerMessage,
+          category: "observation",
+          status: "unread",
+          priority: 2,
+          scheduled_for: new Date().toISOString(),
+        });
       }
 
       if (curiosityMessage) {
