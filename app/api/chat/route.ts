@@ -864,13 +864,14 @@ Impossibile recuperare le previsioni.`;
         if (savedEvent) {
           calendarCreatedText =
             `✅ Fatto. Ho aggiunto "${calendarTitle}" al calendario.` +
-            (calendarIntent.start_at
-              ? `\n📅 ${new Date(calendarIntent.start_at).toLocaleString("it-IT", {
+            (savedEvent.start_at
+              ? `\n📅 ${new Date(savedEvent.start_at).toLocaleString("it-IT", {
                   dateStyle: "short",
                   timeStyle: "short",
+                  timeZone: "Europe/Rome",
                 })}`
               : "") +
-            (calendarIntent.remind_at
+            (savedEvent.remind_at
               ? `\n🔔 Promemoria impostato`
               : "");
         }
