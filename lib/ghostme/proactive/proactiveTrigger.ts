@@ -1,4 +1,5 @@
 import { refreshAgendaMessage } from "@/lib/ghostme/calendar/calendarService";
+import { buildGhostSituation } from "@/lib/ghostme/situation/situationEngine";
 
 export async function runProactiveTrigger({
   userId,
@@ -17,9 +18,18 @@ export async function runProactiveTrigger({
       await refreshAgendaMessage(userId);
       break;
 
-    case "daily":
-      console.log("DAILY TRIGGER");
-      break;
+    case "daily": {
+    const situation = await buildGhostSituation(userId);
+
+    console.log(
+        "DAILY TRIGGER:",
+        situation.currentPlace,
+        situation.calendarToday.length,
+        situation.activeGoals.length
+    );
+
+    break;
+    }
 
     case "location_changed":
       console.log("LOCATION TRIGGER");
