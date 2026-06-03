@@ -51,6 +51,9 @@ Regola orari:
 - Gli orari detti dall'utente sono sempre ora italiana.
 - Se l'utente dice "alle 13:30", l'ISO deve rappresentare le 13:30 in Europe/Rome, non le 15:30.
 - Non convertire mentalmente aggiungendo ore.
+- Gli ISO devono SEMPRE includere il fuso orario italiano.
+- In estate usa +02:00, in inverno usa +01:00.
+- Se l'utente dice "alle 15:30", restituisci tipo "2026-06-04T15:30:00+02:00", NON "2026-06-04T15:30:00" e NON "...Z".
 
 Località utente:
 ${location || "non specificata"}
@@ -80,7 +83,7 @@ Formato:
   "description": "Promemoria creato da GhostMe",
   "start_at": null,
   "end_at": null,
-  "remind_at": "2026-05-24T09:00:00"
+  "remind_at": "2026-05-24T09:00:00+02:00"
 }
 
 Oppure:
