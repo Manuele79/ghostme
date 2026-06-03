@@ -32,9 +32,11 @@ export async function generateDailyConversationSummary(userId: string) {
       content,
       created_at
     `)
-        .eq("user_id", userId)
-        .order("message_order", { ascending: false })
-        .limit(30);
+    .eq("user_id", userId)
+    .gte("created_at", start)
+    .lte("created_at", end)
+    .order("message_order", { ascending: false })
+    .limit(30);
 
         console.log("DAILY SUMMARY QUERY ERROR:", error);
 console.log("DAILY SUMMARY MESSAGES:", messages?.length, messages);

@@ -8,6 +8,8 @@ import { generateCuriosityMessage } from "@/lib/ghostme/curiosity/curiosityEngin
 import { buildGhostSituation } from "@/lib/ghostme/situation/situationEngine";
 import { buildAgendaMessage } from "@/lib/ghostme/agenda/agendaEngine";
 import { upsertProactiveMessage } from "@/lib/ghostme/proactive/proactiveMessageService";
+import { runRetentionCleanup } from "@/lib/ghostme/maintenance/retentionEngine";
+import { generateDailyConversationSummary } from "@/lib/ghostme/conversationSummary";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -37,6 +39,10 @@ export async function GET() {
 
     for (const user of users) {
       const userId = user.user_id;
+
+      await generateDailyConversationSummary(userId);
+
+      await runRetentionCleanup(userId);
 
       const situation = await buildGhostSituation(userId);
       const agendaMessage = buildAgendaMessage(situation);
