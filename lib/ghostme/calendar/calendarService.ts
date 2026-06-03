@@ -2,6 +2,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { buildGhostSituation } from "@/lib/ghostme/situation/situationEngine";
 import { buildAgendaMessage } from "@/lib/ghostme/agenda/agendaEngine";
 import { refreshReminderMessage } from "@/lib/ghostme/agenda/reminderEngine";
+import { runProactiveTrigger } from "@/lib/ghostme/proactive/proactiveTrigger";
 
 export type GhostCalendarEventType =
   | "appointment"
@@ -69,7 +70,10 @@ export async function createCalendarEvent({
     return null;
   }
 
-  await refreshAgendaMessage(userId);
+    await runProactiveTrigger({
+    userId,
+    trigger: "calendar_changed",
+  });
 
   return data;
 }

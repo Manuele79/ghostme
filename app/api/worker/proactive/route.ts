@@ -32,7 +32,7 @@ async function upsertProactiveMessage({
     .select("id")
     .eq("user_id", userId)
     .eq("category", category)
-    .eq("status", "unread")
+    .gte("created_at", new Date(new Date().setHours(0, 0, 0, 0)).toISOString())
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -44,6 +44,8 @@ async function upsertProactiveMessage({
         title,
         message,
         priority,
+        status: "unread",
+        read_at: null,
         scheduled_for: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
