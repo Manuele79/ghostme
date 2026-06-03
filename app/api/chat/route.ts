@@ -843,7 +843,9 @@ Impossibile recuperare le previsioni.`;
       try {
         const calendarIntent = await parseCalendarIntent({
           message,
-          nowIso: new Date().toISOString(),
+          nowIso: new Date().toLocaleString("sv-SE", {
+            timeZone: "Europe/Rome",
+          }).replace(" ", "T"),
           location: userLocation,
         });
 
@@ -877,7 +879,7 @@ Impossibile recuperare le previsioni.`;
         console.log("CALENDAR CREATE FLOW ERROR:", err);
       }
     }
-    
+
     if (calendarCreatedText) {
       const encoder = new TextEncoder();
 
