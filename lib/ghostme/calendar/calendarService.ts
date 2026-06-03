@@ -38,6 +38,14 @@ export async function createCalendarEvent({
     finalRemindAt = reminderDate.toISOString();
   }
 
+  let finalEndAt = endAt || null;
+
+  if (type === "appointment" && startAt && !finalEndAt) {
+    const endDate = new Date(startAt);
+    endDate.setHours(endDate.getHours() + 1);
+    finalEndAt = endDate.toISOString();
+  }
+
   const { data, error } = await supabaseAdmin
     .from("calendar_events")
     .insert([
@@ -47,7 +55,7 @@ export async function createCalendarEvent({
         title,
         description,
         start_at: startAt || null,
-        end_at: endAt || null,
+        end_at: finalEndAt,
         remind_at: finalRemindAt,
         source,
         status: "active",
