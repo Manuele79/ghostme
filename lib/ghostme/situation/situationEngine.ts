@@ -1,10 +1,12 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { getLastKnownPlace } from "@/lib/ghostme/location/placeService";
 
 export type GhostSituation = {
   nowIso: string;
   timeContext: string;
   dayContext: string;
   userLocation: string | null;
+  currentPlace: string | null;
 
   calendarToday: any[];
   upcomingEvents: any[];
@@ -214,6 +216,7 @@ export async function buildGhostSituation(userId: string): Promise<GhostSituatio
   ]);
 
   const profile = profileRes.data || null;
+  const currentPlace = await getLastKnownPlace(userId);
   const calendarToday = calendarTodayRes.data || [];
   const upcomingEvents = upcomingCalendarRes.data || [];
   const activeGoals = goalsRes.data || [];
@@ -248,6 +251,9 @@ ${timeContext}, ${dayContext}
 
 LOCALITÀ PROFILO:
 ${profile?.location || "non specificata"}
+
+LUOGO ATTUALE:
+${currentPlace || "sconosciuto"}
 
 CALENDARIO OGGI:
 ${formatList(
@@ -352,6 +358,7 @@ device: ${externalSignals.deviceContext || "non collegato"}
     timeContext,
     dayContext,
     userLocation: profile?.location || null,
+    currentPlace,
 
     calendarToday,
     upcomingEvents,

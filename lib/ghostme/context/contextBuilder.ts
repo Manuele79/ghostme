@@ -4,6 +4,7 @@ export type GhostCurrentContext = {
   timeContext: string;
   dayContext: string;
   userLocation: string | null;
+  currentPlace: string | null;
   activeProjects: string[];
   activeGoals: string[];
   pendingActions: string[];
@@ -90,6 +91,7 @@ export async function buildCurrentContext(
     INTERPRETAZIONE CONTESTUALE:
     Momento: ${situation.timeContext}, ${situation.dayContext}
     Località profilo: ${situation.userLocation || "non specificata"}
+    Luogo attuale: ${situation.currentPlace || "sconosciuto"}
     Progetti attivi: ${activeProjects.join(", ") || "nessuno"}
     Obiettivi attivi: ${activeGoals.join(", ") || "nessuno"}
     Azioni pendenti: ${pendingActions.join(", ") || "nessuna"}
@@ -109,6 +111,7 @@ export async function buildCurrentContext(
     timeContext: situation.timeContext,
     dayContext: situation.dayContext,
     userLocation: situation.userLocation,
+    currentPlace: situation.currentPlace,
     activeProjects,
     activeGoals,
     pendingActions,

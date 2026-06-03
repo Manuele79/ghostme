@@ -97,3 +97,11 @@ export async function detectCurrentPlace({
 
   return null;
 }
+
+export async function getLastKnownPlace(userId: string) {
+  const places = await getSignificantPlaces(userId);
+
+  if (!places.length) return null;
+
+  return places[0]?.label || null;
+}
