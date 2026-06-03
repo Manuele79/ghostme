@@ -44,6 +44,14 @@ Rispondi SOLO con JSON valido.
 Data/ora attuale:
 ${nowIso}
 
+Fuso orario obbligatorio:
+Europe/Rome
+
+Regola orari:
+- Gli orari detti dall'utente sono sempre ora italiana.
+- Se l'utente dice "alle 13:30", l'ISO deve rappresentare le 13:30 in Europe/Rome, non le 15:30.
+- Non convertire mentalmente aggiungendo ore.
+
 Località utente:
 ${location || "non specificata"}
 
@@ -72,7 +80,7 @@ Formato:
   "description": "Promemoria creato da GhostMe",
   "start_at": null,
   "end_at": null,
-  "remind_at": "2026-05-24T09:00:00.000Z"
+  "remind_at": "2026-05-24T09:00:00"
 }
 
 Oppure:
