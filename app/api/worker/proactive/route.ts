@@ -12,6 +12,57 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+async function upsertProactiveMessage({
+  userId,
+  title,
+  message,
+  category,
+  priority,
+}: {
+  userId: string;
+  title: string;
+  message: string;
+  category: string;
+  priority: number;
+}) {
+  if (!userId || !message?.trim()) return;
+
+  const { data: existing } = await supabaseAdmin
+    .from("ghost_proactive_messages")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("category", category)
+    .eq("status", "unread")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (existing?.id) {
+    await supabaseAdmin
+      .from("ghost_proactive_messages")
+      .update({
+        title,
+        message,
+        priority,
+        scheduled_for: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", existing.id);
+
+    return;
+  }
+
+  await supabaseAdmin.from("ghost_proactive_messages").insert({
+    user_id: userId,
+    title,
+    message,
+    category,
+    status: "unread",
+    priority,
+    scheduled_for: new Date().toISOString(),
+  });
+}
+
 export async function GET() {
   try {
     const { data: users, error: usersError } = await supabaseAdmin
@@ -47,7 +98,7 @@ export async function GET() {
       });  
       
       const curiosityMessage = await generateCuriosityMessage(userId);
-      console.log("CURIOSITY:", curiosityMessage);
+
       const [
         calendarRes,
         goalsRes,
@@ -174,58 +225,44 @@ export async function GET() {
         `Buongiorno ${user.full_name || ""}. Non ho abbastanza dati per un briefing utile oggi.`;
 
         if (agendaMessage) {
-          await supabaseAdmin.from("ghost_proactive_messages").insert({
-            user_id: userId,
+          await upsertProactiveMessage({
+            userId,
             title: "Agenda di oggi",
             message: agendaMessage,
             category: "agenda",
-            status: "unread",
             priority: 5,
-            scheduled_for: new Date().toISOString(),
           });
         }
 
-      const { error: insertError } = await supabaseAdmin
-        .from("ghost_proactive_messages")
-        .insert({
-          user_id: userId,
+        await upsertProactiveMessage({
+          userId,
           title: "Daily Briefing",
           message,
           category: "daily_briefing",
-          status: "unread",
           priority: 1,
-          scheduled_for: new Date().toISOString(),
         });
 
-      if (insertError) {
-        console.log("PROACTIVE INSERT ERROR:", insertError);
-      } else {
         created++;
-      }
 
-      if (butlerMessage) {
-        await supabaseAdmin.from("ghost_proactive_messages").insert({
-          user_id: userId,
-          title: "Osservazione GhostMe",
-          message: butlerMessage,
-          category: "observation",
-          status: "unread",
-          priority: 2,
-          scheduled_for: new Date().toISOString(),
-        });
-      }
+        if (butlerMessage) {
+          await upsertProactiveMessage({
+            userId,
+            title: "Osservazione GhostMe",
+            message: butlerMessage,
+            category: "observation",
+            priority: 2,
+          });
+        }
 
-      if (curiosityMessage) {
-        await supabaseAdmin.from("ghost_proactive_messages").insert({
-          user_id: userId,
-          title: "Curiosità GhostMe",
-          message: curiosityMessage,
-          category: "curiosity",
-          status: "unread",
-          priority: 2,
-          scheduled_for: new Date().toISOString(),
-        });
-      }
+        if (curiosityMessage) {
+          await upsertProactiveMessage({
+            userId,
+            title: "Curiosità GhostMe",
+            message: curiosityMessage,
+            category: "curiosity",
+            priority: 2,
+          });
+        }
 
     }
 
