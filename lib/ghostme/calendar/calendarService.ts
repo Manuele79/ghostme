@@ -168,5 +168,6 @@ export async function cleanupExpiredEvents(userId: string) {
     })
     .eq("user_id", userId)
     .eq("status", "active")
-    .lt("start_at", now);
+    .not("end_at", "is", null)
+    .lt("end_at", now);
 }
