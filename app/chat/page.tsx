@@ -53,7 +53,7 @@ export default function ChatPage() {
   >("memory");
 
   const [activeServiceTab, setActiveServiceTab] = useState<
-    "actions" | "calendar" | "mail" | "web" | "home" | "profile" | "traits"
+    "actions" | "calendar" | "mail" | "web" | "home" | "profile" | "traits" | "places"
   >("actions");
 
   const ghostVoice = useGhostVoice();

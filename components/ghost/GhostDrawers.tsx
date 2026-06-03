@@ -100,7 +100,8 @@ export function ServicesDrawer ({
     | "web"
     | "home"
     | "profile"
-    | "traits";
+    | "traits"
+    | "places";
   setActiveTab: (
     tab:
       | "actions"
@@ -110,6 +111,7 @@ export function ServicesDrawer ({
       | "home"
       | "profile"
       | "traits"
+      | "places"
   ) => void;
   userEmail: string;
   userProfile: any;
@@ -132,7 +134,8 @@ export function ServicesDrawer ({
       | "web"
       | "home"
       | "profile"
-      | "traits";
+      | "traits"
+      | "places";
     label: string;
   }[] = [
     { key: "actions", label: "Azioni" },
@@ -141,6 +144,7 @@ export function ServicesDrawer ({
     { key: "web", label: "Web" },
     { key: "home", label: "Home Assistant" },
     { key: "profile", label: "Profilo" },
+    { key: "places", label: "Luoghi" },
     { key: "traits", label: "Valutazione" },
   ];
 
@@ -192,7 +196,9 @@ export function ServicesDrawer ({
                   activeTab === item.key ? "text-black/60" : "text-zinc-500"
                 }`}
               >
-                {["actions", "calendar", "web", "profile", "traits"].includes(item.key)
+                {["actions", "calendar", "web", "profile", "places", "traits"].includes(
+                  item.key
+                )
                   ? "Online"
                   : "Offline / coming soon"}
               </p>
@@ -244,7 +250,8 @@ function ServicePanelContent({
     | "web"
     | "home"
     | "profile"
-    | "traits";
+    | "traits"
+    | "places";
   userProfile: any;
   traits: any;
   summary: string[];
@@ -424,6 +431,86 @@ function ServicePanelContent({
       </div>
     );
   }
+
+  if (activeTab === "places") {
+  async function saveCurrentPlace() {
+    if (!currentUserId) {
+      alert("User ID mancante.");
+      return;
+    }
+
+    if (!navigator.geolocation) {
+      alert("GPS non disponibile su questo dispositivo.");
+      return;
+    }
+
+    const label = prompt("Nome luogo? Es: Casa, Lavoro, Palestra");
+    if (!label?.trim()) return;
+
+    const category =
+      prompt("Categoria? home, work, gym, shop, bar, travel", "unknown") ||
+      "unknown";
+
+    const radiusInput = prompt("Raggio in metri?", "30");
+    const radiusMeters = Number(radiusInput || 30);
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const res = await fetch("/api/location/save-place", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId: currentUserId,
+            label: label.trim(),
+            category,
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            radiusMeters,
+          }),
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          alert("📍 Luogo salvato.");
+        } else {
+          alert("Errore salvataggio luogo.");
+        }
+      },
+      () => {
+        alert("Permesso GPS negato o posizione non disponibile.");
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+      }
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-3xl border border-cyan-400/20 bg-cyan-400/5 p-4">
+        <p className="text-lg font-black text-cyan-200">
+          Luoghi significativi
+        </p>
+
+        <p className="mt-3 text-sm text-zinc-300">
+          Salva posti come Casa, Lavoro o Palestra. GhostMe potrà usarli per
+          capire dove sei.
+        </p>
+
+        <button
+          onClick={saveCurrentPlace}
+          className="mt-4 w-full rounded-2xl bg-cyan-300 px-4 py-3 text-sm font-black text-black"
+        >
+          📍 Salva luogo attuale
+        </button>
+      </div>
+    </div>
+  );
+}
 
   if (activeTab === "calendar") {
 
