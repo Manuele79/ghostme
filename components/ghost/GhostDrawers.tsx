@@ -271,6 +271,8 @@ function ServicePanelContent({
   const [selectedDay, setSelectedDay] = useState(today.getDate());
   const [places, setPlaces] = useState<any[]>([]);
   const [loadingPlaces, setLoadingPlaces] = useState(false);
+  const [detectedPlaceId, setDetectedPlaceId] = useState<string | null>(null);
+  const [currentPlace, setCurrentPlace] = useState<string | null>(null);
   const [newType, setNewType] = useState<"note" | "appointment">("note");
   const [newTitle, setNewTitle] = useState("");
   const [newDescription, setNewDescription] = useState("");
@@ -564,8 +566,14 @@ function ServicePanelContent({
                 const data = await res.json();
 
                 if (data.place) {
+                  setDetectedPlaceId(data.place.id);
+                  setCurrentPlace(data.place.label);
+
                   alert(`📍 Sei in: ${data.place.label}`);
                 } else {
+                  setDetectedPlaceId(null);
+                  setCurrentPlace(null);
+
                   alert("📍 Non sei in nessun luogo salvato.");
                 }
               },
@@ -577,7 +585,16 @@ function ServicePanelContent({
           className="mt-2 w-full rounded-2xl border border-cyan-400/30 px-4 py-3 text-sm font-bold text-cyan-300"
         >
           Dove sono?
-        </button>       
+        </button>  
+
+        {currentPlace && (
+          <div className="mt-3 rounded-2xl border border-yellow-300 bg-yellow-400/10 p-3">
+            <p className="text-sm font-bold text-yellow-200">
+              📍 Luogo attuale: {currentPlace}
+            </p>
+          </div>
+        )}       
+
 
         <div className="mt-4 space-y-2">
           {loadingPlaces ? (
@@ -592,7 +609,11 @@ function ServicePanelContent({
             places.map((place) => (
               <div
                 key={place.id}
-                className="rounded-2xl border border-zinc-800 bg-black/50 p-3"
+                  className={`rounded-2xl border p-3 ${
+                    detectedPlaceId === place.id
+                      ? "border-yellow-300 bg-yellow-400/10"
+                      : "border-zinc-800 bg-black/50"
+                  }`}
               >
                 <p className="font-bold text-cyan-200">
                   {place.label}
