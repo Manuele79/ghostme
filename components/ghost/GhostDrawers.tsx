@@ -269,6 +269,8 @@ function ServicePanelContent({
 
   const [localEvents, setLocalEvents] = useState<CalendarEvent[]>(calendarEvents || []);
   const [selectedDay, setSelectedDay] = useState(today.getDate());
+  const [places, setPlaces] = useState<any[]>([]);
+  const [loadingPlaces, setLoadingPlaces] = useState(false);
   const [newType, setNewType] = useState<"note" | "appointment">("note");
   const [newTitle, setNewTitle] = useState("");
   const [newDescription, setNewDescription] = useState("");
@@ -300,6 +302,36 @@ function ServicePanelContent({
       ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
     ];
   }, [startOffset, daysInMonth]);
+
+    useEffect(() => {
+      if (!currentUserId) return;
+      if (activeTab !== "places") return;
+
+      async function loadPlaces() {
+        setLoadingPlaces(true);
+
+        try {
+          const res = await fetch("/api/location/places", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              userId: currentUserId,
+            }),
+          });
+
+          const data = await res.json();
+          setPlaces(data.places || []);
+        } catch (err) {
+          console.log("LOAD PLACES ERROR:", err);
+        }
+
+        setLoadingPlaces(false);
+      }
+
+      loadPlaces();
+    }, [activeTab, currentUserId]);
 
   function getEventDate(event: CalendarEvent) {
     return event.remind_at || event.start_at || null;
@@ -433,39 +465,6 @@ function ServicePanelContent({
   }
 
   if (activeTab === "places") {
-
-    const [places, setPlaces] = useState<any[]>([]);
-    const [loadingPlaces, setLoadingPlaces] = useState(false);
-
-    useEffect(() => {
-      if (!currentUserId) return;
-
-      async function loadPlaces() {
-        setLoadingPlaces(true);
-
-        try {
-          const res = await fetch("/api/location/places", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              userId: currentUserId,
-            }),
-          });
-
-          const data = await res.json();
-
-          setPlaces(data.places || []);
-        } catch (err) {
-          console.log("LOAD PLACES ERROR:", err);
-        }
-
-        setLoadingPlaces(false);
-      }
-
-      loadPlaces();
-    }, [currentUserId]); 
 
   async function saveCurrentPlace() {
     if (!currentUserId) {
