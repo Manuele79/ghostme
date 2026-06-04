@@ -433,6 +433,40 @@ function ServicePanelContent({
   }
 
   if (activeTab === "places") {
+
+    const [places, setPlaces] = useState<any[]>([]);
+    const [loadingPlaces, setLoadingPlaces] = useState(false);
+
+    useEffect(() => {
+      if (!currentUserId) return;
+
+      async function loadPlaces() {
+        setLoadingPlaces(true);
+
+        try {
+          const res = await fetch("/api/location/places", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              userId: currentUserId,
+            }),
+          });
+
+          const data = await res.json();
+
+          setPlaces(data.places || []);
+        } catch (err) {
+          console.log("LOAD PLACES ERROR:", err);
+        }
+
+        setLoadingPlaces(false);
+      }
+
+      loadPlaces();
+    }, [currentUserId]); 
+
   async function saveCurrentPlace() {
     if (!currentUserId) {
       alert("User ID mancante.");
@@ -443,6 +477,8 @@ function ServicePanelContent({
       alert("GPS non disponibile su questo dispositivo.");
       return;
     }
+
+
 
     const label = prompt("Nome luogo? Es: Casa, Lavoro, Palestra");
     if (!label?.trim()) return;
@@ -507,6 +543,38 @@ function ServicePanelContent({
         >
           📍 Salva luogo attuale
         </button>
+
+        <div className="mt-4 space-y-2">
+          {loadingPlaces ? (
+            <p className="text-sm text-zinc-400">
+              Caricamento luoghi...
+            </p>
+          ) : places.length === 0 ? (
+            <p className="text-sm text-zinc-500">
+              Nessun luogo salvato.
+            </p>
+          ) : (
+            places.map((place) => (
+              <div
+                key={place.id}
+                className="rounded-2xl border border-zinc-800 bg-black/50 p-3"
+              >
+                <p className="font-bold text-cyan-200">
+                  {place.label}
+                </p>
+
+                <p className="mt-1 text-xs uppercase tracking-widest text-zinc-500">
+                  {place.category}
+                </p>
+
+                <p className="mt-1 text-xs text-zinc-400">
+                  Raggio: {place.radius_meters} m
+                </p>
+              </div>
+            ))
+          )}
+        </div>
+
       </div>
     </div>
   );
