@@ -543,6 +543,42 @@ function ServicePanelContent({
           📍 Salva luogo attuale
         </button>
 
+        <button
+          onClick={async () => {
+            if (!currentUserId) return;
+
+            navigator.geolocation.getCurrentPosition(
+              async (position) => {
+                const res = await fetch("/api/location/current-place", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    userId: currentUserId,
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                  }),
+                });
+
+                const data = await res.json();
+
+                if (data.place) {
+                  alert(`📍 Sei in: ${data.place.label}`);
+                } else {
+                  alert("📍 Non sei in nessun luogo salvato.");
+                }
+              },
+              () => {
+                alert("GPS non disponibile.");
+              }
+            );
+          }}
+          className="mt-2 w-full rounded-2xl border border-cyan-400/30 px-4 py-3 text-sm font-bold text-cyan-300"
+        >
+          Dove sono?
+        </button>       
+
         <div className="mt-4 space-y-2">
           {loadingPlaces ? (
             <p className="text-sm text-zinc-400">
@@ -569,6 +605,28 @@ function ServicePanelContent({
                 <p className="mt-1 text-xs text-zinc-400">
                   Raggio: {place.radius_meters} m
                 </p>
+                <button
+                  onClick={async () => {
+                    if (!confirm(`Eliminare ${place.label}?`)) return;
+
+                    await fetch("/api/location/delete-place", {
+                      method: "DELETE",
+                      headers: {
+                        "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify({
+                        id: place.id,
+                      }),
+                    });
+
+                    setPlaces((prev) =>
+                      prev.filter((p) => p.id !== place.id)
+                    );
+                  }}
+                  className="mt-3 rounded-xl border border-red-500/30 px-3 py-2 text-xs font-bold text-red-300"
+                >
+                  Elimina
+                </button>
               </div>
             ))
           )}
