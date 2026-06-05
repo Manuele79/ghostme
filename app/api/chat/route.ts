@@ -812,7 +812,8 @@ export async function POST(req: Request) {
       : "Luogo attuale rilevato: sconosciuto";     
       
       console.log("CURRENT PLACE CONTEXT:", currentPlaceContext);
-
+      console.log("LOCATION RAW:", currentLocation);
+      console.log("LOCATION LABEL:", currentLocation?.current_place_label);
 
       loadedLifeTopics = existingTopicsRes.data || [];
     }
