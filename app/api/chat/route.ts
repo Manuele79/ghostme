@@ -150,6 +150,7 @@ function buildSystemPrompt({
   calendarContext,
   currentPlaceContext,
   serviceContext,
+  cognitiveContext,
 }: {
   traits: any;
   profileContext: string;
@@ -166,6 +167,7 @@ function buildSystemPrompt({
   calendarContext: string;
   currentPlaceContext: string;
   serviceContext: string;
+  cognitiveContext: string;
 }) {
   return `
 Sei GhostMe.
@@ -210,6 +212,9 @@ STATO MENTALE RECENTE:
 ${mentalStateContext || "nessuno stato mentale recente rilevante"}
 
 CONTESTO MENTALE ATTIVO
+
+Contesto cognitivo mirato:
+${cognitiveContext || "nessun contesto cognitivo mirato"}
 
 Topic direttamente collegati al messaggio:
 ${lifeTopicsContext || "nessun topic diretto rilevante"}
@@ -731,6 +736,7 @@ export async function POST(req: Request) {
     // Letture in parallelo (profilo, retrieval, stati, ecc.)
     let profileContext = "";
     let memoryContext = "";
+    let cognitiveContext = "";
     let lifeTopicsContext = "";
     let episodicContext = "";
     let summaryContext = "";
@@ -802,6 +808,18 @@ export async function POST(req: Request) {
       summaryContext = trimBlock(contextualData.summaryContext, 800);
       linkedTopicsContext = trimBlock(contextualData.linkedTopicsContext, 800);
 
+      linkedTopicsContext = trimBlock(
+        `${linkedTopicsContext}
+
+      ${contextualData.relatedTopicContext || ""}`,
+        1200
+      );
+
+      cognitiveContext = trimBlock(
+        contextualData.cognitiveContext || "",
+        2200
+      );
+
       mentalRes && (mentalStateContext = trimBlock(mentalRes, 600));
       goalsRes && (goalsContext = trimBlock(goalsRes, 800));
       timelineRes && (timelineContext = trimBlock(timelineRes, 800));
@@ -836,41 +854,41 @@ export async function POST(req: Request) {
       try {
         const webResult = await runWebSearch(serviceDecision.query);
         serviceContext = `
-SERVIZIO INTERNET ATTIVO:
-Tipo: web_search
-Motivo: ${serviceDecision.reason}
+        SERVIZIO INTERNET ATTIVO:
+        Tipo: web_search
+        Motivo: ${serviceDecision.reason}
 
-Risultato ricerca:
-${webResult.summary}
-`;
-      } catch (err) {
-        console.log("WEB SEARCH ERROR:", err);
-        serviceContext = `
-SERVIZIO INTERNET:
-La ricerca web era richiesta, ma è fallita.
-Dillo chiaramente nella risposta.`;
-      }
-    }
-    if (serviceDecision.service === "weather") {
-      try {
-        const weatherResult = await runWeatherSearch({
-          query: serviceDecision.query,
-          location: userLocation,
-        });
-        serviceContext = `
-SERVIZIO METEO ATTIVO:
-Località usata: ${userLocation || "non specificata"}
+        Risultato ricerca:
+        ${webResult.summary}
+        `;
+              } catch (err) {
+                console.log("WEB SEARCH ERROR:", err);
+                serviceContext = `
+        SERVIZIO INTERNET:
+        La ricerca web era richiesta, ma è fallita.
+        Dillo chiaramente nella risposta.`;
+              }
+            }
+            if (serviceDecision.service === "weather") {
+              try {
+                const weatherResult = await runWeatherSearch({
+                  query: serviceDecision.query,
+                  location: userLocation,
+                });
+                serviceContext = `
+        SERVIZIO METEO ATTIVO:
+        Località usata: ${userLocation || "non specificata"}
 
-Risultato meteo:
-${weatherResult.summary}
-`;
-      } catch (err) {
-        console.log("WEATHER ERROR:", err);
-        serviceContext = `
-SERVIZIO METEO:
-Impossibile recuperare le previsioni.`;
-      }
-    }
+        Risultato meteo:
+        ${weatherResult.summary}
+        `;
+              } catch (err) {
+                console.log("WEATHER ERROR:", err);
+                serviceContext = `
+        SERVIZIO METEO:
+        Impossibile recuperare le previsioni.`;
+              }
+            }
 
     // Calendario (non bloccare la risposta se possibile)
     let calendarCreatedText = "";
@@ -953,6 +971,7 @@ Impossibile recuperare le previsioni.`;
       calendarContext,
       currentPlaceContext,
       serviceContext,
+      cognitiveContext,
       
     });
 

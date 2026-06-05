@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { getRelatedTopicContext } from "@/lib/ghostme/topicLinks";
 
 type DetectedTopic = {
   topic: string;
@@ -45,6 +46,12 @@ export async function buildContextualMemory({
   const directTopics = uniq(
     detectedTopics.map((t) => t.topic).filter(Boolean)
   );
+
+  const relatedTopicContext = await getRelatedTopicContext({
+    userId,
+    topics: directTopics,
+    limit: 16,
+  });
 
   const directLower = directTopics.map(norm);
 
@@ -259,6 +266,28 @@ export async function buildContextualMemory({
     800
   );
 
+  const cognitiveContext = trimBlock(
+    `
+  CONTESTO COGNITIVO MIRATO:
+  Topic diretti: ${directTopics.join(", ") || "nessuno"}
+
+  Rete collegata:
+  ${relatedTopicContext || linkedTopicsContext || "nessun collegamento rilevante"}
+
+  Topic rilevanti:
+  ${lifeTopicsContext || "nessun topic rilevante"}
+
+  Memorie rilevanti:
+  ${memoryContext || "nessuna memoria rilevante"}
+
+  Episodi rilevanti:
+  ${episodicContext || "nessun episodio rilevante"}
+
+  Riassunti rilevanti:
+  ${summaryContext || "nessun riassunto rilevante"}
+  `.trim(),
+    2200
+  );
 
   return {
     memoryContext,
@@ -266,5 +295,7 @@ export async function buildContextualMemory({
     lifeTopicsContext,
     summaryContext,
     linkedTopicsContext,
+    relatedTopicContext,
+    cognitiveContext,
   };
 }
