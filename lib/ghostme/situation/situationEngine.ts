@@ -1,5 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { getLastKnownPlace } from "@/lib/ghostme/location/placeService";
+import { getCurrentLocationState } from "@/lib/ghostme/location/placeService";
 
 export type GhostSituation = {
   nowIso: string;
@@ -216,7 +216,8 @@ export async function buildGhostSituation(userId: string): Promise<GhostSituatio
   ]);
 
   const profile = profileRes.data || null;
-  const currentPlace = await getLastKnownPlace(userId);
+  const currentLocationState = await getCurrentLocationState(userId);
+  const currentPlace = currentLocationState?.current_place_label || null;
   const calendarToday = calendarTodayRes.data || [];
   const upcomingEvents = upcomingCalendarRes.data || [];
   const activeGoals = goalsRes.data || [];

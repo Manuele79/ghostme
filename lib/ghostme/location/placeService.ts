@@ -105,3 +105,20 @@ export async function getLastKnownPlace(userId: string) {
 
   return places[0]?.label || null;
 }
+
+export async function getCurrentLocationState(userId: string) {
+  if (!userId) return null;
+
+  const { data, error } = await supabaseAdmin
+    .from("user_location_state")
+    .select("*")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) {
+    console.log("GET CURRENT LOCATION STATE ERROR:", error);
+    return null;
+  }
+
+  return data;
+}
