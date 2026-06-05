@@ -10,6 +10,7 @@ import { buildAgendaMessage } from "@/lib/ghostme/agenda/agendaEngine";
 import { upsertProactiveMessage } from "@/lib/ghostme/proactive/proactiveMessageService";
 import { runRetentionCleanup } from "@/lib/ghostme/maintenance/retentionEngine";
 import { generateDailyConversationSummary } from "@/lib/ghostme/conversationSummary";
+import { decideProactiveMessage } from "@/lib/ghostme/proactive/proactiveDecisionEngine";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -48,6 +49,21 @@ export async function GET() {
       const agendaMessage = buildAgendaMessage(situation);
 
       const currentContext = await buildCurrentContext(userId);
+
+      const proactiveDecision = await decideProactiveMessage({
+        userName: user.full_name,
+        currentContext,
+      });
+
+      if (proactiveDecision.shouldSpeak && proactiveDecision.message) {
+        await upsertProactiveMessage({
+          userId,
+          title: proactiveDecision.title || "Osservazione GhostMe",
+          message: proactiveDecision.message,
+          category: proactiveDecision.category || "observation",
+          priority: proactiveDecision.priority || 2,
+        });
+      }
 
       const butlerMessage = await generateButlerMessage({
         userName: user.full_name,
