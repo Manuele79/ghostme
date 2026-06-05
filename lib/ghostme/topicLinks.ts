@@ -97,3 +97,86 @@ export async function saveTopicLinks({
     }
   }
 }
+
+export async function getRelatedTopicContext({
+  userId,
+  topics,
+  limit = 12,
+}: {
+  userId: string;
+  topics: string[];
+  limit?: number;
+}) {
+  if (!userId || !topics?.length) return "";
+
+  const cleanTopics = topics
+    .filter(Boolean)
+    .map((t) => t.trim())
+    .filter((t) => t.length > 1);
+
+  if (!cleanTopics.length) return "";
+
+  const lowerTopics = cleanTopics.map((t) => t.toLowerCase());
+
+  const { data: links, error: linksError } = await supabase
+    .from("topic_links")
+    .select("*")
+    .eq("user_id", userId)
+    .or(
+      lowerTopics
+        .map(
+          (topic) =>
+            `source_topic.ilike.${topic},target_topic.ilike.${topic}`
+        )
+        .join(",")
+    )
+    .order("weight", { ascending: false })
+    .limit(limit);
+
+  if (linksError) {
+    console.log("RELATED TOPIC LINKS ERROR:", linksError);
+    return "";
+  }
+
+  if (!links?.length) return "";
+
+  const relatedNames = Array.from(
+    new Set(
+      links.flatMap((link) => [
+        link.source_topic,
+        link.target_topic,
+      ])
+    )
+  );
+
+  const { data: lifeTopics } = await supabase
+    .from("life_topics")
+    .select("topic, category, entity_type, description, weight, mention_count, relationship_strength")
+    .eq("user_id", userId)
+    .in("topic", relatedNames);
+
+  const topicDescriptions =
+    lifeTopics
+      ?.map(
+        (t) =>
+          `- ${t.topic} | ${t.entity_type || "unknown"} | ${
+            t.category || "general"
+          } | ${t.description || "nessuna descrizione"}`
+      )
+      .join("\n") || "";
+
+  const linksText = links
+    .map(
+      (l) =>
+        `- ${l.source_topic} ↔ ${l.target_topic} | ${l.link_type} | peso ${l.weight}`
+    )
+    .join("\n");
+
+  return `
+COLLEGAMENTI MIRATI:
+${linksText}
+
+DETTAGLI TOPIC COLLEGATI:
+${topicDescriptions || "nessun dettaglio"}
+`.trim();
+}
