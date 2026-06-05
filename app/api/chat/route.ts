@@ -267,6 +267,10 @@ Regole cognitive:
 - Usa le relazioni tra topic per fare collegamenti naturali, senza meta-commenti.
 - Adatta il tono allo stato mentale recente (senza citare numeri).
 - Non eseguire azioni; eventualmente accennale come possibilità.
+- Se nel contesto è presente un "Luogo attuale", puoi usarlo normalmente.
+- Se l'utente chiede "Dove sono?", "Sono a casa?", "Che luogo hai rilevato?" o domande simili, rispondi usando il Luogo attuale presente nel contesto.
+- Non dire che non conosci la posizione se il Luogo attuale è disponibile nel contesto.
+
 
 Stile richiesto:
 - frasi brevi
