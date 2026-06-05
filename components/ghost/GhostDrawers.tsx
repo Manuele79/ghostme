@@ -305,35 +305,57 @@ function ServicePanelContent({
     ];
   }, [startOffset, daysInMonth]);
 
-    useEffect(() => {
-      if (!currentUserId) return;
-      if (activeTab !== "places") return;
+useEffect(() => {
+  if (!currentUserId) return;
+  if (activeTab !== "places") return;
 
-      async function loadPlaces() {
-        setLoadingPlaces(true);
+  async function loadPlaces() {
+    setLoadingPlaces(true);
 
-        try {
-          const res = await fetch("/api/location/places", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              userId: currentUserId,
-            }),
-          });
+    try {
+      const [placesRes, stateRes] = await Promise.all([
+        fetch("/api/location/places", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId: currentUserId,
+          }),
+        }),
 
-          const data = await res.json();
-          setPlaces(data.places || []);
-        } catch (err) {
-          console.log("LOAD PLACES ERROR:", err);
-        }
+        fetch("/api/location/current-state", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId: currentUserId,
+          }),
+        }),
+      ]);
 
-        setLoadingPlaces(false);
+      const placesData = await placesRes.json();
+      const stateData = await stateRes.json();
+
+      setPlaces(placesData.places || []);
+
+      if (stateData.location?.current_place_id) {
+        setDetectedPlaceId(stateData.location.current_place_id);
+        setCurrentPlace(stateData.location.current_place_label || null);
+      } else {
+        setDetectedPlaceId(null);
+        setCurrentPlace(null);
       }
+    } catch (err) {
+      console.log("LOAD PLACES ERROR:", err);
+    }
 
-      loadPlaces();
-    }, [activeTab, currentUserId]);
+    setLoadingPlaces(false);
+  }
+
+  loadPlaces();
+}, [activeTab, currentUserId]);
 
   function getEventDate(event: CalendarEvent) {
     return event.remind_at || event.start_at || null;
