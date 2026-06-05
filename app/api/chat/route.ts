@@ -809,7 +809,9 @@ export async function POST(req: Request) {
 
     currentPlaceContext = currentLocation?.current_place_label
       ? `Luogo attuale rilevato: ${currentLocation.current_place_label}`
-      : "Luogo attuale rilevato: sconosciuto";        
+      : "Luogo attuale rilevato: sconosciuto";     
+      
+      console.log("CURRENT PLACE CONTEXT:", currentPlaceContext);
 
 
       loadedLifeTopics = existingTopicsRes.data || [];
