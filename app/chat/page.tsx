@@ -195,6 +195,52 @@ export default function ChatPage() {
 
       setUserEmail(user.email || "");
 
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            try {
+              const placeRes = await fetch("/api/location/current-place", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  userId: user.id,
+                  latitude: position.coords.latitude,
+                  longitude: position.coords.longitude,
+                }),
+              });
+
+              const placeData = await placeRes.json();
+
+              await fetch("/api/location/update-current", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  userId: user.id,
+                  placeId: placeData.place?.id || null,
+                  placeLabel: placeData.place?.label || null,
+                  latitude: position.coords.latitude,
+                  longitude: position.coords.longitude,
+                  source: "browser",
+                }),
+              });
+            } catch (err) {
+              console.log("AUTO LOCATION ERROR:", err);
+            }
+          },
+          (err) => {
+            console.log("GPS ERROR:", err);
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+          }
+        );
+      }   
+
       const { data: profile } = await supabase
         .from("user_profiles")
         .select("*")
