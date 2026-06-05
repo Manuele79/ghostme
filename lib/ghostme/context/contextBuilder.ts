@@ -20,6 +20,7 @@ export type GhostCurrentContext = {
   dynamicProfile: string[];
   activeContradictions: string[];
   importantLinks: string[];
+  reasoningSummary: string;
 };
 
 export async function buildCurrentContext(
@@ -84,28 +85,42 @@ export async function buildCurrentContext(
       .map((l) => `${l.source_topic} ↔ ${l.target_topic}`)
       .slice(0, 8);
 
-  const contextSummary = `
-    SITUAZIONE ATTUALE:
-    ${situation.situationSummary}
+    const reasoningSummary = `
+      Luogo attuale: ${situation.currentPlace || "luogo sconosciuto"}.
+      Momento: ${situation.timeContext}, ${situation.dayContext}.
+      Progetti attivi principali: ${activeProjects.join(", ") || "nessuno"}.
+      Topic dominanti: ${dominantTopics.join(", ") || "nessuno"}.
+      Obiettivi attivi: ${activeGoals.join(", ") || "nessuno"}.
+      Azioni aperte: ${pendingActions.join(", ") || "nessuna"}.
+      Eventi oggi: ${calendarToday.join(", ") || "nessuno"}.
+      Stato mentale: ${mentalState}.
+      Memorie recenti utili: ${recentEpisodes.join(", ") || "nessuna"}.
+      Collegamenti importanti: ${importantLinks.join(", ") || "nessuno"}.
+      `.trim();  
 
-    INTERPRETAZIONE CONTESTUALE:
-    Momento: ${situation.timeContext}, ${situation.dayContext}
-    Località profilo: ${situation.userLocation || "non specificata"}
-    Luogo attuale: ${situation.currentPlace || "sconosciuto"}
-    Progetti attivi: ${activeProjects.join(", ") || "nessuno"}
-    Obiettivi attivi: ${activeGoals.join(", ") || "nessuno"}
-    Azioni pendenti: ${pendingActions.join(", ") || "nessuna"}
-    Eventi oggi: ${calendarToday.join(", ") || "nessuno"}
-    Prossimi eventi: ${upcomingCalendar.join(", ") || "nessuno"}
-    Topic dominanti: ${dominantTopics.join(", ") || "nessuno"}
-    Stato mentale: ${mentalState}
-    Episodi recenti: ${recentEpisodes.join(", ") || "nessuno"}
-    Timeline recente: ${recentTimelineEvents.join(", ") || "nessuna"}
-    Riassunti recenti: ${recentSummaries.join(", ") || "nessuno"}
-    Profilo dinamico: ${dynamicProfile.join(", ") || "nessuno"}
-    Contraddizioni attive: ${activeContradictions.join(", ") || "nessuna"}
-    Collegamenti importanti: ${importantLinks.join(", ") || "nessuno"}
-`.trim();
+    const contextSummary = `
+      SITUAZIONE ATTUALE:
+      ${situation.situationSummary}
+
+      INTERPRETAZIONE CONTESTUALE:
+      Momento: ${situation.timeContext}, ${situation.dayContext}
+      Località profilo: ${situation.userLocation || "non specificata"}
+      Luogo attuale: ${situation.currentPlace || "sconosciuto"}
+      Progetti attivi: ${activeProjects.join(", ") || "nessuno"}
+      Obiettivi attivi: ${activeGoals.join(", ") || "nessuno"}
+      Azioni pendenti: ${pendingActions.join(", ") || "nessuna"}
+      Eventi oggi: ${calendarToday.join(", ") || "nessuno"}
+      Prossimi eventi: ${upcomingCalendar.join(", ") || "nessuno"}
+      Topic dominanti: ${dominantTopics.join(", ") || "nessuno"}
+      Stato mentale: ${mentalState}
+      Episodi recenti: ${recentEpisodes.join(", ") || "nessuno"}
+      Timeline recente: ${recentTimelineEvents.join(", ") || "nessuna"}
+      Riassunti recenti: ${recentSummaries.join(", ") || "nessuno"}
+      Profilo dinamico: ${dynamicProfile.join(", ") || "nessuno"}
+      Contraddizioni attive: ${activeContradictions.join(", ") || "nessuna"}
+      Collegamenti importanti: ${importantLinks.join(", ") || "nessuno"}
+      Sintesi ragionata: ${reasoningSummary}
+  `.trim();
 
   return {
     timeContext: situation.timeContext,
@@ -127,5 +142,6 @@ export async function buildCurrentContext(
     dynamicProfile,
     activeContradictions,
     importantLinks,
+    reasoningSummary,
   };
 }
