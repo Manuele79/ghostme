@@ -148,6 +148,7 @@ function buildSystemPrompt({
   dynamicSelfProfileContext,
   actionIntentContext,
   calendarContext,
+  currentPlaceContext,
   serviceContext,
 }: {
   traits: any;
@@ -163,6 +164,7 @@ function buildSystemPrompt({
   dynamicSelfProfileContext: string;
   actionIntentContext: string;
   calendarContext: string;
+  currentPlaceContext: string;
   serviceContext: string;
 }) {
   return `
@@ -238,6 +240,9 @@ ${serviceContext || "nessun servizio esterno usato"}
 
 Calendario reale:
 ${calendarContext || "nessun appuntamento o promemoria salvato"}
+
+Luogo attuale:
+${currentPlaceContext || "luogo non rilevato"}
 
 Regole calendario:
 - Se l'utente chiede appuntamenti, promemoria, note o calendario, usa SOLO Calendario reale.
@@ -727,6 +732,7 @@ export async function POST(req: Request) {
     let calendarContext = "";
     let serviceContext = "";
     let userLocation = "";
+    let currentPlaceContext = "";
 
     if (userId) {
       const [
@@ -738,6 +744,7 @@ export async function POST(req: Request) {
         dynProfileRes,
         actionIntentRes,
         calendarRes,
+        currentLocationRes,
         existingTopicsRes,
       ] = await Promise.all([
         supabase
@@ -763,6 +770,12 @@ export async function POST(req: Request) {
           .eq("status", "active")
           .order("start_at", { ascending: true })
           .limit(30),
+
+        supabaseAdmin
+          .from("user_location_state")
+          .select("current_place_label, latitude, longitude, source, updated_at")
+          .eq("user_id", userId)
+          .maybeSingle(),
 
         supabase.from("life_topics").select("*").eq("user_id", userId),
       ]);
@@ -791,6 +804,13 @@ export async function POST(req: Request) {
             return `${event.type} | ${event.title} | ${date} | ${event.description || ""}`;
           })
           .join("\n") || "";
+
+      const currentLocation = currentLocationRes.data;
+
+    currentPlaceContext = currentLocation?.current_place_label
+      ? `Luogo attuale rilevato: ${currentLocation.current_place_label}`
+      : "Luogo attuale rilevato: sconosciuto";        
+
 
       loadedLifeTopics = existingTopicsRes.data || [];
     }
@@ -916,7 +936,9 @@ Impossibile recuperare le previsioni.`;
       dynamicSelfProfileContext,
       actionIntentContext,
       calendarContext,
+      currentPlaceContext,
       serviceContext,
+      
     });
 
     // Streaming della risposta
