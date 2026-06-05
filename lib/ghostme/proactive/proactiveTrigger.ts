@@ -1,5 +1,26 @@
 import { refreshAgendaMessage } from "@/lib/ghostme/calendar/calendarService";
 import { buildGhostSituation } from "@/lib/ghostme/situation/situationEngine";
+import { buildCurrentContext } from "@/lib/ghostme/context/contextBuilder";
+import { decideProactiveMessage } from "@/lib/ghostme/proactive/proactiveDecisionEngine";
+import { upsertProactiveMessage } from "@/lib/ghostme/proactive/proactiveMessageService";
+
+async function runDecisionForTrigger(userId: string) {
+  const currentContext = await buildCurrentContext(userId);
+
+  const decision = await decideProactiveMessage({
+    currentContext,
+  });
+
+  if (decision.shouldSpeak && decision.message) {
+    await upsertProactiveMessage({
+      userId,
+      title: decision.title || "Osservazione GhostMe",
+      message: decision.message,
+      category: decision.category || "observation",
+      priority: decision.priority || 2,
+    });
+  }
+}
 
 export async function runProactiveTrigger({
   userId,
@@ -32,15 +53,15 @@ export async function runProactiveTrigger({
     }
 
     case "location_changed":
-      console.log("LOCATION TRIGGER");
+      await runDecisionForTrigger(userId);
       break;
 
     case "memory_gap":
-      console.log("MEMORY GAP TRIGGER");
+      await runDecisionForTrigger(userId);
       break;
 
     case "conversation_insight":
-      console.log("CONVERSATION INSIGHT TRIGGER");
+      await runDecisionForTrigger(userId);
       break;
   }
 }
