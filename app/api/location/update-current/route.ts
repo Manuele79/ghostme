@@ -5,6 +5,8 @@ import {
   analyzeLocationPatterns,
 } from "@/lib/ghostme/observation/observationEngine";
 
+import { runProactiveTrigger } from "@/lib/ghostme/proactive/proactiveTrigger";
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -110,6 +112,12 @@ export async function POST(req: Request) {
       }
 
       await analyzeLocationPatterns(body.userId);
+
+      await runProactiveTrigger({
+        userId: body.userId,
+        trigger: "location_changed",
+      });
+
     }
 
     return NextResponse.json({
