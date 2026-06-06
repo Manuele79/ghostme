@@ -15,7 +15,7 @@ export async function POST(req: Request) {
       title: body.title,
       description: body.description || "",
       startAt: body.startAt || null,
-      endAt: null,
+      endAt: body.endAt || null,
       remindAt: body.remindAt || null,
       source: "manual",
     });
@@ -46,6 +46,7 @@ export async function PATCH(req: Request) {
         title: body.title,
         description: body.description || "",
         start_at: body.startAt || null,
+        end_at: body.endAt || null,
         remind_at: body.remindAt || null,
         updated_at: new Date().toISOString(),
       })

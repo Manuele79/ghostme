@@ -474,6 +474,12 @@ useEffect(() => {
       remindDate.setHours(remindDate.getHours() - 1);
     }
 
+    const endDate = new Date(eventDate);
+
+    if (newType === "appointment") {
+      endDate.setHours(endDate.getHours() + 1);
+    }
+
     const payload = {
       id: editingEventId,
       userId,
@@ -481,7 +487,11 @@ useEffect(() => {
       title: newTitle.trim(),
       description: newDescription.trim(),
       startAt: eventDate.toISOString(),
-      remindAt: newType === "appointment" ? remindDate.toISOString() : eventDate.toISOString(),
+      endAt: newType === "appointment" ? endDate.toISOString() : eventDate.toISOString(),
+      remindAt:
+        newType === "appointment"
+          ? remindDate.toISOString()
+          : eventDate.toISOString(),
     };
 
     const res = await fetch("/api/calendar-events", {
