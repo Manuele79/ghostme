@@ -499,19 +499,43 @@ useEffect(() => {
           </p>
 
           <p className="mt-3 text-sm text-zinc-300">
-            Qui compariranno osservazioni, suggerimenti e pattern che GhostMe impara da luoghi, abitudini e contesto.
+            Qui trovi osservazioni, suggerimenti e messaggi proattivi generati da GhostMe.
           </p>
         </div>
 
-        <div className="rounded-3xl border border-zinc-800 bg-black/60 p-4">
-          <p className="text-sm font-black text-cyan-200">
-            Nessuna osservazione attiva
-          </p>
+        {loadingObservations ? (
+          <EmptyBrainBox text="Caricamento osservazioni..." />
+        ) : observations.length === 0 ? (
+          <EmptyBrainBox text="Nessuna osservazione attiva." />
+        ) : (
+          <div className="space-y-3">
+            {observations.map((item) => (
+              <div
+                key={item.id}
+                className="rounded-3xl border border-zinc-800 bg-black/60 p-4"
+              >
+                <p className="text-sm font-black text-cyan-200">
+                  {item.title || "Osservazione GhostMe"}
+                </p>
 
-          <p className="mt-2 text-sm text-zinc-400">
-            Quando GhostMe noterà qualcosa di utile, lo vedrai qui.
-          </p>
-        </div>
+                <p className="mt-2 text-sm leading-relaxed text-zinc-300">
+                  {item.message}
+                </p>
+
+                <p className="mt-3 text-xs text-zinc-500">
+                  {item.category || "observation"} · priorità {item.priority || 1}
+                </p>
+{/* Apri chat - da collegare dopo */}
+                <button
+                  onClick={() => {}}
+                  className="mt-3 rounded-xl border border-cyan-400/30 px-3 py-2 text-xs font-bold text-cyan-300"
+                >
+                  Apri chat
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
