@@ -141,7 +141,7 @@ export function ServicesDrawer ({
     { key: "actions", label: "Azioni" },
     { key: "calendar", label: "Calendario" },
     { key: "mail", label: "Mail" },
-    { key: "web", label: "Web" },
+    { key: "web", label: "Osservazioni" },
     { key: "home", label: "Home Assistant" },
     { key: "profile", label: "Profilo" },
     { key: "places", label: "Luoghi" },
@@ -280,6 +280,7 @@ function ServicePanelContent({
   const [saving, setSaving] = useState(false);
   const [savedMessage, setSavedMessage] = useState("");
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
+
 
   useEffect(() => {
     setLocalEvents(calendarEvents || []);
@@ -456,6 +457,32 @@ useEffect(() => {
     }, 2500);
   }
 }
+
+  if (activeTab === "web") {
+    return (
+      <div className="space-y-4">
+        <div className="rounded-3xl border border-cyan-400/20 bg-cyan-400/5 p-4">
+          <p className="text-lg font-black text-cyan-200">
+            Osservazioni GhostMe
+          </p>
+
+          <p className="mt-3 text-sm text-zinc-300">
+            Qui compariranno osservazioni, suggerimenti e pattern che GhostMe impara da luoghi, abitudini e contesto.
+          </p>
+        </div>
+
+        <div className="rounded-3xl border border-zinc-800 bg-black/60 p-4">
+          <p className="text-sm font-black text-cyan-200">
+            Nessuna osservazione attiva
+          </p>
+
+          <p className="mt-2 text-sm text-zinc-400">
+            Quando GhostMe noterà qualcosa di utile, lo vedrai qui.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (activeTab === "profile") {
     return (
@@ -1137,6 +1164,20 @@ function BrainPanelContent({
   activeTab: "memory" | "timeline" | "goals" | "state";
   brainData: BrainData;
 }) {
+  const [hiddenCards, setHiddenCards] = useState<string[]>(() => {
+    if (typeof window === "undefined") return [];
+
+    try {
+      return JSON.parse(localStorage.getItem("ghost_hidden_cards") || "[]");
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem("ghost_hidden_cards", JSON.stringify(hiddenCards));
+  }, [hiddenCards]);
+
   if (activeTab === "state") {
     const s = brainData.mentalState;
 
@@ -1181,15 +1222,34 @@ function BrainPanelContent({
         ? brainData.timeline
         : brainData.goals;
 
-  if (!list.length) return <EmptyBrainBox text="Nessun dato ancora." />;
+  const visibleList = list.filter(
+    (item) => !hiddenCards.includes(`${activeTab}-${item.id}`)
+  );
+
+  if (!visibleList.length) return <EmptyBrainBox text="Nessun dato visibile." />;
 
   return (
     <div className="space-y-3">
-      {list.map((item) => (
+      {visibleList.map((item) => (
         <div
           key={item.id}
           className="rounded-3xl border border-zinc-800 bg-black/60 p-4"
         >
+          <div className="flex justify-end">
+            <button
+              onClick={() =>
+                setHiddenCards((prev) => [
+                  ...prev,
+                  `${activeTab}-${item.id}`,
+                ])
+              }
+              className="rounded-full border border-zinc-700 px-2 py-1 text-xs text-zinc-500 hover:border-red-400 hover:text-red-300"
+              title="Nascondi dal pannello"
+            >
+              ✕
+            </button>
+          </div>
+
           <p className="text-sm font-black text-cyan-200">
             {item.title || item.trait || item.intent_type || "Elemento"}
           </p>
@@ -1213,7 +1273,6 @@ function BrainPanelContent({
     </div>
   );
 }
-
 function EmptyBrainBox({ text }: { text: string }) {
   return (
     <div className="rounded-3xl border border-zinc-800 bg-black/60 p-5 text-sm text-zinc-400">
