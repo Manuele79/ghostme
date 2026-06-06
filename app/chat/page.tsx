@@ -292,6 +292,21 @@ export default function ChatPage() {
         );
       }
 
+      try {
+        const lastRun = localStorage.getItem("ghost_proactive_last_run");
+        const now = Date.now();
+
+        if (!lastRun || now - Number(lastRun) > 1000 * 60 * 30) {
+          await fetch("/api/worker/proactive", {
+            method: "GET",
+          });
+
+          localStorage.setItem("ghost_proactive_last_run", String(now));
+        }
+      } catch (err) {
+        console.log("PROACTIVE WORKER BOOT ERROR:", err);
+      }
+
       await refreshBrain(user.id);
       setLoading(false);
     }
@@ -528,6 +543,14 @@ export default function ChatPage() {
   }
 }
 
+  function replyToProactiveMessage(message: string) {
+    setInput(
+      `Sto rispondendo alla tua osservazione:\n\n"${message}"\n\nRisposta: `
+    );
+
+    setServicesOpen(false);
+  }
+
   async function logout() {
     await supabase.auth.signOut();
     router.push("/login");
@@ -579,6 +602,7 @@ export default function ChatPage() {
         refreshBrain={refreshBrain}
         currentUserId={currentUserId}
         logout={logout}
+        onReplyObservation={replyToProactiveMessage}
       />
 
       <HistoryDrawer

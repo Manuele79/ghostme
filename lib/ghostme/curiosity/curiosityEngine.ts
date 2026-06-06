@@ -19,7 +19,7 @@ export async function generateCuriosityMessage(userId: string) {
     .select("id")
     .eq("user_id", userId)
     .eq("category", "curiosity")
-    .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+    .gte("created_at", new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString())
     .limit(1);
 
   if (recent && recent.length > 0) return null;

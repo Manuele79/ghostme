@@ -90,6 +90,7 @@ export function ServicesDrawer ({
   refreshBrain,
   currentUserId,
   logout,
+  onReplyObservation,
 }: {
   open: boolean;
   onClose: () => void;
@@ -123,6 +124,7 @@ export function ServicesDrawer ({
   refreshBrain: (userId: string) => Promise<void>;
   currentUserId: string;
   logout: () => void;
+  onReplyObservation: (message: string) => void;
 }) {
   if (!open) return null;
 
@@ -217,6 +219,7 @@ export function ServicesDrawer ({
             actions={actions}
             refreshBrain={refreshBrain}
             currentUserId={currentUserId}
+            onReplyObservation={onReplyObservation}
             
           />
         </div>
@@ -242,6 +245,7 @@ function ServicePanelContent({
   calendarEvents,
   refreshBrain,
   currentUserId,
+  onReplyObservation,
 }: {
   activeTab:
     | "actions"
@@ -260,6 +264,7 @@ function ServicePanelContent({
   calendarEvents: CalendarEvent[];
   refreshBrain: (userId: string) => Promise<void>;
   currentUserId: string;
+  onReplyObservation: (message: string) => void;
 }) {
   const today = new Date();
 
@@ -282,6 +287,24 @@ function ServicePanelContent({
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [observations, setObservations] = useState<any[]>([]);
   const [loadingObservations, setLoadingObservations] = useState(false);
+
+  const [hiddenObservations, setHiddenObservations] = useState<string[]>(() => {
+    if (typeof window === "undefined") return [];
+
+    try {
+      return JSON.parse(localStorage.getItem("ghost_hidden_observations") || "[]");
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem(
+      "ghost_hidden_observations",
+      JSON.stringify(hiddenObservations)
+    );
+  }, [hiddenObservations]);
+
   const [hiddenActions, setHiddenActions] = useState<string[]>(() => {
     if (typeof window === "undefined") return [];
 
@@ -523,11 +546,28 @@ useEffect(() => {
           <EmptyBrainBox text="Nessuna osservazione attiva." />
         ) : (
           <div className="space-y-3">
-            {observations.map((item) => (
+            {observations
+                .filter((item) => !hiddenObservations.includes(item.id))
+                .map((item) => (
               <div
                 key={item.id}
                 className="rounded-3xl border border-zinc-800 bg-black/60 p-4"
               >
+
+              <div className="flex justify-end">
+                <button
+                  onClick={() =>
+                    setHiddenObservations((prev) =>
+                      prev.includes(item.id) ? prev : [...prev, item.id]
+                    )
+                  }
+                  className="rounded-full border border-zinc-700 px-2 py-1 text-xs text-zinc-500 hover:border-red-400 hover:text-red-300"
+                  title="Nascondi dal pannello"
+                >
+                  ✕
+                </button>
+              </div>
+
                 <p className="text-sm font-black text-cyan-200">
                   {item.title || "Osservazione GhostMe"}
                 </p>
@@ -539,12 +579,11 @@ useEffect(() => {
                 <p className="mt-3 text-xs text-zinc-500">
                   {item.category || "observation"} · priorità {item.priority || 1}
                 </p>
-{/* Apri chat - da collegare dopo */}
                 <button
-                  onClick={() => {}}
+                  onClick={() => onReplyObservation(item.message || "")}
                   className="mt-3 rounded-xl border border-cyan-400/30 px-3 py-2 text-xs font-bold text-cyan-300"
                 >
-                  Apri chat
+                  Rispondi
                 </button>
               </div>
             ))}

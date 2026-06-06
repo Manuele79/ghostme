@@ -14,6 +14,7 @@ export async function POST(req: Request) {
       .select("*")
       .eq("user_id", body.userId)
       .neq("status", "dismissed")
+      .in("category", ["observation", "curiosity"])
       .order("priority", { ascending: false })
       .order("created_at", { ascending: false })
       .limit(20);

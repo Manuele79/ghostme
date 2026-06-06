@@ -32,14 +32,22 @@ export async function upsertProactiveMessage({
     .maybeSingle();
 
   if (existing?.id) {
+    const { data: oldMessage } = await supabaseAdmin
+      .from("ghost_proactive_messages")
+      .select("message, status")
+      .eq("id", existing.id)
+      .maybeSingle();
+
+    const messageChanged = oldMessage?.message !== message;
+
     await supabaseAdmin
       .from("ghost_proactive_messages")
       .update({
         title,
         message,
         priority,
-        status: "unread",
-        read_at: null,
+        status: messageChanged ? "unread" : oldMessage?.status || "read",
+        read_at: messageChanged ? null : undefined,
         scheduled_for: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
