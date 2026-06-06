@@ -282,6 +282,20 @@ function ServicePanelContent({
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [observations, setObservations] = useState<any[]>([]);
   const [loadingObservations, setLoadingObservations] = useState(false);
+  const [hiddenActions, setHiddenActions] = useState<string[]>(() => {
+    if (typeof window === "undefined") return [];
+
+    try {
+      return JSON.parse(localStorage.getItem("ghost_hidden_actions") || "[]");
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem("ghost_hidden_actions", JSON.stringify(hiddenActions));
+  }, [hiddenActions]);
+
 
   useEffect(() => {
     setLocalEvents(calendarEvents || []);
@@ -1127,18 +1141,37 @@ useEffect(() => {
     );
   }
 
-  if (activeTab === "actions") {
-    if (!actions.length) {
-      return <EmptyBrainBox text="Nessuna azione futura rilevata." />;
-    }
+      if (activeTab === "actions") {
+        const visibleActions = actions.filter(
+          (item) => !hiddenActions.includes(item.id)
+        );
 
-    return (
-      <div className="space-y-3">
-        {actions.map((item) => (
+        if (!visibleActions.length) {
+          return <EmptyBrainBox text="Nessuna azione futura visibile." />;
+        }
+
+        return (
+          <div className="space-y-3">
+            {visibleActions.map((item) => (
           <div
             key={item.id}
             className="rounded-3xl border border-zinc-800 bg-black/60 p-4"
           >
+
+          <div className="flex justify-end">
+            <button
+              onClick={() =>
+                setHiddenActions((prev) =>
+                  prev.includes(item.id) ? prev : [...prev, item.id]
+                )
+              }
+              className="rounded-full border border-zinc-700 px-2 py-1 text-xs text-zinc-500 hover:border-red-400 hover:text-red-300"
+              title="Nascondi dal pannello"
+            >
+              ✕
+            </button>
+          </div>
+
             <p className="text-sm font-black text-cyan-200">
               {item.title || item.intent_type}
             </p>
