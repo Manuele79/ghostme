@@ -280,7 +280,8 @@ function ServicePanelContent({
   const [saving, setSaving] = useState(false);
   const [savedMessage, setSavedMessage] = useState("");
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
-
+  const [observations, setObservations] = useState<any[]>([]);
+  const [loadingObservations, setLoadingObservations] = useState(false);
 
   useEffect(() => {
     setLocalEvents(calendarEvents || []);
@@ -356,6 +357,37 @@ useEffect(() => {
   }
 
   loadPlaces();
+}, [activeTab, currentUserId]);
+
+useEffect(() => {
+  if (!currentUserId) return;
+  if (activeTab !== "web") return;
+
+  async function loadObservations() {
+    setLoadingObservations(true);
+
+    try {
+      const res = await fetch("/api/proactive/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: currentUserId,
+        }),
+      });
+
+      const data = await res.json();
+
+      setObservations(data.messages || []);
+    } catch (err) {
+      console.log("LOAD OBSERVATIONS ERROR:", err);
+    }
+
+    setLoadingObservations(false);
+  }
+
+  loadObservations();
 }, [activeTab, currentUserId]);
 
   function getEventDate(event: CalendarEvent) {

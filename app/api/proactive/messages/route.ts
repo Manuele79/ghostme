@@ -1,0 +1,33 @@
+import { NextResponse } from "next/server";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+
+    if (!body.userId) {
+      return NextResponse.json({ error: "userId mancante" }, { status: 400 });
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from("ghost_proactive_messages")
+      .select("*")
+      .eq("user_id", body.userId)
+      .neq("status", "dismissed")
+      .order("priority", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      messages: data || [],
+    });
+  } catch (err) {
+    console.log("GET PROACTIVE MESSAGES ERROR:", err);
+    return NextResponse.json({ error: "Errore lettura osservazioni" }, { status: 500 });
+  }
+}
