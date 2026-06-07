@@ -11,6 +11,7 @@ import { upsertProactiveMessage } from "@/lib/ghostme/proactive/proactiveMessage
 import { runRetentionCleanup } from "@/lib/ghostme/maintenance/retentionEngine";
 import { generateDailyConversationSummary } from "@/lib/ghostme/conversationSummary";
 import { decideProactiveMessage } from "@/lib/ghostme/proactive/proactiveDecisionEngine";
+import { refreshReminderMessage } from "@/lib/ghostme/agenda/reminderEngine";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -44,6 +45,8 @@ export async function GET() {
       await generateDailyConversationSummary(userId);
 
       await runRetentionCleanup(userId);
+
+      await refreshReminderMessage(userId);
 
       const situation = await buildGhostSituation(userId);
       const agendaMessage = buildAgendaMessage(situation);
