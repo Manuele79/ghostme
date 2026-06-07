@@ -12,12 +12,14 @@ export function MemoryDrawer({
   activeTab,
   setActiveTab,
   brainData,
+  currentUserId,
 }: {
   open: boolean;
   onClose: () => void;
   activeTab: "memory" | "timeline" | "goals" | "state";
   setActiveTab: (tab: "memory" | "timeline" | "goals" | "state") => void;
   brainData: BrainData;
+  currentUserId: string;
 }) {
   if (!open) return null;
 
@@ -68,7 +70,11 @@ export function MemoryDrawer({
         </div>
 
         <div className="mt-5">
-          <BrainPanelContent activeTab={activeTab} brainData={brainData} />
+          <BrainPanelContent
+            activeTab={activeTab}
+            brainData={brainData}
+            currentUserId={currentUserId}
+          />
         </div>
       </aside>
     </div>
@@ -288,6 +294,7 @@ function ServicePanelContent({
   const [observations, setObservations] = useState<any[]>([]);
   const [loadingObservations, setLoadingObservations] = useState(false);
 
+
   const [hiddenObservations, setHiddenObservations] = useState<string[]>(() => {
     if (typeof window === "undefined") return [];
 
@@ -426,6 +433,8 @@ useEffect(() => {
 
   loadObservations();
 }, [activeTab, currentUserId]);
+
+
 
   function getEventDate(event: CalendarEvent) {
     return event.remind_at || event.start_at || null;
@@ -1298,9 +1307,11 @@ export function HistoryDrawer({
 function BrainPanelContent({
   activeTab,
   brainData,
+  currentUserId,
 }: {
   activeTab: "memory" | "timeline" | "goals" | "state";
   brainData: BrainData;
+  currentUserId: string;
 }) {
   const [hiddenCards, setHiddenCards] = useState<string[]>(() => {
     if (typeof window === "undefined") return [];
@@ -1311,6 +1322,42 @@ function BrainPanelContent({
       return [];
     }
   });
+
+const [memorySearch, setMemorySearch] = useState("");
+const [memorySearchResults, setMemorySearchResults] = useState<any | null>(null);
+const [searchingMemory, setSearchingMemory] = useState(false);
+
+async function searchMemory() {
+  if (!currentUserId) return;
+
+  if (!memorySearch.trim()) {
+    setMemorySearchResults(null);
+    return;
+  }
+
+  setSearchingMemory(true);
+
+  try {
+    const res = await fetch("/api/memory/search", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userId: currentUserId,
+        query: memorySearch.trim(),
+      }),
+    });
+
+    const data = await res.json();
+    setMemorySearchResults(data.results || null);
+  } catch (err) {
+    console.log("MEMORY SEARCH FRONT ERROR:", err);
+  }
+
+  setSearchingMemory(false);
+}
+
 
   useEffect(() => {
     localStorage.setItem("ghost_hidden_cards", JSON.stringify(hiddenCards));
@@ -1364,11 +1411,77 @@ function BrainPanelContent({
     (item) => !hiddenCards.includes(`${activeTab}-${item.id}`)
   );
 
-  if (!visibleList.length) return <EmptyBrainBox text="Nessun dato visibile." />;
+return (
+  <div className="space-y-3">
+    {activeTab === "memory" && (
+      <div className="rounded-3xl border border-cyan-400/20 bg-cyan-400/5 p-4">
+        <p className="text-sm font-black text-cyan-200">
+          Cerca nella memoria
+        </p>
 
-  return (
-    <div className="space-y-3">
-      {visibleList.map((item) => (
+        <div className="mt-3 flex gap-2">
+          <input
+            value={memorySearch}
+            onChange={(e) => setMemorySearch(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") searchMemory();
+            }}
+            placeholder="Valentina, Casa, GhostMe, Alex..."
+            className="flex-1 rounded-2xl border border-zinc-800 bg-zinc-950 p-3 text-sm text-white outline-none"
+          />
+
+          <button
+            onClick={searchMemory}
+            disabled={searchingMemory}
+            className="rounded-2xl bg-cyan-300 px-4 text-sm font-black text-black disabled:opacity-50"
+          >
+            {searchingMemory ? "..." : "Cerca"}
+          </button>
+        </div>
+
+        {memorySearchResults && (
+          <div className="mt-4 space-y-3 text-sm text-zinc-300">
+            {Object.entries(memorySearchResults).map(([section, items]: any) =>
+              items?.length ? (
+                <div
+                  key={section}
+                  className="rounded-2xl border border-zinc-800 bg-zinc-950 p-3"
+                >
+                  <p className="font-black text-cyan-200">{section}</p>
+
+                  <div className="mt-2 space-y-2">
+                    {items.slice(0, 5).map((item: any) => (
+                      <div key={item.id} className="text-xs text-zinc-400">
+                        <p className="font-bold text-zinc-200">
+                          {item.topic ||
+                            item.title ||
+                            item.source_topic ||
+                            "Elemento"}
+                        </p>
+
+                        <p>
+                          {item.description ||
+                            item.content ||
+                            item.summary ||
+                            item.target_topic ||
+                            item.source_message ||
+                            "Nessun dettaglio"}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null
+            )}
+          </div>
+        )}
+      </div>
+    )}
+
+    {!visibleList.length ? (
+      <EmptyBrainBox text="Nessun dato visibile." />
+    ) : (
+      visibleList.map((item: any) => (
         <div
           key={item.id}
           className="rounded-3xl border border-zinc-800 bg-black/60 p-4"
@@ -1407,10 +1520,12 @@ function BrainPanelContent({
             {item.emotional_tone && <span>{item.emotional_tone}</span>}
           </div>
         </div>
-      ))}
-    </div>
-  );
+      ))
+    )}
+  </div>
+);
 }
+
 function EmptyBrainBox({ text }: { text: string }) {
   return (
     <div className="rounded-3xl border border-zinc-800 bg-black/60 p-5 text-sm text-zinc-400">

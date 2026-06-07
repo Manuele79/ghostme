@@ -585,6 +585,7 @@ export default function ChatPage() {
         activeTab={activeMemoryTab}
         setActiveTab={setActiveMemoryTab}
         brainData={brainData}
+        currentUserId={currentUserId}
       />
 
       <ServicesDrawer
