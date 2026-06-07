@@ -1426,7 +1426,7 @@ return (
             onKeyDown={(e) => {
               if (e.key === "Enter") searchMemory();
             }}
-            placeholder="Valentina, Casa, GhostMe, Alex..."
+            placeholder="NOMI, LUOGHI, PROGETTI..."
             className="flex-1 rounded-2xl border border-zinc-800 bg-zinc-950 p-3 text-sm text-white outline-none"
           />
 
