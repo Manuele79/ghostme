@@ -25,6 +25,8 @@ import { extractEntitiesWithAI } from "@/lib/ghostme/entityExtractor";
 import { applyMemoryDecay } from "@/lib/ghostme/memoryDecay";
 import { detectAndSaveContradictions } from "@/lib/ghostme/contradictions";
 import { updateMentalState } from "@/lib/ghostme/mentalState";
+import { buildBehaviorPrompt } from "@/lib/ghostme/behavior/behaviorRulesEngine";
+import { saveBehaviorRule } from "@/lib/ghostme/behavior/behaviorRulesEngine";
 
 import {
   getGoalsDesiresContext,
@@ -151,6 +153,7 @@ function buildSystemPrompt({
   currentPlaceContext,
   serviceContext,
   cognitiveContext,
+  behaviorRulesContext,
 }: {
   traits: any;
   profileContext: string;
@@ -168,6 +171,7 @@ function buildSystemPrompt({
   currentPlaceContext: string;
   serviceContext: string;
   cognitiveContext: string;
+  behaviorRulesContext: string;
 }) {
   return `
 Sei GhostMe.
@@ -248,6 +252,9 @@ ${calendarContext || "nessun appuntamento o promemoria salvato"}
 
 Luogo attuale:
 ${currentPlaceContext || "luogo non rilevato"}
+
+REGOLE COMPORTAMENTALI APPRESE:
+${behaviorRulesContext || "nessuna regola comportamentale specifica"}
 
 Regole calendario:
 - Se l'utente chiede appuntamenti, promemoria, note o calendario, usa SOLO Calendario reale.
@@ -954,6 +961,9 @@ export async function POST(req: Request) {
       );
     }
 
+    const behaviorRulesContext = userId
+    ? await buildBehaviorPrompt(userId)
+    : "";
 
     const systemPrompt = buildSystemPrompt({
       traits,
@@ -972,6 +982,7 @@ export async function POST(req: Request) {
       currentPlaceContext,
       serviceContext,
       cognitiveContext,
+      behaviorRulesContext,
       
     });
 
@@ -1043,6 +1054,38 @@ export async function POST(req: Request) {
           jobs.push(detectAndSaveTimelineEvent({ userId, message, detectedTopics }));
           jobs.push(updateDynamicSelfProfile({ userId, message }));
           jobs.push(detectAndSaveActionIntent({ userId, message, detectedTopics }));
+
+          const lower = message.toLowerCase();
+
+          const behaviorSignals = [
+            "non chiedermi più",
+            "non propormelo più",
+            "non farmi più",
+            "da ora in poi",
+            "d'ora in poi",
+            "ricordati che preferisco",
+            "preferisco che",
+            "quando succede",
+            "in futuro fai",
+            "in futuro non",
+          ];
+
+          const hasBehaviorRule = behaviorSignals.some((signal) =>
+            lower.includes(signal)
+          );
+
+          if (hasBehaviorRule) {
+            jobs.push(
+              saveBehaviorRule({
+                userId,
+                ruleText: message,
+                ruleType: "learned_preference",
+                targetArea: "chat",
+                sourceMessage: message,
+                priority: 7,
+              })
+            );
+          }
 
           await Promise.allSettled(jobs);
         } catch (err) {
