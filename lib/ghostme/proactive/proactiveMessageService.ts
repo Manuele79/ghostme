@@ -26,7 +26,6 @@ export async function upsertProactiveMessage({
     .select("id")
     .eq("user_id", userId)
     .eq("category", category)
-    .gte("created_at", startOfTodayIso())
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();

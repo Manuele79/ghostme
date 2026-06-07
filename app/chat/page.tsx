@@ -292,23 +292,29 @@ export default function ChatPage() {
         );
       }
 
+      await refreshBrain(user.id);
+      setLoading(false);
+
       try {
         const lastRun = localStorage.getItem("ghost_proactive_last_run");
         const now = Date.now();
 
         if (!lastRun || now - Number(lastRun) > 1000 * 60 * 30) {
-          await fetch("/api/worker/proactive", {
-            method: "GET",
-          });
-
           localStorage.setItem("ghost_proactive_last_run", String(now));
+
+          fetch("/api/worker/proactive", {
+            method: "GET",
+          })
+            .then(async () => {
+              await refreshBrain(user.id);
+            })
+            .catch((err) => {
+              console.log("PROACTIVE WORKER BACKGROUND ERROR:", err);
+            });
         }
       } catch (err) {
         console.log("PROACTIVE WORKER BOOT ERROR:", err);
       }
-
-      await refreshBrain(user.id);
-      setLoading(false);
     }
 
     boot();
