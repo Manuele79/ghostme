@@ -41,17 +41,48 @@ export async function saveBehaviorRule({
 }) {
   if (!userId || !ruleText?.trim()) return null;
 
+    const cleanRuleText = ruleText.trim();
+
+    const { data: existingRule } = await supabaseAdmin
+      .from("ghost_behavior_rules")
+      .select("id, confidence, priority")
+      .eq("user_id", userId)
+      .eq("status", "active")
+      .ilike("rule_text", `%${cleanRuleText.slice(0, 60)}%`)
+      .limit(1)
+      .maybeSingle();
+
+    if (existingRule?.id) {
+      const { data, error } = await supabaseAdmin
+        .from("ghost_behavior_rules")
+        .update({
+          confidence: Math.min((existingRule.confidence || 8) + 1, 10),
+          priority: Math.max(existingRule.priority || 5, priority),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", existingRule.id)
+        .select()
+        .single();
+
+      if (error) {
+        console.log("UPDATE EXISTING BEHAVIOR RULE ERROR:", error);
+        return null;
+      }
+
+      return data;
+    }
+
   const { data, error } = await supabaseAdmin
     .from("ghost_behavior_rules")
     .insert([
       {
         user_id: userId,
-        rule_text: ruleText.trim(),
+        rule_text: cleanRuleText,
         rule_type: ruleType,
         context: context || null,
         trigger_hint: triggerHint || null,
         target_area: targetArea || "general",
-        source_message: sourceMessage || ruleText,
+        source_message: sourceMessage || cleanRuleText,
         priority,
         confidence: 8,
         status: "active",

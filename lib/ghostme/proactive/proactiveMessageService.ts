@@ -23,38 +23,53 @@ export async function upsertProactiveMessage({
 
   const { data: existing } = await supabaseAdmin
     .from("ghost_proactive_messages")
-    .select("id")
+    .select("id, message, status")
     .eq("user_id", userId)
     .eq("category", category)
+    .in("status", ["unread", "read"])
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
 
   if (existing?.id) {
-    const { data: oldMessage } = await supabaseAdmin
-      .from("ghost_proactive_messages")
-      .select("message, status")
-      .eq("id", existing.id)
-      .maybeSingle();
+    const messageChanged = existing.message !== message;
 
-    const messageChanged = oldMessage?.message !== message;
+    // Se il messaggio è uguale, aggiorna solo priorità/timestamp.
+    if (!messageChanged) {
+      await supabaseAdmin
+        .from("ghost_proactive_messages")
+        .update({
+          title,
+          priority,
+          scheduled_for: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", existing.id);
 
-    await supabaseAdmin
-      .from("ghost_proactive_messages")
-      .update({
-        title,
-        message,
-        priority,
-        status: messageChanged ? "unread" : oldMessage?.status || "read",
-        read_at: messageChanged ? null : undefined,
-        scheduled_for: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", existing.id);
+      return;
+    }
 
-    return;
+    // Se era unread, aggiorna lo stesso record.
+    if (existing.status === "unread") {
+      await supabaseAdmin
+        .from("ghost_proactive_messages")
+        .update({
+          title,
+          message,
+          priority,
+          status: "unread",
+          read_at: null,
+          scheduled_for: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", existing.id);
+
+      return;
+    }
   }
 
+  // Se non esiste, o l'ultimo era già read con contenuto diverso,
+  // crea un nuovo messaggio.
   await supabaseAdmin.from("ghost_proactive_messages").insert({
     user_id: userId,
     title,

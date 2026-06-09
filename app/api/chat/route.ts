@@ -793,6 +793,7 @@ export async function POST(req: Request) {
           .select("type, title, description, start_at, remind_at, status")
           .eq("user_id", userId)
           .eq("status", "active")
+          .or(`start_at.gte.${new Date().toISOString()},remind_at.gte.${new Date().toISOString()}`)
           .order("start_at", { ascending: true })
           .limit(30),
 

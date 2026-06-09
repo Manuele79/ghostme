@@ -130,3 +130,24 @@ Se non c'è azione:
 
   return data;
 }
+
+export async function cleanupOldActionIntents(userId: string) {
+  if (!userId) return;
+
+  const limitDate = new Date();
+  limitDate.setDate(limitDate.getDate() - 30);
+
+  const { error } = await supabaseAdmin
+    .from("action_intents")
+    .update({
+      status: "archived",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("user_id", userId)
+    .in("status", ["detected", "pending"])
+    .lt("updated_at", limitDate.toISOString());
+
+  if (error) {
+    console.log("CLEANUP OLD ACTION INTENTS ERROR:", error);
+  }
+}

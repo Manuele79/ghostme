@@ -90,6 +90,8 @@ export async function POST(req: Request) {
         .select("*")
         .eq("user_id", userId)
         .eq("status", "unread")
+        .lte("scheduled_for", new Date().toISOString())
+        .order("priority", { ascending: false })
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle(),
