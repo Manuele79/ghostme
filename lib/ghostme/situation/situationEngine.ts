@@ -21,6 +21,8 @@ export type GhostSituation = {
   dynamicProfile: any[];
   activeContradictions: any[];
   importantLinks: any[];
+  behaviorPatterns: any[];
+  recentObservations: any[];
 
   externalSignals: {
     weatherContext: string | null;
@@ -111,6 +113,8 @@ export async function buildGhostSituation(userId: string): Promise<GhostSituatio
     dynamicProfileRes,
     contradictionsRes,
     linksRes,
+    behaviorPatternsRes,
+    observationsRes,
   ] = await Promise.all([
     supabaseAdmin
       .from("user_profiles")
@@ -125,8 +129,9 @@ export async function buildGhostSituation(userId: string): Promise<GhostSituatio
       .select("*")
       .eq("user_id", userId)
       .eq("status", "active")
-      .gte("start_at", startOfTodayIsoRome())
-      .lte("start_at", endOfTodayIsoRome())
+      .or(
+        `and(start_at.gte.${nowIso},start_at.lte.${endOfTodayIsoRome()}),and(remind_at.gte.${nowIso},remind_at.lte.${endOfTodayIsoRome()})`
+      )
       .order("start_at", { ascending: true })
       .limit(10),
 
@@ -135,7 +140,7 @@ export async function buildGhostSituation(userId: string): Promise<GhostSituatio
       .select("*")
       .eq("user_id", userId)
       .eq("status", "active")
-      .gte("start_at", nowIso)
+      .or(`start_at.gte.${nowIso},remind_at.gte.${nowIso}`)
       .order("start_at", { ascending: true })
       .limit(10),
 
@@ -213,6 +218,25 @@ export async function buildGhostSituation(userId: string): Promise<GhostSituatio
       .eq("user_id", userId)
       .order("weight", { ascending: false })
       .limit(12),
+
+    supabaseAdmin
+      .from("behavior_patterns")
+      .select("*")
+      .eq("user_id", userId)
+      .in("status", ["learning", "active"])
+      .order("confidence", { ascending: false })
+      .order("last_seen_at", { ascending: false })
+      .limit(8),
+
+    supabaseAdmin
+      .from("observation_events")
+      .select("*")
+      .eq("user_id", userId)
+      .order("occurred_at", { ascending: false })
+      .limit(12),
+
+
+
   ]);
 
   const profile = profileRes.data || null;
@@ -231,6 +255,9 @@ export async function buildGhostSituation(userId: string): Promise<GhostSituatio
   const dynamicProfile = dynamicProfileRes.data || [];
   const activeContradictions = contradictionsRes.data || [];
   const importantLinks = linksRes.data || [];
+
+  const behaviorPatterns = behaviorPatternsRes.data || [];
+  const recentObservations = observationsRes.data || [];
 
   const timeContext = getTimeContext();
   const dayContext = getDayContext();
@@ -347,6 +374,25 @@ ${formatList(
   6
 )}
 
+PATTERN COMPORTAMENTALI:
+${formatList(
+  behaviorPatterns,
+  (p) =>
+    `- ${p.title || p.pattern_type} | stato ${p.status} | confidenza ${p.confidence} | occorrenze ${p.occurrences} | ${p.description || ""}`,
+  "nessun pattern comportamentale rilevante",
+  5
+)}
+
+OSSERVAZIONI RECENTI:
+${formatList(
+  recentObservations,
+  (o) =>
+    `- ${o.event_type} | luogo ${o.place_label || "sconosciuto"} | ${o.occurred_at}`,
+  "nessuna osservazione recente",
+  6
+)}
+
+
 SEGNALI ESTERNI PREDISPOSTI:
 meteo: ${externalSignals.weatherContext || "non collegato qui"}
 web: ${externalSignals.webContext || "non collegato qui"}
@@ -374,6 +420,8 @@ device: ${externalSignals.deviceContext || "non collegato"}
     dynamicProfile,
     activeContradictions,
     importantLinks,
+    behaviorPatterns,
+    recentObservations,
 
     externalSignals,
     situationSummary,

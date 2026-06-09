@@ -10,6 +10,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "userId mancante" }, { status: 400 });
     }
 
+    const now = new Date().toISOString();
+
     const [
       profileRes,
       traitsRes,
@@ -79,7 +81,8 @@ export async function POST(req: Request) {
         .select("*")
         .eq("user_id", userId)
         .eq("status", "active")
-        .order("remind_at", { ascending: true })
+        .or(`start_at.gte.${now},remind_at.gte.${now}`)
+        .order("start_at", { ascending: true })
         .limit(80),
 
       supabaseAdmin

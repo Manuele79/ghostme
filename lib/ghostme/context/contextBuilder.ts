@@ -1,4 +1,6 @@
 import { buildGhostSituation } from "@/lib/ghostme/situation/situationEngine";
+import { buildBehaviorPrompt } from "@/lib/ghostme/behavior/behaviorRulesEngine";
+
 
 export type GhostCurrentContext = {
   timeContext: string;
@@ -20,6 +22,9 @@ export type GhostCurrentContext = {
   dynamicProfile: string[];
   activeContradictions: string[];
   importantLinks: string[];
+  behaviorPatterns: string[];
+  recentObservations: string[];
+  behaviorRulesContext: string;
   reasoningSummary: string;
 };
 
@@ -27,6 +32,8 @@ export async function buildCurrentContext(
   userId: string
 ): Promise<GhostCurrentContext> {
   const situation = await buildGhostSituation(userId);
+
+  const behaviorRulesContext = await buildBehaviorPrompt(userId);
 
   const activeProjects = situation.dominantTopics
     .filter((t) => t.category === "project" || t.entity_type === "project")
@@ -85,6 +92,20 @@ export async function buildCurrentContext(
       .map((l) => `${l.source_topic} ↔ ${l.target_topic}`)
       .slice(0, 8);
 
+    const behaviorPatterns = situation.behaviorPatterns
+      .map(
+        (p) =>
+          `${p.title || p.pattern_type} | stato ${p.status} | confidenza ${p.confidence} | occorrenze ${p.occurrences}`
+      )
+      .slice(0, 6);
+
+    const recentObservations = situation.recentObservations
+      .map(
+        (o) =>
+          `${o.event_type} | luogo ${o.place_label || "sconosciuto"} | ${o.occurred_at}`
+      )
+      .slice(0, 8);
+
     const reasoningSummary = `
       Luogo attuale: ${situation.currentPlace || "luogo sconosciuto"}.
       Momento: ${situation.timeContext}, ${situation.dayContext}.
@@ -96,6 +117,8 @@ export async function buildCurrentContext(
       Stato mentale: ${mentalState}.
       Memorie recenti utili: ${recentEpisodes.join(", ") || "nessuna"}.
       Collegamenti importanti: ${importantLinks.join(", ") || "nessuno"}.
+      Pattern comportamentali: ${behaviorPatterns.join(", ") || "nessuno"}.
+      Osservazioni recenti: ${recentObservations.join(", ") || "nessuna"}.
       `.trim();  
 
     const contextSummary = `
@@ -119,6 +142,10 @@ export async function buildCurrentContext(
       Profilo dinamico: ${dynamicProfile.join(", ") || "nessuno"}
       Contraddizioni attive: ${activeContradictions.join(", ") || "nessuna"}
       Collegamenti importanti: ${importantLinks.join(", ") || "nessuno"}
+      Pattern comportamentali: ${behaviorPatterns.join(", ") || "nessuno"}
+      Osservazioni recenti: ${recentObservations.join(", ") || "nessuna"}
+      Regole comportamentali attive:
+      ${behaviorRulesContext || "nessuna regola comportamentale attiva"}
       Sintesi ragionata: ${reasoningSummary}
   `.trim();
 
@@ -142,6 +169,9 @@ export async function buildCurrentContext(
     dynamicProfile,
     activeContradictions,
     importantLinks,
+    behaviorPatterns,
+    recentObservations,
+    behaviorRulesContext,
     reasoningSummary,
   };
 }
