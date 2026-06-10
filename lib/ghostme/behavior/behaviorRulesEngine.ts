@@ -108,7 +108,8 @@ export async function saveBehaviorRule({
 export async function buildBehaviorPrompt(userId: string) {
   const rules = await getActiveBehaviorRules(userId);
 
-  if (rules.length) {
+  if (!rules.length) return "";
+
   await supabaseAdmin
     .from("ghost_behavior_rules")
     .update({
@@ -118,9 +119,6 @@ export async function buildBehaviorPrompt(userId: string) {
       "id",
       rules.map((rule) => rule.id)
     );
-}
-
-  if (!rules.length) return "";
 
   return `
 REGOLE COMPORTAMENTALI PERSONALIZZATE DELL'UTENTE
