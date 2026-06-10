@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { buildPersonalitySummary } from "@/lib/personality";
+import { seedBehaviorFromProfile } from "@/lib/ghostme/profile/profileBehaviorSeed";
+
 
 type SelectedAnswer = {
   questionId: string;
@@ -500,6 +502,8 @@ async function saveProfile() {
     setSaveMessage("Profilo creato, ma c'è stato un errore su traits/risposte.");
     return;
   }
+
+  await seedBehaviorFromProfile(userData.id);
 
   setSaveMessage("Profilo salvato correttamente.");
 }

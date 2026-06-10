@@ -13,13 +13,13 @@ function trimText(value: string, max = 1800) {
 export async function generateCuriosityMessage(userId: string) {
   if (!userId) return null;
 
-  // massimo 1 curiosità ogni 24 ore
+  // massimo 1 curiosità ogni  ore
   const { data: recent } = await supabaseAdmin
     .from("ghost_proactive_messages")
     .select("id")
     .eq("user_id", userId)
     .eq("category", "curiosity")
-    .gte("created_at", new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString())
+    .gte("created_at", new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString())
     .limit(1);
 
   if (recent && recent.length > 0) return null;

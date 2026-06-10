@@ -253,6 +253,20 @@ export async function GET() {
           });
         }
 
+
+      const startOfToday = new Date();
+      startOfToday.setHours(0, 0, 0, 0);
+
+      const { data: existingDaily } = await supabaseAdmin
+        .from("ghost_proactive_messages")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("category", "daily_briefing")
+        .gte("created_at", startOfToday.toISOString())
+        .limit(1)
+        .maybeSingle();       
+
+      if (!existingDaily?.id) {
         await upsertProactiveMessage({
           userId,
           title: "Daily Briefing",
@@ -260,10 +274,25 @@ export async function GET() {
           category: "daily_briefing",
           priority: 1,
         });
+      }
 
         created++;
 
-        if (butlerMessage) {
+      if (butlerMessage) {
+        const observationLimit = new Date(
+          Date.now() - 6 * 60 * 60 * 1000
+        ).toISOString();
+
+        const { data: recentObservation } = await supabaseAdmin
+          .from("ghost_proactive_messages")
+          .select("id")
+          .eq("user_id", userId)
+          .eq("category", "observation")
+          .gte("created_at", observationLimit)
+          .limit(1)
+          .maybeSingle();
+
+        if (!recentObservation?.id) {
           await upsertProactiveMessage({
             userId,
             title: "Osservazione GhostMe",
@@ -272,6 +301,7 @@ export async function GET() {
             priority: 2,
           });
         }
+      }
 
         if (curiosityMessage) {
           await upsertProactiveMessage({

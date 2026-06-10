@@ -109,12 +109,16 @@ export async function refreshAgendaMessage(userId: string) {
   const situation = await buildGhostSituation(userId);
   const agendaMessage = buildAgendaMessage(situation);
 
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
   const { data: existing } = await supabaseAdmin
     .from("ghost_proactive_messages")
     .select("id")
     .eq("user_id", userId)
     .eq("category", "agenda")
-    .eq("status", "unread")
+    .in("status", ["unread", "read"])
+    .gte("created_at", startOfToday.toISOString())
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -139,6 +143,8 @@ export async function refreshAgendaMessage(userId: string) {
       .update({
         title: "Agenda di oggi",
         message: agendaMessage,
+        status: "unread",
+        read_at: null,
         priority: 5,
         scheduled_for: new Date().toISOString(),
         updated_at: new Date().toISOString(),
