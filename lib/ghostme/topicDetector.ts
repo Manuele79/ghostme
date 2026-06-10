@@ -19,7 +19,46 @@ const ignoredWords = new Set(
     "mattina", "pomeriggio", "notte", "bene", "male", "grazie", "ok",
     "home", "assistant", "san", "santo", "santa", "friulano", "friuli",
     "collio", "cormons", "zona", "ristorante", "friggitoria", "fritto",
-    "frittura", "pesce", "ghost", "ghostme",
+    "frittura", "pesce", "ghost", "ghostme","risposta",
+"rispondendo",
+"osservazione",
+"osservazioni",
+"potrebbe",
+"potresti",
+"qual",
+"quale",
+"quali",
+"considera",
+"prenditi",
+"anche",
+"attuale",
+"attuali",
+"momento",
+"utile",
+"supportarti",
+"capire",
+"meglio",
+"luogo",
+"trovi",
+"tua",
+"tuo",
+"tue",
+"tuoi",
+"mia",
+"mio",
+"alla",
+"allo",
+"alle",
+"agli",
+"dei",
+"del",
+"della",
+"delle",
+"dello",
+"nel",
+"nella",
+"nelle",
+"negli",
     "askdj",
   ].map((w) => w.toLowerCase())
 );
@@ -172,6 +211,14 @@ function isPossiblePersonName(
 export function detectTopicsFromMessage(message: string): DetectedTopic[] {
   const detected: DetectedTopic[] = [];
   const normalized = normalizeText(message);
+
+ if (
+  normalized.startsWith("sto rispondendo alla tua osservazione") ||
+  normalized.startsWith("sto rispondendo alla tua curiosità") ||
+  normalized.startsWith("sto rispondendo al tuo promemoria")
+) {
+  return [];
+} 
 
   for (const rule of knownTopicRules) {
     const matchedKeyword = rule.keywords.find((keyword) =>
