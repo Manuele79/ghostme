@@ -89,7 +89,6 @@ export async function GET() {
       
       const curiosityMessage = await generateCuriosityMessage(userId);
 
-      await generateObservationInsight(userId);
 
       const [
         calendarRes,
@@ -104,7 +103,8 @@ export async function GET() {
           .select("title, type, description, start_at, remind_at")
           .eq("user_id", userId)
           .eq("status", "active")
-          .order("remind_at", { ascending: true })
+          .or(`start_at.gte.${new Date().toISOString()},remind_at.gte.${new Date().toISOString()}`)
+          .order("start_at", { ascending: true })
           .limit(8),
 
         supabaseAdmin
@@ -167,8 +167,8 @@ export async function GET() {
         1. Saluto breve
         2. Cose concrete di oggi o prossime
         3. Collegamento intelligente con memoria/progetti/stato mentale
-        4. Suggerimento pratico su cosa conviene fare
-        5. Una domanda finale utile
+        4. Solo se utile, una micro-azione concreta
+        5. Evita domande finali se non servono davvero
 
         Regole:
         - Se ci sono appuntamenti, cita quelli.
@@ -177,14 +177,41 @@ export async function GET() {
         - Se il calendario è vuoto, non dire che ci sono appuntamenti.
         - Se i dati sono pochi, fai un briefing breve.
         - Massimo 130 parole.
+        - NON proporre riflessioni generiche.
+        - NON dire "prenditi 15 minuti per riflettere".
+        - NON dare consigli psicologici o motivazionali.
+        - Dai solo cose operative: appuntamenti, promemoria, azioni concrete, anomalie utili.
+        - Se non c'è nulla di concreto, fai un briefing molto breve.
         `;
+
+      const calendarForPrompt = (calendarRes.data || []).map((event) => ({
+        ...event,
+        when_it: event.start_at
+          ? new Date(event.start_at).toLocaleString("it-IT", {
+              timeZone: "Europe/Rome",
+              day: "2-digit",
+              month: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : event.remind_at
+            ? new Date(event.remind_at).toLocaleString("it-IT", {
+                timeZone: "Europe/Rome",
+                day: "2-digit",
+                month: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : "orario non specificato",
+      }));
+
 
       const userPrompt = `
         UTENTE:
         ${JSON.stringify(user, null, 2)}
 
         CALENDARIO:
-        ${JSON.stringify(calendarRes.data || [], null, 2)}
+       ${JSON.stringify(calendarForPrompt, null, 2)}
 
         OBIETTIVI:
         ${JSON.stringify(goalsRes.data || [], null, 2)}

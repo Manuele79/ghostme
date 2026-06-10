@@ -1,10 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
-function startOfTodayIso() {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d.toISOString();
-}
+
 
 export async function upsertProactiveMessage({
   userId,

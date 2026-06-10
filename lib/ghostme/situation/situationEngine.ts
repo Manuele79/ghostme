@@ -442,7 +442,7 @@ device: ${externalSignals.deviceContext || "non collegato"}
     dynamicProfile,
     activeContradictions,
     importantLinks,
-    behaviorRules: behaviorRulesRes.data || [],
+    behaviorRules,
     behaviorPatterns,
     recentObservations,
 
