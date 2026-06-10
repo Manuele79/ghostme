@@ -22,20 +22,26 @@ export async function buildHomeReasoning() {
     );
   }
 
-  // TV
-  const tvs = states.filter(
-    (s) =>
-      s.entity_id.startsWith("media_player.") &&
-      ["on", "playing", "paused"].includes(
-        String(s.state).toLowerCase()
-      )
-  );
+// TV / media attivi
+const mediaNameMap: Record<string, string> = {
+  "media_player.lg_webos_tv_uk6200pla": "TV cucina",
+  "media_player.hisense_43a5fe_dal10537_airplay": "TV camera",
+};
 
-  for (const tv of tvs) {
-    lines.push(
-      `${tv.attributes?.friendly_name || "TV"} accesa`
-    );
-  }
+const mediaPlayers = states.filter(
+  (s) =>
+    s.entity_id.startsWith("media_player.") &&
+    ["on", "playing", "paused"].includes(String(s.state).toLowerCase())
+);
+
+for (const media of mediaPlayers) {
+  const name =
+    mediaNameMap[media.entity_id] ||
+    media.attributes?.friendly_name ||
+    media.entity_id;
+
+  lines.push(`${name} accesa`);
+}
 
   // Luci accese
   const lights = states.filter(

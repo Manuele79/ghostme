@@ -2,7 +2,7 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { buildGhostSituation } from "@/lib/ghostme/situation/situationEngine";
 import { buildBehaviorPrompt } from "@/lib/ghostme/behavior/behaviorRulesEngine";
-
+import { buildHomeReasoning } from "@/lib/ghostme/homeAssistant/homeReasoningBuilder";
 
 export type GhostCurrentContext = {
   timeContext: string;
@@ -36,6 +36,8 @@ export async function buildCurrentContext(
   userId: string
 ): Promise<GhostCurrentContext> {
   const situation = await buildGhostSituation(userId);
+
+  const homeContext = await buildHomeReasoning();
 
   const behaviorRulesContext = await buildBehaviorPrompt(userId);
 
@@ -144,6 +146,8 @@ export async function buildCurrentContext(
       Regole comportamentali: ${behaviorRules.join(", ") || "nessuna"}.
       Osservazioni recenti: ${recentObservations.join(", ") || "nessuna"}.
       Messaggi proattivi recenti: ${recentProactiveMessages.join(" | ") || "nessuno"}.
+      Contesto casa:
+      ${homeContext}
       `.trim();  
 
     const contextSummary = `
@@ -175,6 +179,8 @@ export async function buildCurrentContext(
       Sintesi ragionata: ${reasoningSummary}
       Messaggi proattivi recenti:
       ${recentProactiveMessages.join("\n") || "nessuno"}
+      HOME ASSISTANT:
+      ${homeContext}
   `.trim();
 
   return {
