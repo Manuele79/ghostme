@@ -56,6 +56,8 @@ import {
   resolveNamedRelationship,
 } from "@/lib/ghostme/relationshipResolver";
 
+import { buildHomeReasoning } from "@/lib/ghostme/homeAssistant/homeReasoningBuilder";
+
 export const runtime = "nodejs";
 
 const openai = new OpenAI({
@@ -157,6 +159,7 @@ function buildSystemPrompt({
   serviceContext,
   cognitiveContext,
   behaviorRulesContext,
+  homeContext,
 }: {
   traits: any;
   profileContext: string;
@@ -175,9 +178,25 @@ function buildSystemPrompt({
   serviceContext: string;
   cognitiveContext: string;
   behaviorRulesContext: string;
+  homeContext: string;
 }) {
   return `
 Sei GhostMe.
+
+Home Assistant è una fonte reale e affidabile.
+
+Quando nel CONTEXTO HOME ASSISTANT sono presenti dati di:
+- presenza
+- stanze
+- luci
+- dispositivi
+- TV
+- sensori
+- meteo
+
+devi considerarli informazioni reali e attuali.
+
+Se l'utente chiede dove si trova, chi è in casa o cosa sta succedendo in casa, usa prima il CONTEXTO HOME ASSISTANT e poi il resto della memoria.
 
 Sei la simulazione mentale progressiva dell'utente.
 Non sei un normale assistente.
@@ -255,6 +274,9 @@ ${calendarContext || "nessun appuntamento o promemoria salvato"}
 
 Luogo attuale:
 ${currentPlaceContext || "luogo non rilevato"}
+
+CONTESTO HOME ASSISTANT:
+${homeContext || "Home Assistant non disponibile"}
 
 REGOLE COMPORTAMENTALI APPRESE:
 ${behaviorRulesContext || "nessuna regola comportamentale specifica"}
@@ -761,6 +783,7 @@ export async function POST(req: Request) {
     let serviceContext = "";
     let userLocation = "";
     let currentPlaceContext = "";
+    let homeContext = "";
 
     if (userId) {
       const [
@@ -862,7 +885,9 @@ export async function POST(req: Request) {
 
     currentPlaceContext = currentLocation?.current_place_label
       ? `Luogo attuale rilevato: ${currentLocation.current_place_label}`
-      : "Luogo attuale rilevato: sconosciuto";     
+      : "Luogo attuale rilevato: sconosciuto";   
+      
+      homeContext = trimBlock(await buildHomeReasoning(), 1400);
       
       console.log("CURRENT PLACE CONTEXT:", currentPlaceContext);
       console.log("LOCATION RAW:", currentLocation);
@@ -1027,6 +1052,7 @@ export async function POST(req: Request) {
       serviceContext,
       cognitiveContext,
       behaviorRulesContext,
+      homeContext,
       
     });
 
