@@ -27,6 +27,20 @@ export async function runRetentionCleanup(userId: string) {
     .eq("status", "read")
     .lt("created_at", chatLimit.toISOString());
 
+  const unreadLimit = new Date(now);
+  unreadLimit.setDate(unreadLimit.getDate() - 7);
+
+  await supabaseAdmin
+    .from("ghost_proactive_messages")
+    .update({
+      status: "archived",
+      updated_at: now.toISOString(),
+    })
+    .eq("user_id", userId)
+    .eq("status", "unread")
+    .lt("created_at", unreadLimit.toISOString());
+
+
   await supabaseAdmin
     .from("calendar_events")
     .update({

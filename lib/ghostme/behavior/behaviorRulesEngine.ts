@@ -108,6 +108,18 @@ export async function saveBehaviorRule({
 export async function buildBehaviorPrompt(userId: string) {
   const rules = await getActiveBehaviorRules(userId);
 
+  if (rules.length) {
+  await supabaseAdmin
+    .from("ghost_behavior_rules")
+    .update({
+      last_applied_at: new Date().toISOString(),
+    })
+    .in(
+      "id",
+      rules.map((rule) => rule.id)
+    );
+}
+
   if (!rules.length) return "";
 
   return `

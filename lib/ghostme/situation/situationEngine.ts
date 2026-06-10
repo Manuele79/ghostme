@@ -21,6 +21,7 @@ export type GhostSituation = {
   dynamicProfile: any[];
   activeContradictions: any[];
   importantLinks: any[];
+  behaviorRules: any[];
   behaviorPatterns: any[];
   recentObservations: any[];
 
@@ -113,6 +114,7 @@ export async function buildGhostSituation(userId: string): Promise<GhostSituatio
     dynamicProfileRes,
     contradictionsRes,
     linksRes,
+    behaviorRulesRes,
     behaviorPatternsRes,
     observationsRes,
   ] = await Promise.all([
@@ -220,6 +222,17 @@ export async function buildGhostSituation(userId: string): Promise<GhostSituatio
       .limit(12),
 
     supabaseAdmin
+      .from("ghost_behavior_rules")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("status", "active")
+      .order("priority", { ascending: false })
+      .order("confidence", { ascending: false })
+      .limit(15),
+
+
+
+    supabaseAdmin
       .from("behavior_patterns")
       .select("*")
       .eq("user_id", userId)
@@ -234,7 +247,6 @@ export async function buildGhostSituation(userId: string): Promise<GhostSituatio
       .eq("user_id", userId)
       .order("occurred_at", { ascending: false })
       .limit(12),
-
 
 
   ]);
@@ -255,6 +267,7 @@ export async function buildGhostSituation(userId: string): Promise<GhostSituatio
   const dynamicProfile = dynamicProfileRes.data || [];
   const activeContradictions = contradictionsRes.data || [];
   const importantLinks = linksRes.data || [];
+  const behaviorRules = behaviorRulesRes.data || [];
 
   const behaviorPatterns = behaviorPatternsRes.data || [];
   const recentObservations = observationsRes.data || [];
@@ -374,6 +387,15 @@ ${formatList(
   6
 )}
 
+REGOLE COMPORTAMENTALI:
+${formatList(
+  behaviorRules,
+  (r) =>
+    `- [${r.target_area || "general"}] priorità ${r.priority} | ${r.rule_text}`,
+  "nessuna regola comportamentale attiva",
+  8
+)}
+
 PATTERN COMPORTAMENTALI:
 ${formatList(
   behaviorPatterns,
@@ -420,6 +442,7 @@ device: ${externalSignals.deviceContext || "non collegato"}
     dynamicProfile,
     activeContradictions,
     importantLinks,
+    behaviorRules: behaviorRulesRes.data || [],
     behaviorPatterns,
     recentObservations,
 

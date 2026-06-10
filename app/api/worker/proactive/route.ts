@@ -14,6 +14,8 @@ import { decideProactiveMessage } from "@/lib/ghostme/proactive/proactiveDecisio
 import { refreshReminderMessage } from "@/lib/ghostme/agenda/reminderEngine";
 import { generateObservationInsight } from "@/lib/ghostme/observation/observationInsightEngine";
 import { cleanupOldActionIntents } from "@/lib/ghostme/actionLayer";
+import { generatePatternInsight } from "@/lib/ghostme/patterns/patternInsightEngine";
+import { applyPatternDecay } from "@/lib/ghostme/patterns/patternDecay";
 
 
 const openai = new OpenAI({
@@ -52,6 +54,13 @@ export async function GET() {
       await cleanupOldActionIntents(userId);
 
       await refreshReminderMessage(userId);
+
+      await generateObservationInsight(userId);
+
+      await generatePatternInsight(userId);
+
+      await applyPatternDecay(userId);
+
 
       const situation = await buildGhostSituation(userId);
       const agendaMessage = buildAgendaMessage(situation);

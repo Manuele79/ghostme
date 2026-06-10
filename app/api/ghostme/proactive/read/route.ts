@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     const { error } = await supabaseAdmin
       .from("ghost_proactive_messages")
       .update({
-        status: "read",
+        status: body.dismissed ? "dismissed" : "read",
         read_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })

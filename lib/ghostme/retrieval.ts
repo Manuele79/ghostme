@@ -152,11 +152,30 @@ export async function buildContextualMemory({
           ? 20
           : 0;
 
-        const score =
-          directBoost +
-          (topic.weight || 0) * 3 +
-          (topic.relationship_strength || 0) * 2 +
-          (topic.mention_count || 0);
+    const lastMention = topic.last_mentioned_at
+      ? new Date(topic.last_mentioned_at).getTime()
+      : 0;
+
+    const daysOld = Math.floor(
+      (Date.now() - lastMention) /
+      (1000 * 60 * 60 * 24)
+    );
+
+    let recencyBonus = 0;
+
+    if (daysOld <= 3) recencyBonus = 20;
+    else if (daysOld <= 7) recencyBonus = 15;
+    else if (daysOld <= 14) recencyBonus = 10;
+    else if (daysOld <= 30) recencyBonus = 5;
+    else if (daysOld <= 90) recencyBonus = 0;
+    else recencyBonus = -10;
+
+    const score =
+      directBoost +
+      recencyBonus +
+      (topic.weight || 0) * 3 +
+      (topic.relationship_strength || 0) * 2 +
+      (topic.mention_count || 0);
 
         return { ...topic, score };
       })

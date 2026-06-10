@@ -23,6 +23,7 @@ export type GhostCurrentContext = {
   activeContradictions: string[];
   importantLinks: string[];
   behaviorPatterns: string[];
+  behaviorRules: string[];
   recentObservations: string[];
   behaviorRulesContext: string;
   reasoningSummary: string;
@@ -92,6 +93,11 @@ export async function buildCurrentContext(
       .map((l) => `${l.source_topic} ↔ ${l.target_topic}`)
       .slice(0, 8);
 
+    const behaviorRules = situation.behaviorRules
+      .map((r) => `[${r.target_area || "general"}] ${r.rule_text}`)
+      .slice(0, 10);
+
+
     const behaviorPatterns = situation.behaviorPatterns
       .map(
         (p) =>
@@ -118,6 +124,7 @@ export async function buildCurrentContext(
       Memorie recenti utili: ${recentEpisodes.join(", ") || "nessuna"}.
       Collegamenti importanti: ${importantLinks.join(", ") || "nessuno"}.
       Pattern comportamentali: ${behaviorPatterns.join(", ") || "nessuno"}.
+      Regole comportamentali: ${behaviorRules.join(", ") || "nessuna"}.
       Osservazioni recenti: ${recentObservations.join(", ") || "nessuna"}.
       `.trim();  
 
@@ -143,6 +150,7 @@ export async function buildCurrentContext(
       Contraddizioni attive: ${activeContradictions.join(", ") || "nessuna"}
       Collegamenti importanti: ${importantLinks.join(", ") || "nessuno"}
       Pattern comportamentali: ${behaviorPatterns.join(", ") || "nessuno"}
+      Regole comportamentali: ${behaviorRules.join(", ") || "nessuna"}
       Osservazioni recenti: ${recentObservations.join(", ") || "nessuna"}
       Regole comportamentali attive:
       ${behaviorRulesContext || "nessuna regola comportamentale attiva"}
@@ -169,6 +177,7 @@ export async function buildCurrentContext(
     dynamicProfile,
     activeContradictions,
     importantLinks,
+    behaviorRules,
     behaviorPatterns,
     recentObservations,
     behaviorRulesContext,
