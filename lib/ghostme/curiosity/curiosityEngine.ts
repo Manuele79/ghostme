@@ -1,5 +1,6 @@
 import { OpenAI } from "openai";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { buildGhostSituation } from "@/lib/ghostme/situation/situationEngine";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -23,6 +24,7 @@ export async function generateCuriosityMessage(userId: string) {
     .limit(1);
 
   if (recent && recent.length > 0) return null;
+  const situation = await buildGhostSituation(userId);
 
   const [
     topicsRes,
@@ -127,11 +129,19 @@ Regole:
 - Massimo 55 parole.
 - Deve sembrare GhostMe che ha notato qualcosa, non un questionario.
 - Una sola domanda.
+- Se il luogo attuale è già noto, NON chiedere dove si trova l'utente.
+- Se il contesto dice che il luogo attuale è casa/lavoro/altro luogo noto, usalo come dato già disponibile.
         `,
       },
       {
         role: "user",
         content: trimText(`
+
+CONTESTO ATTUALE:
+Luogo attuale: ${situation.currentPlace || "sconosciuto"}
+Momento: ${situation.timeContext}, ${situation.dayContext}
+Località profilo: ${situation.userLocation || "non specificata"}
+
 TOPIC IMPORTANTI:
 ${JSON.stringify(topics, null, 2)}
 
