@@ -837,11 +837,23 @@ export async function POST(req: Request) {
       dynProfileRes && (dynamicSelfProfileContext = trimBlock(dynProfileRes, 800));
       actionIntentRes && (actionIntentContext = trimBlock(actionIntentRes, 600));
 
+      function formatRomeDateTime(value?: string | null) {
+        if (!value) return "orario non specificato";
+
+        return new Date(value).toLocaleString("it-IT", {
+          timeZone: "Europe/Rome",
+          day: "2-digit",
+          month: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      }
+
       const calendarEvents = calendarRes.data || [];
       calendarContext =
         calendarEvents
           .map((event) => {
-            const date = event.start_at || event.remind_at || "";
+            const date = formatRomeDateTime(event.start_at || event.remind_at);
             return `${event.type} | ${event.title} | ${date} | ${event.description || ""}`;
           })
           .join("\n") || "";
