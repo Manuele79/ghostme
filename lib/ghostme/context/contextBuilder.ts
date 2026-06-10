@@ -1,3 +1,5 @@
+
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { buildGhostSituation } from "@/lib/ghostme/situation/situationEngine";
 import { buildBehaviorPrompt } from "@/lib/ghostme/behavior/behaviorRulesEngine";
 
@@ -27,6 +29,7 @@ export type GhostCurrentContext = {
   recentObservations: string[];
   behaviorRulesContext: string;
   reasoningSummary: string;
+  recentProactiveMessages: string[];
 };
 
 export async function buildCurrentContext(
@@ -35,6 +38,20 @@ export async function buildCurrentContext(
   const situation = await buildGhostSituation(userId);
 
   const behaviorRulesContext = await buildBehaviorPrompt(userId);
+
+  const { data: recentProactiveRows } = await supabaseAdmin
+  .from("ghost_proactive_messages")
+  .select("category, title, message, created_at")
+  .eq("user_id", userId)
+  .in("status", ["unread", "read"])
+  .order("created_at", { ascending: false })
+  .limit(10);
+
+  const recentProactiveMessages =
+    recentProactiveRows?.map(
+      (m) =>
+        `[${m.category || "general"}] ${m.title || "Messaggio"}: ${m.message}`
+    ) || [];
 
   const activeProjects = situation.dominantTopics
     .filter((t) => t.category === "project" || t.entity_type === "project")
@@ -126,6 +143,7 @@ export async function buildCurrentContext(
       Pattern comportamentali: ${behaviorPatterns.join(", ") || "nessuno"}.
       Regole comportamentali: ${behaviorRules.join(", ") || "nessuna"}.
       Osservazioni recenti: ${recentObservations.join(", ") || "nessuna"}.
+      Messaggi proattivi recenti: ${recentProactiveMessages.join(" | ") || "nessuno"}.
       `.trim();  
 
     const contextSummary = `
@@ -155,6 +173,8 @@ export async function buildCurrentContext(
       Regole comportamentali attive:
       ${behaviorRulesContext || "nessuna regola comportamentale attiva"}
       Sintesi ragionata: ${reasoningSummary}
+      Messaggi proattivi recenti:
+      ${recentProactiveMessages.join("\n") || "nessuno"}
   `.trim();
 
   return {
@@ -182,5 +202,6 @@ export async function buildCurrentContext(
     recentObservations,
     behaviorRulesContext,
     reasoningSummary,
+    recentProactiveMessages,
   };
 }

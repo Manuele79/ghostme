@@ -59,6 +59,9 @@ Regole:
 - Niente "come AI".
 - Non inventare.
 - Se usi il luogo attuale, parla naturale: "sei a casa", non "nel contesto risulti".
+- Controlla i messaggi proattivi recenti.
+- NON ripetere un tema già detto da Daily, Agenda, Observation, Curiosity o Butler.
+- Se il tema utile è già stato trattato di recente, rispondi shouldSpeak false.
 
 Rispondi SOLO con JSON valido:
 

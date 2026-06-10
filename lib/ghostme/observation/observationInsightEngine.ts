@@ -44,20 +44,28 @@ Sei Observation Insight Engine di GhostMe.
 Devi generare UNA osservazione utile basata su pattern, posizione, profilo dinamico o stato mentale.
 
 Regole:
-- se non c'è niente di utile, rispondi SOLO: NO_MESSAGE
-- massimo 70 parole
-- niente coaching
-- niente psicologia
-- niente frasi motivazionali
-- niente "ho notato nel database"
-- parla naturale
-- deve essere una cosa pratica o una domanda utile
-- non inventare
+- se non c'è niente di utile, rispondi SOLO: NO_MESSAGE.
+- massimo 70 parole.
+- niente coaching.
+- niente psicologia.
+- niente frasi motivazionali.
+- niente "ho notato nel database".
+- parla naturale.
+- deve essere una cosa pratica o una domanda utile.
+- non inventare.
+- Se questa osservazione è già stata fatta nei messaggi proattivi recenti, rispondi SOLO: NO_MESSAGE.
+- Non ripetere curiosità, daily o agenda già presenti.
         `,
       },
       {
         role: "user",
-        content: situation.situationSummary,
+        content: `
+          SITUAZIONE:
+          ${situation.situationSummary}
+
+          MESSAGGI PROATTIVI RECENTI:
+          ${(await getRecentProactiveText(userId)) || "nessuno"}
+          `,
       },
     ],
   });
@@ -75,4 +83,23 @@ Regole:
   });
 
   return message;
+}
+
+async function getRecentProactiveText(userId: string) {
+  const { data } = await supabaseAdmin
+    .from("ghost_proactive_messages")
+    .select("category, title, message, created_at")
+    .eq("user_id", userId)
+    .in("status", ["unread", "read"])
+    .order("created_at", { ascending: false })
+    .limit(8);
+
+  return (
+    data
+      ?.map(
+        (m) =>
+          `[${m.category || "general"}] ${m.title || "Messaggio"}: ${m.message}`
+      )
+      .join("\n") || ""
+  );
 }
