@@ -657,6 +657,7 @@ export default function ChatPage() {
             lastUserMessage={lastUserMessage}
             lastAssistantMessage={lastAssistantMessage}
             proactiveMessage={brainData.proactiveMessage}
+            proactiveMessages={brainData.proactiveMessages}
             onProactiveSeen={markProactiveAsRead}
             userName={userName}
             openHistory={() => setHistoryOpen(true)}

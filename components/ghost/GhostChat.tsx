@@ -1,8 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import GhostCore from "./GhostCore";
 import { GhostMode, VoiceState } from "./types";
+
+type ProactiveCard = {
+  id: string;
+  title?: string | null;
+  message: string;
+  category?: string | null;
+};
 
 export default function GhostChat({
   mode,
@@ -18,6 +23,7 @@ export default function GhostChat({
   lastUserMessage,
   lastAssistantMessage,
   proactiveMessage,
+  proactiveMessages,
   onProactiveSeen,
   userName,
   openHistory,
@@ -32,117 +38,103 @@ export default function GhostChat({
   sendMessage: () => void;
   loadingChat: boolean;
   startVoiceInput: () => void;
-    lastUserMessage?: {
+  lastUserMessage?: {
     role: "user" | "assistant";
     content: string;
-    };
-
-    lastAssistantMessage?: {
+  };
+  lastAssistantMessage?: {
     role: "user" | "assistant";
     content: string;
-    };
-    proactiveMessage?: {
-      id: string;
-      title?: string | null;
-      message: string;
-      category?: string | null;
-    } | null;
-
-    onProactiveSeen?: (messageId?: string) => void;
+  };
+  proactiveMessage?: ProactiveCard | null;
+  proactiveMessages?: ProactiveCard[];
+  onProactiveSeen?: (messageId?: string) => void;
   userName: string;
   openHistory: () => void;
 }) {
+  const visibleProactiveMessages =
+    proactiveMessages && proactiveMessages.length > 0
+      ? proactiveMessages
+      : proactiveMessage
+        ? [proactiveMessage]
+        : [];
 
-const [briefingCollapsed, setBriefingCollapsed] = useState(false);
+  return (
+    <section className="relative mx-auto mt-8 flex w-full max-w-4xl flex-1 flex-col justify-end">
+      <div className="relative z-10 flex min-h-[42vh] flex-col justify-end gap-5 pb-5">
+        {visibleProactiveMessages.length > 0 && (
+          <div className="mx-auto mb-4 flex w-full max-w-3xl flex-col gap-3">
+            {visibleProactiveMessages.map((message) => (
+              <div
+                key={message.id}
+                className="rounded-3xl border border-cyan-400/20 bg-cyan-400/5 p-5 text-cyan-100 backdrop-blur-sm"
+              >
+                <div className="mb-3 flex items-center justify-between">
+                  <div className="text-xs font-black uppercase tracking-[0.3em] text-cyan-300">
+                    {getProactiveLabel(message.category)}
+                  </div>
 
+                  <button
+                    onClick={() => onProactiveSeen?.(message.id)}
+                    className="rounded-lg px-2 py-1 text-cyan-300 hover:bg-cyan-400/10"
+                    title="Segna come letto"
+                  >
+                    ✓
+                  </button>
+                </div>
 
-
-return (
-  <section className="relative mx-auto mt-8 flex w-full max-w-4xl flex-1 flex-col justify-end">
-    <div className="relative z-10 flex min-h-[42vh] flex-col justify-end gap-5 pb-5">
-
-    {proactiveMessage && (
-      <div className="mx-auto mb-4 w-full max-w-3xl rounded-3xl border border-cyan-400/20 bg-cyan-400/5 p-5 text-cyan-100 backdrop-blur-sm">
-
-        <div className="mb-3 flex items-center justify-between">
-          <div className="text-xs font-black uppercase tracking-[0.3em] text-cyan-300">
-            {proactiveMessage.category === "reminder"
-              ? "Promemoria"
-              : proactiveMessage.category === "agenda"
-              ? "Agenda di Oggi"
-              : proactiveMessage.category === "curiosity"
-              ? "Curiosità GhostMe"
-              : proactiveMessage.category === "observation"
-              ? "Osservazione GhostMe"
-              : "Daily Briefing"}
+                <div className="whitespace-pre-line text-sm leading-relaxed">
+                  {message.message}
+                </div>
+              </div>
+            ))}
           </div>
+        )}
 
-          <button
-            onClick={() => {
-              if (!briefingCollapsed && proactiveMessage?.id) {
-                onProactiveSeen?.(proactiveMessage.id);
-              }
+        {loadingChat ? (
+          <>
+            {lastAssistantMessage && (
+              <ChatBubble
+                role="assistant"
+                label="GhostMe"
+                content={lastAssistantMessage.content}
+              />
+            )}
 
-              setBriefingCollapsed(!briefingCollapsed);
-            }}
-            className="rounded-lg px-2 py-1 text-cyan-300 hover:bg-cyan-400/10"
-          >
-            {briefingCollapsed ? "▼" : "▲"}
-          </button>
-        </div>
+            {lastUserMessage && (
+              <ChatBubble
+                role="user"
+                label={userName}
+                content={lastUserMessage.content}
+              />
+            )}
+          </>
+        ) : (
+          <>
+            {lastUserMessage && (
+              <ChatBubble
+                role="user"
+                label={userName}
+                content={lastUserMessage.content}
+              />
+            )}
 
-        {!briefingCollapsed && (
-          <div className="whitespace-pre-line text-sm leading-relaxed">
-            {proactiveMessage.message}
+            {lastAssistantMessage && (
+              <ChatBubble
+                role="assistant"
+                label="GhostMe"
+                content={lastAssistantMessage.content}
+              />
+            )}
+          </>
+        )}
+
+        {!lastUserMessage && !lastAssistantMessage && (
+          <div className="mx-auto max-w-xl rounded-3xl border border-cyan-400/20 bg-black/45 p-5 text-center text-zinc-300 backdrop-blur-sm">
+            Scrivi qualcosa. GhostMe ha già il cervello acceso.
           </div>
         )}
       </div>
-    )}
-
-      {loadingChat ? (
-        <>
-          {lastAssistantMessage && (
-            <ChatBubble
-              role="assistant"
-              label="GhostMe"
-              content={lastAssistantMessage.content}
-            />
-          )}
-
-          {lastUserMessage && (
-            <ChatBubble
-              role="user"
-              label={userName}
-              content={lastUserMessage.content}
-            />
-          )}
-        </>
-      ) : (
-        <>
-          {lastUserMessage && (
-            <ChatBubble
-              role="user"
-              label={userName}
-              content={lastUserMessage.content}
-            />
-          )}
-
-          {lastAssistantMessage && (
-            <ChatBubble
-              role="assistant"
-              label="GhostMe"
-              content={lastAssistantMessage.content}
-            />
-          )}
-        </>
-      )}
-
-      {!lastUserMessage && !lastAssistantMessage && (
-        <div className="mx-auto max-w-xl rounded-3xl border border-cyan-400/20 bg-black/45 p-5 text-center text-zinc-300 backdrop-blur-sm">
-          Scrivi qualcosa. GhostMe ha già il cervello acceso.
-        </div>
-      )}
-    </div>
 
       <button
         onClick={openHistory}
@@ -152,66 +144,78 @@ return (
         ↺
       </button>
 
-    <div className="relative z-20 rounded-[1.6rem] border border-cyan-400/10 bg-black/60 p-2 backdrop-blur-md">
-      <div className="flex gap-2">
-        <button
-          onClick={cycleMode}
-          className="hidden rounded-2xl border border-cyan-400/25 bg-cyan-400/10 px-4 text-xs font-black text-cyan-100 sm:block"
-        >
-          {currentModeLabel}
-        </button>
-
-        {mode === "voce-chat" && (
+      <div className="relative z-20 rounded-[1.6rem] border border-cyan-400/10 bg-black/60 p-2 backdrop-blur-md">
+        <div className="flex gap-2">
           <button
-            onClick={startVoiceInput}
-            className="group flex h-16 w-16 items-center justify-center rounded-2xl border border-cyan-400/25 bg-cyan-400/10 text-3xl text-cyan-200 shadow-[0_0_30px_rgba(34,211,238,0.18)] transition-all duration-300 hover:scale-110 hover:bg-cyan-400/20"
+            onClick={cycleMode}
+            className="hidden rounded-2xl border border-cyan-400/25 bg-cyan-400/10 px-4 text-xs font-black text-cyan-100 sm:block"
           >
-            <span className="transition-transform duration-300 group-hover:scale-110">
-              🎙️
-            </span>
+            {currentModeLabel}
           </button>
-        )}
 
-        <textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              sendMessage();
-            }
-          }}
-          placeholder="Scrivi qualcosa..."
-          className="h-16 flex-1 resize-none rounded-2xl border border-zinc-800 bg-zinc-950/90 p-4 text-white outline-none placeholder:text-zinc-600 focus:border-cyan-400"
-        />
+          {mode === "voce-chat" && (
+            <button
+              onClick={startVoiceInput}
+              className="group flex h-16 w-16 items-center justify-center rounded-2xl border border-cyan-400/25 bg-cyan-400/10 text-3xl text-cyan-200 shadow-[0_0_30px_rgba(34,211,238,0.18)] transition-all duration-300 hover:scale-110 hover:bg-cyan-400/20"
+            >
+              <span className="transition-transform duration-300 group-hover:scale-110">
+                🎙️
+              </span>
+            </button>
+          )}
 
-        <button
-          onClick={sendMessage}
-          disabled={loadingChat}
-          className="rounded-2xl bg-cyan-300 px-5 font-black text-black shadow-[0_0_25px_rgba(34,211,238,0.28)] disabled:opacity-50"
-        >
-          {loadingChat ? "..." : "Invia"}
-        </button>
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+              }
+            }}
+            placeholder="Scrivi qualcosa..."
+            className="h-16 flex-1 resize-none rounded-2xl border border-zinc-800 bg-zinc-950/90 p-4 text-white outline-none placeholder:text-zinc-600 focus:border-cyan-400"
+          />
+
+          <button
+            onClick={sendMessage}
+            disabled={loadingChat}
+            className="rounded-2xl bg-cyan-300 px-5 font-black text-black shadow-[0_0_25px_rgba(34,211,238,0.28)] disabled:opacity-50"
+          >
+            {loadingChat ? "..." : "Invia"}
+          </button>
+        </div>
+
+        <div className="mt-2 flex justify-between gap-2 sm:hidden">
+          <button
+            onClick={openHistory}
+            className="rounded-2xl border border-cyan-400/20 px-4 py-2 text-xs font-bold text-cyan-200"
+          >
+            Cronologia
+          </button>
+
+          <button
+            onClick={cycleMode}
+            className="rounded-2xl border border-cyan-400/20 px-4 py-2 text-xs font-bold text-cyan-200"
+          >
+            {currentModeLabel}
+          </button>
+        </div>
       </div>
+    </section>
+  );
+}
 
-      <div className="mt-2 flex justify-between gap-2 sm:hidden">
-        <button
-          onClick={openHistory}
-          className="rounded-2xl border border-cyan-400/20 px-4 py-2 text-xs font-bold text-cyan-200"
-        >
-          Cronologia
-        </button>
+function getProactiveLabel(category?: string | null) {
+  if (category === "reminder") return "Promemoria";
+  if (category === "agenda") return "Agenda di Oggi";
+  if (category === "curiosity") return "Curiosità GhostMe";
+  if (category === "observation") return "Osservazione GhostMe";
+  if (category === "daily_briefing") return "Daily Briefing";
+  if (category === "home_question") return "Domanda Casa";
+  if (category === "situation_question") return "Domanda Situazione";
 
-        <button
-          onClick={cycleMode}
-          className="rounded-2xl border border-cyan-400/20 px-4 py-2 text-xs font-bold text-cyan-200"
-        >
-          {currentModeLabel}
-        </button>
-      </div>
-    </div>
-  </section>
-);
+  return "GhostMe";
 }
 
 function ChatBubble({

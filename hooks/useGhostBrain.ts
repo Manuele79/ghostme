@@ -25,6 +25,7 @@ export function useGhostBrain() {
     actions: [],
      calendarEvents: [],
      proactiveMessage: null,
+     proactiveMessages: [],
   });
 
   async function loadBrainData(args: LoadBrainArgs) {
@@ -55,6 +56,7 @@ export function useGhostBrain() {
       actions: data.actions || [],
       calendarEvents: data.calendarEvents || [],
       proactiveMessage: data.proactiveMessage || null,
+      proactiveMessages: data.proactiveMessages || [],
     });
 
     if (data.profile) {

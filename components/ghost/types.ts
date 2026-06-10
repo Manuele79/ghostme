@@ -19,6 +19,7 @@ export type BrainData = {
   actions: any[];
   calendarEvents: CalendarEvent[];
   proactiveMessage: ProactiveMessage | null;
+  proactiveMessages: ProactiveMessage[];
 };
 
 export const modeLabels: Record<GhostMode, string> = {
