@@ -39,18 +39,9 @@ export async function runProactiveTrigger({
       await refreshAgendaMessage(userId);
       break;
 
-    case "daily": {
-    const situation = await buildGhostSituation(userId);
-
-    console.log(
-        "DAILY TRIGGER:",
-        situation.currentPlace,
-        situation.calendarToday.length,
-        situation.activeGoals.length
-    );
-
-    break;
-    }
+    case "daily":
+      await runDecisionForTrigger(userId);
+      break;
 
     case "location_changed":
       await runDecisionForTrigger(userId);

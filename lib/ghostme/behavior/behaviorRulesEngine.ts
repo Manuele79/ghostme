@@ -1,5 +1,11 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
+import { OpenAI } from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
 export async function getActiveBehaviorRules(userId: string) {
   if (!userId) return [];
 
@@ -118,4 +124,92 @@ ${rules
   )
   .join("\n")}
 `.trim();
+}
+
+export async function detectAndSaveBehaviorRule({
+  userId,
+  message,
+}: {
+  userId: string;
+  message: string;
+}) {
+  if (!userId || !message?.trim()) return null;
+
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    temperature: 0,
+    max_tokens: 450,
+    messages: [
+      {
+        role: "system",
+        content: `
+Sei il Behavior Learning Engine interno di GhostMe.
+
+Devi capire se il messaggio contiene una preferenza stabile dell'utente su come GhostMe deve comportarsi in futuro.
+
+Salva SOLO regole utili e durature.
+
+Esempi da salvare:
+- "preferisco risposte brevi"
+- "dammi sempre codice completo"
+- "non chiedermelo più"
+- "quando parli di codice, dimmi sempre dove incollare"
+- "non usare tono motivazionale"
+- "da ora in poi fai così"
+- "non propormi più questa cosa"
+
+NON salvare:
+- emozioni momentanee
+- fatti personali normali
+- appuntamenti
+- semplici risposte tipo ok/fatto/grazie
+- preferenze non legate al comportamento di GhostMe
+
+Rispondi SOLO con JSON valido:
+
+{
+  "has_rule": true,
+  "rule_text": "...",
+  "rule_type": "preference | boundary | style | workflow",
+  "target_area": "chat | code | calendar | daily | proactive | general",
+  "trigger_hint": "...",
+  "priority": 1
+}
+
+Se non c'è regola:
+{
+  "has_rule": false
+}
+        `,
+      },
+      {
+        role: "user",
+        content: message,
+      },
+    ],
+  });
+
+  const raw = completion.choices[0]?.message?.content || "{}";
+
+  let parsed: any = null;
+
+  try {
+    parsed = JSON.parse(raw);
+  } catch (err) {
+    console.log("BEHAVIOR RULE DETECTION PARSE ERROR:", err);
+    console.log("BEHAVIOR RULE DETECTION RAW:", raw);
+    return null;
+  }
+
+  if (!parsed?.has_rule || !parsed?.rule_text) return null;
+
+  return saveBehaviorRule({
+    userId,
+    ruleText: parsed.rule_text,
+    ruleType: parsed.rule_type || "preference",
+    targetArea: parsed.target_area || "general",
+    triggerHint: parsed.trigger_hint || null,
+    sourceMessage: message,
+    priority: Math.min(Math.max(parsed.priority || 5, 1), 10),
+  });
 }

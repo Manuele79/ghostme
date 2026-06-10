@@ -12,6 +12,7 @@ import { runRetentionCleanup } from "@/lib/ghostme/maintenance/retentionEngine";
 import { generateDailyConversationSummary } from "@/lib/ghostme/conversationSummary";
 import { decideProactiveMessage } from "@/lib/ghostme/proactive/proactiveDecisionEngine";
 import { refreshReminderMessage } from "@/lib/ghostme/agenda/reminderEngine";
+import { generateObservationInsight } from "@/lib/ghostme/observation/observationInsightEngine";
 import { cleanupOldActionIntents } from "@/lib/ghostme/actionLayer";
 
 
@@ -78,6 +79,8 @@ export async function GET() {
       });  
       
       const curiosityMessage = await generateCuriosityMessage(userId);
+
+      await generateObservationInsight(userId);
 
       const [
         calendarRes,

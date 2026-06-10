@@ -25,8 +25,10 @@ import { extractEntitiesWithAI } from "@/lib/ghostme/entityExtractor";
 import { applyMemoryDecay } from "@/lib/ghostme/memoryDecay";
 import { detectAndSaveContradictions } from "@/lib/ghostme/contradictions";
 import { updateMentalState } from "@/lib/ghostme/mentalState";
-import { buildBehaviorPrompt } from "@/lib/ghostme/behavior/behaviorRulesEngine";
-import { saveBehaviorRule } from "@/lib/ghostme/behavior/behaviorRulesEngine";
+import {
+  buildBehaviorPrompt,
+  detectAndSaveBehaviorRule,
+} from "@/lib/ghostme/behavior/behaviorRulesEngine";
 
 import {
   getGoalsDesiresContext,
@@ -46,6 +48,7 @@ import {
 import {
   getActionIntentContext,
   detectAndSaveActionIntent,
+  detectAndCompleteActionIntent,
 } from "@/lib/ghostme/actionLayer";
 
 import {
@@ -856,48 +859,76 @@ export async function POST(req: Request) {
       loadedLifeTopics = existingTopicsRes.data || [];
     }
 
-    // Servizi esterni (web/meteo)
+    // Servizi esterni (web/meteo/news)
     const serviceDecision = decideGhostService(message);
+
     if (serviceDecision.service === "web_search") {
       try {
         const webResult = await runWebSearch(serviceDecision.query);
+
         serviceContext = `
-        SERVIZIO INTERNET ATTIVO:
-        Tipo: web_search
-        Motivo: ${serviceDecision.reason}
+    SERVIZIO INTERNET ATTIVO:
+    Tipo: web_search
+    Motivo: ${serviceDecision.reason}
 
-        Risultato ricerca:
-        ${webResult.summary}
-        `;
-              } catch (err) {
-                console.log("WEB SEARCH ERROR:", err);
-                serviceContext = `
-        SERVIZIO INTERNET:
-        La ricerca web era richiesta, ma è fallita.
-        Dillo chiaramente nella risposta.`;
-              }
-            }
-            if (serviceDecision.service === "weather") {
-              try {
-                const weatherResult = await runWeatherSearch({
-                  query: serviceDecision.query,
-                  location: userLocation,
-                });
-                serviceContext = `
-        SERVIZIO METEO ATTIVO:
-        Località usata: ${userLocation || "non specificata"}
+    Risultato ricerca:
+    ${webResult.summary}
+    `;
+      } catch (err) {
+        console.log("WEB SEARCH ERROR:", err);
+        serviceContext = `
+    SERVIZIO INTERNET:
+    La ricerca web era richiesta, ma è fallita.
+    Dillo chiaramente nella risposta.`;
+      }
+    } else if (serviceDecision.service === "weather") {
+      try {
+        const weatherResult = await runWeatherSearch({
+          query: serviceDecision.query,
+          location: userLocation,
+        });
 
-        Risultato meteo:
-        ${weatherResult.summary}
-        `;
-              } catch (err) {
-                console.log("WEATHER ERROR:", err);
-                serviceContext = `
-        SERVIZIO METEO:
-        Impossibile recuperare le previsioni.`;
-              }
-            }
+        serviceContext = `
+    SERVIZIO METEO ATTIVO:
+    Località usata: ${userLocation || "non specificata"}
 
+    Risultato meteo:
+    ${weatherResult.summary}
+    `;
+      } catch (err) {
+        console.log("WEATHER ERROR:", err);
+        serviceContext = `
+    SERVIZIO METEO:
+    Impossibile recuperare le previsioni.`;
+      }
+    } else if (serviceDecision.service === "news") {
+      try {
+        const newsResult = await runWebSearch(`
+    Cerca notizie aggiornate per questa richiesta:
+
+    ${serviceDecision.query}
+
+    Rispondi in italiano.
+    Dai solo le notizie rilevanti, sintetiche e con contesto.
+    Se la richiesta è troppo generica, dai le principali notizie pertinenti.
+    `);
+
+        serviceContext = `
+    SERVIZIO NEWS ATTIVO:
+    Tipo: news
+    Motivo: ${serviceDecision.reason}
+
+    Risultato notizie:
+    ${newsResult.summary}
+    `;
+      } catch (err) {
+        console.log("NEWS SEARCH ERROR:", err);
+        serviceContext = `
+    SERVIZIO NEWS:
+    La ricerca notizie era richiesta, ma è fallita.
+    Dillo chiaramente nella risposta.`;
+      }
+    }
     // Calendario (non bloccare la risposta se possibile)
     let calendarCreatedText = "";
     if (userId) {
@@ -1054,39 +1085,10 @@ export async function POST(req: Request) {
           jobs.push(detectAndSaveGoalsDesires({ userId, message, detectedTopics }));
           jobs.push(detectAndSaveTimelineEvent({ userId, message, detectedTopics }));
           jobs.push(updateDynamicSelfProfile({ userId, message }));
+          jobs.push(detectAndCompleteActionIntent({ userId, message }));
           jobs.push(detectAndSaveActionIntent({ userId, message, detectedTopics }));
 
-          const lower = message.toLowerCase();
-
-          const behaviorSignals = [
-            "non chiedermi più",
-            "non propormelo più",
-            "non farmi più",
-            "da ora in poi",
-            "d'ora in poi",
-            "ricordati che preferisco",
-            "preferisco che",
-            "quando succede",
-            "in futuro fai",
-            "in futuro non",
-          ];
-
-          const hasBehaviorRule = behaviorSignals.some((signal) =>
-            lower.includes(signal)
-          );
-
-          if (hasBehaviorRule) {
-            jobs.push(
-              saveBehaviorRule({
-                userId,
-                ruleText: message,
-                ruleType: "learned_preference",
-                targetArea: "chat",
-                sourceMessage: message,
-                priority: 7,
-              })
-            );
-          }
+          jobs.push(detectAndSaveBehaviorRule({ userId, message }));
 
           await Promise.allSettled(jobs);
         } catch (err) {

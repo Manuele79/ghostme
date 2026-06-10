@@ -151,3 +151,108 @@ export async function cleanupOldActionIntents(userId: string) {
     console.log("CLEANUP OLD ACTION INTENTS ERROR:", error);
   }
 }
+
+export async function detectAndCompleteActionIntent({
+  userId,
+  message,
+}: {
+  userId: string;
+  message: string;
+}) {
+  if (!userId || !message?.trim()) return null;
+
+  const { data: pendingActions } = await supabaseAdmin
+    .from("action_intents")
+    .select("id, intent_type, title, description, source_message, priority, updated_at")
+    .eq("user_id", userId)
+    .in("status", ["detected", "pending"])
+    .order("priority", { ascending: false })
+    .order("updated_at", { ascending: false })
+    .limit(10);
+
+  if (!pendingActions?.length) return null;
+
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    temperature: 0,
+    max_tokens: 350,
+    messages: [
+      {
+        role: "system",
+        content: `
+Sei il motore interno di completamento azioni di GhostMe.
+
+Devi capire se il messaggio dell'utente indica che una delle azioni aperte è stata completata.
+
+Regole:
+- Completa SOLO se è chiaro.
+- Frasi come "fatto", "già fatto", "ho chiamato", "ho mandato", "ho sistemato" possono completare.
+- Non completare se l'utente sta solo parlando dell'azione.
+- Non inventare.
+- Se non sei sicuro, has_completed false.
+
+Rispondi SOLO con JSON valido:
+
+{
+  "has_completed": true,
+  "action_id": "uuid della azione completata",
+  "reason": "motivo breve"
+}
+
+Oppure:
+
+{
+  "has_completed": false
+}
+        `,
+      },
+      {
+        role: "user",
+        content: `
+AZIONI APERTE:
+${JSON.stringify(pendingActions, null, 2)}
+
+MESSAGGIO UTENTE:
+${message}
+        `,
+      },
+    ],
+  });
+
+  const raw = completion.choices[0]?.message?.content || "{}";
+
+  let parsed: any = null;
+
+  try {
+    parsed = JSON.parse(raw);
+  } catch (err) {
+    console.log("ACTION COMPLETE PARSE ERROR:", err);
+    console.log("ACTION COMPLETE RAW:", raw);
+    return null;
+  }
+
+  if (!parsed?.has_completed || !parsed?.action_id) return null;
+
+  const validAction = pendingActions.find(
+    (a) => a.id === parsed.action_id
+  );
+
+  if (!validAction) return null;
+
+  const { data, error } = await supabaseAdmin
+    .from("action_intents")
+    .update({
+      status: "completed",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", validAction.id)
+    .eq("user_id", userId)
+    .select();
+
+  if (error) {
+    console.log("ACTION COMPLETE UPDATE ERROR:", error);
+    return null;
+  }
+
+  return data;
+}
