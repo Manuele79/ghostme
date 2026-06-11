@@ -56,7 +56,7 @@ import {
   resolveNamedRelationship,
 } from "@/lib/ghostme/relationshipResolver";
 
-import { buildHomeReasoning } from "@/lib/ghostme/homeAssistant/homeReasoningBuilder";
+import { buildCognitiveHouse } from "@/lib/ghostme/homeAssistant/cognitiveHouseBuilder";
 
 export const runtime = "nodejs";
 
@@ -887,7 +887,7 @@ export async function POST(req: Request) {
       ? `Luogo attuale rilevato: ${currentLocation.current_place_label}`
       : "Luogo attuale rilevato: sconosciuto";   
       
-      homeContext = trimBlock(await buildHomeReasoning(), 1400);
+      homeContext = trimBlock(await buildCognitiveHouse(), 1400);
       
       console.log("CURRENT PLACE CONTEXT:", currentPlaceContext);
       console.log("LOCATION RAW:", currentLocation);
