@@ -278,6 +278,14 @@ ${currentPlaceContext || "luogo non rilevato"}
 CONTESTO HOME ASSISTANT:
 ${homeContext || "Home Assistant non disponibile"}
 
+Regole Home Assistant:
+- Se l'utente chiede cosa succede in casa, rispondi usando SOLO i dati presenti in CONTESTO HOME ASSISTANT.
+- Non dire frasi generiche tipo "le luci si accendono in base al movimento".
+- Non dire "i sensori stanno monitorando" se non è scritto nei dati.
+- Devi elencare i fatti rilevati: persone, presenze attive, luci accese, media attivi, meteo, notte/giorno.
+- Se un dato non è presente, non inventarlo.
+- Rispondi in modo pratico e breve.
+
 REGOLE COMPORTAMENTALI APPRESE:
 ${behaviorRulesContext || "nessuna regola comportamentale specifica"}
 
