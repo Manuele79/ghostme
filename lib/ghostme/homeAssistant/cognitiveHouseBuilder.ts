@@ -6,109 +6,175 @@ type HAState = {
   attributes?: Record<string, any>;
 };
 
-function name(s: HAState) {
+function friendlyName(s: HAState) {
   return s.attributes?.friendly_name || s.entity_id;
 }
 
-function isOn(s: HAState) {
+function isOnState(state: string) {
   return ["on", "playing", "paused", "home"].includes(
-    String(s.state).toLowerCase()
+    String(state || "").toLowerCase()
   );
 }
 
-const tvMap: Record<string, string> = {
+function isUnavailable(s: HAState) {
+  return ["unavailable", "unknown", "none", ""].includes(
+    String(s.state || "").toLowerCase()
+  );
+}
+
+const mediaNameMap: Record<string, string> = {
   "media_player.lg_webos_tv_uk6200pla": "TV cucina",
   "media_player.hisense_43a5fe_dal10537_airplay": "TV camera",
 };
+
+function section(title: string, lines: string[]) {
+  if (!lines.length) return "";
+
+  return `
+${title}
+${lines.map((line) => `- ${line}`).join("\n")}
+`.trim();
+}
+
+function isPresenceOrMotion(s: HAState) {
+  const id = s.entity_id.toLowerCase();
+  const name = friendlyName(s).toLowerCase();
+
+  return (
+    id.includes("occupazione") ||
+    id.includes("presence") ||
+    id.includes("presenza") ||
+    id.includes("movimento") ||
+    id.includes("motion") ||
+    id.startsWith("sensor.matter") ||
+    name.includes("occupazione") ||
+    name.includes("presence") ||
+    name.includes("presenza") ||
+    name.includes("movimento") ||
+    name.includes("motion")
+  );
+}
+
+function isPhoneSensor(s: HAState) {
+  const id = s.entity_id.toLowerCase();
+  const name = friendlyName(s).toLowerCase();
+
+  return (
+    id.includes("rea_nx9") ||
+    id.includes("cph2305") ||
+    name.includes("rea-nx9") ||
+    name.includes("cph2305") ||
+    name.includes("manuele") ||
+    name.includes("valentina")
+  );
+}
 
 export async function buildCognitiveHouse() {
   const states = (await getHAStates()) as HAState[];
 
   if (!states.length) {
-    return "Casa cognitiva non disponibile";
+    return "CASA COGNITIVA\n- Home Assistant non disponibile";
   }
 
-  const lines: string[] = [];
+  const cleanStates = states.filter((s) => !isUnavailable(s));
 
-  const people = states.filter((s) => s.entity_id.startsWith("person."));
-  const peopleAtHome = people.filter((p) => p.state !== "not_home");
-
-  lines.push(`Persone probabili in casa: ${peopleAtHome.length || 0}`);
-
-  for (const p of people) {
-    lines.push(`${name(p)}: ${p.state === "home" ? "a casa" : p.state}`);
-  }
-
-  const presence = states.filter((s) => {
-    const id = s.entity_id.toLowerCase();
-    const n = name(s).toLowerCase();
-
-    return (
-      isOn(s) &&
-      (
-        id.includes("occupazione") ||
-        id.includes("presence") ||
-        id.includes("presenza") ||
-        id.includes("movimento") ||
-        id.includes("motion") ||
-        id.startsWith("sensor.matter") ||
-        n.includes("occupazione") ||
-        n.includes("presence") ||
-        n.includes("presenza") ||
-        n.includes("movimento")
-      )
-    );
+  const people = cleanStates.filter((s) => s.entity_id.startsWith("person."));
+  const peopleLines = people.map((p) => {
+    const status = p.state === "home" ? "a casa" : p.state;
+    return `${friendlyName(p)}: ${status}`;
   });
 
-  if (presence.length) {
-    lines.push(
-      `Presenze/movimenti attivi: ${presence.map(name).join(", ")}`
-    );
-  }
+  const peopleAtHome = people.filter((p) => p.state !== "not_home");
 
-  const lights = states.filter(
-    (s) => s.entity_id.startsWith("light.") && s.state === "on"
-  );
+  const presenceActive = cleanStates
+    .filter((s) => isPresenceOrMotion(s) && isOnState(s.state))
+    .map((s) => friendlyName(s));
 
-  const switches = states.filter(
-    (s) => s.entity_id.startsWith("switch.") && s.state === "on"
-  );
+  const lightsOn = cleanStates
+    .filter((s) => s.entity_id.startsWith("light.") && s.state === "on")
+    .map((s) => friendlyName(s));
 
-  if (lights.length) {
-    lines.push(`Luci accese: ${lights.map(name).join(", ")}`);
-  }
+  const switchesOn = cleanStates
+    .filter((s) => {
+      if (!s.entity_id.startsWith("switch.")) return false;
 
-  if (switches.length) {
-    lines.push(`Prese/interruttori accesi: ${switches.map(name).join(", ")}`);
-  }
+      const id = s.entity_id.toLowerCase();
+      const name = friendlyName(s).toLowerCase();
 
-  const media = states.filter(
-    (s) =>
-      s.entity_id.startsWith("media_player.") &&
-      ["on", "playing", "paused"].includes(String(s.state).toLowerCase())
-  );
+      if (
+        id.includes("matter_server") ||
+        id.includes("file_editor") ||
+        id.includes("terminal") ||
+        id.includes("hacs") ||
+        name.includes("matter server") ||
+        name.includes("file editor") ||
+        name.includes("terminal") ||
+        name.includes("hacs")
+      ) {
+        return false;
+      }
 
-  if (media.length) {
-    lines.push(
-      `Media attivi: ${media
-        .map((m) => tvMap[m.entity_id] || name(m))
-        .join(", ")}`
-    );
-  }
+      return s.state === "on";
+    })
+    .map((s) => friendlyName(s));
 
-  const weather = states.find((s) => s.entity_id.startsWith("weather."));
+  const mediaActive = cleanStates
+    .filter(
+      (s) =>
+        s.entity_id.startsWith("media_player.") &&
+        ["on", "playing", "paused"].includes(String(s.state).toLowerCase())
+    )
+    .map((s) => mediaNameMap[s.entity_id] || friendlyName(s));
+
+  const weather = cleanStates.find((s) => s.entity_id.startsWith("weather."));
+  const sun = cleanStates.find((s) => s.entity_id === "sun.sun");
+
+  const environmentLines: string[] = [];
+
   if (weather) {
-    lines.push(`Meteo: ${weather.state}`);
+    environmentLines.push(`Meteo: ${weather.state}`);
   }
 
-  const sun = states.find((s) => s.entity_id === "sun.sun");
   if (sun) {
-    lines.push(sun.state === "above_horizon" ? "È giorno" : "È notte");
+    environmentLines.push(sun.state === "above_horizon" ? "È giorno" : "È notte");
   }
+
+  const phoneLines = cleanStates
+    .filter(isPhoneSensor)
+    .filter((s) => {
+      const id = s.entity_id.toLowerCase();
+      const name = friendlyName(s).toLowerCase();
+
+      return (
+        id.includes("battery_level") ||
+        id.includes("battery_state") ||
+        id.includes("wi_fi_connection") ||
+        id.includes("wifi_connection") ||
+        id.includes("charger_type") ||
+        name.includes("battery level") ||
+        name.includes("battery state") ||
+        name.includes("wi-fi connection") ||
+        name.includes("wifi connection") ||
+        name.includes("charger type")
+      );
+    })
+    .map((s) => `${friendlyName(s)}: ${s.state}${s.attributes?.unit_of_measurement ? ` ${s.attributes.unit_of_measurement}` : ""}`);
+
+  const lines = [
+    `Persone probabili in casa: ${peopleAtHome.length}`,
+    "",
+    section("PERSONE", peopleLines),
+    section("PRESENZA / MOVIMENTO ATTIVI", presenceActive),
+    section("LUCI ACCESE", lightsOn),
+    section("PRESE / SWITCH ACCESI", switchesOn),
+    section("MEDIA ATTIVI", mediaActive),
+    section("AMBIENTE", environmentLines),
+    section("TELEFONI", phoneLines),
+  ].filter(Boolean);
 
   return `
 CASA COGNITIVA
 
-${lines.join("\n")}
+${lines.join("\n\n")}
 `.trim();
 }
