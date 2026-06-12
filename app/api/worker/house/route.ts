@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { logHomeAssistantSnapshot } from "@/lib/ghostme/homeAssistant/homeEventLogger";
 import { analyzeHousePatterns } from "@/lib/ghostme/homeAssistant/housePatternEngine";
+import { generateHouseSuggestions } from "@/lib/ghostme/homeAssistant/houseSuggestionEngine";
 
 export async function GET(req: Request) {
   const secret = process.env.WORKER_SECRET;
@@ -33,6 +34,7 @@ export async function GET(req: Request) {
   for (const user of users || []) {
     const logResult = await logHomeAssistantSnapshot(user.user_id);
     const patterns = await analyzeHousePatterns(user.user_id);
+    const suggestions = await generateHouseSuggestions(user.user_id);
 
     totalInserted += logResult.inserted || 0;
 
@@ -40,6 +42,7 @@ export async function GET(req: Request) {
       userId: user.user_id,
       inserted: logResult.inserted || 0,
       patterns,
+      suggestionsCreated: suggestions.length,
     });
   }
 
