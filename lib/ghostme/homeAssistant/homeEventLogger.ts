@@ -16,6 +16,7 @@ function friendlyName(s: HAState) {
 
 function isUsefulEvent(entityType: string) {
   return [
+    "person",
     "presence",
     "motion",
     "lux",
@@ -26,7 +27,13 @@ function isUsefulEvent(entityType: string) {
     "weather",
     "sun",
     "temperature",
+    "humidity",
+    "co2",
+    "noise",
+    "pressure",
     "climate",
+    "fan",
+    "appliance",
     "automation",
   ].includes(entityType);
 }
