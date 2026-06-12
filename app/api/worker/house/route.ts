@@ -16,17 +16,17 @@ export async function GET(req: Request) {
     );
   }
 
-  const { data: users, error } = await supabaseAdmin
-    .from("user_profiles")
-    .select("user_id")
-    .limit(20);
+  const testUserId = process.env.GHOSTME_TEST_USER_ID;
 
-  if (error) {
+  if (!testUserId) {
     return NextResponse.json(
-      { success: false, error: "Errore lettura utenti" },
+      { success: false, error: "Manca GHOSTME_TEST_USER_ID" },
       { status: 500 }
     );
   }
+
+  const users = [{ user_id: testUserId }];
+
 
   let totalInserted = 0;
   const results: any[] = [];
