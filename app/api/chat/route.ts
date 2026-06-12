@@ -58,6 +58,7 @@ import {
 
 import { buildCognitiveHouse } from "@/lib/ghostme/homeAssistant/cognitiveHouseBuilder";
 import { buildHouseLearnedRulesContext } from "@/lib/ghostme/homeAssistant/houseLearnedRulesContext";
+import { buildHouseAutomationContext } from "@/lib/ghostme/homeAssistant/houseAutomationContext";
 
 export const runtime = "nodejs";
 
@@ -162,6 +163,7 @@ function buildSystemPrompt({
   behaviorRulesContext,
   homeContext,
   houseLearnedRulesContext,
+  houseAutomationContext,
 }: {
   traits: any;
   profileContext: string;
@@ -182,6 +184,7 @@ function buildSystemPrompt({
   behaviorRulesContext: string;
   homeContext: string;
   houseLearnedRulesContext: string;
+  houseAutomationContext: string;
 }) {
   return `
 Sei GhostMe.
@@ -283,6 +286,9 @@ ${homeContext || "Home Assistant non disponibile"}
 
 REGOLE CASA APPRESE:
 ${houseLearnedRulesContext || "Nessuna regola casa appresa"}
+
+AUTOMAZIONI CASA:
+${houseAutomationContext || "Nessuna automazione conosciuta"}
 
 Regole Home Assistant:
 - Se l'utente chiede cosa succede in casa, rispondi usando SOLO i dati presenti in CONTESTO HOME ASSISTANT.
@@ -799,6 +805,7 @@ export async function POST(req: Request) {
     let currentPlaceContext = "";
     let homeContext = "";
     let houseLearnedRulesContext = "";
+    let houseAutomationContext = "";
     if (userId) {
       const [
         userProfileRes,
@@ -873,6 +880,11 @@ export async function POST(req: Request) {
       timelineRes && (timelineContext = trimBlock(timelineRes, 800));
       dynProfileRes && (dynamicSelfProfileContext = trimBlock(dynProfileRes, 800));
       actionIntentRes && (actionIntentContext = trimBlock(actionIntentRes, 600));
+      houseAutomationContext = trimBlock(
+      await buildHouseAutomationContext(userId),
+      1200
+    );
+
 
       function formatRomeDateTime(value?: string | null) {
         if (!value) return "orario non specificato";
@@ -1071,6 +1083,7 @@ export async function POST(req: Request) {
       behaviorRulesContext,
       homeContext,
       houseLearnedRulesContext,
+      houseAutomationContext,
       
     });
 
