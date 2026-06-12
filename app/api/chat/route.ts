@@ -57,6 +57,7 @@ import {
 } from "@/lib/ghostme/relationshipResolver";
 
 import { buildCognitiveHouse } from "@/lib/ghostme/homeAssistant/cognitiveHouseBuilder";
+import { buildHouseLearnedRulesContext } from "@/lib/ghostme/homeAssistant/houseLearnedRulesContext";
 
 export const runtime = "nodejs";
 
@@ -160,6 +161,7 @@ function buildSystemPrompt({
   cognitiveContext,
   behaviorRulesContext,
   homeContext,
+  houseLearnedRulesContext,
 }: {
   traits: any;
   profileContext: string;
@@ -179,6 +181,7 @@ function buildSystemPrompt({
   cognitiveContext: string;
   behaviorRulesContext: string;
   homeContext: string;
+  houseLearnedRulesContext: string;
 }) {
   return `
 Sei GhostMe.
@@ -277,6 +280,9 @@ ${currentPlaceContext || "luogo non rilevato"}
 
 CONTESTO HOME ASSISTANT:
 ${homeContext || "Home Assistant non disponibile"}
+
+REGOLE CASA APPRESE:
+${houseLearnedRulesContext || "Nessuna regola casa appresa"}
 
 Regole Home Assistant:
 - Se l'utente chiede cosa succede in casa, rispondi usando SOLO i dati presenti in CONTESTO HOME ASSISTANT.
@@ -792,7 +798,7 @@ export async function POST(req: Request) {
     let userLocation = "";
     let currentPlaceContext = "";
     let homeContext = "";
-
+    let houseLearnedRulesContext = "";
     if (userId) {
       const [
         userProfileRes,
@@ -896,7 +902,10 @@ export async function POST(req: Request) {
       : "Luogo attuale rilevato: sconosciuto";   
       
       homeContext = trimBlock(await buildCognitiveHouse(), 1400);
-      
+      houseLearnedRulesContext = trimBlock(
+        await buildHouseLearnedRulesContext(userId),
+        1200
+      );
       console.log("CURRENT PLACE CONTEXT:", currentPlaceContext);
       console.log("LOCATION RAW:", currentLocation);
       console.log("LOCATION LABEL:", currentLocation?.current_place_label);
@@ -1061,6 +1070,7 @@ export async function POST(req: Request) {
       cognitiveContext,
       behaviorRulesContext,
       homeContext,
+      houseLearnedRulesContext,
       
     });
 
