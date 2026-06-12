@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { GhostMode, VoiceState } from "./types";
 
 type ProactiveCard = {
@@ -59,6 +60,29 @@ export default function GhostChat({
         ? [proactiveMessage]
         : [];
 
+
+  const [answeredHomeMessages, setAnsweredHomeMessages] = useState<Record<string, string>>({});
+
+  async function answerHomeQuestion(messageId: string, response: "yes" | "no") {
+    setAnsweredHomeMessages((prev) => ({
+      ...prev,
+      [messageId]: response,
+    }));
+
+    await fetch("/api/house-suggestion-response", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        proactiveMessageId: messageId,
+        response,
+      }),
+    });
+
+    onProactiveSeen?.(messageId);
+  }        
+
   return (
     <section className="relative mx-auto mt-8 flex w-full max-w-4xl flex-1 flex-col justify-end">
       <div className="relative z-10 flex min-h-[42vh] flex-col justify-end gap-5 pb-5">
@@ -86,6 +110,33 @@ export default function GhostChat({
                 <div className="whitespace-pre-line text-sm leading-relaxed">
                   {message.message}
                 </div>
+
+                {message.category === "home_question" && (
+                  <div className="mt-4 flex gap-3">
+                    <button
+                      onClick={() => answerHomeQuestion(message.id, "yes")}
+                      disabled={!!answeredHomeMessages[message.id]}
+                      className="rounded-2xl bg-cyan-300 px-5 py-2 text-sm font-black text-black disabled:opacity-50"
+                    >
+                      Sì
+                    </button>
+
+                    <button
+                      onClick={() => answerHomeQuestion(message.id, "no")}
+                      disabled={!!answeredHomeMessages[message.id]}
+                      className="rounded-2xl border border-red-400/40 px-5 py-2 text-sm font-black text-red-200 disabled:opacity-50"
+                    >
+                      No
+                    </button>
+
+                    {answeredHomeMessages[message.id] && (
+                      <span className="self-center text-xs text-cyan-300">
+                        Risposta salvata
+                      </span>
+                    )}
+                  </div>
+                )}
+
               </div>
             ))}
           </div>
