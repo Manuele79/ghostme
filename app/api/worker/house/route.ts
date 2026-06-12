@@ -4,6 +4,8 @@ import { logHomeAssistantSnapshot } from "@/lib/ghostme/homeAssistant/homeEventL
 import { analyzeHousePatterns } from "@/lib/ghostme/homeAssistant/housePatternEngine";
 import { generateHouseSuggestions } from "@/lib/ghostme/homeAssistant/houseSuggestionEngine";
 import { learnHouseRoutes } from "@/lib/ghostme/homeAssistant/houseRouteLearningEngine";
+import { generateHouseAutomationSuggestions } from "@/lib/ghostme/homeAssistant/houseAutomationSuggestionEngine";
+import { planHouseAutomationControls } from "@/lib/ghostme/homeAssistant/houseAutomationControlPlanner";
 
 export async function GET(req: Request) {
   const secret = process.env.WORKER_SECRET;
@@ -37,6 +39,8 @@ export async function GET(req: Request) {
     const patterns = await analyzeHousePatterns(user.user_id);
     const routes = await learnHouseRoutes(user.user_id);
     const suggestions = await generateHouseSuggestions(user.user_id);
+    const automationSuggestions = await generateHouseAutomationSuggestions(user.user_id);
+    const controlPlans = await planHouseAutomationControls(user.user_id);
 
     totalInserted += logResult.inserted || 0;
 
@@ -45,7 +49,9 @@ export async function GET(req: Request) {
       logResult,
       patterns,
       routes,
-      suggestionsCreated: suggestions.length,
+      suggestionsCreated: suggestions.length + automationSuggestions.length,
+      automationSuggestionsCreated: automationSuggestions.length,
+      controlPlansCreated: controlPlans.length,
     });
   }
 
