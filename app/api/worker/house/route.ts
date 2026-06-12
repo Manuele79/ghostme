@@ -40,7 +40,7 @@ export async function GET(req: Request) {
 
     results.push({
       userId: user.user_id,
-      inserted: logResult.inserted || 0,
+      logResult,
       patterns,
       suggestionsCreated: suggestions.length,
     });
