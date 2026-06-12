@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { logHomeAssistantSnapshot } from "@/lib/ghostme/homeAssistant/homeEventLogger";
 import { analyzeHousePatterns } from "@/lib/ghostme/homeAssistant/housePatternEngine";
 import { generateHouseSuggestions } from "@/lib/ghostme/homeAssistant/houseSuggestionEngine";
+import { learnHouseRoutes } from "@/lib/ghostme/homeAssistant/houseRouteLearningEngine";
 
 export async function GET(req: Request) {
   const secret = process.env.WORKER_SECRET;
@@ -34,6 +35,7 @@ export async function GET(req: Request) {
   for (const user of users || []) {
     const logResult = await logHomeAssistantSnapshot(user.user_id);
     const patterns = await analyzeHousePatterns(user.user_id);
+    const routes = await learnHouseRoutes(user.user_id);
     const suggestions = await generateHouseSuggestions(user.user_id);
 
     totalInserted += logResult.inserted || 0;
@@ -42,6 +44,7 @@ export async function GET(req: Request) {
       userId: user.user_id,
       logResult,
       patterns,
+      routes,
       suggestionsCreated: suggestions.length,
     });
   }
