@@ -31,7 +31,16 @@ export async function learnHouseRoutes(userId: string) {
     .select("room_key, event_type, occurred_at, people_home_count")
     .eq("user_id", userId)
     .gte("occurred_at", since)
-    .in("event_type", ["motion_on", "presence_on", "person_location_changed"])
+    .in("event_type", [
+    "motion_on",
+    "presence_on",
+    "motion_off",
+    "presence_off",
+    "light_on",
+    "switch_on",
+    "tv_on",
+    "person_location_changed",
+  ])
     .order("occurred_at", { ascending: true });
 
   if (error || !events?.length) {
@@ -54,7 +63,7 @@ export async function learnHouseRoutes(userId: string) {
       new Date(next.occurred_at).getTime() -
       new Date(current.occurred_at).getTime();
 
-    if (diffMs < 0 || diffMs > 90 * 1000) continue;
+    if (diffMs < 0 || diffMs > 5 * 60 * 1000) continue;
 
     const key = routeKey(current.room_key, next.room_key);
 
