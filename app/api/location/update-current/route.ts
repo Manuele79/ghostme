@@ -31,9 +31,15 @@ export async function POST(req: Request) {
           user_id: body.userId,
           current_place_id: body.placeId || null,
           current_place_label: body.placeLabel || null,
+          place_category: body.placeCategory || body.category || null,
+          address: body.address || null,
           latitude: body.latitude ?? null,
           longitude: body.longitude ?? null,
+          accuracy: body.accuracy ?? null,
+          confidence: body.confidence ?? 50,
           source: body.source || "browser",
+          last_changed_at:
+            previousPlace !== nextPlace ? new Date().toISOString() : previousState?.last_changed_at || new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
         { onConflict: "user_id" }

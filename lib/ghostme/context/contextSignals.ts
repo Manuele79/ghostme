@@ -42,6 +42,8 @@ export function buildContextSignals(
   const signals: ContextSignal[] = [];
 
   const place = cleanPlace(situation.currentPlace);
+  const placeCategory = cleanPlace(situation.currentPlaceCategory);
+  const locationConfidence = Number(situation.locationConfidence || 0);
   const time = cleanPlace(situation.timeContext);
 
   const calendarToday = situation.calendarToday || [];
@@ -104,6 +106,51 @@ export function buildContextSignals(
       reason: `Luogo attuale riconosciuto: ${situation.currentPlace}`,
     });
   }
+
+    if (placeCategory && placeCategory !== "unknown") {
+    signals.push({
+        key: `place_category_${placeCategory}`,
+        category: "location",
+        priority: 7,
+        reason: `Il luogo attuale è classificato come ${placeCategory}.`,
+    });
+    }
+
+    if (placeCategory === "supermarket" || placeCategory === "shop") {
+    signals.push({
+        key: "shopping_place",
+        category: "location",
+        priority: 8,
+        reason: "L'utente si trova in un luogo collegato alla spesa o agli acquisti.",
+    });
+    }
+
+    if (placeCategory === "restaurant" || placeCategory === "bar") {
+    signals.push({
+        key: "food_place",
+        category: "location",
+        priority: 7,
+        reason: "L'utente si trova in un luogo collegato a cibo o pausa.",
+    });
+    }
+
+    if (placeCategory === "fuel") {
+    signals.push({
+        key: "fuel_place",
+        category: "location",
+        priority: 7,
+        reason: "L'utente si trova in un luogo collegato al rifornimento.",
+    });
+    }
+
+    if (!place && locationConfidence >= 70) {
+    signals.push({
+        key: "precise_unknown_place",
+        category: "location",
+        priority: 8,
+        reason: "La posizione è precisa ma il luogo non è ancora salvato.",
+    });
+    }
 
   if (place && !isHome(place)) {
     signals.push({

@@ -8,6 +8,11 @@ export type GhostSituation = {
   userLocation: string | null;
   currentPlace: string | null;
 
+  currentPlaceCategory: string | null;
+  currentPlaceAddress: string | null;
+  locationConfidence: number | null;
+  lastLocationChange: string | null;
+
   calendarToday: any[];
   upcomingEvents: any[];
   activeGoals: any[];
@@ -254,6 +259,11 @@ export async function buildGhostSituation(userId: string): Promise<GhostSituatio
   const profile = profileRes.data || null;
   const currentLocationState = await getCurrentLocationState(userId);
   const currentPlace = currentLocationState?.current_place_label || null;
+  const currentPlaceCategory = currentLocationState?.place_category || null;
+  const currentPlaceAddress = currentLocationState?.address || null;
+  const locationConfidence = currentLocationState?.confidence ?? null;
+  const lastLocationChange = currentLocationState?.last_changed_at || null;
+
   const calendarToday = calendarTodayRes.data || [];
   const upcomingEvents = upcomingCalendarRes.data || [];
   const activeGoals = goalsRes.data || [];
@@ -295,6 +305,10 @@ ${profile?.location || "non specificata"}
 
 LUOGO ATTUALE:
 ${currentPlace || "sconosciuto"}
+  Categoria: ${currentPlaceCategory || "non classificata"}
+  Indirizzo: ${currentPlaceAddress || "non disponibile"}
+  Confidenza: ${locationConfidence ?? "non disponibile"}
+  Ultimo cambio luogo: ${lastLocationChange || "non disponibile"}
 
 CALENDARIO OGGI:
 ${formatList(
@@ -428,6 +442,10 @@ device: ${externalSignals.deviceContext || "non collegato"}
     dayContext,
     userLocation: profile?.location || null,
     currentPlace,
+    currentPlaceCategory,
+    currentPlaceAddress,
+    locationConfidence,
+    lastLocationChange,
 
     calendarToday,
     upcomingEvents,

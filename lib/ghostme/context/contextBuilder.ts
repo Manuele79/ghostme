@@ -10,6 +10,10 @@ export type GhostCurrentContext = {
   dayContext: string;
   userLocation: string | null;
   currentPlace: string | null;
+  currentPlaceCategory: string | null;
+  currentPlaceAddress: string | null;
+  locationConfidence: number | null;
+  lastLocationChange: string | null;
   activeProjects: string[];
   activeGoals: string[];
   pendingActions: string[];
@@ -144,6 +148,10 @@ export async function buildCurrentContext(
 
     const reasoningSummary = `
       Luogo attuale: ${situation.currentPlace || "luogo sconosciuto"}.
+      Categoria luogo: ${situation.currentPlaceCategory || "non classificata"}.
+      Indirizzo luogo: ${situation.currentPlaceAddress || "non disponibile"}.
+      Confidenza luogo: ${situation.locationConfidence ?? "non disponibile"}.
+      Ultimo cambio luogo: ${situation.lastLocationChange || "non disponibile"}.
       Momento: ${situation.timeContext}, ${situation.dayContext}.
       Progetti attivi principali: ${activeProjects.join(", ") || "nessuno"}.
       Topic dominanti: ${dominantTopics.join(", ") || "nessuno"}.
@@ -171,6 +179,10 @@ export async function buildCurrentContext(
       Momento: ${situation.timeContext}, ${situation.dayContext}
       Località profilo: ${situation.userLocation || "non specificata"}
       Luogo attuale: ${situation.currentPlace || "sconosciuto"}
+      Categoria luogo: ${situation.currentPlaceCategory || "non classificata"}
+      Indirizzo luogo: ${situation.currentPlaceAddress || "non disponibile"}
+      Confidenza luogo: ${situation.locationConfidence ?? "non disponibile"}
+      Ultimo cambio luogo: ${situation.lastLocationChange || "non disponibile"}
       Progetti attivi: ${activeProjects.join(", ") || "nessuno"}
       Obiettivi attivi: ${activeGoals.join(", ") || "nessuno"}
       Azioni pendenti: ${pendingActions.join(", ") || "nessuna"}
@@ -203,6 +215,10 @@ export async function buildCurrentContext(
     dayContext: situation.dayContext,
     userLocation: situation.userLocation,
     currentPlace: situation.currentPlace,
+    currentPlaceCategory: situation.currentPlaceCategory,
+    currentPlaceAddress: situation.currentPlaceAddress,
+    locationConfidence: situation.locationConfidence,
+    lastLocationChange: situation.lastLocationChange,
     activeProjects,
     activeGoals,
     pendingActions,
