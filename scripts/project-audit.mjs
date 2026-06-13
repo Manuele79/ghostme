@@ -2,10 +2,11 @@ import fs from "fs";
 import path from "path";
 
 const ROOT = process.cwd();
-const OUT_MD = path.join(ROOT, "PROJECT_AUDIT.md");
-const OUT_JSON = path.join(ROOT, "PROJECT_AUDIT.json");
 
-const INCLUDE_EXT = [".ts", ".tsx", ".js", ".jsx"];
+const OUT_MD = path.join(ROOT, "PROJECT_AUDIT_FULL.md");
+const OUT_JSON = path.join(ROOT, "PROJECT_AUDIT_FULL.json");
+
+const INCLUDE_EXT = [".ts", ".tsx", ".js", ".jsx", ".mjs"];
 const IGNORE_DIRS = new Set([
   "node_modules",
   ".next",
@@ -14,6 +15,8 @@ const IGNORE_DIRS = new Set([
   "build",
   ".vercel",
 ]);
+
+const TABLE_METHODS = ["select", "insert", "update", "upsert", "delete"];
 
 function walk(dir, files = []) {
   for (const item of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -60,6 +63,7 @@ function resolveImport(fromFile, imp) {
     `${base}.tsx`,
     `${base}.js`,
     `${base}.jsx`,
+    `${base}.mjs`,
     path.join(base, "index.ts"),
     path.join(base, "index.tsx"),
   ];
@@ -71,198 +75,403 @@ function resolveImport(fromFile, imp) {
   return imp;
 }
 
-const files = walk(ROOT);
-const fileSet = new Set(files.map(rel));
-
-const analysis = {
-  files: {},
-  tables: {},
-  apiRoutes: [],
-  possibleDeadFiles: [],
-  exportedFunctions: {},
-  importsGraph: {},
-  importedBy: {},
-};
-
-for (const file of files) {
-  const r = rel(file);
-  const code = read(file);
-
-  const imports = [...code.matchAll(/from\s+["']([^"']+)["']/g)].map((m) =>
-    resolveImport(file, m[1])
-  );
-
-  const dynamicImports = [...code.matchAll(/import\(["']([^"']+)["']\)/g)].map(
-    (m) => resolveImport(file, m[1])
-  );
-
-  const allImports = [...new Set([...imports, ...dynamicImports])];
-
-  const tablesRead = [
-    ...code.matchAll(/\.from\(["']([^"']+)["']\)/g),
-  ].map((m) => m[1]);
-
-  const inserts = [...code.matchAll(/\.from\(["']([^"']+)["']\)[\s\S]{0,250}\.insert/g)].map(
-    (m) => m[1]
-  );
-
-  const updates = [...code.matchAll(/\.from\(["']([^"']+)["']\)[\s\S]{0,250}\.update/g)].map(
-    (m) => m[1]
-  );
-
-  const deletes = [...code.matchAll(/\.from\(["']([^"']+)["']\)[\s\S]{0,250}\.delete/g)].map(
-    (m) => m[1]
-  );
-
-  const exported = [
-    ...code.matchAll(/export\s+(?:async\s+)?function\s+([A-Za-z0-9_]+)/g),
-  ].map((m) => m[1]);
-
-  analysis.files[r] = {
-    imports: allImports,
-    tablesUsed: [...new Set(tablesRead)],
-    tablesInserted: [...new Set(inserts)],
-    tablesUpdated: [...new Set(updates)],
-    tablesDeleted: [...new Set(deletes)],
-    exportedFunctions: exported,
-  };
-
-  analysis.importsGraph[r] = allImports;
-
-  for (const imp of allImports) {
-    if (!analysis.importedBy[imp]) analysis.importedBy[imp] = [];
-    analysis.importedBy[imp].push(r);
-  }
-
-  for (const table of tablesRead) {
-    if (!analysis.tables[table]) {
-      analysis.tables[table] = {
-        readBy: [],
-        insertedBy: [],
-        updatedBy: [],
-        deletedBy: [],
-      };
-    }
-
-    analysis.tables[table].readBy.push(r);
-  }
-
-  for (const table of inserts) {
-    if (!analysis.tables[table]) {
-      analysis.tables[table] = {
-        readBy: [],
-        insertedBy: [],
-        updatedBy: [],
-        deletedBy: [],
-      };
-    }
-
-    analysis.tables[table].insertedBy.push(r);
-  }
-
-  for (const table of updates) {
-    if (!analysis.tables[table]) {
-      analysis.tables[table] = {
-        readBy: [],
-        insertedBy: [],
-        updatedBy: [],
-        deletedBy: [],
-      };
-    }
-
-    analysis.tables[table].updatedBy.push(r);
-  }
-
-  for (const table of deletes) {
-    if (!analysis.tables[table]) {
-      analysis.tables[table] = {
-        readBy: [],
-        insertedBy: [],
-        updatedBy: [],
-        deletedBy: [],
-      };
-    }
-
-    analysis.tables[table].deletedBy.push(r);
-  }
-
-  if (r.startsWith("app/api/") && r.endsWith("route.ts")) {
-    analysis.apiRoutes.push(r);
-  }
-
-  if (exported.length) {
-    analysis.exportedFunctions[r] = exported;
-  }
+function getFolder(file) {
+  const parts = file.split("/");
+  parts.pop();
+  return parts.join("/") || ".";
 }
 
-for (const r of fileSet) {
-  const isEntry =
-    r.startsWith("app/") ||
-    r.startsWith("pages/") ||
-    r.includes("route.ts") ||
-    r.includes("page.tsx") ||
-    r.includes("layout.tsx");
-
-  const imported = analysis.importedBy[r]?.length > 0;
-
-  if (!isEntry && !imported) {
-    analysis.possibleDeadFiles.push(r);
-  }
+function uniq(arr) {
+  return [...new Set(arr.filter(Boolean))];
 }
 
 function list(items) {
   if (!items?.length) return "- nessuno";
-  return items.map((x) => `- ${x}`).join("\n");
+  return uniq(items).map((x) => `- ${x}`).join("\n");
 }
 
-let md = `# PROJECT AUDIT
+function extractSupabaseOps(code) {
+  const ops = {};
 
-Generato automaticamente.
+  const fromMatches = [...code.matchAll(/\.from\(["']([^"']+)["']\)/g)];
 
-## API routes
+  for (const match of fromMatches) {
+    const table = match[1];
+    const start = match.index || 0;
+    const chunk = code.slice(start, start + 900);
+
+    if (!ops[table]) {
+      ops[table] = {
+        select: false,
+        insert: false,
+        update: false,
+        upsert: false,
+        delete: false,
+      };
+    }
+
+    for (const method of TABLE_METHODS) {
+      if (new RegExp(`\\.${method}\\s*\\(`).test(chunk)) {
+        ops[table][method] = true;
+      }
+    }
+  }
+
+  return ops;
+}
+
+function extractApiCalls(code) {
+  return uniq(
+    [...code.matchAll(/fetch\(["'`]([^"'`]+)["'`]/g)].map((m) => m[1])
+  );
+}
+
+function extractExports(code) {
+  return uniq([
+    ...[...code.matchAll(/export\s+(?:async\s+)?function\s+([A-Za-z0-9_]+)/g)].map((m) => m[1]),
+    ...[...code.matchAll(/export\s+const\s+([A-Za-z0-9_]+)/g)].map((m) => m[1]),
+  ]);
+}
+
+function extractFunctionCalls(code) {
+  return uniq(
+    [...code.matchAll(/\b([A-Za-z_][A-Za-z0-9_]*)\s*\(/g)]
+      .map((m) => m[1])
+      .filter(
+        (name) =>
+          ![
+            "if",
+            "for",
+            "while",
+            "switch",
+            "catch",
+            "function",
+            "return",
+            "map",
+            "filter",
+            "reduce",
+            "forEach",
+            "console",
+            "String",
+            "Number",
+            "Date",
+            "JSON",
+          ].includes(name)
+      )
+  );
+}
+
+const filesAbs = walk(ROOT);
+const files = filesAbs.map(rel);
+const fileSet = new Set(files);
+
+const analysis = {
+  generatedAt: new Date().toISOString(),
+  folders: {},
+  files: {},
+  importsGraph: {},
+  importedBy: {},
+  apiRoutes: [],
+  apiCalls: {},
+  tables: {},
+  exportedFunctions: {},
+  functionUsage: {},
+  possibleDeadFiles: [],
+  possibleDeadExports: [],
+  suspiciousDebugRoutes: [],
+  duplicateFileNames: {},
+};
+
+for (const abs of filesAbs) {
+  const file = rel(abs);
+  const code = read(abs);
+  const folder = getFolder(file);
+
+  if (!analysis.folders[folder]) analysis.folders[folder] = [];
+  analysis.folders[folder].push(file);
+
+  const imports = uniq([
+    ...[...code.matchAll(/from\s+["']([^"']+)["']/g)].map((m) =>
+      resolveImport(abs, m[1])
+    ),
+    ...[...code.matchAll(/import\(["']([^"']+)["']\)/g)].map((m) =>
+      resolveImport(abs, m[1])
+    ),
+  ]);
+
+  analysis.importsGraph[file] = imports;
+
+  for (const imp of imports) {
+    if (!analysis.importedBy[imp]) analysis.importedBy[imp] = [];
+    analysis.importedBy[imp].push(file);
+  }
+
+  const tableOps = extractSupabaseOps(code);
+  const apiCalls = extractApiCalls(code);
+  const exports = extractExports(code);
+  const calls = extractFunctionCalls(code);
+
+  analysis.files[file] = {
+    folder,
+    imports,
+    importedBy: [],
+    apiCalls,
+    tables: tableOps,
+    exports,
+    calls,
+    lines: code.split("\n").length,
+  };
+
+  if (file.startsWith("app/api/") && file.endsWith("route.ts")) {
+    analysis.apiRoutes.push(file);
+  }
+
+  if (
+    file.startsWith("app/api/debug") ||
+    file.startsWith("app/api/test") ||
+    file.includes("/debug-") ||
+    file.includes("/test-")
+  ) {
+    analysis.suspiciousDebugRoutes.push(file);
+  }
+
+  for (const [table, ops] of Object.entries(tableOps)) {
+    if (!analysis.tables[table]) {
+      analysis.tables[table] = {
+        readBy: [],
+        insertedBy: [],
+        updatedBy: [],
+        upsertedBy: [],
+        deletedBy: [],
+      };
+    }
+
+    if (ops.select) analysis.tables[table].readBy.push(file);
+    if (ops.insert) analysis.tables[table].insertedBy.push(file);
+    if (ops.update) analysis.tables[table].updatedBy.push(file);
+    if (ops.upsert) analysis.tables[table].upsertedBy.push(file);
+    if (ops.delete) analysis.tables[table].deletedBy.push(file);
+  }
+
+  if (exports.length) {
+    analysis.exportedFunctions[file] = exports;
+  }
+
+  for (const fn of exports) {
+    if (!analysis.functionUsage[fn]) {
+      analysis.functionUsage[fn] = {
+        exportedBy: [],
+        calledBy: [],
+      };
+    }
+    analysis.functionUsage[fn].exportedBy.push(file);
+  }
+
+  for (const call of calls) {
+    if (!analysis.functionUsage[call]) {
+      analysis.functionUsage[call] = {
+        exportedBy: [],
+        calledBy: [],
+      };
+    }
+    analysis.functionUsage[call].calledBy.push(file);
+  }
+
+  for (const call of apiCalls) {
+    if (!analysis.apiCalls[call]) analysis.apiCalls[call] = [];
+    analysis.apiCalls[call].push(file);
+  }
+}
+
+for (const file of files) {
+  analysis.files[file].importedBy = analysis.importedBy[file] || [];
+
+  const isEntry =
+    file.startsWith("app/") ||
+    file.startsWith("pages/") ||
+    file.includes("route.ts") ||
+    file.includes("page.tsx") ||
+    file.includes("layout.tsx") ||
+    file.startsWith("scripts/") ||
+    file === "next.config.ts" ||
+    file === "next-env.d.ts";
+
+  const imported = (analysis.importedBy[file] || []).length > 0;
+
+  if (!isEntry && !imported) {
+    analysis.possibleDeadFiles.push(file);
+  }
+}
+
+for (const [fn, usage] of Object.entries(analysis.functionUsage)) {
+  if (usage.exportedBy.length && !usage.calledBy.length) {
+    analysis.possibleDeadExports.push({
+      function: fn,
+      exportedBy: usage.exportedBy,
+    });
+  }
+}
+
+const names = {};
+for (const file of files) {
+  const name = path.basename(file);
+  if (!names[name]) names[name] = [];
+  names[name].push(file);
+}
+
+for (const [name, paths] of Object.entries(names)) {
+  if (paths.length > 1) {
+    analysis.duplicateFileNames[name] = paths;
+  }
+}
+
+let md = `# PROJECT AUDIT FULL
+
+Generato: ${analysis.generatedAt}
+
+# 1. RIASSUNTO
+
+- File analizzati: ${files.length}
+- Cartelle: ${Object.keys(analysis.folders).length}
+- API routes: ${analysis.apiRoutes.length}
+- Tabelle Supabase usate: ${Object.keys(analysis.tables).length}
+- File potenzialmente scollegati: ${analysis.possibleDeadFiles.length}
+- Export potenzialmente non usati: ${analysis.possibleDeadExports.length}
+- Rotte debug/test: ${analysis.suspiciousDebugRoutes.length}
+
+---
+
+# 2. CARTELLE
+
+`;
+
+for (const [folder, folderFiles] of Object.entries(analysis.folders).sort()) {
+  md += `## ${folder}\n\n${list(folderFiles)}\n\n`;
+}
+
+md += `---
+
+# 3. API ROUTES
 
 ${list(analysis.apiRoutes)}
 
-## Tabelle Supabase usate
+---
+
+# 4. API CHIAMATE DAL FRONT / CODICE
+
+`;
+
+for (const [api, callers] of Object.entries(analysis.apiCalls).sort()) {
+  md += `## ${api}\n\nChiamata da:\n${list(callers)}\n\n`;
+}
+
+md += `---
+
+# 5. TABELLE SUPABASE
 
 `;
 
 for (const [table, data] of Object.entries(analysis.tables).sort()) {
-  md += `### ${table}
+  md += `## ${table}
 
-**Lettura**
-${list([...new Set(data.readBy)])}
+### Read
+${list(data.readBy)}
 
-**Insert**
-${list([...new Set(data.insertedBy)])}
+### Insert
+${list(data.insertedBy)}
 
-**Update**
-${list([...new Set(data.updatedBy)])}
+### Update
+${list(data.updatedBy)}
 
-**Delete**
-${list([...new Set(data.deletedBy)])}
+### Upsert
+${list(data.upsertedBy)}
+
+### Delete
+${list(data.deletedBy)}
 
 `;
 }
 
-md += `## File potenzialmente scollegati
+md += `---
+
+# 6. FILE POTENZIALMENTE SCOLLEGATI
 
 ${list(analysis.possibleDeadFiles)}
 
-## Mappa import principali
+---
+
+# 7. EXPORT POTENZIALMENTE NON USATI
 
 `;
 
-for (const [file, imports] of Object.entries(analysis.importsGraph).sort()) {
-  if (!file.startsWith("lib/ghostme") && !file.startsWith("app/api")) continue;
+if (!analysis.possibleDeadExports.length) {
+  md += "- nessuno\n\n";
+} else {
+  for (const item of analysis.possibleDeadExports) {
+    md += `- ${item.function} esportata da ${item.exportedBy.join(", ")}\n`;
+  }
+}
 
-  md += `### ${file}
+md += `
 
-Importa:
-${list(imports)}
+---
 
-Importato da:
-${list(analysis.importedBy[file] || [])}
+# 8. ROTTE DEBUG / TEST DA CONTROLLARE
+
+${list(analysis.suspiciousDebugRoutes)}
+
+---
+
+# 9. NOMI FILE DUPLICATI
+
+`;
+
+for (const [name, paths] of Object.entries(analysis.duplicateFileNames).sort()) {
+  md += `## ${name}\n${list(paths)}\n\n`;
+}
+
+md += `---
+
+# 10. MAPPA FILE PRINCIPALI
+
+`;
+
+for (const [file, data] of Object.entries(analysis.files).sort()) {
+  if (
+    !file.startsWith("lib/ghostme") &&
+    !file.startsWith("app/api") &&
+    !file.startsWith("components/ghost") &&
+    !file.startsWith("hooks")
+  ) {
+    continue;
+  }
+
+  md += `## ${file}
+
+Righe: ${data.lines}
+
+### Importa
+${list(data.imports)}
+
+### Importato da
+${list(data.importedBy)}
+
+### API chiamate
+${list(data.apiCalls)}
+
+### Export
+${list(data.exports)}
+
+### Tabelle
+${Object.keys(data.tables).length ? Object.entries(data.tables)
+    .map(([t, ops]) => {
+      const active = Object.entries(ops)
+        .filter(([, v]) => v)
+        .map(([k]) => k)
+        .join(", ");
+      return `- ${t}: ${active}`;
+    })
+    .join("\n") : "- nessuna"}
 
 `;
 }
@@ -271,5 +480,5 @@ fs.writeFileSync(OUT_JSON, JSON.stringify(analysis, null, 2));
 fs.writeFileSync(OUT_MD, md);
 
 console.log("Creati:");
-console.log("- PROJECT_AUDIT.md");
-console.log("- PROJECT_AUDIT.json");
+console.log("- PROJECT_AUDIT_FULL.md");
+console.log("- PROJECT_AUDIT_FULL.json");
