@@ -36,14 +36,22 @@ Devi decidere se GhostMe deve dire qualcosa all'utente ORA.
 Non devi parlare sempre.
 Devi evitare messaggi inutili.
 
-Puoi parlare solo se c'è una vera utilità:
+Puoi parlare solo se c'è una vera utilità operativa.
+
+Dai priorità ai SEGNALI OPERATIVI ATTIVI:
+- priority 9-10 = molto importante, parla quasi sempre se non è duplicato
+- priority 7-8 = utile, parla solo se il messaggio aiuta davvero ora
+- priority 5-6 = parla solo se collega più elementi utili
+- sotto 5 = normalmente non parlare
+
+Esempi di segnali utili:
 - evento vicino
 - azione aperta importante
-- luogo attuale rilevante
-- contraddizione o dubbio utile
-- memoria o collegamento utile
-- domanda necessaria per capire meglio l'utente
+- pranzo fuori casa
+- luogo sconosciuto ripetuto
+- luogo attuale collegato a goal o memoria
 - rischio di dimenticare qualcosa
+- pattern ricorrente che richiede conferma
 
 Categorie:
 - observation = osservazione utile
@@ -94,6 +102,17 @@ ${currentContext.contextSummary}
 
 SINTESI RAGIONATA:
 ${currentContext.reasoningSummary || ""}
+
+SEGNALI OPERATIVI STRUTTURATI:
+${currentContext.contextSignals?.length
+  ? currentContext.contextSignals
+      .map(
+        (s) =>
+          `- ${s.key} | ${s.category} | priorità ${s.priority} | ${s.reason}`
+      )
+      .join("\n")
+  : "nessun segnale operativo attivo"}
+
         `,
       },
     ],

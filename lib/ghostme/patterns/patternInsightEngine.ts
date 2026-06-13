@@ -1,5 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { upsertProactiveMessage } from "@/lib/ghostme/proactive/proactiveMessageService";
+
 import { OpenAI } from "openai";
 
 const openai = new OpenAI({
@@ -67,14 +67,6 @@ ${JSON.stringify(patterns, null, 2)}
   const message = completion.choices[0]?.message?.content?.trim() || "";
 
   if (!message || message === "NO_MESSAGE") return null;
-
-  await upsertProactiveMessage({
-    userId,
-    title: "Osservazione GhostMe",
-    message,
-    category: "observation",
-    priority: 3,
-  });
 
   return message;
 }

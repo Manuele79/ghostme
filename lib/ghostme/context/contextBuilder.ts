@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { buildGhostSituation } from "@/lib/ghostme/situation/situationEngine";
 import { buildBehaviorPrompt } from "@/lib/ghostme/behavior/behaviorRulesEngine";
 import { buildHomeReasoning } from "@/lib/ghostme/homeAssistant/homeReasoningBuilder";
+import { buildContextSignals, ContextSignal } from "@/lib/ghostme/context/contextSignals";
 
 export type GhostCurrentContext = {
   timeContext: string;
@@ -30,13 +31,14 @@ export type GhostCurrentContext = {
   behaviorRulesContext: string;
   reasoningSummary: string;
   recentProactiveMessages: string[];
+  contextSignals: ContextSignal[];
 };
 
 export async function buildCurrentContext(
   userId: string
 ): Promise<GhostCurrentContext> {
   const situation = await buildGhostSituation(userId);
-
+  const contextSignals = buildContextSignals(situation);
   const homeContext = await buildHomeReasoning();
 
   const behaviorRulesContext = await buildBehaviorPrompt(userId);
@@ -54,6 +56,15 @@ export async function buildCurrentContext(
       (m) =>
         `[${m.category || "general"}] ${m.title || "Messaggio"}: ${m.message}`
     ) || [];
+
+   const signalSummary = contextSignals.length
+  ? contextSignals
+      .map(
+        (s) =>
+          `- ${s.key} | ${s.category} | priorità ${s.priority} | ${s.reason}`
+      )
+      .join("\n")
+  : "nessun segnale operativo forte"; 
 
   const activeProjects = situation.dominantTopics
     .filter((t) => t.category === "project" || t.entity_type === "project")
@@ -146,6 +157,8 @@ export async function buildCurrentContext(
       Regole comportamentali: ${behaviorRules.join(", ") || "nessuna"}.
       Osservazioni recenti: ${recentObservations.join(", ") || "nessuna"}.
       Messaggi proattivi recenti: ${recentProactiveMessages.join(" | ") || "nessuno"}.
+      Segnali operativi attivi:
+      ${signalSummary}
       Contesto casa:
       ${homeContext}
       `.trim();  
@@ -174,6 +187,8 @@ export async function buildCurrentContext(
       Pattern comportamentali: ${behaviorPatterns.join(", ") || "nessuno"}
       Regole comportamentali: ${behaviorRules.join(", ") || "nessuna"}
       Osservazioni recenti: ${recentObservations.join(", ") || "nessuna"}
+      SEGNALI OPERATIVI ATTIVI:
+      ${signalSummary}
       Regole comportamentali attive:
       ${behaviorRulesContext || "nessuna regola comportamentale attiva"}
       Sintesi ragionata: ${reasoningSummary}
@@ -206,6 +221,7 @@ export async function buildCurrentContext(
     behaviorRules,
     behaviorPatterns,
     recentObservations,
+    contextSignals,
     behaviorRulesContext,
     reasoningSummary,
     recentProactiveMessages,

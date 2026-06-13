@@ -3,8 +3,6 @@ import { OpenAI } from "openai";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 import { buildCurrentContext } from "@/lib/ghostme/context/contextBuilder";
-import { generateButlerMessage } from "@/lib/ghostme/butler/butlerEngine";
-import { generateCuriosityMessage } from "@/lib/ghostme/curiosity/curiosityEngine";
 import { buildGhostSituation } from "@/lib/ghostme/situation/situationEngine";
 import { buildAgendaMessage } from "@/lib/ghostme/agenda/agendaEngine";
 import { upsertProactiveMessage } from "@/lib/ghostme/proactive/proactiveMessageService";
@@ -16,12 +14,12 @@ import { generateObservationInsight } from "@/lib/ghostme/observation/observatio
 import { cleanupOldActionIntents } from "@/lib/ghostme/actionLayer";
 import { generatePatternInsight } from "@/lib/ghostme/patterns/patternInsightEngine";
 import { applyPatternDecay } from "@/lib/ghostme/patterns/patternDecay";
-
+import { generateCuriosityMessage } from "@/lib/ghostme/curiosity/curiosityEngine";
+import { generateButlerMessage } from "@/lib/ghostme/butler/butlerEngine";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-
 
 export async function GET() {
   try {
@@ -31,15 +29,14 @@ export async function GET() {
 
     if (usersError) {
       console.log("PROACTIVE USERS ERROR:", usersError);
-      return NextResponse.json({ success: false, error: usersError }, { status: 500 });
+      return NextResponse.json(
+        { success: false, error: usersError },
+        { status: 500 }
+      );
     }
 
     if (!users?.length) {
-      return NextResponse.json({
-        success: true,
-        users: 0,
-        created: 0,
-      });
+      return NextResponse.json({ success: true, users: 0, created: 0 });
     }
 
     let created = 0;
@@ -48,47 +45,108 @@ export async function GET() {
       const userId = user.user_id;
 
       await generateDailyConversationSummary(userId);
-
       await runRetentionCleanup(userId);
-
       await cleanupOldActionIntents(userId);
-
       await refreshReminderMessage(userId);
 
-      await generateObservationInsight(userId);
-
-      await generatePatternInsight(userId);
+      const observationInsight = await generateObservationInsight(userId);
+      const patternInsight = await generatePatternInsight(userId);
+      const curiosityMessage = await generateCuriosityMessage(userId);
 
       await applyPatternDecay(userId);
 
-
       const situation = await buildGhostSituation(userId);
       const agendaMessage = buildAgendaMessage(situation);
-
       const currentContext = await buildCurrentContext(userId);
+      const butlerMessage = await generateButlerMessage({
+        userName: user.full_name,
+        currentContext,
+      });
 
       const proactiveDecision = await decideProactiveMessage({
         userName: user.full_name,
         currentContext,
       });
 
-      if (proactiveDecision.shouldSpeak && proactiveDecision.message) {
+      const proactiveCandidates = [
+        proactiveDecision.shouldSpeak && proactiveDecision.message
+          ? {
+              title: proactiveDecision.title || "Osservazione GhostMe",
+              message: proactiveDecision.message,
+              category: proactiveDecision.category || "observation",
+              priority: proactiveDecision.priority || 2,
+              source: "decision",
+            }
+          : null,
+
+        observationInsight
+          ? {
+              title: "Osservazione GhostMe",
+              message: observationInsight,
+              category: "observation",
+              priority: 3,
+              source: "observation",
+            }
+          : null,
+
+        patternInsight
+          ? {
+              title: "Pattern GhostMe",
+              message: patternInsight,
+              category: "observation",
+              priority: 3,
+              source: "pattern",
+            }
+          : null,
+
+        curiosityMessage
+          ? {
+              title: "Curiosità GhostMe",
+              message: curiosityMessage,
+              category: "curiosity",
+              priority: 2,
+              source: "curiosity",
+            }
+          : null,
+
+        butlerMessage
+        ? {
+            title: "Osservazione GhostMe",
+            message: butlerMessage,
+            category: "observation",
+            priority: 2,
+            source: "butler",
+          }
+        : null,
+
+
+      ].filter(Boolean) as any[];
+
+      const bestCandidate = proactiveCandidates.sort(
+        (a, b) => (b.priority || 0) - (a.priority || 0)
+      )[0];
+
+      if (bestCandidate) {
         await upsertProactiveMessage({
           userId,
-          title: proactiveDecision.title || "Osservazione GhostMe",
-          message: proactiveDecision.message,
-          category: proactiveDecision.category || "observation",
-          priority: proactiveDecision.priority || 2,
+          title: bestCandidate.title,
+          message: bestCandidate.message,
+          category: bestCandidate.category,
+          priority: bestCandidate.priority,
         });
+
+        created++;
       }
 
-      const butlerMessage = await generateButlerMessage({
-        userName: user.full_name,
-        currentContext,
-      });  
-      
-      const curiosityMessage = await generateCuriosityMessage(userId);
-
+      if (agendaMessage) {
+        await upsertProactiveMessage({
+          userId,
+          title: "Agenda di oggi",
+          message: agendaMessage,
+          category: "agenda",
+          priority: 5,
+        });
+      }
 
       const [
         calendarRes,
@@ -103,7 +161,9 @@ export async function GET() {
           .select("title, type, description, start_at, remind_at")
           .eq("user_id", userId)
           .eq("status", "active")
-          .or(`start_at.gte.${new Date().toISOString()},remind_at.gte.${new Date().toISOString()}`)
+          .or(
+            `start_at.gte.${new Date().toISOString()},remind_at.gte.${new Date().toISOString()}`
+          )
           .order("start_at", { ascending: true })
           .limit(8),
 
@@ -140,49 +200,23 @@ export async function GET() {
 
         supabaseAdmin
           .from("life_topics")
-          .select("topic, category, entity_type, weight, mention_count, last_mentioned_at, description")
+          .select(
+            "topic, category, entity_type, weight, mention_count, last_mentioned_at, description"
+          )
           .eq("user_id", userId)
           .order("weight", { ascending: false })
           .limit(8),
       ]);
 
       const systemPrompt = `
-        Sei GhostMe.
+Sei GhostMe.
 
-        Devi creare un briefing proattivo personale per l'utente.
-
-        Non devi fare un elenco freddo.
-        Devi sembrare una mente personale che conosce il contesto.
-
-        Tono:
-        - diretto
-        - pratico
-        - umano
-        - leggermente ironico se serve
-        - niente frasi motivazionali da coach
-        - niente poesia
-        - niente "come assistente AI"
-
-        Struttura consigliata:
-        1. Saluto breve
-        2. Cose concrete di oggi o prossime
-        3. Collegamento intelligente con memoria/progetti/stato mentale
-        4. Solo se utile, una micro-azione concreta
-        5. Evita domande finali se non servono davvero
-
-        Regole:
-        - Se ci sono appuntamenti, cita quelli.
-        - Se ci sono obiettivi o azioni aperte, collegali.
-        - Non inventare dati mancanti.
-        - Se il calendario è vuoto, non dire che ci sono appuntamenti.
-        - Se i dati sono pochi, fai un briefing breve.
-        - Massimo 130 parole.
-        - NON proporre riflessioni generiche.
-        - NON dire "prenditi 15 minuti per riflettere".
-        - NON dare consigli psicologici o motivazionali.
-        - Dai solo cose operative: appuntamenti, promemoria, azioni concrete, anomalie utili.
-        - Se non c'è nulla di concreto, fai un briefing molto breve.
-        `;
+Devi creare un briefing proattivo personale per l'utente.
+Massimo 130 parole.
+Solo cose operative: appuntamenti, promemoria, azioni concrete, anomalie utili.
+Niente motivazione finta, niente coaching, niente poesia.
+Se non c'è nulla di concreto, fai un briefing molto breve.
+      `;
 
       const calendarForPrompt = (calendarRes.data || []).map((event) => ({
         ...event,
@@ -205,29 +239,28 @@ export async function GET() {
             : "orario non specificato",
       }));
 
-
       const userPrompt = `
-        UTENTE:
-        ${JSON.stringify(user, null, 2)}
+UTENTE:
+${JSON.stringify(user, null, 2)}
 
-        CALENDARIO:
-       ${JSON.stringify(calendarForPrompt, null, 2)}
+CALENDARIO:
+${JSON.stringify(calendarForPrompt, null, 2)}
 
-        OBIETTIVI:
-        ${JSON.stringify(goalsRes.data || [], null, 2)}
+OBIETTIVI:
+${JSON.stringify(goalsRes.data || [], null, 2)}
 
-        AZIONI APERTE:
-        ${JSON.stringify(actionsRes.data || [], null, 2)}
+AZIONI APERTE:
+${JSON.stringify(actionsRes.data || [], null, 2)}
 
-        STATO MENTALE:
-        ${JSON.stringify(mentalRes.data || null, null, 2)}
+STATO MENTALE:
+${JSON.stringify(mentalRes.data || null, null, 2)}
 
-        TIMELINE RECENTE:
-        ${JSON.stringify(timelineRes.data || [], null, 2)}
+TIMELINE RECENTE:
+${JSON.stringify(timelineRes.data || [], null, 2)}
 
-        TOPIC IMPORTANTI:
-        ${JSON.stringify(topicsRes.data || [], null, 2)}
-        `;
+TOPIC IMPORTANTI:
+${JSON.stringify(topicsRes.data || [], null, 2)}
+      `;
 
       const completion = await openai.chat.completions.create({
         model: "gpt-4o-mini",
@@ -243,17 +276,6 @@ export async function GET() {
         completion.choices[0]?.message?.content ||
         `Buongiorno ${user.full_name || ""}. Non ho abbastanza dati per un briefing utile oggi.`;
 
-        if (agendaMessage) {
-          await upsertProactiveMessage({
-            userId,
-            title: "Agenda di oggi",
-            message: agendaMessage,
-            category: "agenda",
-            priority: 5,
-          });
-        }
-
-
       const startOfToday = new Date();
       startOfToday.setHours(0, 0, 0, 0);
 
@@ -264,7 +286,7 @@ export async function GET() {
         .eq("category", "daily_briefing")
         .gte("created_at", startOfToday.toISOString())
         .limit(1)
-        .maybeSingle();       
+        .maybeSingle();
 
       if (!existingDaily?.id) {
         await upsertProactiveMessage({
@@ -275,44 +297,6 @@ export async function GET() {
           priority: 1,
         });
       }
-
-        created++;
-
-      if (butlerMessage) {
-        const observationLimit = new Date(
-          Date.now() - 6 * 60 * 60 * 1000
-        ).toISOString();
-
-        const { data: recentObservation } = await supabaseAdmin
-          .from("ghost_proactive_messages")
-          .select("id")
-          .eq("user_id", userId)
-          .eq("category", "observation")
-          .gte("created_at", observationLimit)
-          .limit(1)
-          .maybeSingle();
-
-        if (!recentObservation?.id) {
-          await upsertProactiveMessage({
-            userId,
-            title: "Osservazione GhostMe",
-            message: butlerMessage,
-            category: "observation",
-            priority: 2,
-          });
-        }
-      }
-
-        if (curiosityMessage) {
-          await upsertProactiveMessage({
-            userId,
-            title: "Curiosità GhostMe",
-            message: curiosityMessage,
-            category: "curiosity",
-            priority: 2,
-          });
-        }
-
     }
 
     return NextResponse.json({
