@@ -1,0 +1,3276 @@
+{
+  "files": {
+    "app/api/calendar-events/route.ts": {
+      "imports": [
+        "next/server",
+        "lib/supabaseAdmin.ts",
+        "lib/ghostme/calendar/calendarService.ts"
+      ],
+      "tablesUsed": [
+        "calendar_events"
+      ],
+      "tablesInserted": [],
+      "tablesUpdated": [
+        "calendar_events"
+      ],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "POST",
+        "PATCH",
+        "DELETE"
+      ]
+    },
+    "app/api/chat/route.ts": {
+      "imports": [
+        "openai",
+        "next/server",
+        "lib/supabase.ts",
+        "lib/supabaseAdmin.ts",
+        "lib/ghostme/core/messageClassifier.ts",
+        "lib/ghostme/topicDetector.ts",
+        "lib/ghostme/services/serviceRouter.ts",
+        "lib/ghostme/services/webSearchService.ts",
+        "lib/ghostme/services/weatherService.ts",
+        "lib/ghostme/calendar/calendarIntent.ts",
+        "lib/ghostme/calendar/calendarService.ts",
+        "lib/ghostme/retrieval.ts",
+        "lib/ghostme/topicLinks.ts",
+        "lib/ghostme/entityExtractor.ts",
+        "lib/ghostme/memoryDecay.ts",
+        "lib/ghostme/contradictions.ts",
+        "lib/ghostme/mentalState.ts",
+        "lib/ghostme/behavior/behaviorRulesEngine.ts",
+        "lib/ghostme/goalsDesires.ts",
+        "lib/ghostme/timeline.ts",
+        "lib/ghostme/dynamicSelfProfile.ts",
+        "lib/ghostme/actionLayer.ts",
+        "lib/ghostme/relationshipResolver.ts",
+        "lib/ghostme/homeAssistant/cognitiveHouseBuilder.ts",
+        "lib/ghostme/homeAssistant/houseLearnedRulesContext.ts",
+        "lib/ghostme/homeAssistant/houseAutomationContext.ts"
+      ],
+      "tablesUsed": [
+        "mental_states",
+        "memories_active",
+        "life_topics",
+        "episodic_memories",
+        "user_profiles",
+        "calendar_events",
+        "user_location_state"
+      ],
+      "tablesInserted": [
+        "memories_active",
+        "life_topics",
+        "episodic_memories"
+      ],
+      "tablesUpdated": [
+        "memories_active",
+        "life_topics"
+      ],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "POST"
+      ]
+    },
+    "app/api/conversation-summary/route.ts": {
+      "imports": [
+        "next/server",
+        "lib/ghostme/conversationSummary.ts"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "POST"
+      ]
+    },
+    "app/api/debug-ha-entities/route.ts": {
+      "imports": [
+        "next/server",
+        "lib/ghostme/homeAssistant/haClient.ts"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "GET"
+      ]
+    },
+    "app/api/debug-house-logger/route.ts": {
+      "imports": [
+        "next/server",
+        "lib/ghostme/homeAssistant/haClient.ts",
+        "lib/ghostme/homeAssistant/homeEntityMapper.ts"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "GET"
+      ]
+    },
+    "app/api/ghostme/brain/route.ts": {
+      "imports": [
+        "next/server",
+        "lib/supabaseAdmin.ts"
+      ],
+      "tablesUsed": [
+        "user_profiles",
+        "traits",
+        "memories_active",
+        "autobiographical_timeline",
+        "goals_desires",
+        "mental_states",
+        "action_intents",
+        "calendar_events",
+        "ghost_proactive_messages"
+      ],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "POST"
+      ]
+    },
+    "app/api/ghostme/proactive/read/route.ts": {
+      "imports": [
+        "next/server",
+        "lib/supabaseAdmin.ts"
+      ],
+      "tablesUsed": [
+        "ghost_proactive_messages"
+      ],
+      "tablesInserted": [],
+      "tablesUpdated": [
+        "ghost_proactive_messages"
+      ],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "POST"
+      ]
+    },
+    "app/api/goals/update-status/route.ts": {
+      "imports": [
+        "next/server",
+        "lib/supabaseAdmin.ts"
+      ],
+      "tablesUsed": [
+        "goals_desires"
+      ],
+      "tablesInserted": [],
+      "tablesUpdated": [
+        "goals_desires"
+      ],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "POST"
+      ]
+    },
+    "app/api/house-suggestion-response/route.ts": {
+      "imports": [
+        "next/server",
+        "lib/supabaseAdmin.ts"
+      ],
+      "tablesUsed": [
+        "ghost_proactive_messages",
+        "house_suggestions",
+        "house_learned_rules"
+      ],
+      "tablesInserted": [
+        "house_learned_rules"
+      ],
+      "tablesUpdated": [
+        "house_suggestions",
+        "house_learned_rules"
+      ],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "POST"
+      ]
+    },
+    "app/api/location/current-place/route.ts": {
+      "imports": [
+        "next/server",
+        "lib/ghostme/location/placeService.ts"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "POST"
+      ]
+    },
+    "app/api/location/current-state/route.ts": {
+      "imports": [
+        "next/server",
+        "lib/supabaseAdmin.ts"
+      ],
+      "tablesUsed": [
+        "user_location_state"
+      ],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "POST"
+      ]
+    },
+    "app/api/location/delete-place/route.ts": {
+      "imports": [
+        "next/server",
+        "lib/supabaseAdmin.ts"
+      ],
+      "tablesUsed": [
+        "significant_places"
+      ],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [
+        "significant_places"
+      ],
+      "exportedFunctions": [
+        "DELETE"
+      ]
+    },
+    "app/api/location/places/route.ts": {
+      "imports": [
+        "next/server",
+        "lib/ghostme/location/placeService.ts"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "POST"
+      ]
+    },
+    "app/api/location/save-place/route.ts": {
+      "imports": [
+        "next/server",
+        "lib/ghostme/location/placeService.ts"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "POST"
+      ]
+    },
+    "app/api/location/update-current/route.ts": {
+      "imports": [
+        "next/server",
+        "lib/supabaseAdmin.ts",
+        "lib/ghostme/observation/observationEngine.ts",
+        "lib/ghostme/proactive/proactiveTrigger.ts"
+      ],
+      "tablesUsed": [
+        "user_location_state"
+      ],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "POST"
+      ]
+    },
+    "app/api/memory/route.ts": {
+      "imports": [
+        "next/server",
+        "lib/supabase.ts"
+      ],
+      "tablesUsed": [
+        "memories_active"
+      ],
+      "tablesInserted": [
+        "memories_active"
+      ],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "POST"
+      ]
+    },
+    "app/api/memory/search/route.ts": {
+      "imports": [
+        "next/server",
+        "lib/supabaseAdmin.ts"
+      ],
+      "tablesUsed": [
+        "life_topics",
+        "memories_active",
+        "autobiographical_timeline",
+        "goals_desires",
+        "action_intents",
+        "topic_links",
+        "conversation_summaries",
+        "episodic_memories"
+      ],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "POST"
+      ]
+    },
+    "app/api/proactive/messages/route.ts": {
+      "imports": [
+        "next/server",
+        "lib/supabaseAdmin.ts"
+      ],
+      "tablesUsed": [
+        "ghost_proactive_messages"
+      ],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "POST"
+      ]
+    },
+    "app/api/test-ha/route.ts": {
+      "imports": [
+        "next/server",
+        "lib/ghostme/homeAssistant/haClient.ts"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "GET"
+      ]
+    },
+    "app/api/test-home-context/route.ts": {
+      "imports": [
+        "next/server",
+        "lib/ghostme/homeAssistant/homeContextBuilder.ts"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "GET"
+      ]
+    },
+    "app/api/test-home-reasoning/route.ts": {
+      "imports": [
+        "next/server",
+        "lib/ghostme/homeAssistant/homeReasoningBuilder.ts"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "GET"
+      ]
+    },
+    "app/api/worker/house/route.ts": {
+      "imports": [
+        "next/server",
+        "lib/supabaseAdmin.ts",
+        "lib/ghostme/homeAssistant/homeEventLogger.ts",
+        "lib/ghostme/homeAssistant/housePatternEngine.ts",
+        "lib/ghostme/homeAssistant/houseSuggestionEngine.ts",
+        "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts",
+        "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
+        "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
+        "lib/ghostme/homeAssistant/houseEntityRegistry.ts"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "GET"
+      ]
+    },
+    "app/api/worker/proactive/route.ts": {
+      "imports": [
+        "next/server",
+        "openai",
+        "lib/supabaseAdmin.ts",
+        "lib/ghostme/context/contextBuilder.ts",
+        "lib/ghostme/butler/butlerEngine.ts",
+        "lib/ghostme/curiosity/curiosityEngine.ts",
+        "lib/ghostme/situation/situationEngine.ts",
+        "lib/ghostme/agenda/agendaEngine.ts",
+        "lib/ghostme/proactive/proactiveMessageService.ts",
+        "lib/ghostme/maintenance/retentionEngine.ts",
+        "lib/ghostme/conversationSummary.ts",
+        "lib/ghostme/proactive/proactiveDecisionEngine.ts",
+        "lib/ghostme/agenda/reminderEngine.ts",
+        "lib/ghostme/observation/observationInsightEngine.ts",
+        "lib/ghostme/actionLayer.ts",
+        "lib/ghostme/patterns/patternInsightEngine.ts",
+        "lib/ghostme/patterns/patternDecay.ts"
+      ],
+      "tablesUsed": [
+        "user_profiles",
+        "calendar_events",
+        "goals_desires",
+        "action_intents",
+        "mental_states",
+        "autobiographical_timeline",
+        "life_topics",
+        "ghost_proactive_messages"
+      ],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "GET"
+      ]
+    },
+    "app/chat/page.tsx": {
+      "imports": [
+        "react",
+        "next/navigation",
+        "lib/supabase.ts",
+        "lib/personality.ts",
+        "components/ghost/types.ts",
+        "components/ghost/GhostHeader.tsx",
+        "components/ghost/GhostChat.tsx",
+        "components/ghost/GhostVoiceMode.tsx",
+        "components/ghost/GhostLayout.tsx",
+        "components/ghost/GhostBackground.tsx",
+        "hooks/useGhostVoice.ts",
+        "hooks/useGhostChat.ts",
+        "hooks/useGhostBrain.ts",
+        "components/ghost/GhostDrawers.tsx"
+      ],
+      "tablesUsed": [
+        "chat_messages",
+        "user_profiles",
+        "traits"
+      ],
+      "tablesInserted": [
+        "chat_messages"
+      ],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": []
+    },
+    "app/layout.tsx": {
+      "imports": [
+        "next",
+        "next/font/google"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": []
+    },
+    "app/login/page.tsx": {
+      "imports": [
+        "react",
+        "next/navigation",
+        "lib/supabase.ts"
+      ],
+      "tablesUsed": [
+        "user_profiles",
+        "traits"
+      ],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": []
+    },
+    "app/memory/page.tsx": {
+      "imports": [
+        "react",
+        "lib/supabase.ts"
+      ],
+      "tablesUsed": [
+        "memories_active"
+      ],
+      "tablesInserted": [
+        "memories_active"
+      ],
+      "tablesUpdated": [
+        "memories_active"
+      ],
+      "tablesDeleted": [
+        "memories_active"
+      ],
+      "exportedFunctions": []
+    },
+    "app/page.tsx": {
+      "imports": [
+        "next/navigation"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": []
+    },
+    "app/setup/page.tsx": {
+      "imports": [
+        "react",
+        "lib/supabase.ts",
+        "lib/personality.ts",
+        "lib/ghostme/profile/profileBehaviorSeed.ts"
+      ],
+      "tablesUsed": [
+        "answers",
+        "users",
+        "traits"
+      ],
+      "tablesInserted": [
+        "answers"
+      ],
+      "tablesUpdated": [],
+      "tablesDeleted": [
+        "answers"
+      ],
+      "exportedFunctions": []
+    },
+    "app/setup/profile/page.tsx": {
+      "imports": [
+        "react",
+        "lib/supabase.ts",
+        "next/navigation"
+      ],
+      "tablesUsed": [
+        "user_profiles"
+      ],
+      "tablesInserted": [
+        "user_profiles"
+      ],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": []
+    },
+    "components/ghost/GhostBackground.tsx": {
+      "imports": [
+        "components/ghost/types.ts"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": []
+    },
+    "components/ghost/GhostCanvasCore.tsx": {
+      "imports": [
+        "react",
+        "components/ghost/types.ts"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": []
+    },
+    "components/ghost/GhostChat.tsx": {
+      "imports": [
+        "react",
+        "components/ghost/types.ts"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": []
+    },
+    "components/ghost/GhostCore.tsx": {
+      "imports": [
+        "next/image",
+        "components/ghost/types.ts"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": []
+    },
+    "components/ghost/GhostDrawers.tsx": {
+      "imports": [
+        "components/ghost/types.ts",
+        "react"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "MemoryDrawer",
+        "ServicesDrawer",
+        "HistoryDrawer"
+      ]
+    },
+    "components/ghost/GhostGlobalStyles.tsx": {
+      "imports": [],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": []
+    },
+    "components/ghost/GhostHeader.tsx": {
+      "imports": [
+        "components/ghost/types.ts"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": []
+    },
+    "components/ghost/GhostLayout.tsx": {
+      "imports": [
+        "react",
+        "components/ghost/GhostGlobalStyles.tsx"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": []
+    },
+    "components/ghost/GhostVoiceMode.tsx": {
+      "imports": [
+        "components/ghost/GhostCore.tsx",
+        "components/ghost/types.ts",
+        "components/ghost/GhostCanvasCore.tsx"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": []
+    },
+    "components/ghost/types.ts": {
+      "imports": [],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": []
+    },
+    "hooks/useGhostBrain.ts": {
+      "imports": [
+        "react",
+        "components/ghost/types.ts",
+        "lib/personality.ts"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "useGhostBrain"
+      ]
+    },
+    "hooks/useGhostChat.ts": {
+      "imports": [
+        "react",
+        "components/ghost/types.ts"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "useGhostChat"
+      ]
+    },
+    "hooks/useGhostVoice.ts": {
+      "imports": [
+        "react",
+        "components/ghost/types.ts"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "useGhostVoice"
+      ]
+    },
+    "lib/ghostme/actionLayer.ts": {
+      "imports": [
+        "openai",
+        "lib/supabaseAdmin.ts"
+      ],
+      "tablesUsed": [
+        "action_intents"
+      ],
+      "tablesInserted": [
+        "action_intents"
+      ],
+      "tablesUpdated": [
+        "action_intents"
+      ],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "getActionIntentContext",
+        "detectAndSaveActionIntent",
+        "cleanupOldActionIntents",
+        "detectAndCompleteActionIntent"
+      ]
+    },
+    "lib/ghostme/agenda/agendaEngine.ts": {
+      "imports": [
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "buildAgendaMessage"
+      ]
+    },
+    "lib/ghostme/agenda/reminderEngine.ts": {
+      "imports": [
+        "lib/supabaseAdmin.ts"
+      ],
+      "tablesUsed": [
+        "calendar_events",
+        "ghost_proactive_messages"
+      ],
+      "tablesInserted": [
+        "ghost_proactive_messages"
+      ],
+      "tablesUpdated": [
+        "ghost_proactive_messages"
+      ],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "refreshReminderMessage"
+      ]
+    },
+    "lib/ghostme/behavior/behaviorRulesEngine.ts": {
+      "imports": [
+        "lib/supabaseAdmin.ts",
+        "openai"
+      ],
+      "tablesUsed": [
+        "ghost_behavior_rules"
+      ],
+      "tablesInserted": [
+        "ghost_behavior_rules"
+      ],
+      "tablesUpdated": [
+        "ghost_behavior_rules"
+      ],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "getActiveBehaviorRules",
+        "saveBehaviorRule",
+        "buildBehaviorPrompt",
+        "detectAndSaveBehaviorRule"
+      ]
+    },
+    "lib/ghostme/butler/butlerEngine.ts": {
+      "imports": [
+        "openai",
+        "lib/ghostme/context/contextBuilder.ts"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "generateButlerMessage"
+      ]
+    },
+    "lib/ghostme/calendar/calendarIntent.ts": {
+      "imports": [
+        "openai"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "parseCalendarIntent"
+      ]
+    },
+    "lib/ghostme/calendar/calendarService.ts": {
+      "imports": [
+        "lib/supabaseAdmin.ts",
+        "lib/ghostme/situation/situationEngine.ts",
+        "lib/ghostme/agenda/agendaEngine.ts",
+        "lib/ghostme/agenda/reminderEngine.ts",
+        "lib/ghostme/proactive/proactiveTrigger.ts"
+      ],
+      "tablesUsed": [
+        "calendar_events",
+        "ghost_proactive_messages"
+      ],
+      "tablesInserted": [
+        "calendar_events",
+        "ghost_proactive_messages"
+      ],
+      "tablesUpdated": [
+        "ghost_proactive_messages",
+        "calendar_events"
+      ],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "createCalendarEvent",
+        "getUpcomingCalendarEvents",
+        "refreshAgendaMessage",
+        "cleanupExpiredEvents"
+      ]
+    },
+    "lib/ghostme/context/contextBuilder.ts": {
+      "imports": [
+        "lib/supabaseAdmin.ts",
+        "lib/ghostme/situation/situationEngine.ts",
+        "lib/ghostme/behavior/behaviorRulesEngine.ts",
+        "lib/ghostme/homeAssistant/homeReasoningBuilder.ts"
+      ],
+      "tablesUsed": [
+        "ghost_proactive_messages"
+      ],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "buildCurrentContext"
+      ]
+    },
+    "lib/ghostme/contradictions.ts": {
+      "imports": [
+        "openai",
+        "lib/supabaseAdmin.ts"
+      ],
+      "tablesUsed": [
+        "memories_active",
+        "life_topics",
+        "contradictions"
+      ],
+      "tablesInserted": [
+        "contradictions"
+      ],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "detectAndSaveContradictions"
+      ]
+    },
+    "lib/ghostme/conversationSummary.ts": {
+      "imports": [
+        "openai",
+        "lib/supabaseAdmin.ts"
+      ],
+      "tablesUsed": [
+        "chat_messages",
+        "conversation_summaries"
+      ],
+      "tablesInserted": [
+        "conversation_summaries"
+      ],
+      "tablesUpdated": [
+        "conversation_summaries"
+      ],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "generateDailyConversationSummary"
+      ]
+    },
+    "lib/ghostme/core/messageClassifier.ts": {
+      "imports": [],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "classifyGhostMessage"
+      ]
+    },
+    "lib/ghostme/curiosity/curiosityEngine.ts": {
+      "imports": [
+        "openai",
+        "lib/supabaseAdmin.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "tablesUsed": [
+        "ghost_proactive_messages",
+        "life_topics",
+        "goals_desires",
+        "dynamic_self_profile",
+        "contradictions",
+        "autobiographical_timeline",
+        "conversation_summaries"
+      ],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "generateCuriosityMessage"
+      ]
+    },
+    "lib/ghostme/dynamicSelfProfile.ts": {
+      "imports": [
+        "openai",
+        "lib/supabaseAdmin.ts"
+      ],
+      "tablesUsed": [
+        "dynamic_self_profile"
+      ],
+      "tablesInserted": [
+        "dynamic_self_profile"
+      ],
+      "tablesUpdated": [
+        "dynamic_self_profile"
+      ],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "getDynamicSelfProfileContext",
+        "updateDynamicSelfProfile"
+      ]
+    },
+    "lib/ghostme/entityExtractor.ts": {
+      "imports": [
+        "openai",
+        "lib/ghostme/topicDetector.ts"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "extractEntitiesWithAI"
+      ]
+    },
+    "lib/ghostme/goalsDesires.ts": {
+      "imports": [
+        "openai",
+        "lib/supabaseAdmin.ts"
+      ],
+      "tablesUsed": [
+        "goals_desires"
+      ],
+      "tablesInserted": [
+        "goals_desires"
+      ],
+      "tablesUpdated": [
+        "goals_desires"
+      ],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "getGoalsDesiresContext",
+        "detectAndSaveGoalsDesires"
+      ]
+    },
+    "lib/ghostme/homeAssistant/cognitiveHouseBuilder.ts": {
+      "imports": [
+        "lib/ghostme/homeAssistant/haClient.ts"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "buildCognitiveHouse"
+      ]
+    },
+    "lib/ghostme/homeAssistant/haClient.ts": {
+      "imports": [],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "getHAStates"
+      ]
+    },
+    "lib/ghostme/homeAssistant/homeContextBuilder.ts": {
+      "imports": [
+        "lib/ghostme/homeAssistant/haClient.ts"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "buildHomeContext"
+      ]
+    },
+    "lib/ghostme/homeAssistant/homeEntityMapper.ts": {
+      "imports": [],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "getEntityInfo"
+      ]
+    },
+    "lib/ghostme/homeAssistant/homeEventLogger.ts": {
+      "imports": [
+        "lib/supabaseAdmin.ts",
+        "lib/ghostme/homeAssistant/haClient.ts",
+        "lib/ghostme/homeAssistant/homeEntityMapper.ts"
+      ],
+      "tablesUsed": [
+        "house_events"
+      ],
+      "tablesInserted": [
+        "house_events"
+      ],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "logHomeAssistantSnapshot"
+      ]
+    },
+    "lib/ghostme/homeAssistant/homeReasoningBuilder.ts": {
+      "imports": [
+        "lib/ghostme/homeAssistant/haClient.ts"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "buildHomeReasoning"
+      ]
+    },
+    "lib/ghostme/homeAssistant/houseAutomationContext.ts": {
+      "imports": [
+        "lib/supabaseAdmin.ts"
+      ],
+      "tablesUsed": [
+        "house_events"
+      ],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "buildHouseAutomationContext"
+      ]
+    },
+    "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts": {
+      "imports": [
+        "lib/supabaseAdmin.ts"
+      ],
+      "tablesUsed": [
+        "house_automation_controls",
+        "ghost_proactive_messages",
+        "house_learned_rules",
+        "house_events"
+      ],
+      "tablesInserted": [
+        "ghost_proactive_messages"
+      ],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "planHouseAutomationControls"
+      ]
+    },
+    "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts": {
+      "imports": [
+        "lib/supabaseAdmin.ts"
+      ],
+      "tablesUsed": [
+        "house_suggestions",
+        "ghost_proactive_messages",
+        "house_events"
+      ],
+      "tablesInserted": [
+        "house_suggestions",
+        "ghost_proactive_messages"
+      ],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "generateHouseAutomationSuggestions"
+      ]
+    },
+    "lib/ghostme/homeAssistant/houseEntityRegistry.ts": {
+      "imports": [
+        "lib/supabaseAdmin.ts",
+        "lib/ghostme/homeAssistant/haClient.ts",
+        "lib/ghostme/homeAssistant/homeEntityMapper.ts"
+      ],
+      "tablesUsed": [
+        "house_entities"
+      ],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "syncHouseEntities"
+      ]
+    },
+    "lib/ghostme/homeAssistant/houseLearnedRulesContext.ts": {
+      "imports": [
+        "lib/supabaseAdmin.ts"
+      ],
+      "tablesUsed": [
+        "house_learned_rules"
+      ],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "buildHouseLearnedRulesContext"
+      ]
+    },
+    "lib/ghostme/homeAssistant/housePatternEngine.ts": {
+      "imports": [
+        "lib/supabaseAdmin.ts"
+      ],
+      "tablesUsed": [
+        "house_events"
+      ],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "analyzeHousePatterns"
+      ]
+    },
+    "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts": {
+      "imports": [
+        "lib/supabaseAdmin.ts"
+      ],
+      "tablesUsed": [
+        "house_events",
+        "house_learned_rules"
+      ],
+      "tablesInserted": [
+        "house_learned_rules"
+      ],
+      "tablesUpdated": [
+        "house_learned_rules"
+      ],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "learnHouseRoutes"
+      ]
+    },
+    "lib/ghostme/homeAssistant/houseSuggestionEngine.ts": {
+      "imports": [
+        "lib/supabaseAdmin.ts",
+        "lib/ghostme/homeAssistant/cognitiveHouseBuilder.ts",
+        "lib/ghostme/homeAssistant/housePatternEngine.ts"
+      ],
+      "tablesUsed": [
+        "house_suggestions",
+        "ghost_proactive_messages"
+      ],
+      "tablesInserted": [
+        "house_suggestions",
+        "ghost_proactive_messages"
+      ],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "generateHouseSuggestions"
+      ]
+    },
+    "lib/ghostme/location/locationEngine.ts": {
+      "imports": [],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "classifyLocationSignal"
+      ]
+    },
+    "lib/ghostme/location/placeService.ts": {
+      "imports": [
+        "lib/supabaseAdmin.ts"
+      ],
+      "tablesUsed": [
+        "significant_places",
+        "user_location_state"
+      ],
+      "tablesInserted": [
+        "significant_places"
+      ],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "saveSignificantPlace",
+        "getSignificantPlaces",
+        "detectCurrentPlace",
+        "getLastKnownPlace",
+        "getCurrentLocationState"
+      ]
+    },
+    "lib/ghostme/maintenance/retentionEngine.ts": {
+      "imports": [
+        "lib/supabaseAdmin.ts"
+      ],
+      "tablesUsed": [
+        "chat_messages",
+        "ghost_proactive_messages",
+        "calendar_events"
+      ],
+      "tablesInserted": [],
+      "tablesUpdated": [
+        "chat_messages",
+        "ghost_proactive_messages",
+        "calendar_events"
+      ],
+      "tablesDeleted": [
+        "chat_messages"
+      ],
+      "exportedFunctions": [
+        "runRetentionCleanup"
+      ]
+    },
+    "lib/ghostme/memoryDecay.ts": {
+      "imports": [
+        "lib/supabase.ts"
+      ],
+      "tablesUsed": [
+        "life_topics"
+      ],
+      "tablesInserted": [],
+      "tablesUpdated": [
+        "life_topics"
+      ],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "applyMemoryDecay"
+      ]
+    },
+    "lib/ghostme/mentalState.ts": {
+      "imports": [
+        "openai",
+        "lib/supabaseAdmin.ts"
+      ],
+      "tablesUsed": [
+        "mental_states"
+      ],
+      "tablesInserted": [
+        "mental_states"
+      ],
+      "tablesUpdated": [
+        "mental_states"
+      ],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "updateMentalState"
+      ]
+    },
+    "lib/ghostme/observation/observationEngine.ts": {
+      "imports": [
+        "lib/supabaseAdmin.ts"
+      ],
+      "tablesUsed": [
+        "observation_events",
+        "behavior_patterns"
+      ],
+      "tablesInserted": [
+        "observation_events",
+        "behavior_patterns"
+      ],
+      "tablesUpdated": [
+        "behavior_patterns"
+      ],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "recordObservation",
+        "analyzeLocationPatterns"
+      ]
+    },
+    "lib/ghostme/observation/observationInsightEngine.ts": {
+      "imports": [
+        "lib/supabaseAdmin.ts",
+        "lib/ghostme/situation/situationEngine.ts",
+        "lib/ghostme/proactive/proactiveMessageService.ts",
+        "openai"
+      ],
+      "tablesUsed": [
+        "ghost_proactive_messages"
+      ],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "generateObservationInsight"
+      ]
+    },
+    "lib/ghostme/patterns/patternDecay.ts": {
+      "imports": [
+        "lib/supabaseAdmin.ts"
+      ],
+      "tablesUsed": [
+        "behavior_patterns"
+      ],
+      "tablesInserted": [],
+      "tablesUpdated": [
+        "behavior_patterns"
+      ],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "applyPatternDecay"
+      ]
+    },
+    "lib/ghostme/patterns/patternInsightEngine.ts": {
+      "imports": [
+        "lib/supabaseAdmin.ts",
+        "lib/ghostme/proactive/proactiveMessageService.ts",
+        "openai"
+      ],
+      "tablesUsed": [
+        "ghost_proactive_messages",
+        "behavior_patterns"
+      ],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "generatePatternInsight"
+      ]
+    },
+    "lib/ghostme/proactive/proactiveDecisionEngine.ts": {
+      "imports": [
+        "openai",
+        "lib/ghostme/context/contextBuilder.ts"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "decideProactiveMessage"
+      ]
+    },
+    "lib/ghostme/proactive/proactiveMessageService.ts": {
+      "imports": [
+        "lib/supabaseAdmin.ts"
+      ],
+      "tablesUsed": [
+        "ghost_proactive_messages"
+      ],
+      "tablesInserted": [
+        "ghost_proactive_messages"
+      ],
+      "tablesUpdated": [
+        "ghost_proactive_messages"
+      ],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "upsertProactiveMessage"
+      ]
+    },
+    "lib/ghostme/proactive/proactiveTrigger.ts": {
+      "imports": [
+        "lib/ghostme/calendar/calendarService.ts",
+        "lib/ghostme/situation/situationEngine.ts",
+        "lib/ghostme/context/contextBuilder.ts",
+        "lib/ghostme/proactive/proactiveDecisionEngine.ts",
+        "lib/ghostme/proactive/proactiveMessageService.ts"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "runProactiveTrigger"
+      ]
+    },
+    "lib/ghostme/profile/profileBehaviorSeed.ts": {
+      "imports": [
+        "lib/supabaseAdmin.ts"
+      ],
+      "tablesUsed": [
+        "ghost_behavior_rules",
+        "dynamic_self_profile",
+        "user_profiles",
+        "traits"
+      ],
+      "tablesInserted": [
+        "ghost_behavior_rules",
+        "dynamic_self_profile"
+      ],
+      "tablesUpdated": [
+        "dynamic_self_profile"
+      ],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "seedBehaviorFromProfile"
+      ]
+    },
+    "lib/ghostme/relationshipResolver.ts": {
+      "imports": [
+        "lib/supabase.ts"
+      ],
+      "tablesUsed": [
+        "life_topics",
+        "memories_active"
+      ],
+      "tablesInserted": [
+        "life_topics",
+        "memories_active"
+      ],
+      "tablesUpdated": [
+        "life_topics",
+        "memories_active"
+      ],
+      "tablesDeleted": [
+        "life_topics"
+      ],
+      "exportedFunctions": [
+        "removeGenericRelationshipTopics",
+        "resolveNamedRelationship"
+      ]
+    },
+    "lib/ghostme/retrieval.ts": {
+      "imports": [
+        "lib/supabase.ts",
+        "lib/ghostme/topicLinks.ts"
+      ],
+      "tablesUsed": [
+        "topic_links",
+        "life_topics",
+        "memories_active",
+        "episodic_memories",
+        "conversation_summaries"
+      ],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "buildContextualMemory"
+      ]
+    },
+    "lib/ghostme/services/serviceRouter.ts": {
+      "imports": [],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "decideGhostService"
+      ]
+    },
+    "lib/ghostme/services/timeService.ts": {
+      "imports": [],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "getLocalTimeContext"
+      ]
+    },
+    "lib/ghostme/services/weatherService.ts": {
+      "imports": [
+        "lib/ghostme/services/webSearchService.ts"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "runWeatherSearch"
+      ]
+    },
+    "lib/ghostme/services/webSearchService.ts": {
+      "imports": [
+        "openai"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "runWebSearch"
+      ]
+    },
+    "lib/ghostme/situation/situationEngine.ts": {
+      "imports": [
+        "lib/supabaseAdmin.ts",
+        "lib/ghostme/location/placeService.ts"
+      ],
+      "tablesUsed": [
+        "user_profiles",
+        "calendar_events",
+        "goals_desires",
+        "action_intents",
+        "life_topics",
+        "mental_states",
+        "episodic_memories",
+        "autobiographical_timeline",
+        "conversation_summaries",
+        "dynamic_self_profile",
+        "contradictions",
+        "topic_links",
+        "ghost_behavior_rules",
+        "behavior_patterns",
+        "observation_events"
+      ],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "buildGhostSituation"
+      ]
+    },
+    "lib/ghostme/timeline.ts": {
+      "imports": [
+        "openai",
+        "lib/supabaseAdmin.ts"
+      ],
+      "tablesUsed": [
+        "autobiographical_timeline"
+      ],
+      "tablesInserted": [
+        "autobiographical_timeline"
+      ],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "getTimelineContext",
+        "detectAndSaveTimelineEvent"
+      ]
+    },
+    "lib/ghostme/topicDetector.ts": {
+      "imports": [],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "detectTopicsFromMessage",
+        "isPossibleEpisode",
+        "detectEmotionalTone",
+        "shouldSaveActiveMemory",
+        "detectImportanceLevel",
+        "detectMemoryCategory"
+      ]
+    },
+    "lib/ghostme/topicLinks.ts": {
+      "imports": [
+        "lib/supabase.ts"
+      ],
+      "tablesUsed": [
+        "topic_links",
+        "life_topics"
+      ],
+      "tablesInserted": [
+        "topic_links"
+      ],
+      "tablesUpdated": [
+        "topic_links"
+      ],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "saveTopicLinks",
+        "getRelatedTopicContext"
+      ]
+    },
+    "lib/personality.ts": {
+      "imports": [],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": [
+        "buildPersonalitySummary",
+        "buildGhostMeMessage"
+      ]
+    },
+    "lib/supabase.ts": {
+      "imports": [
+        "@supabase/supabase-js"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": []
+    },
+    "lib/supabaseAdmin.ts": {
+      "imports": [
+        "@supabase/supabase-js"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": []
+    },
+    "next-env.d.ts": {
+      "imports": [],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": []
+    },
+    "next.config.ts": {
+      "imports": [
+        "next"
+      ],
+      "tablesUsed": [],
+      "tablesInserted": [],
+      "tablesUpdated": [],
+      "tablesDeleted": [],
+      "exportedFunctions": []
+    }
+  },
+  "tables": {
+    "calendar_events": {
+      "readBy": [
+        "app/api/calendar-events/route.ts",
+        "app/api/calendar-events/route.ts",
+        "app/api/chat/route.ts",
+        "app/api/ghostme/brain/route.ts",
+        "app/api/worker/proactive/route.ts",
+        "lib/ghostme/agenda/reminderEngine.ts",
+        "lib/ghostme/calendar/calendarService.ts",
+        "lib/ghostme/calendar/calendarService.ts",
+        "lib/ghostme/calendar/calendarService.ts",
+        "lib/ghostme/calendar/calendarService.ts",
+        "lib/ghostme/calendar/calendarService.ts",
+        "lib/ghostme/maintenance/retentionEngine.ts",
+        "lib/ghostme/situation/situationEngine.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "insertedBy": [
+        "lib/ghostme/calendar/calendarService.ts"
+      ],
+      "updatedBy": [
+        "app/api/calendar-events/route.ts",
+        "app/api/calendar-events/route.ts",
+        "lib/ghostme/calendar/calendarService.ts",
+        "lib/ghostme/calendar/calendarService.ts",
+        "lib/ghostme/calendar/calendarService.ts",
+        "lib/ghostme/maintenance/retentionEngine.ts"
+      ],
+      "deletedBy": []
+    },
+    "mental_states": {
+      "readBy": [
+        "app/api/chat/route.ts",
+        "app/api/ghostme/brain/route.ts",
+        "app/api/worker/proactive/route.ts",
+        "lib/ghostme/mentalState.ts",
+        "lib/ghostme/mentalState.ts",
+        "lib/ghostme/mentalState.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "insertedBy": [
+        "lib/ghostme/mentalState.ts"
+      ],
+      "updatedBy": [
+        "lib/ghostme/mentalState.ts"
+      ],
+      "deletedBy": []
+    },
+    "memories_active": {
+      "readBy": [
+        "app/api/chat/route.ts",
+        "app/api/chat/route.ts",
+        "app/api/chat/route.ts",
+        "app/api/chat/route.ts",
+        "app/api/chat/route.ts",
+        "app/api/chat/route.ts",
+        "app/api/ghostme/brain/route.ts",
+        "app/api/memory/route.ts",
+        "app/api/memory/search/route.ts",
+        "app/memory/page.tsx",
+        "app/memory/page.tsx",
+        "app/memory/page.tsx",
+        "app/memory/page.tsx",
+        "app/memory/page.tsx",
+        "lib/ghostme/contradictions.ts",
+        "lib/ghostme/relationshipResolver.ts",
+        "lib/ghostme/relationshipResolver.ts",
+        "lib/ghostme/relationshipResolver.ts",
+        "lib/ghostme/retrieval.ts"
+      ],
+      "insertedBy": [
+        "app/api/chat/route.ts",
+        "app/api/chat/route.ts",
+        "app/api/memory/route.ts",
+        "app/memory/page.tsx",
+        "lib/ghostme/relationshipResolver.ts"
+      ],
+      "updatedBy": [
+        "app/api/chat/route.ts",
+        "app/api/chat/route.ts",
+        "app/memory/page.tsx",
+        "app/memory/page.tsx",
+        "lib/ghostme/relationshipResolver.ts"
+      ],
+      "deletedBy": [
+        "app/memory/page.tsx"
+      ]
+    },
+    "life_topics": {
+      "readBy": [
+        "app/api/chat/route.ts",
+        "app/api/chat/route.ts",
+        "app/api/chat/route.ts",
+        "app/api/chat/route.ts",
+        "app/api/chat/route.ts",
+        "app/api/chat/route.ts",
+        "app/api/chat/route.ts",
+        "app/api/chat/route.ts",
+        "app/api/memory/search/route.ts",
+        "app/api/worker/proactive/route.ts",
+        "lib/ghostme/contradictions.ts",
+        "lib/ghostme/curiosity/curiosityEngine.ts",
+        "lib/ghostme/memoryDecay.ts",
+        "lib/ghostme/memoryDecay.ts",
+        "lib/ghostme/relationshipResolver.ts",
+        "lib/ghostme/relationshipResolver.ts",
+        "lib/ghostme/relationshipResolver.ts",
+        "lib/ghostme/relationshipResolver.ts",
+        "lib/ghostme/retrieval.ts",
+        "lib/ghostme/situation/situationEngine.ts",
+        "lib/ghostme/topicLinks.ts"
+      ],
+      "insertedBy": [
+        "app/api/chat/route.ts",
+        "lib/ghostme/relationshipResolver.ts"
+      ],
+      "updatedBy": [
+        "app/api/chat/route.ts",
+        "app/api/chat/route.ts",
+        "app/api/chat/route.ts",
+        "lib/ghostme/memoryDecay.ts",
+        "lib/ghostme/relationshipResolver.ts"
+      ],
+      "deletedBy": [
+        "lib/ghostme/relationshipResolver.ts"
+      ]
+    },
+    "episodic_memories": {
+      "readBy": [
+        "app/api/chat/route.ts",
+        "app/api/memory/search/route.ts",
+        "lib/ghostme/retrieval.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "insertedBy": [
+        "app/api/chat/route.ts"
+      ],
+      "updatedBy": [],
+      "deletedBy": []
+    },
+    "user_profiles": {
+      "readBy": [
+        "app/api/chat/route.ts",
+        "app/api/ghostme/brain/route.ts",
+        "app/api/worker/proactive/route.ts",
+        "app/chat/page.tsx",
+        "app/login/page.tsx",
+        "app/setup/profile/page.tsx",
+        "lib/ghostme/profile/profileBehaviorSeed.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "insertedBy": [
+        "app/setup/profile/page.tsx"
+      ],
+      "updatedBy": [],
+      "deletedBy": []
+    },
+    "user_location_state": {
+      "readBy": [
+        "app/api/chat/route.ts",
+        "app/api/location/current-state/route.ts",
+        "app/api/location/update-current/route.ts",
+        "app/api/location/update-current/route.ts",
+        "lib/ghostme/location/placeService.ts"
+      ],
+      "insertedBy": [],
+      "updatedBy": [],
+      "deletedBy": []
+    },
+    "traits": {
+      "readBy": [
+        "app/api/ghostme/brain/route.ts",
+        "app/chat/page.tsx",
+        "app/login/page.tsx",
+        "app/setup/page.tsx",
+        "app/setup/page.tsx",
+        "lib/ghostme/profile/profileBehaviorSeed.ts"
+      ],
+      "insertedBy": [],
+      "updatedBy": [],
+      "deletedBy": []
+    },
+    "autobiographical_timeline": {
+      "readBy": [
+        "app/api/ghostme/brain/route.ts",
+        "app/api/memory/search/route.ts",
+        "app/api/worker/proactive/route.ts",
+        "lib/ghostme/curiosity/curiosityEngine.ts",
+        "lib/ghostme/situation/situationEngine.ts",
+        "lib/ghostme/timeline.ts",
+        "lib/ghostme/timeline.ts"
+      ],
+      "insertedBy": [
+        "lib/ghostme/timeline.ts"
+      ],
+      "updatedBy": [],
+      "deletedBy": []
+    },
+    "goals_desires": {
+      "readBy": [
+        "app/api/ghostme/brain/route.ts",
+        "app/api/goals/update-status/route.ts",
+        "app/api/memory/search/route.ts",
+        "app/api/worker/proactive/route.ts",
+        "lib/ghostme/curiosity/curiosityEngine.ts",
+        "lib/ghostme/goalsDesires.ts",
+        "lib/ghostme/goalsDesires.ts",
+        "lib/ghostme/goalsDesires.ts",
+        "lib/ghostme/goalsDesires.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "insertedBy": [
+        "lib/ghostme/goalsDesires.ts"
+      ],
+      "updatedBy": [
+        "app/api/goals/update-status/route.ts",
+        "lib/ghostme/goalsDesires.ts"
+      ],
+      "deletedBy": []
+    },
+    "action_intents": {
+      "readBy": [
+        "app/api/ghostme/brain/route.ts",
+        "app/api/memory/search/route.ts",
+        "app/api/worker/proactive/route.ts",
+        "lib/ghostme/actionLayer.ts",
+        "lib/ghostme/actionLayer.ts",
+        "lib/ghostme/actionLayer.ts",
+        "lib/ghostme/actionLayer.ts",
+        "lib/ghostme/actionLayer.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "insertedBy": [
+        "lib/ghostme/actionLayer.ts"
+      ],
+      "updatedBy": [
+        "lib/ghostme/actionLayer.ts",
+        "lib/ghostme/actionLayer.ts"
+      ],
+      "deletedBy": []
+    },
+    "ghost_proactive_messages": {
+      "readBy": [
+        "app/api/ghostme/brain/route.ts",
+        "app/api/ghostme/brain/route.ts",
+        "app/api/ghostme/proactive/read/route.ts",
+        "app/api/house-suggestion-response/route.ts",
+        "app/api/house-suggestion-response/route.ts",
+        "app/api/proactive/messages/route.ts",
+        "app/api/worker/proactive/route.ts",
+        "app/api/worker/proactive/route.ts",
+        "lib/ghostme/agenda/reminderEngine.ts",
+        "lib/ghostme/agenda/reminderEngine.ts",
+        "lib/ghostme/agenda/reminderEngine.ts",
+        "lib/ghostme/agenda/reminderEngine.ts",
+        "lib/ghostme/calendar/calendarService.ts",
+        "lib/ghostme/calendar/calendarService.ts",
+        "lib/ghostme/calendar/calendarService.ts",
+        "lib/ghostme/calendar/calendarService.ts",
+        "lib/ghostme/context/contextBuilder.ts",
+        "lib/ghostme/curiosity/curiosityEngine.ts",
+        "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
+        "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
+        "lib/ghostme/homeAssistant/houseSuggestionEngine.ts",
+        "lib/ghostme/maintenance/retentionEngine.ts",
+        "lib/ghostme/maintenance/retentionEngine.ts",
+        "lib/ghostme/observation/observationInsightEngine.ts",
+        "lib/ghostme/observation/observationInsightEngine.ts",
+        "lib/ghostme/patterns/patternInsightEngine.ts",
+        "lib/ghostme/proactive/proactiveMessageService.ts",
+        "lib/ghostme/proactive/proactiveMessageService.ts",
+        "lib/ghostme/proactive/proactiveMessageService.ts",
+        "lib/ghostme/proactive/proactiveMessageService.ts"
+      ],
+      "insertedBy": [
+        "lib/ghostme/agenda/reminderEngine.ts",
+        "lib/ghostme/calendar/calendarService.ts",
+        "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
+        "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
+        "lib/ghostme/homeAssistant/houseSuggestionEngine.ts",
+        "lib/ghostme/proactive/proactiveMessageService.ts"
+      ],
+      "updatedBy": [
+        "app/api/ghostme/proactive/read/route.ts",
+        "lib/ghostme/agenda/reminderEngine.ts",
+        "lib/ghostme/agenda/reminderEngine.ts",
+        "lib/ghostme/calendar/calendarService.ts",
+        "lib/ghostme/calendar/calendarService.ts",
+        "lib/ghostme/maintenance/retentionEngine.ts",
+        "lib/ghostme/proactive/proactiveMessageService.ts",
+        "lib/ghostme/proactive/proactiveMessageService.ts"
+      ],
+      "deletedBy": []
+    },
+    "house_suggestions": {
+      "readBy": [
+        "app/api/house-suggestion-response/route.ts",
+        "app/api/house-suggestion-response/route.ts",
+        "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
+        "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
+        "lib/ghostme/homeAssistant/houseSuggestionEngine.ts",
+        "lib/ghostme/homeAssistant/houseSuggestionEngine.ts"
+      ],
+      "insertedBy": [
+        "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
+        "lib/ghostme/homeAssistant/houseSuggestionEngine.ts"
+      ],
+      "updatedBy": [
+        "app/api/house-suggestion-response/route.ts"
+      ],
+      "deletedBy": []
+    },
+    "house_learned_rules": {
+      "readBy": [
+        "app/api/house-suggestion-response/route.ts",
+        "app/api/house-suggestion-response/route.ts",
+        "app/api/house-suggestion-response/route.ts",
+        "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
+        "lib/ghostme/homeAssistant/houseLearnedRulesContext.ts",
+        "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts",
+        "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts",
+        "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts"
+      ],
+      "insertedBy": [
+        "app/api/house-suggestion-response/route.ts",
+        "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts"
+      ],
+      "updatedBy": [
+        "app/api/house-suggestion-response/route.ts",
+        "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts"
+      ],
+      "deletedBy": []
+    },
+    "significant_places": {
+      "readBy": [
+        "app/api/location/delete-place/route.ts",
+        "lib/ghostme/location/placeService.ts",
+        "lib/ghostme/location/placeService.ts"
+      ],
+      "insertedBy": [
+        "lib/ghostme/location/placeService.ts"
+      ],
+      "updatedBy": [],
+      "deletedBy": [
+        "app/api/location/delete-place/route.ts"
+      ]
+    },
+    "topic_links": {
+      "readBy": [
+        "app/api/memory/search/route.ts",
+        "lib/ghostme/retrieval.ts",
+        "lib/ghostme/situation/situationEngine.ts",
+        "lib/ghostme/topicLinks.ts",
+        "lib/ghostme/topicLinks.ts",
+        "lib/ghostme/topicLinks.ts",
+        "lib/ghostme/topicLinks.ts"
+      ],
+      "insertedBy": [
+        "lib/ghostme/topicLinks.ts"
+      ],
+      "updatedBy": [
+        "lib/ghostme/topicLinks.ts"
+      ],
+      "deletedBy": []
+    },
+    "conversation_summaries": {
+      "readBy": [
+        "app/api/memory/search/route.ts",
+        "lib/ghostme/conversationSummary.ts",
+        "lib/ghostme/conversationSummary.ts",
+        "lib/ghostme/conversationSummary.ts",
+        "lib/ghostme/curiosity/curiosityEngine.ts",
+        "lib/ghostme/retrieval.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "insertedBy": [
+        "lib/ghostme/conversationSummary.ts"
+      ],
+      "updatedBy": [
+        "lib/ghostme/conversationSummary.ts"
+      ],
+      "deletedBy": []
+    },
+    "chat_messages": {
+      "readBy": [
+        "app/chat/page.tsx",
+        "app/chat/page.tsx",
+        "lib/ghostme/conversationSummary.ts",
+        "lib/ghostme/maintenance/retentionEngine.ts"
+      ],
+      "insertedBy": [
+        "app/chat/page.tsx"
+      ],
+      "updatedBy": [
+        "lib/ghostme/maintenance/retentionEngine.ts"
+      ],
+      "deletedBy": [
+        "lib/ghostme/maintenance/retentionEngine.ts"
+      ]
+    },
+    "answers": {
+      "readBy": [
+        "app/setup/page.tsx",
+        "app/setup/page.tsx",
+        "app/setup/page.tsx"
+      ],
+      "insertedBy": [
+        "app/setup/page.tsx",
+        "app/setup/page.tsx"
+      ],
+      "updatedBy": [],
+      "deletedBy": [
+        "app/setup/page.tsx"
+      ]
+    },
+    "users": {
+      "readBy": [
+        "app/setup/page.tsx"
+      ],
+      "insertedBy": [],
+      "updatedBy": [],
+      "deletedBy": []
+    },
+    "ghost_behavior_rules": {
+      "readBy": [
+        "lib/ghostme/behavior/behaviorRulesEngine.ts",
+        "lib/ghostme/behavior/behaviorRulesEngine.ts",
+        "lib/ghostme/behavior/behaviorRulesEngine.ts",
+        "lib/ghostme/behavior/behaviorRulesEngine.ts",
+        "lib/ghostme/behavior/behaviorRulesEngine.ts",
+        "lib/ghostme/profile/profileBehaviorSeed.ts",
+        "lib/ghostme/profile/profileBehaviorSeed.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "insertedBy": [
+        "lib/ghostme/behavior/behaviorRulesEngine.ts",
+        "lib/ghostme/profile/profileBehaviorSeed.ts"
+      ],
+      "updatedBy": [
+        "lib/ghostme/behavior/behaviorRulesEngine.ts",
+        "lib/ghostme/behavior/behaviorRulesEngine.ts"
+      ],
+      "deletedBy": []
+    },
+    "contradictions": {
+      "readBy": [
+        "lib/ghostme/contradictions.ts",
+        "lib/ghostme/curiosity/curiosityEngine.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "insertedBy": [
+        "lib/ghostme/contradictions.ts"
+      ],
+      "updatedBy": [],
+      "deletedBy": []
+    },
+    "dynamic_self_profile": {
+      "readBy": [
+        "lib/ghostme/curiosity/curiosityEngine.ts",
+        "lib/ghostme/dynamicSelfProfile.ts",
+        "lib/ghostme/dynamicSelfProfile.ts",
+        "lib/ghostme/dynamicSelfProfile.ts",
+        "lib/ghostme/dynamicSelfProfile.ts",
+        "lib/ghostme/profile/profileBehaviorSeed.ts",
+        "lib/ghostme/profile/profileBehaviorSeed.ts",
+        "lib/ghostme/profile/profileBehaviorSeed.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "insertedBy": [
+        "lib/ghostme/dynamicSelfProfile.ts",
+        "lib/ghostme/profile/profileBehaviorSeed.ts"
+      ],
+      "updatedBy": [
+        "lib/ghostme/dynamicSelfProfile.ts",
+        "lib/ghostme/profile/profileBehaviorSeed.ts"
+      ],
+      "deletedBy": []
+    },
+    "house_events": {
+      "readBy": [
+        "lib/ghostme/homeAssistant/homeEventLogger.ts",
+        "lib/ghostme/homeAssistant/homeEventLogger.ts",
+        "lib/ghostme/homeAssistant/houseAutomationContext.ts",
+        "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
+        "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
+        "lib/ghostme/homeAssistant/housePatternEngine.ts",
+        "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts"
+      ],
+      "insertedBy": [
+        "lib/ghostme/homeAssistant/homeEventLogger.ts"
+      ],
+      "updatedBy": [],
+      "deletedBy": []
+    },
+    "house_automation_controls": {
+      "readBy": [
+        "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
+        "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts"
+      ],
+      "insertedBy": [],
+      "updatedBy": [],
+      "deletedBy": []
+    },
+    "house_entities": {
+      "readBy": [
+        "lib/ghostme/homeAssistant/houseEntityRegistry.ts"
+      ],
+      "insertedBy": [],
+      "updatedBy": [],
+      "deletedBy": []
+    },
+    "observation_events": {
+      "readBy": [
+        "lib/ghostme/observation/observationEngine.ts",
+        "lib/ghostme/observation/observationEngine.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "insertedBy": [
+        "lib/ghostme/observation/observationEngine.ts"
+      ],
+      "updatedBy": [],
+      "deletedBy": []
+    },
+    "behavior_patterns": {
+      "readBy": [
+        "lib/ghostme/observation/observationEngine.ts",
+        "lib/ghostme/observation/observationEngine.ts",
+        "lib/ghostme/observation/observationEngine.ts",
+        "lib/ghostme/patterns/patternDecay.ts",
+        "lib/ghostme/patterns/patternDecay.ts",
+        "lib/ghostme/patterns/patternInsightEngine.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "insertedBy": [
+        "lib/ghostme/observation/observationEngine.ts"
+      ],
+      "updatedBy": [
+        "lib/ghostme/observation/observationEngine.ts",
+        "lib/ghostme/patterns/patternDecay.ts"
+      ],
+      "deletedBy": []
+    }
+  },
+  "apiRoutes": [
+    "app/api/calendar-events/route.ts",
+    "app/api/chat/route.ts",
+    "app/api/conversation-summary/route.ts",
+    "app/api/debug-ha-entities/route.ts",
+    "app/api/debug-house-logger/route.ts",
+    "app/api/ghostme/brain/route.ts",
+    "app/api/ghostme/proactive/read/route.ts",
+    "app/api/goals/update-status/route.ts",
+    "app/api/house-suggestion-response/route.ts",
+    "app/api/location/current-place/route.ts",
+    "app/api/location/current-state/route.ts",
+    "app/api/location/delete-place/route.ts",
+    "app/api/location/places/route.ts",
+    "app/api/location/save-place/route.ts",
+    "app/api/location/update-current/route.ts",
+    "app/api/memory/route.ts",
+    "app/api/memory/search/route.ts",
+    "app/api/proactive/messages/route.ts",
+    "app/api/test-ha/route.ts",
+    "app/api/test-home-context/route.ts",
+    "app/api/test-home-reasoning/route.ts",
+    "app/api/worker/house/route.ts",
+    "app/api/worker/proactive/route.ts"
+  ],
+  "possibleDeadFiles": [
+    "lib/ghostme/location/locationEngine.ts",
+    "lib/ghostme/services/timeService.ts",
+    "next-env.d.ts",
+    "next.config.ts"
+  ],
+  "exportedFunctions": {
+    "app/api/calendar-events/route.ts": [
+      "POST",
+      "PATCH",
+      "DELETE"
+    ],
+    "app/api/chat/route.ts": [
+      "POST"
+    ],
+    "app/api/conversation-summary/route.ts": [
+      "POST"
+    ],
+    "app/api/debug-ha-entities/route.ts": [
+      "GET"
+    ],
+    "app/api/debug-house-logger/route.ts": [
+      "GET"
+    ],
+    "app/api/ghostme/brain/route.ts": [
+      "POST"
+    ],
+    "app/api/ghostme/proactive/read/route.ts": [
+      "POST"
+    ],
+    "app/api/goals/update-status/route.ts": [
+      "POST"
+    ],
+    "app/api/house-suggestion-response/route.ts": [
+      "POST"
+    ],
+    "app/api/location/current-place/route.ts": [
+      "POST"
+    ],
+    "app/api/location/current-state/route.ts": [
+      "POST"
+    ],
+    "app/api/location/delete-place/route.ts": [
+      "DELETE"
+    ],
+    "app/api/location/places/route.ts": [
+      "POST"
+    ],
+    "app/api/location/save-place/route.ts": [
+      "POST"
+    ],
+    "app/api/location/update-current/route.ts": [
+      "POST"
+    ],
+    "app/api/memory/route.ts": [
+      "POST"
+    ],
+    "app/api/memory/search/route.ts": [
+      "POST"
+    ],
+    "app/api/proactive/messages/route.ts": [
+      "POST"
+    ],
+    "app/api/test-ha/route.ts": [
+      "GET"
+    ],
+    "app/api/test-home-context/route.ts": [
+      "GET"
+    ],
+    "app/api/test-home-reasoning/route.ts": [
+      "GET"
+    ],
+    "app/api/worker/house/route.ts": [
+      "GET"
+    ],
+    "app/api/worker/proactive/route.ts": [
+      "GET"
+    ],
+    "components/ghost/GhostDrawers.tsx": [
+      "MemoryDrawer",
+      "ServicesDrawer",
+      "HistoryDrawer"
+    ],
+    "hooks/useGhostBrain.ts": [
+      "useGhostBrain"
+    ],
+    "hooks/useGhostChat.ts": [
+      "useGhostChat"
+    ],
+    "hooks/useGhostVoice.ts": [
+      "useGhostVoice"
+    ],
+    "lib/ghostme/actionLayer.ts": [
+      "getActionIntentContext",
+      "detectAndSaveActionIntent",
+      "cleanupOldActionIntents",
+      "detectAndCompleteActionIntent"
+    ],
+    "lib/ghostme/agenda/agendaEngine.ts": [
+      "buildAgendaMessage"
+    ],
+    "lib/ghostme/agenda/reminderEngine.ts": [
+      "refreshReminderMessage"
+    ],
+    "lib/ghostme/behavior/behaviorRulesEngine.ts": [
+      "getActiveBehaviorRules",
+      "saveBehaviorRule",
+      "buildBehaviorPrompt",
+      "detectAndSaveBehaviorRule"
+    ],
+    "lib/ghostme/butler/butlerEngine.ts": [
+      "generateButlerMessage"
+    ],
+    "lib/ghostme/calendar/calendarIntent.ts": [
+      "parseCalendarIntent"
+    ],
+    "lib/ghostme/calendar/calendarService.ts": [
+      "createCalendarEvent",
+      "getUpcomingCalendarEvents",
+      "refreshAgendaMessage",
+      "cleanupExpiredEvents"
+    ],
+    "lib/ghostme/context/contextBuilder.ts": [
+      "buildCurrentContext"
+    ],
+    "lib/ghostme/contradictions.ts": [
+      "detectAndSaveContradictions"
+    ],
+    "lib/ghostme/conversationSummary.ts": [
+      "generateDailyConversationSummary"
+    ],
+    "lib/ghostme/core/messageClassifier.ts": [
+      "classifyGhostMessage"
+    ],
+    "lib/ghostme/curiosity/curiosityEngine.ts": [
+      "generateCuriosityMessage"
+    ],
+    "lib/ghostme/dynamicSelfProfile.ts": [
+      "getDynamicSelfProfileContext",
+      "updateDynamicSelfProfile"
+    ],
+    "lib/ghostme/entityExtractor.ts": [
+      "extractEntitiesWithAI"
+    ],
+    "lib/ghostme/goalsDesires.ts": [
+      "getGoalsDesiresContext",
+      "detectAndSaveGoalsDesires"
+    ],
+    "lib/ghostme/homeAssistant/cognitiveHouseBuilder.ts": [
+      "buildCognitiveHouse"
+    ],
+    "lib/ghostme/homeAssistant/haClient.ts": [
+      "getHAStates"
+    ],
+    "lib/ghostme/homeAssistant/homeContextBuilder.ts": [
+      "buildHomeContext"
+    ],
+    "lib/ghostme/homeAssistant/homeEntityMapper.ts": [
+      "getEntityInfo"
+    ],
+    "lib/ghostme/homeAssistant/homeEventLogger.ts": [
+      "logHomeAssistantSnapshot"
+    ],
+    "lib/ghostme/homeAssistant/homeReasoningBuilder.ts": [
+      "buildHomeReasoning"
+    ],
+    "lib/ghostme/homeAssistant/houseAutomationContext.ts": [
+      "buildHouseAutomationContext"
+    ],
+    "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts": [
+      "planHouseAutomationControls"
+    ],
+    "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts": [
+      "generateHouseAutomationSuggestions"
+    ],
+    "lib/ghostme/homeAssistant/houseEntityRegistry.ts": [
+      "syncHouseEntities"
+    ],
+    "lib/ghostme/homeAssistant/houseLearnedRulesContext.ts": [
+      "buildHouseLearnedRulesContext"
+    ],
+    "lib/ghostme/homeAssistant/housePatternEngine.ts": [
+      "analyzeHousePatterns"
+    ],
+    "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts": [
+      "learnHouseRoutes"
+    ],
+    "lib/ghostme/homeAssistant/houseSuggestionEngine.ts": [
+      "generateHouseSuggestions"
+    ],
+    "lib/ghostme/location/locationEngine.ts": [
+      "classifyLocationSignal"
+    ],
+    "lib/ghostme/location/placeService.ts": [
+      "saveSignificantPlace",
+      "getSignificantPlaces",
+      "detectCurrentPlace",
+      "getLastKnownPlace",
+      "getCurrentLocationState"
+    ],
+    "lib/ghostme/maintenance/retentionEngine.ts": [
+      "runRetentionCleanup"
+    ],
+    "lib/ghostme/memoryDecay.ts": [
+      "applyMemoryDecay"
+    ],
+    "lib/ghostme/mentalState.ts": [
+      "updateMentalState"
+    ],
+    "lib/ghostme/observation/observationEngine.ts": [
+      "recordObservation",
+      "analyzeLocationPatterns"
+    ],
+    "lib/ghostme/observation/observationInsightEngine.ts": [
+      "generateObservationInsight"
+    ],
+    "lib/ghostme/patterns/patternDecay.ts": [
+      "applyPatternDecay"
+    ],
+    "lib/ghostme/patterns/patternInsightEngine.ts": [
+      "generatePatternInsight"
+    ],
+    "lib/ghostme/proactive/proactiveDecisionEngine.ts": [
+      "decideProactiveMessage"
+    ],
+    "lib/ghostme/proactive/proactiveMessageService.ts": [
+      "upsertProactiveMessage"
+    ],
+    "lib/ghostme/proactive/proactiveTrigger.ts": [
+      "runProactiveTrigger"
+    ],
+    "lib/ghostme/profile/profileBehaviorSeed.ts": [
+      "seedBehaviorFromProfile"
+    ],
+    "lib/ghostme/relationshipResolver.ts": [
+      "removeGenericRelationshipTopics",
+      "resolveNamedRelationship"
+    ],
+    "lib/ghostme/retrieval.ts": [
+      "buildContextualMemory"
+    ],
+    "lib/ghostme/services/serviceRouter.ts": [
+      "decideGhostService"
+    ],
+    "lib/ghostme/services/timeService.ts": [
+      "getLocalTimeContext"
+    ],
+    "lib/ghostme/services/weatherService.ts": [
+      "runWeatherSearch"
+    ],
+    "lib/ghostme/services/webSearchService.ts": [
+      "runWebSearch"
+    ],
+    "lib/ghostme/situation/situationEngine.ts": [
+      "buildGhostSituation"
+    ],
+    "lib/ghostme/timeline.ts": [
+      "getTimelineContext",
+      "detectAndSaveTimelineEvent"
+    ],
+    "lib/ghostme/topicDetector.ts": [
+      "detectTopicsFromMessage",
+      "isPossibleEpisode",
+      "detectEmotionalTone",
+      "shouldSaveActiveMemory",
+      "detectImportanceLevel",
+      "detectMemoryCategory"
+    ],
+    "lib/ghostme/topicLinks.ts": [
+      "saveTopicLinks",
+      "getRelatedTopicContext"
+    ],
+    "lib/personality.ts": [
+      "buildPersonalitySummary",
+      "buildGhostMeMessage"
+    ]
+  },
+  "importsGraph": {
+    "app/api/calendar-events/route.ts": [
+      "next/server",
+      "lib/supabaseAdmin.ts",
+      "lib/ghostme/calendar/calendarService.ts"
+    ],
+    "app/api/chat/route.ts": [
+      "openai",
+      "next/server",
+      "lib/supabase.ts",
+      "lib/supabaseAdmin.ts",
+      "lib/ghostme/core/messageClassifier.ts",
+      "lib/ghostme/topicDetector.ts",
+      "lib/ghostme/services/serviceRouter.ts",
+      "lib/ghostme/services/webSearchService.ts",
+      "lib/ghostme/services/weatherService.ts",
+      "lib/ghostme/calendar/calendarIntent.ts",
+      "lib/ghostme/calendar/calendarService.ts",
+      "lib/ghostme/retrieval.ts",
+      "lib/ghostme/topicLinks.ts",
+      "lib/ghostme/entityExtractor.ts",
+      "lib/ghostme/memoryDecay.ts",
+      "lib/ghostme/contradictions.ts",
+      "lib/ghostme/mentalState.ts",
+      "lib/ghostme/behavior/behaviorRulesEngine.ts",
+      "lib/ghostme/goalsDesires.ts",
+      "lib/ghostme/timeline.ts",
+      "lib/ghostme/dynamicSelfProfile.ts",
+      "lib/ghostme/actionLayer.ts",
+      "lib/ghostme/relationshipResolver.ts",
+      "lib/ghostme/homeAssistant/cognitiveHouseBuilder.ts",
+      "lib/ghostme/homeAssistant/houseLearnedRulesContext.ts",
+      "lib/ghostme/homeAssistant/houseAutomationContext.ts"
+    ],
+    "app/api/conversation-summary/route.ts": [
+      "next/server",
+      "lib/ghostme/conversationSummary.ts"
+    ],
+    "app/api/debug-ha-entities/route.ts": [
+      "next/server",
+      "lib/ghostme/homeAssistant/haClient.ts"
+    ],
+    "app/api/debug-house-logger/route.ts": [
+      "next/server",
+      "lib/ghostme/homeAssistant/haClient.ts",
+      "lib/ghostme/homeAssistant/homeEntityMapper.ts"
+    ],
+    "app/api/ghostme/brain/route.ts": [
+      "next/server",
+      "lib/supabaseAdmin.ts"
+    ],
+    "app/api/ghostme/proactive/read/route.ts": [
+      "next/server",
+      "lib/supabaseAdmin.ts"
+    ],
+    "app/api/goals/update-status/route.ts": [
+      "next/server",
+      "lib/supabaseAdmin.ts"
+    ],
+    "app/api/house-suggestion-response/route.ts": [
+      "next/server",
+      "lib/supabaseAdmin.ts"
+    ],
+    "app/api/location/current-place/route.ts": [
+      "next/server",
+      "lib/ghostme/location/placeService.ts"
+    ],
+    "app/api/location/current-state/route.ts": [
+      "next/server",
+      "lib/supabaseAdmin.ts"
+    ],
+    "app/api/location/delete-place/route.ts": [
+      "next/server",
+      "lib/supabaseAdmin.ts"
+    ],
+    "app/api/location/places/route.ts": [
+      "next/server",
+      "lib/ghostme/location/placeService.ts"
+    ],
+    "app/api/location/save-place/route.ts": [
+      "next/server",
+      "lib/ghostme/location/placeService.ts"
+    ],
+    "app/api/location/update-current/route.ts": [
+      "next/server",
+      "lib/supabaseAdmin.ts",
+      "lib/ghostme/observation/observationEngine.ts",
+      "lib/ghostme/proactive/proactiveTrigger.ts"
+    ],
+    "app/api/memory/route.ts": [
+      "next/server",
+      "lib/supabase.ts"
+    ],
+    "app/api/memory/search/route.ts": [
+      "next/server",
+      "lib/supabaseAdmin.ts"
+    ],
+    "app/api/proactive/messages/route.ts": [
+      "next/server",
+      "lib/supabaseAdmin.ts"
+    ],
+    "app/api/test-ha/route.ts": [
+      "next/server",
+      "lib/ghostme/homeAssistant/haClient.ts"
+    ],
+    "app/api/test-home-context/route.ts": [
+      "next/server",
+      "lib/ghostme/homeAssistant/homeContextBuilder.ts"
+    ],
+    "app/api/test-home-reasoning/route.ts": [
+      "next/server",
+      "lib/ghostme/homeAssistant/homeReasoningBuilder.ts"
+    ],
+    "app/api/worker/house/route.ts": [
+      "next/server",
+      "lib/supabaseAdmin.ts",
+      "lib/ghostme/homeAssistant/homeEventLogger.ts",
+      "lib/ghostme/homeAssistant/housePatternEngine.ts",
+      "lib/ghostme/homeAssistant/houseSuggestionEngine.ts",
+      "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts",
+      "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
+      "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
+      "lib/ghostme/homeAssistant/houseEntityRegistry.ts"
+    ],
+    "app/api/worker/proactive/route.ts": [
+      "next/server",
+      "openai",
+      "lib/supabaseAdmin.ts",
+      "lib/ghostme/context/contextBuilder.ts",
+      "lib/ghostme/butler/butlerEngine.ts",
+      "lib/ghostme/curiosity/curiosityEngine.ts",
+      "lib/ghostme/situation/situationEngine.ts",
+      "lib/ghostme/agenda/agendaEngine.ts",
+      "lib/ghostme/proactive/proactiveMessageService.ts",
+      "lib/ghostme/maintenance/retentionEngine.ts",
+      "lib/ghostme/conversationSummary.ts",
+      "lib/ghostme/proactive/proactiveDecisionEngine.ts",
+      "lib/ghostme/agenda/reminderEngine.ts",
+      "lib/ghostme/observation/observationInsightEngine.ts",
+      "lib/ghostme/actionLayer.ts",
+      "lib/ghostme/patterns/patternInsightEngine.ts",
+      "lib/ghostme/patterns/patternDecay.ts"
+    ],
+    "app/chat/page.tsx": [
+      "react",
+      "next/navigation",
+      "lib/supabase.ts",
+      "lib/personality.ts",
+      "components/ghost/types.ts",
+      "components/ghost/GhostHeader.tsx",
+      "components/ghost/GhostChat.tsx",
+      "components/ghost/GhostVoiceMode.tsx",
+      "components/ghost/GhostLayout.tsx",
+      "components/ghost/GhostBackground.tsx",
+      "hooks/useGhostVoice.ts",
+      "hooks/useGhostChat.ts",
+      "hooks/useGhostBrain.ts",
+      "components/ghost/GhostDrawers.tsx"
+    ],
+    "app/layout.tsx": [
+      "next",
+      "next/font/google"
+    ],
+    "app/login/page.tsx": [
+      "react",
+      "next/navigation",
+      "lib/supabase.ts"
+    ],
+    "app/memory/page.tsx": [
+      "react",
+      "lib/supabase.ts"
+    ],
+    "app/page.tsx": [
+      "next/navigation"
+    ],
+    "app/setup/page.tsx": [
+      "react",
+      "lib/supabase.ts",
+      "lib/personality.ts",
+      "lib/ghostme/profile/profileBehaviorSeed.ts"
+    ],
+    "app/setup/profile/page.tsx": [
+      "react",
+      "lib/supabase.ts",
+      "next/navigation"
+    ],
+    "components/ghost/GhostBackground.tsx": [
+      "components/ghost/types.ts"
+    ],
+    "components/ghost/GhostCanvasCore.tsx": [
+      "react",
+      "components/ghost/types.ts"
+    ],
+    "components/ghost/GhostChat.tsx": [
+      "react",
+      "components/ghost/types.ts"
+    ],
+    "components/ghost/GhostCore.tsx": [
+      "next/image",
+      "components/ghost/types.ts"
+    ],
+    "components/ghost/GhostDrawers.tsx": [
+      "components/ghost/types.ts",
+      "react"
+    ],
+    "components/ghost/GhostGlobalStyles.tsx": [],
+    "components/ghost/GhostHeader.tsx": [
+      "components/ghost/types.ts"
+    ],
+    "components/ghost/GhostLayout.tsx": [
+      "react",
+      "components/ghost/GhostGlobalStyles.tsx"
+    ],
+    "components/ghost/GhostVoiceMode.tsx": [
+      "components/ghost/GhostCore.tsx",
+      "components/ghost/types.ts",
+      "components/ghost/GhostCanvasCore.tsx"
+    ],
+    "components/ghost/types.ts": [],
+    "hooks/useGhostBrain.ts": [
+      "react",
+      "components/ghost/types.ts",
+      "lib/personality.ts"
+    ],
+    "hooks/useGhostChat.ts": [
+      "react",
+      "components/ghost/types.ts"
+    ],
+    "hooks/useGhostVoice.ts": [
+      "react",
+      "components/ghost/types.ts"
+    ],
+    "lib/ghostme/actionLayer.ts": [
+      "openai",
+      "lib/supabaseAdmin.ts"
+    ],
+    "lib/ghostme/agenda/agendaEngine.ts": [
+      "lib/ghostme/situation/situationEngine.ts"
+    ],
+    "lib/ghostme/agenda/reminderEngine.ts": [
+      "lib/supabaseAdmin.ts"
+    ],
+    "lib/ghostme/behavior/behaviorRulesEngine.ts": [
+      "lib/supabaseAdmin.ts",
+      "openai"
+    ],
+    "lib/ghostme/butler/butlerEngine.ts": [
+      "openai",
+      "lib/ghostme/context/contextBuilder.ts"
+    ],
+    "lib/ghostme/calendar/calendarIntent.ts": [
+      "openai"
+    ],
+    "lib/ghostme/calendar/calendarService.ts": [
+      "lib/supabaseAdmin.ts",
+      "lib/ghostme/situation/situationEngine.ts",
+      "lib/ghostme/agenda/agendaEngine.ts",
+      "lib/ghostme/agenda/reminderEngine.ts",
+      "lib/ghostme/proactive/proactiveTrigger.ts"
+    ],
+    "lib/ghostme/context/contextBuilder.ts": [
+      "lib/supabaseAdmin.ts",
+      "lib/ghostme/situation/situationEngine.ts",
+      "lib/ghostme/behavior/behaviorRulesEngine.ts",
+      "lib/ghostme/homeAssistant/homeReasoningBuilder.ts"
+    ],
+    "lib/ghostme/contradictions.ts": [
+      "openai",
+      "lib/supabaseAdmin.ts"
+    ],
+    "lib/ghostme/conversationSummary.ts": [
+      "openai",
+      "lib/supabaseAdmin.ts"
+    ],
+    "lib/ghostme/core/messageClassifier.ts": [],
+    "lib/ghostme/curiosity/curiosityEngine.ts": [
+      "openai",
+      "lib/supabaseAdmin.ts",
+      "lib/ghostme/situation/situationEngine.ts"
+    ],
+    "lib/ghostme/dynamicSelfProfile.ts": [
+      "openai",
+      "lib/supabaseAdmin.ts"
+    ],
+    "lib/ghostme/entityExtractor.ts": [
+      "openai",
+      "lib/ghostme/topicDetector.ts"
+    ],
+    "lib/ghostme/goalsDesires.ts": [
+      "openai",
+      "lib/supabaseAdmin.ts"
+    ],
+    "lib/ghostme/homeAssistant/cognitiveHouseBuilder.ts": [
+      "lib/ghostme/homeAssistant/haClient.ts"
+    ],
+    "lib/ghostme/homeAssistant/haClient.ts": [],
+    "lib/ghostme/homeAssistant/homeContextBuilder.ts": [
+      "lib/ghostme/homeAssistant/haClient.ts"
+    ],
+    "lib/ghostme/homeAssistant/homeEntityMapper.ts": [],
+    "lib/ghostme/homeAssistant/homeEventLogger.ts": [
+      "lib/supabaseAdmin.ts",
+      "lib/ghostme/homeAssistant/haClient.ts",
+      "lib/ghostme/homeAssistant/homeEntityMapper.ts"
+    ],
+    "lib/ghostme/homeAssistant/homeReasoningBuilder.ts": [
+      "lib/ghostme/homeAssistant/haClient.ts"
+    ],
+    "lib/ghostme/homeAssistant/houseAutomationContext.ts": [
+      "lib/supabaseAdmin.ts"
+    ],
+    "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts": [
+      "lib/supabaseAdmin.ts"
+    ],
+    "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts": [
+      "lib/supabaseAdmin.ts"
+    ],
+    "lib/ghostme/homeAssistant/houseEntityRegistry.ts": [
+      "lib/supabaseAdmin.ts",
+      "lib/ghostme/homeAssistant/haClient.ts",
+      "lib/ghostme/homeAssistant/homeEntityMapper.ts"
+    ],
+    "lib/ghostme/homeAssistant/houseLearnedRulesContext.ts": [
+      "lib/supabaseAdmin.ts"
+    ],
+    "lib/ghostme/homeAssistant/housePatternEngine.ts": [
+      "lib/supabaseAdmin.ts"
+    ],
+    "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts": [
+      "lib/supabaseAdmin.ts"
+    ],
+    "lib/ghostme/homeAssistant/houseSuggestionEngine.ts": [
+      "lib/supabaseAdmin.ts",
+      "lib/ghostme/homeAssistant/cognitiveHouseBuilder.ts",
+      "lib/ghostme/homeAssistant/housePatternEngine.ts"
+    ],
+    "lib/ghostme/location/locationEngine.ts": [],
+    "lib/ghostme/location/placeService.ts": [
+      "lib/supabaseAdmin.ts"
+    ],
+    "lib/ghostme/maintenance/retentionEngine.ts": [
+      "lib/supabaseAdmin.ts"
+    ],
+    "lib/ghostme/memoryDecay.ts": [
+      "lib/supabase.ts"
+    ],
+    "lib/ghostme/mentalState.ts": [
+      "openai",
+      "lib/supabaseAdmin.ts"
+    ],
+    "lib/ghostme/observation/observationEngine.ts": [
+      "lib/supabaseAdmin.ts"
+    ],
+    "lib/ghostme/observation/observationInsightEngine.ts": [
+      "lib/supabaseAdmin.ts",
+      "lib/ghostme/situation/situationEngine.ts",
+      "lib/ghostme/proactive/proactiveMessageService.ts",
+      "openai"
+    ],
+    "lib/ghostme/patterns/patternDecay.ts": [
+      "lib/supabaseAdmin.ts"
+    ],
+    "lib/ghostme/patterns/patternInsightEngine.ts": [
+      "lib/supabaseAdmin.ts",
+      "lib/ghostme/proactive/proactiveMessageService.ts",
+      "openai"
+    ],
+    "lib/ghostme/proactive/proactiveDecisionEngine.ts": [
+      "openai",
+      "lib/ghostme/context/contextBuilder.ts"
+    ],
+    "lib/ghostme/proactive/proactiveMessageService.ts": [
+      "lib/supabaseAdmin.ts"
+    ],
+    "lib/ghostme/proactive/proactiveTrigger.ts": [
+      "lib/ghostme/calendar/calendarService.ts",
+      "lib/ghostme/situation/situationEngine.ts",
+      "lib/ghostme/context/contextBuilder.ts",
+      "lib/ghostme/proactive/proactiveDecisionEngine.ts",
+      "lib/ghostme/proactive/proactiveMessageService.ts"
+    ],
+    "lib/ghostme/profile/profileBehaviorSeed.ts": [
+      "lib/supabaseAdmin.ts"
+    ],
+    "lib/ghostme/relationshipResolver.ts": [
+      "lib/supabase.ts"
+    ],
+    "lib/ghostme/retrieval.ts": [
+      "lib/supabase.ts",
+      "lib/ghostme/topicLinks.ts"
+    ],
+    "lib/ghostme/services/serviceRouter.ts": [],
+    "lib/ghostme/services/timeService.ts": [],
+    "lib/ghostme/services/weatherService.ts": [
+      "lib/ghostme/services/webSearchService.ts"
+    ],
+    "lib/ghostme/services/webSearchService.ts": [
+      "openai"
+    ],
+    "lib/ghostme/situation/situationEngine.ts": [
+      "lib/supabaseAdmin.ts",
+      "lib/ghostme/location/placeService.ts"
+    ],
+    "lib/ghostme/timeline.ts": [
+      "openai",
+      "lib/supabaseAdmin.ts"
+    ],
+    "lib/ghostme/topicDetector.ts": [],
+    "lib/ghostme/topicLinks.ts": [
+      "lib/supabase.ts"
+    ],
+    "lib/personality.ts": [],
+    "lib/supabase.ts": [
+      "@supabase/supabase-js"
+    ],
+    "lib/supabaseAdmin.ts": [
+      "@supabase/supabase-js"
+    ],
+    "next-env.d.ts": [],
+    "next.config.ts": [
+      "next"
+    ]
+  },
+  "importedBy": {
+    "next/server": [
+      "app/api/calendar-events/route.ts",
+      "app/api/chat/route.ts",
+      "app/api/conversation-summary/route.ts",
+      "app/api/debug-ha-entities/route.ts",
+      "app/api/debug-house-logger/route.ts",
+      "app/api/ghostme/brain/route.ts",
+      "app/api/ghostme/proactive/read/route.ts",
+      "app/api/goals/update-status/route.ts",
+      "app/api/house-suggestion-response/route.ts",
+      "app/api/location/current-place/route.ts",
+      "app/api/location/current-state/route.ts",
+      "app/api/location/delete-place/route.ts",
+      "app/api/location/places/route.ts",
+      "app/api/location/save-place/route.ts",
+      "app/api/location/update-current/route.ts",
+      "app/api/memory/route.ts",
+      "app/api/memory/search/route.ts",
+      "app/api/proactive/messages/route.ts",
+      "app/api/test-ha/route.ts",
+      "app/api/test-home-context/route.ts",
+      "app/api/test-home-reasoning/route.ts",
+      "app/api/worker/house/route.ts",
+      "app/api/worker/proactive/route.ts"
+    ],
+    "lib/supabaseAdmin.ts": [
+      "app/api/calendar-events/route.ts",
+      "app/api/chat/route.ts",
+      "app/api/ghostme/brain/route.ts",
+      "app/api/ghostme/proactive/read/route.ts",
+      "app/api/goals/update-status/route.ts",
+      "app/api/house-suggestion-response/route.ts",
+      "app/api/location/current-state/route.ts",
+      "app/api/location/delete-place/route.ts",
+      "app/api/location/update-current/route.ts",
+      "app/api/memory/search/route.ts",
+      "app/api/proactive/messages/route.ts",
+      "app/api/worker/house/route.ts",
+      "app/api/worker/proactive/route.ts",
+      "lib/ghostme/actionLayer.ts",
+      "lib/ghostme/agenda/reminderEngine.ts",
+      "lib/ghostme/behavior/behaviorRulesEngine.ts",
+      "lib/ghostme/calendar/calendarService.ts",
+      "lib/ghostme/context/contextBuilder.ts",
+      "lib/ghostme/contradictions.ts",
+      "lib/ghostme/conversationSummary.ts",
+      "lib/ghostme/curiosity/curiosityEngine.ts",
+      "lib/ghostme/dynamicSelfProfile.ts",
+      "lib/ghostme/goalsDesires.ts",
+      "lib/ghostme/homeAssistant/homeEventLogger.ts",
+      "lib/ghostme/homeAssistant/houseAutomationContext.ts",
+      "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
+      "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
+      "lib/ghostme/homeAssistant/houseEntityRegistry.ts",
+      "lib/ghostme/homeAssistant/houseLearnedRulesContext.ts",
+      "lib/ghostme/homeAssistant/housePatternEngine.ts",
+      "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts",
+      "lib/ghostme/homeAssistant/houseSuggestionEngine.ts",
+      "lib/ghostme/location/placeService.ts",
+      "lib/ghostme/maintenance/retentionEngine.ts",
+      "lib/ghostme/mentalState.ts",
+      "lib/ghostme/observation/observationEngine.ts",
+      "lib/ghostme/observation/observationInsightEngine.ts",
+      "lib/ghostme/patterns/patternDecay.ts",
+      "lib/ghostme/patterns/patternInsightEngine.ts",
+      "lib/ghostme/proactive/proactiveMessageService.ts",
+      "lib/ghostme/profile/profileBehaviorSeed.ts",
+      "lib/ghostme/situation/situationEngine.ts",
+      "lib/ghostme/timeline.ts"
+    ],
+    "lib/ghostme/calendar/calendarService.ts": [
+      "app/api/calendar-events/route.ts",
+      "app/api/chat/route.ts",
+      "lib/ghostme/proactive/proactiveTrigger.ts"
+    ],
+    "openai": [
+      "app/api/chat/route.ts",
+      "app/api/worker/proactive/route.ts",
+      "lib/ghostme/actionLayer.ts",
+      "lib/ghostme/behavior/behaviorRulesEngine.ts",
+      "lib/ghostme/butler/butlerEngine.ts",
+      "lib/ghostme/calendar/calendarIntent.ts",
+      "lib/ghostme/contradictions.ts",
+      "lib/ghostme/conversationSummary.ts",
+      "lib/ghostme/curiosity/curiosityEngine.ts",
+      "lib/ghostme/dynamicSelfProfile.ts",
+      "lib/ghostme/entityExtractor.ts",
+      "lib/ghostme/goalsDesires.ts",
+      "lib/ghostme/mentalState.ts",
+      "lib/ghostme/observation/observationInsightEngine.ts",
+      "lib/ghostme/patterns/patternInsightEngine.ts",
+      "lib/ghostme/proactive/proactiveDecisionEngine.ts",
+      "lib/ghostme/services/webSearchService.ts",
+      "lib/ghostme/timeline.ts"
+    ],
+    "lib/supabase.ts": [
+      "app/api/chat/route.ts",
+      "app/api/memory/route.ts",
+      "app/chat/page.tsx",
+      "app/login/page.tsx",
+      "app/memory/page.tsx",
+      "app/setup/page.tsx",
+      "app/setup/profile/page.tsx",
+      "lib/ghostme/memoryDecay.ts",
+      "lib/ghostme/relationshipResolver.ts",
+      "lib/ghostme/retrieval.ts",
+      "lib/ghostme/topicLinks.ts"
+    ],
+    "lib/ghostme/core/messageClassifier.ts": [
+      "app/api/chat/route.ts"
+    ],
+    "lib/ghostme/topicDetector.ts": [
+      "app/api/chat/route.ts",
+      "lib/ghostme/entityExtractor.ts"
+    ],
+    "lib/ghostme/services/serviceRouter.ts": [
+      "app/api/chat/route.ts"
+    ],
+    "lib/ghostme/services/webSearchService.ts": [
+      "app/api/chat/route.ts",
+      "lib/ghostme/services/weatherService.ts"
+    ],
+    "lib/ghostme/services/weatherService.ts": [
+      "app/api/chat/route.ts"
+    ],
+    "lib/ghostme/calendar/calendarIntent.ts": [
+      "app/api/chat/route.ts"
+    ],
+    "lib/ghostme/retrieval.ts": [
+      "app/api/chat/route.ts"
+    ],
+    "lib/ghostme/topicLinks.ts": [
+      "app/api/chat/route.ts",
+      "lib/ghostme/retrieval.ts"
+    ],
+    "lib/ghostme/entityExtractor.ts": [
+      "app/api/chat/route.ts"
+    ],
+    "lib/ghostme/memoryDecay.ts": [
+      "app/api/chat/route.ts"
+    ],
+    "lib/ghostme/contradictions.ts": [
+      "app/api/chat/route.ts"
+    ],
+    "lib/ghostme/mentalState.ts": [
+      "app/api/chat/route.ts"
+    ],
+    "lib/ghostme/behavior/behaviorRulesEngine.ts": [
+      "app/api/chat/route.ts",
+      "lib/ghostme/context/contextBuilder.ts"
+    ],
+    "lib/ghostme/goalsDesires.ts": [
+      "app/api/chat/route.ts"
+    ],
+    "lib/ghostme/timeline.ts": [
+      "app/api/chat/route.ts"
+    ],
+    "lib/ghostme/dynamicSelfProfile.ts": [
+      "app/api/chat/route.ts"
+    ],
+    "lib/ghostme/actionLayer.ts": [
+      "app/api/chat/route.ts",
+      "app/api/worker/proactive/route.ts"
+    ],
+    "lib/ghostme/relationshipResolver.ts": [
+      "app/api/chat/route.ts"
+    ],
+    "lib/ghostme/homeAssistant/cognitiveHouseBuilder.ts": [
+      "app/api/chat/route.ts",
+      "lib/ghostme/homeAssistant/houseSuggestionEngine.ts"
+    ],
+    "lib/ghostme/homeAssistant/houseLearnedRulesContext.ts": [
+      "app/api/chat/route.ts"
+    ],
+    "lib/ghostme/homeAssistant/houseAutomationContext.ts": [
+      "app/api/chat/route.ts"
+    ],
+    "lib/ghostme/conversationSummary.ts": [
+      "app/api/conversation-summary/route.ts",
+      "app/api/worker/proactive/route.ts"
+    ],
+    "lib/ghostme/homeAssistant/haClient.ts": [
+      "app/api/debug-ha-entities/route.ts",
+      "app/api/debug-house-logger/route.ts",
+      "app/api/test-ha/route.ts",
+      "lib/ghostme/homeAssistant/cognitiveHouseBuilder.ts",
+      "lib/ghostme/homeAssistant/homeContextBuilder.ts",
+      "lib/ghostme/homeAssistant/homeEventLogger.ts",
+      "lib/ghostme/homeAssistant/homeReasoningBuilder.ts",
+      "lib/ghostme/homeAssistant/houseEntityRegistry.ts"
+    ],
+    "lib/ghostme/homeAssistant/homeEntityMapper.ts": [
+      "app/api/debug-house-logger/route.ts",
+      "lib/ghostme/homeAssistant/homeEventLogger.ts",
+      "lib/ghostme/homeAssistant/houseEntityRegistry.ts"
+    ],
+    "lib/ghostme/location/placeService.ts": [
+      "app/api/location/current-place/route.ts",
+      "app/api/location/places/route.ts",
+      "app/api/location/save-place/route.ts",
+      "lib/ghostme/situation/situationEngine.ts"
+    ],
+    "lib/ghostme/observation/observationEngine.ts": [
+      "app/api/location/update-current/route.ts"
+    ],
+    "lib/ghostme/proactive/proactiveTrigger.ts": [
+      "app/api/location/update-current/route.ts",
+      "lib/ghostme/calendar/calendarService.ts"
+    ],
+    "lib/ghostme/homeAssistant/homeContextBuilder.ts": [
+      "app/api/test-home-context/route.ts"
+    ],
+    "lib/ghostme/homeAssistant/homeReasoningBuilder.ts": [
+      "app/api/test-home-reasoning/route.ts",
+      "lib/ghostme/context/contextBuilder.ts"
+    ],
+    "lib/ghostme/homeAssistant/homeEventLogger.ts": [
+      "app/api/worker/house/route.ts"
+    ],
+    "lib/ghostme/homeAssistant/housePatternEngine.ts": [
+      "app/api/worker/house/route.ts",
+      "lib/ghostme/homeAssistant/houseSuggestionEngine.ts"
+    ],
+    "lib/ghostme/homeAssistant/houseSuggestionEngine.ts": [
+      "app/api/worker/house/route.ts"
+    ],
+    "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts": [
+      "app/api/worker/house/route.ts"
+    ],
+    "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts": [
+      "app/api/worker/house/route.ts"
+    ],
+    "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts": [
+      "app/api/worker/house/route.ts"
+    ],
+    "lib/ghostme/homeAssistant/houseEntityRegistry.ts": [
+      "app/api/worker/house/route.ts"
+    ],
+    "lib/ghostme/context/contextBuilder.ts": [
+      "app/api/worker/proactive/route.ts",
+      "lib/ghostme/butler/butlerEngine.ts",
+      "lib/ghostme/proactive/proactiveDecisionEngine.ts",
+      "lib/ghostme/proactive/proactiveTrigger.ts"
+    ],
+    "lib/ghostme/butler/butlerEngine.ts": [
+      "app/api/worker/proactive/route.ts"
+    ],
+    "lib/ghostme/curiosity/curiosityEngine.ts": [
+      "app/api/worker/proactive/route.ts"
+    ],
+    "lib/ghostme/situation/situationEngine.ts": [
+      "app/api/worker/proactive/route.ts",
+      "lib/ghostme/agenda/agendaEngine.ts",
+      "lib/ghostme/calendar/calendarService.ts",
+      "lib/ghostme/context/contextBuilder.ts",
+      "lib/ghostme/curiosity/curiosityEngine.ts",
+      "lib/ghostme/observation/observationInsightEngine.ts",
+      "lib/ghostme/proactive/proactiveTrigger.ts"
+    ],
+    "lib/ghostme/agenda/agendaEngine.ts": [
+      "app/api/worker/proactive/route.ts",
+      "lib/ghostme/calendar/calendarService.ts"
+    ],
+    "lib/ghostme/proactive/proactiveMessageService.ts": [
+      "app/api/worker/proactive/route.ts",
+      "lib/ghostme/observation/observationInsightEngine.ts",
+      "lib/ghostme/patterns/patternInsightEngine.ts",
+      "lib/ghostme/proactive/proactiveTrigger.ts"
+    ],
+    "lib/ghostme/maintenance/retentionEngine.ts": [
+      "app/api/worker/proactive/route.ts"
+    ],
+    "lib/ghostme/proactive/proactiveDecisionEngine.ts": [
+      "app/api/worker/proactive/route.ts",
+      "lib/ghostme/proactive/proactiveTrigger.ts"
+    ],
+    "lib/ghostme/agenda/reminderEngine.ts": [
+      "app/api/worker/proactive/route.ts",
+      "lib/ghostme/calendar/calendarService.ts"
+    ],
+    "lib/ghostme/observation/observationInsightEngine.ts": [
+      "app/api/worker/proactive/route.ts"
+    ],
+    "lib/ghostme/patterns/patternInsightEngine.ts": [
+      "app/api/worker/proactive/route.ts"
+    ],
+    "lib/ghostme/patterns/patternDecay.ts": [
+      "app/api/worker/proactive/route.ts"
+    ],
+    "react": [
+      "app/chat/page.tsx",
+      "app/login/page.tsx",
+      "app/memory/page.tsx",
+      "app/setup/page.tsx",
+      "app/setup/profile/page.tsx",
+      "components/ghost/GhostCanvasCore.tsx",
+      "components/ghost/GhostChat.tsx",
+      "components/ghost/GhostDrawers.tsx",
+      "components/ghost/GhostLayout.tsx",
+      "hooks/useGhostBrain.ts",
+      "hooks/useGhostChat.ts",
+      "hooks/useGhostVoice.ts"
+    ],
+    "next/navigation": [
+      "app/chat/page.tsx",
+      "app/login/page.tsx",
+      "app/page.tsx",
+      "app/setup/profile/page.tsx"
+    ],
+    "lib/personality.ts": [
+      "app/chat/page.tsx",
+      "app/setup/page.tsx",
+      "hooks/useGhostBrain.ts"
+    ],
+    "components/ghost/types.ts": [
+      "app/chat/page.tsx",
+      "components/ghost/GhostBackground.tsx",
+      "components/ghost/GhostCanvasCore.tsx",
+      "components/ghost/GhostChat.tsx",
+      "components/ghost/GhostCore.tsx",
+      "components/ghost/GhostDrawers.tsx",
+      "components/ghost/GhostHeader.tsx",
+      "components/ghost/GhostVoiceMode.tsx",
+      "hooks/useGhostBrain.ts",
+      "hooks/useGhostChat.ts",
+      "hooks/useGhostVoice.ts"
+    ],
+    "components/ghost/GhostHeader.tsx": [
+      "app/chat/page.tsx"
+    ],
+    "components/ghost/GhostChat.tsx": [
+      "app/chat/page.tsx"
+    ],
+    "components/ghost/GhostVoiceMode.tsx": [
+      "app/chat/page.tsx"
+    ],
+    "components/ghost/GhostLayout.tsx": [
+      "app/chat/page.tsx"
+    ],
+    "components/ghost/GhostBackground.tsx": [
+      "app/chat/page.tsx"
+    ],
+    "hooks/useGhostVoice.ts": [
+      "app/chat/page.tsx"
+    ],
+    "hooks/useGhostChat.ts": [
+      "app/chat/page.tsx"
+    ],
+    "hooks/useGhostBrain.ts": [
+      "app/chat/page.tsx"
+    ],
+    "components/ghost/GhostDrawers.tsx": [
+      "app/chat/page.tsx"
+    ],
+    "next": [
+      "app/layout.tsx",
+      "next.config.ts"
+    ],
+    "next/font/google": [
+      "app/layout.tsx"
+    ],
+    "lib/ghostme/profile/profileBehaviorSeed.ts": [
+      "app/setup/page.tsx"
+    ],
+    "next/image": [
+      "components/ghost/GhostCore.tsx"
+    ],
+    "components/ghost/GhostGlobalStyles.tsx": [
+      "components/ghost/GhostLayout.tsx"
+    ],
+    "components/ghost/GhostCore.tsx": [
+      "components/ghost/GhostVoiceMode.tsx"
+    ],
+    "components/ghost/GhostCanvasCore.tsx": [
+      "components/ghost/GhostVoiceMode.tsx"
+    ],
+    "@supabase/supabase-js": [
+      "lib/supabase.ts",
+      "lib/supabaseAdmin.ts"
+    ]
+  }
+}
