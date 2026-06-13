@@ -11,7 +11,7 @@ function isUsefulEntity(entityType: string) {
 }
 
 export async function syncHouseEntities(userId: string) {
-  if (!userId) return { upserted: 0 };
+  if (!userId) return { totalStates: 0, mappedRows: 0, upserted: 0 };
 
   const states = await getHAStates();
 
@@ -34,7 +34,13 @@ export async function syncHouseEntities(userId: string) {
     })
     .filter(Boolean);
 
-  if (!rows.length) return { upserted: 0 };
+  if (!rows.length) {
+    return {
+      totalStates: states.length,
+      mappedRows: 0,
+      upserted: 0,
+    };
+  }
 
   const { error } = await supabaseAdmin
     .from("house_entities")
@@ -44,8 +50,19 @@ export async function syncHouseEntities(userId: string) {
 
   if (error) {
     console.log("SYNC HOUSE ENTITIES ERROR:", error);
-    return { upserted: 0, error: error.message };
+    return {
+      totalStates: states.length,
+      mappedRows: rows.length,
+      upserted: 0,
+      error: error.message,
+      details: error.details,
+      code: error.code,
+    };
   }
 
-  return { upserted: rows.length };
+  return {
+    totalStates: states.length,
+    mappedRows: rows.length,
+    upserted: rows.length,
+  };
 }
