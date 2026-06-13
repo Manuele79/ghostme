@@ -26,6 +26,7 @@ export default function GhostChat({
   proactiveMessage,
   proactiveMessages,
   onProactiveSeen,
+  onProactiveAnswered,
   userName,
   openHistory,
 }: {
@@ -50,6 +51,7 @@ export default function GhostChat({
   proactiveMessage?: ProactiveCard | null;
   proactiveMessages?: ProactiveCard[];
   onProactiveSeen?: (messageId?: string) => void;
+  onProactiveAnswered?: (messageId?: string) => void;
   userName: string;
   openHistory: () => void;
 }) {
@@ -59,6 +61,11 @@ export default function GhostChat({
       : proactiveMessage
         ? [proactiveMessage]
         : [];
+
+ function replyToProactive(message: ProactiveCard) {
+  setInput(`Sto rispondendo a "${message.title || "GhostMe"}": `);
+  onProactiveAnswered?.(message.id);
+}      
 
 
   const [answeredHomeMessages, setAnsweredHomeMessages] = useState<Record<string, string>>({});
@@ -110,6 +117,17 @@ export default function GhostChat({
                 <div className="whitespace-pre-line text-sm leading-relaxed">
                   {message.message}
                 </div>
+
+              {message.category !== "home_question" && (
+              <div className="mt-4">
+                <button
+                  onClick={() => replyToProactive(message)}
+                  className="rounded-2xl border border-cyan-400/40 px-4 py-2 text-xs font-black text-cyan-200 hover:bg-cyan-400/10"
+                >
+                  Rispondi
+                </button>
+              </div>
+            )}              
 
                 {message.category === "home_question" && (
                   <div className="mt-4 flex gap-3">

@@ -9,7 +9,7 @@ export type DetectedTopic = {
 
 const ignoredWords = new Set(
   [
-    "ciao", "oggi", "domani", "ieri", "come", "cosa", "sono", "sei", "siamo",
+    "oggi", "domani", "ieri", "come", "cosa", "sono", "sei", "siamo",
     "ero", "era", "eri", "stato", "stata", "stavo", "sto", "per", "con",
     "senza", "dentro", "fuori", "dopo", "prima", "voglio", "vorrei", "devo",
     "faccio", "facendo", "lavoro", "lavorando", "provando", "appena",
@@ -19,7 +19,7 @@ const ignoredWords = new Set(
     "mattina", "pomeriggio", "notte", "bene", "male", "grazie", "ok",
     "home", "assistant", "san", "santo", "santa", "friulano", "friuli",
     "collio", "cormons", "zona", "ristorante", "friggitoria", "fritto",
-    "frittura", "pesce", "ghost", "ghostme","risposta",
+    "frittura", "pesce", "risposta",
 "rispondendo",
 "osservazione",
 "osservazioni",
@@ -59,7 +59,7 @@ const ignoredWords = new Set(
 "nella",
 "nelle",
 "negli",
-    "askdj",
+    
   ].map((w) => w.toLowerCase())
 );
 
@@ -162,18 +162,31 @@ function isInsideKnownTopicWord(word: string, detected: DetectedTopic[]) {
   );
 }
 
-const knownPlaces = new Set(
-  [
-    "tokyo",
-    "giappone",
-    "cividale",
-    "zoncolan",
-    "pramollo",
-    "austria",
-    "badia",
-    "collio",
-  ]
-);
+const knownPlaces = new Set([
+  "tokyo",
+  "giappone",
+  "cividale",
+  "zoncolan",
+  "pramollo",
+  "austria",
+  "badia",
+  "collio",
+
+  "genova",
+  "udine",
+  "trieste",
+  "milano",
+  "roma",
+  "venezia",
+  "napoli",
+
+  "italia",
+  "francia",
+  "germania",
+  "spagna",
+  "croazia",
+  "slovenia",
+]);
 
 function isPossiblePersonName(
   word: string,
@@ -204,6 +217,22 @@ function isPossiblePersonName(
 
   // Nome proprio semplice: Valentina, Enrico, Ale, Marco
   if (!/^[A-ZÀ-Ù][a-zà-ù]+$/.test(clean)) return false;
+
+  if (
+  [
+    "Dimmi",
+    "Qual",
+    "Quale",
+    "Quali",
+    "Considera",
+    "Prenditi",
+    "Potresti",
+    "Risposta",
+    "Osservazione",
+  ].includes(clean)
+) {
+  return false;
+}
 
   return true;
 }
@@ -266,7 +295,7 @@ words.forEach((word) => {
       category: "unknown",
       entity_type: "unknown",
       needs_clarification: true,
-      confidence: 70,
+      confidence: 55,
       reason: "possible_person_name",
     });
   });

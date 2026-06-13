@@ -39,18 +39,56 @@ const BLOCKED_ENTITY_TOPICS = new Set(
     "vercel",
     "github",
     "supabase",
+
+    // parole conversazionali inutili
+    "dimmi",
+    "qual",
+    "quale",
+    "quali",
+    "considera",
+    "potresti",
+    "prenditi",
+    "hahaha",
+    "ahahah",
+    "ahah",
+    "risposta",
+    "rispondendo",
+    "osservazione",
+    "osservazioni",
+    "attuale",
+    "attuali",
+    "momento",
+    "utile",
+    "meglio",
+    "supportarti",
+    "anche",
+    "allora",
+    "ok",
+    "bene",
+    "grazie",
+    "fatto",
+    "vai",
+
+    // pezzi singoli che creano link finti
+    "alfa",
+    "romeo",
+    "ai",
+    "pc",
+    "tv",
   ].map((x) => x.toLowerCase())
 );
 
 function normalizeExtractedTopic(topic: string) {
-  const clean = topic.trim();
+  const clean = topic.trim().replace(/\s+/g, " ");
   const lower = clean.toLowerCase();
 
-  if (lower === "ghost me") return "GhostMe";
-  if (lower === "ask dj") return "AskDJ";
+  if (lower === "ghost me" || lower === "ghostme") return "GhostMe";
+  if (lower === "ask dj" || lower === "askdj") return "AskDJ";
   if (lower === "home assistant") return "Home Assistant";
+  if (lower === "alfa romeo") return "Alfa Romeo";
+  if (lower === "moto piaggio" || lower === "moto / piaggio") return "Moto / Piaggio";
 
-  return clean;
+  return clean.replace(/\b\w/g, (l) => l.toUpperCase());
 }
 
 function isBlockedEntityTopic(topic: string) {
@@ -166,7 +204,28 @@ Rispondi SOLO con JSON valido:
         ...item,
         topic: normalizeExtractedTopic(String(item.topic)),
       }))
-      .filter((item: any) => !isBlockedEntityTopic(item.topic))
+      .filter((item: any) => {
+        const topic = String(item.topic || "").trim();
+        const lower = topic.toLowerCase();
+
+        if (isBlockedEntityTopic(topic)) return false;
+        if (topic.length < 3) return false;
+
+        // blocca unknown deboli: sono quasi sempre parole a caso
+        if (
+          (item.entity_type || "unknown") === "unknown" &&
+          Number(item.confidence || 0) < 85
+        ) {
+          return false;
+        }
+
+        // blocca topic di una parola comune in minuscolo
+        if (/^[a-zà-ù]+$/.test(topic) && Number(item.confidence || 0) < 90) {
+          return false;
+        }
+
+        return true;
+      })
       .slice(0, 6)
       .map((item: any) => ({
         topic: String(item.topic).trim(),

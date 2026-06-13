@@ -80,7 +80,11 @@ export async function generateCuriosityMessage(userId: string) {
       .limit(6),
   ]);
 
-  const topics = topicsRes.data || [];
+  const topics = (topicsRes.data || []).filter(
+    (t: any) =>
+      !isBadCuriosityTopic(t.topic) &&
+      !(t.entity_type === "unknown" && Number(t.weight || 0) < 3)
+  );
   const goals = goalsRes.data || [];
   const profile = profileRes.data || [];
   const contradictions = contradictionsRes.data || [];
@@ -131,11 +135,15 @@ Regole:
 - Una sola domanda.
 - Se il luogo attuale è già noto, NON chiedere dove si trova l'utente.
 - Se il contesto dice che il luogo attuale è casa/lavoro/altro luogo noto, usalo come dato già disponibile.
+- Ignora topic sporchi, parole singole casuali o parole da chat come "dimmi", "qual", "considera", "prenditi", "hahaha".
+- Non generare curiosità partendo da topic tecnici generici o parole isolate.
+- Se i topic disponibili sono deboli o sporchi, rispondi SOLO: NO_MESSAGE.
         `,
       },
       {
         role: "user",
         content: trimText(`
+
 
 CONTESTO ATTUALE:
 Luogo attuale: ${situation.currentPlace || "sconosciuto"}
@@ -170,3 +178,52 @@ ${JSON.stringify(summaries, null, 2)}
 
   return message;
 }
+
+const BAD_CURIOSITY_TOPICS = new Set(
+  [
+    "dimmi",
+    "qual",
+    "quale",
+    "quali",
+    "considera",
+    "potresti",
+    "prenditi",
+    "hahaha",
+    "ahahah",
+    "ahah",
+    "risposta",
+    "rispondendo",
+    "osservazione",
+    "osservazioni",
+    "attuale",
+    "attuali",
+    "momento",
+    "utile",
+    "meglio",
+    "supportarti",
+    "anche",
+    "allora",
+    "ok",
+    "bene",
+    "grazie",
+    "fatto",
+    "vai",
+    "alfa",
+    "romeo",
+    "ai",
+    "pc",
+    "tv",
+  ].map((x) => x.toLowerCase())
+);
+
+function isBadCuriosityTopic(value?: string | null) {
+  const clean = String(value || "").trim();
+  const lower = clean.toLowerCase();
+
+  if (!clean) return true;
+  if (clean.length < 3) return true;
+  if (BAD_CURIOSITY_TOPICS.has(lower)) return true;
+
+  return false;
+}
+

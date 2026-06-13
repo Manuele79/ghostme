@@ -7,8 +7,90 @@ type LinkableTopic = {
   confidence?: number;
 };
 
+const BLOCKED_LINK_TOPICS = new Set(
+  [
+    "dimmi",
+    "qual",
+    "quale",
+    "quali",
+    "considera",
+    "potresti",
+    "prenditi",
+    "hahaha",
+    "ahahah",
+    "ahah",
+    "risposta",
+    "rispondendo",
+    "osservazione",
+    "osservazioni",
+    "attuale",
+    "attuali",
+    "momento",
+    "utile",
+    "meglio",
+    "supportarti",
+    "anche",
+    "allora",
+    "ok",
+    "bene",
+    "grazie",
+    "fatto",
+    "vai",
+    "alfa",
+    "romeo",
+    "ai",
+    "pc",
+    "tv",
+  ].map((x) => x.toLowerCase())
+);
+
+const CANONICAL_TOPICS: Record<string, string> = {
+  ghostme: "GhostMe",
+  "ghost me": "GhostMe",
+  askdj: "AskDJ",
+  "ask dj": "AskDJ",
+  "home assistant": "Home Assistant",
+  domotica: "Domotica",
+  lavoro: "Lavoro",
+  valentina: "Valentina",
+  vale: "Valentina",
+  alex: "Alex",
+  "moto / piaggio": "Moto / Piaggio",
+  "moto piaggio": "Moto / Piaggio",
+  piaggio: "Moto / Piaggio",
+  snowboard: "Snowboard",
+  "alfa romeo": "Alfa Romeo",
+};
+
 function normalizeTopic(topic: string) {
-  return topic.trim();
+  const clean = String(topic || "").trim().replace(/\s+/g, " ");
+  const lower = clean.toLowerCase();
+
+  if (CANONICAL_TOPICS[lower]) return CANONICAL_TOPICS[lower];
+
+  return clean.replace(/\b\w/g, (l) => l.toUpperCase());
+}
+
+function isBadTopic(topic: string, item?: LinkableTopic) {
+  const clean = String(topic || "").trim();
+  const lower = clean.toLowerCase();
+
+  if (!clean) return true;
+  if (clean.length < 3) return true;
+  if (BLOCKED_LINK_TOPICS.has(lower)) return true;
+
+  // blocca topic singoli troppo generici
+  if (/^[a-zà-ù]+$/i.test(clean) && clean.length < 4) return true;
+
+  // blocca unknown deboli
+  if (
+    item?.entity_type === "unknown" &&
+    Number(item?.confidence || 0) < 85
+  ) {
+    return true;
+  }
+
+  return false;
 }
 
 function makePair(a: string, b: string) {
@@ -35,8 +117,18 @@ export async function saveTopicLinks({
   const cleanTopics = Array.from(
     new Map(
       topics
-        .filter((t) => t.topic && t.topic.trim().length > 1)
-        .map((t) => [t.topic.toLowerCase(), t])
+        .filter((t) => t.topic && !isBadTopic(t.topic, t))
+        .map((t) => {
+          const normalizedTopic = normalizeTopic(t.topic);
+
+          return [
+            normalizedTopic.toLowerCase(),
+            {
+              ...t,
+              topic: normalizedTopic,
+            },
+          ];
+        })
     ).values()
   );
 
@@ -48,6 +140,9 @@ export async function saveTopicLinks({
         cleanTopics[i].topic,
         cleanTopics[j].topic
       );
+
+      if (sourceTopic.toLowerCase() === targetTopic.toLowerCase()) continue;
+      if (isBadTopic(sourceTopic) || isBadTopic(targetTopic)) continue;
 
       const { data: existingLink, error: existingError } =
         await supabase
@@ -78,7 +173,9 @@ export async function saveTopicLinks({
           })
           .eq("id", existingLink.id);
 
-        console.log("TOPIC LINK UPDATE ERROR:", updateError);
+        if (updateError) {
+          console.log("TOPIC LINK UPDATE ERROR:", updateError);
+        }
       } else {
         const { error: insertError } = await supabase
           .from("topic_links")
@@ -92,7 +189,9 @@ export async function saveTopicLinks({
             },
           ]);
 
-        console.log("TOPIC LINK INSERT ERROR:", insertError);
+        if (insertError) {
+          console.log("TOPIC LINK INSERT ERROR:", insertError);
+        }
       }
     }
   }
@@ -111,8 +210,8 @@ export async function getRelatedTopicContext({
 
   const cleanTopics = topics
     .filter(Boolean)
-    .map((t) => t.trim())
-    .filter((t) => t.length > 1);
+    .map((t) => normalizeTopic(t))
+    .filter((t) => !isBadTopic(t));
 
   if (!cleanTopics.length) return "";
 
@@ -138,13 +237,20 @@ export async function getRelatedTopicContext({
     return "";
   }
 
-  if (!links?.length) return "";
+  const cleanLinks =
+    links?.filter(
+      (l) =>
+        !isBadTopic(l.source_topic) &&
+        !isBadTopic(l.target_topic)
+    ) || [];
+
+  if (!cleanLinks.length) return "";
 
   const relatedNames = Array.from(
     new Set(
-      links.flatMap((link) => [
-        link.source_topic,
-        link.target_topic,
+      cleanLinks.flatMap((link) => [
+        normalizeTopic(link.source_topic),
+        normalizeTopic(link.target_topic),
       ])
     )
   );
@@ -165,10 +271,12 @@ export async function getRelatedTopicContext({
       )
       .join("\n") || "";
 
-  const linksText = links
+  const linksText = cleanLinks
     .map(
       (l) =>
-        `- ${l.source_topic} ↔ ${l.target_topic} | ${l.link_type} | peso ${l.weight}`
+        `- ${normalizeTopic(l.source_topic)} ↔ ${normalizeTopic(
+          l.target_topic
+        )} | ${l.link_type} | peso ${l.weight}`
     )
     .join("\n");
 

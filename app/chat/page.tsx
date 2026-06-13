@@ -120,6 +120,24 @@ export default function ChatPage() {
     await refreshBrain(currentUserId);
   }
 
+  async function markProactiveAsAnswered(messageId?: string) {
+  if (!messageId || !currentUserId) return;
+
+  await fetch("/api/ghostme/proactive/read", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      id: messageId,
+      userId: currentUserId,
+      status: "answered",
+    }),
+  });
+
+  await refreshBrain(currentUserId);
+}
+
   async function saveConversationInBackground({
     userText,
     assistantReply,
@@ -659,6 +677,7 @@ export default function ChatPage() {
             proactiveMessage={brainData.proactiveMessage}
             proactiveMessages={brainData.proactiveMessages}
             onProactiveSeen={markProactiveAsRead}
+            onProactiveAnswered={markProactiveAsAnswered}
             userName={userName}
             openHistory={() => setHistoryOpen(true)}
           />

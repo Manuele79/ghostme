@@ -55,17 +55,25 @@ Regole:
 - non inventare.
 - Se questa osservazione è già stata fatta nei messaggi proattivi recenti, rispondi SOLO: NO_MESSAGE.
 - Non ripetere curiosità, daily o agenda già presenti.
+- Se il luogo attuale è già noto, NON chiedere dove si trova l'utente.
+- Se il contesto dice che il luogo attuale è casa/lavoro/altro luogo noto, usalo come dato già disponibile.
+- Ignora parole sporche o topic casuali tipo "dimmi", "qual", "considera", "prenditi", "hahaha".
+- Non creare osservazioni partendo da parole isolate o messaggi tecnici generici.
         `,
       },
       {
         role: "user",
         content: `
-          SITUAZIONE:
-          ${situation.situationSummary}
+        SITUAZIONE:
+        Luogo attuale: ${situation.currentPlace || "sconosciuto"}
+        Momento: ${situation.timeContext}, ${situation.dayContext}
+        Località profilo: ${situation.userLocation || "non specificata"}
 
-          MESSAGGI PROATTIVI RECENTI:
-          ${(await getRecentProactiveText(userId)) || "nessuno"}
-          `,
+        ${situation.situationSummary}
+
+        MESSAGGI PROATTIVI RECENTI:
+        ${(await getRecentProactiveText(userId)) || "nessuno"}
+        `,
       },
     ],
   });
