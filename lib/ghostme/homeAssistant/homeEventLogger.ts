@@ -14,41 +14,58 @@ function friendlyName(s: HAState) {
   return s.attributes?.friendly_name || s.entity_id;
 }
 
-function isUsefulEvent(entityType: string) {
-  return [
-    "person",
-    "presence",
-    "motion",
-    "lux",
-    "light",
-    "switch",
-    "tv",
-    "phone",
-    "weather",
-    "sun",
-    "temperature",
-    "humidity",
-    "co2",
-    "noise",
-    "pressure",
-    "climate",
-    "fan",
-    "appliance",
-    "automation",
-  ].includes(entityType);
+function clean(value: any) {
+  return String(value ?? "").toLowerCase().trim();
+}
+
+function numericState(value: any) {
+  const n = Number(String(value ?? "").replace(",", "."));
+  return Number.isFinite(n) ? n : null;
+}
+
+function isMainIndoorTemperature(entityId: string) {
+  const id = entityId.toLowerCase();
+
+  return (
+    id === "sensor.camera_temperatura_ambiente" ||
+    id === "climate.camera"
+  );
+}
+
+function isUsefulEvent(entityType: string, entityId?: string) {
+  if (
+    [
+      "person",
+      "presence",
+      "motion",
+      "light",
+      "switch",
+      "tv",
+      "phone",
+      "weather",
+      "sun",
+      "climate",
+      "fan",
+      "appliance",
+      "automation",
+    ].includes(entityType)
+  ) {
+    return true;
+  }
+
+  if (entityType === "temperature" && entityId) {
+    return isMainIndoorTemperature(entityId);
+  }
+
+  return false;
 }
 
 function getEventType(entityType: string, state: string) {
-  const cleanState = String(state || "").toLowerCase();
+  const cleanState = clean(state);
 
   if (entityType === "motion") return cleanState === "on" ? "motion_on" : "motion_off";
   if (entityType === "presence") return cleanState === "on" ? "presence_on" : "presence_off";
-  if (entityType === "lux") return "lux_changed";
   if (entityType === "temperature") return "temperature_changed";
-  if (entityType === "humidity") return "humidity_changed";
-  if (entityType === "co2") return "co2_changed";
-  if (entityType === "noise") return "noise_changed";
-  if (entityType === "pressure") return "pressure_changed";
   if (entityType === "light") return cleanState === "on" ? "light_on" : "light_off";
   if (entityType === "switch") return cleanState === "on" ? "switch_on" : "switch_off";
 
@@ -90,7 +107,7 @@ async function getLastHouseEvent({
 }) {
   const { data, error } = await supabaseAdmin
     .from("house_events")
-    .select("id, new_state, occurred_at")
+    .select("id, new_state, event_type, occurred_at")
     .eq("user_id", userId)
     .eq("entity_id", entityId)
     .order("occurred_at", { ascending: false })
@@ -104,25 +121,97 @@ async function getLastHouseEvent({
   return data || null;
 }
 
+function shouldSaveStateChange({
+  entityType,
+  entityId,
+  oldState,
+  newState,
+  eventType,
+}: {
+  entityType: string;
+  entityId: string;
+  oldState?: string | null;
+  newState: string;
+  eventType: string;
+}) {
+  const oldClean = clean(oldState);
+  const newClean = clean(newState);
+
+  if (oldClean === newClean) {
+    return { save: false, reason: "same_state" };
+  }
+
+  if (["unknown", "unavailable", "none", ""].includes(newClean)) {
+    return { save: false, reason: "invalid_state" };
+  }
+
+  if (entityType === "temperature") {
+    if (!isMainIndoorTemperature(entityId)) {
+      return { save: false, reason: "temperature_not_primary" };
+    }
+
+    const oldNum = numericState(oldState);
+    const newNum = numericState(newState);
+
+    if (oldNum === null || newNum === null) {
+      return { save: true, reason: "temperature_first_or_non_numeric" };
+    }
+
+    if (Math.abs(newNum - oldNum) < 1) {
+      return { save: false, reason: "temperature_delta_under_1" };
+    }
+
+    return { save: true, reason: "temperature_delta_ok" };
+  }
+
+  if (["humidity_changed", "pressure_changed", "co2_changed", "noise_changed", "lux_changed"].includes(eventType)) {
+    return { save: false, reason: "raw_environment_ignored" };
+  }
+
+  if (entityType === "weather") {
+    return { save: true, reason: "weather_state_changed" };
+  }
+
+  if (entityType === "sun") {
+    return { save: true, reason: "sun_state_changed" };
+  }
+
+  return { save: true, reason: "useful_state_change" };
+}
+
 export async function logHomeAssistantSnapshot(userId: string) {
   if (!userId) {
-    return { inserted: 0, useful: 0, skippedSame: 0, errors: ["missing_user_id"] };
+    return {
+      inserted: 0,
+      useful: 0,
+      skippedSame: 0,
+      skippedFiltered: 0,
+      errors: ["missing_user_id"],
+    };
   }
 
   const states = (await getHAStates()) as HAState[];
 
   if (!states.length) {
-    return { inserted: 0, useful: 0, skippedSame: 0, errors: ["no_ha_states"] };
+    return {
+      inserted: 0,
+      useful: 0,
+      skippedSame: 0,
+      skippedFiltered: 0,
+      errors: ["no_ha_states"],
+    };
   }
 
   let inserted = 0;
   let useful = 0;
   let skippedSame = 0;
+  let skippedFiltered = 0;
+  const filteredReasons: Record<string, number> = {};
   const errors: any[] = [];
 
   const peopleHomeCount = states.filter((s) => {
-    const id = String(s.entity_id || "").toLowerCase();
-    const state = String(s.state || "").toLowerCase();
+    const id = clean(s.entity_id);
+    const state = clean(s.state);
 
     return (
       (id === "person.manuele" || id === "person.valentina") &&
@@ -135,7 +224,7 @@ export async function logHomeAssistantSnapshot(userId: string) {
   for (const state of states) {
     const info = getEntityInfo(state.entity_id);
 
-    if (!isUsefulEvent(info.type)) continue;
+    if (!isUsefulEvent(info.type, state.entity_id)) continue;
 
     useful++;
 
@@ -146,12 +235,26 @@ export async function logHomeAssistantSnapshot(userId: string) {
       entityId: state.entity_id,
     });
 
-    if (last?.new_state === newState) {
-      skippedSame++;
+    const eventType = getEventType(info.type, newState);
+
+    const decision = shouldSaveStateChange({
+      entityType: info.type,
+      entityId: state.entity_id,
+      oldState: last?.new_state || null,
+      newState,
+      eventType,
+    });
+
+    if (!decision.save) {
+      if (decision.reason === "same_state") {
+        skippedSame++;
+      } else {
+        skippedFiltered++;
+        filteredReasons[decision.reason] =
+          (filteredReasons[decision.reason] || 0) + 1;
+      }
       continue;
     }
-
-    const eventType = getEventType(info.type, newState);
 
     const payload = {
       user_id: userId,
@@ -167,6 +270,7 @@ export async function logHomeAssistantSnapshot(userId: string) {
         last_changed: state.last_changed || null,
         last_updated: state.last_updated || null,
         person: info.person || null,
+        save_reason: decision.reason,
       },
       people_home_count: peopleHomeCount,
       target_user: info.person || null,
@@ -196,6 +300,8 @@ export async function logHomeAssistantSnapshot(userId: string) {
     inserted,
     useful,
     skippedSame,
+    skippedFiltered,
+    filteredReasons,
     errors: errors.slice(0, 10),
   };
 }
