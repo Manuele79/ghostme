@@ -267,15 +267,20 @@ for (const abs of filesAbs) {
     analysis.functionUsage[fn].exportedBy.push(file);
   }
 
-  for (const call of calls) {
-    if (!analysis.functionUsage[call]) {
-      analysis.functionUsage[call] = {
-        exportedBy: [],
-        calledBy: [],
-      };
-    }
-    analysis.functionUsage[call].calledBy.push(file);
+for (const call of calls) {
+  if (!analysis.functionUsage[call]) {
+    analysis.functionUsage[call] = {
+      exportedBy: [],
+      calledBy: [],
+    };
   }
+
+  if (!analysis.functionUsage[call].calledBy) {
+    analysis.functionUsage[call].calledBy = [];
+  }
+
+  analysis.functionUsage[call].calledBy.push(file);
+}
 
   for (const call of apiCalls) {
     if (!analysis.apiCalls[call]) analysis.apiCalls[call] = [];
