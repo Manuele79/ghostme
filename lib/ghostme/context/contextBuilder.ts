@@ -36,6 +36,8 @@ export type GhostCurrentContext = {
   reasoningSummary: string;
   recentProactiveMessages: string[];
   contextSignals: ContextSignal[];
+  homeContext: string;
+  homeSignals: string[];
 };
 
 export async function buildCurrentContext(
@@ -44,6 +46,22 @@ export async function buildCurrentContext(
   const situation = await buildGhostSituation(userId);
   const contextSignals = buildContextSignals(situation);
   const homeContext = await buildHomeReasoning();
+  const homeSignals = homeContext
+  .split("\n")
+  .map((line) => line.trim().replace("- ", ""))
+  .filter((line) =>
+    [
+      "house_empty",
+      "one_person_home",
+      "two_people_home",
+      "media_active",
+      "lights_active",
+      "night_mode",
+      "day_mode",
+      "relax_mode_possible",
+      "home_activity_possible",
+    ].some((signal) => line === signal || line.startsWith("active_rooms:"))
+  );
 
   const behaviorRulesContext = await buildBehaviorPrompt(userId);
 
@@ -69,6 +87,10 @@ export async function buildCurrentContext(
       )
       .join("\n")
   : "nessun segnale operativo forte"; 
+
+  const homeSignalSummary = homeSignals.length
+  ? homeSignals.map((s) => `- ${s}`).join("\n")
+  : "nessun segnale casa forte";
 
   const activeProjects = situation.dominantTopics
     .filter((t) => t.category === "project" || t.entity_type === "project")
@@ -169,6 +191,8 @@ export async function buildCurrentContext(
       ${signalSummary}
       Contesto casa:
       ${homeContext}
+      Segnali casa:
+      ${homeSignalSummary}
       `.trim();  
 
     const contextSummary = `
@@ -208,6 +232,8 @@ export async function buildCurrentContext(
       ${recentProactiveMessages.join("\n") || "nessuno"}
       HOME ASSISTANT:
       ${homeContext}
+      SEGNALI CASA:
+      ${homeSignalSummary}
   `.trim();
 
   return {
@@ -241,5 +267,7 @@ export async function buildCurrentContext(
     behaviorRulesContext,
     reasoningSummary,
     recentProactiveMessages,
+    homeContext,
+    homeSignals,
   };
 }
