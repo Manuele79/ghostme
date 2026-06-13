@@ -6,6 +6,8 @@ import { generateHouseSuggestions } from "@/lib/ghostme/homeAssistant/houseSugge
 import { learnHouseRoutes } from "@/lib/ghostme/homeAssistant/houseRouteLearningEngine";
 import { generateHouseAutomationSuggestions } from "@/lib/ghostme/homeAssistant/houseAutomationSuggestionEngine";
 import { planHouseAutomationControls } from "@/lib/ghostme/homeAssistant/houseAutomationControlPlanner";
+import { syncHouseEntities } from "@/lib/ghostme/homeAssistant/houseEntityRegistry";
+
 
 export async function GET(req: Request) {
   const secret = process.env.WORKER_SECRET;
@@ -36,6 +38,7 @@ export async function GET(req: Request) {
 
   for (const user of users || []) {
     const logResult = await logHomeAssistantSnapshot(user.user_id);
+    const entitySync = await syncHouseEntities(user.user_id);
     const patterns = await analyzeHousePatterns(user.user_id);
     const routes = await learnHouseRoutes(user.user_id);
     const suggestions = await generateHouseSuggestions(user.user_id);
@@ -47,6 +50,7 @@ export async function GET(req: Request) {
     results.push({
       userId: user.user_id,
       logResult,
+      entitySync,
       patterns,
       routes,
       suggestionsCreated: suggestions.length + automationSuggestions.length,

@@ -39,17 +39,22 @@ async function createControlPlan({
 }) {
   if (await recentControlExists(userId, automationKey, controlType)) return null;
 
+  const payload = {
+    user_id: userId,
+    automation_key: automationKey,
+    automation_name: automationName,
+    room_key: roomKey || null,
+    control_type: controlType,
+    status: "pending_confirmation",
+    last_action: "planned",
+    last_reason: `${reason} | confidenza ${confidence}/10`,
+    updated_at: new Date().toISOString(),
+  };
+
   const { data, error } = await supabaseAdmin
     .from("house_automation_controls")
-    .insert({
-      user_id: userId,
-      automation_key: automationKey,
-      automation_name: automationName,
-      room_key: roomKey || null,
-      control_type: controlType,
-      reason,
-      confidence,
-      status: "pending_confirmation",
+    .upsert(payload, {
+      onConflict: "user_id,automation_key",
     })
     .select()
     .single();
