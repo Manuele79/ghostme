@@ -1358,7 +1358,37 @@ async function searchMemory() {
   setSearchingMemory(false);
 }
 
+  async function updateGoalStatus(
+    goalId: string,
+    status: "completed" | "archived"
+  ) {
+    if (!currentUserId || !goalId) return;
 
+    try {
+      const res = await fetch("/api/goals/update-status", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          goalId,
+          userId: currentUserId,
+          status,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        console.log("GOAL STATUS UPDATE ERROR:", data.error);
+        return;
+      }
+
+      setHiddenCards((prev) => [...prev, `goals-${goalId}`]);
+    } catch (err) {
+      console.log("GOAL STATUS FRONT ERROR:", err);
+    }
+  }
   useEffect(() => {
     localStorage.setItem("ghost_hidden_cards", JSON.stringify(hiddenCards));
   }, [hiddenCards]);
@@ -1519,6 +1549,24 @@ return (
             {item.importance && <span>importanza {item.importance}</span>}
             {item.emotional_tone && <span>{item.emotional_tone}</span>}
           </div>
+
+          {activeTab === "goals" && (
+            <div className="mt-4 flex gap-2">
+              <button
+                onClick={() => updateGoalStatus(item.id, "completed")}
+                className="rounded-2xl bg-emerald-400 px-3 py-2 text-xs font-black text-black"
+              >
+                Completa
+              </button>
+
+              <button
+                onClick={() => updateGoalStatus(item.id, "archived")}
+                className="rounded-2xl border border-zinc-700 px-3 py-2 text-xs font-black text-zinc-300"
+              >
+                Archivia
+              </button>
+            </div>
+          )}          
         </div>
       ))
     )}
