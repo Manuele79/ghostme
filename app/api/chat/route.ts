@@ -1,7 +1,6 @@
 import { OpenAI } from "openai";
 import { NextResponse, after } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { classifyGhostMessage } from "@/lib/ghostme/core/messageClassifier";
 import {
   detectTopicsFromMessage,
@@ -19,34 +18,28 @@ import { runWeatherSearch } from "@/lib/ghostme/services/weatherService";
 import { parseCalendarIntent } from "@/lib/ghostme/calendar/calendarIntent";
 import { createCalendarEvent } from "@/lib/ghostme/calendar/calendarService";
 
-import { buildContextualMemory } from "@/lib/ghostme/retrieval";
 import { saveTopicLinks } from "@/lib/ghostme/topicLinks";
 import { extractEntitiesWithAI } from "@/lib/ghostme/entityExtractor";
 import { applyMemoryDecay } from "@/lib/ghostme/memoryDecay";
 import { detectAndSaveContradictions } from "@/lib/ghostme/contradictions";
 import { updateMentalState } from "@/lib/ghostme/mentalState";
 import {
-  buildBehaviorPrompt,
   detectAndSaveBehaviorRule,
 } from "@/lib/ghostme/behavior/behaviorRulesEngine";
 
 import {
-  getGoalsDesiresContext,
   detectAndSaveGoalsDesires,
 } from "@/lib/ghostme/goalsDesires";
 
 import {
-  getTimelineContext,
   detectAndSaveTimelineEvent,
 } from "@/lib/ghostme/timeline";
 
 import {
-  getDynamicSelfProfileContext,
   updateDynamicSelfProfile,
 } from "@/lib/ghostme/dynamicSelfProfile";
 
 import {
-  getActionIntentContext,
   detectAndSaveActionIntent,
   detectAndCompleteActionIntent,
 } from "@/lib/ghostme/actionLayer";
@@ -56,10 +49,8 @@ import {
   resolveNamedRelationship,
 } from "@/lib/ghostme/relationshipResolver";
 
-import { buildCognitiveHouse } from "@/lib/ghostme/homeAssistant/cognitiveHouseBuilder";
-import { buildHouseLearnedRulesContext } from "@/lib/ghostme/homeAssistant/houseLearnedRulesContext";
-import { buildHouseAutomationContext } from "@/lib/ghostme/homeAssistant/houseAutomationContext";
-import { buildSystemPrompt, trimBlock } from "@/lib/ghostme/chat/chatPromptBuilder";
+import { buildSystemPrompt } from "@/lib/ghostme/chat/chatPromptBuilder";
+import { buildChatContext } from "@/lib/ghostme/chat/chatContextBuilder";
 
 export const runtime = "nodejs";
 
@@ -94,49 +85,6 @@ function uniqueTopics(topics: DetectedTopicLike[]) {
     }
   }
   return Array.from(map.values()).slice(0, 8);
-}
-
-function buildProfileContext(userProfile: any) {
-  if (!userProfile) return "";
-  return `
-Nome: ${userProfile.full_name || ""}
-Età: ${userProfile.age || ""}
-Genere: ${userProfile.gender || ""}
-Lavoro: ${userProfile.job || ""}
-Hobby: ${userProfile.hobbies || ""}
-Località: ${userProfile.location || ""}
-Sport: ${userProfile.sports || ""}
-Relazione: ${userProfile.relationship_status || ""}
-Figli: ${userProfile.children_info || ""}
-Interessi: ${userProfile.interests || ""}
-Tipo di persona: ${userProfile.communication_style || ""}
-Bio: ${userProfile.short_bio || ""}
-`;
-}
-
-async function getMentalStateContext(userId: string) {
-  if (!userId) return "";
-  const { data } = await supabaseAdmin
-    .from("mental_states")
-    .select("*")
-    .eq("user_id", userId)
-    .order("updated_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (!data) return "";
-  return `
-stress: ${data.stress ?? 0}
-entusiasmo: ${data.entusiasmo ?? 0}
-stanchezza: ${data.stanchezza ?? 0}
-controllo: ${data.controllo ?? 0}
-nostalgia: ${data.nostalgia ?? 0}
-frustrazione: ${data.frustrazione ?? 0}
-focus: ${data.focus ?? 0}
-socialita: ${data.socialita ?? 0}
-note: ${data.notes || ""}
-ultimo trigger: ${data.last_trigger || ""}
-`;
 }
 
 async function saveActiveMemory({
@@ -559,8 +507,7 @@ export async function POST(req: Request) {
     const ruleBasedTopics = messageClass.shouldRunHeavyEngines
   ? detectTopicsFromMessage(message)
   : [];
-    const profileContextForExtractor =
-      traits?.user_id ? buildProfileContext(null) : ""; // l’estrattore non ha bisogno del profilo completo qui
+    const profileContextForExtractor = ""; // l’estrattore non ha bisogno del profilo completo qui
 
     const aiTopics = messageClass.shouldRunHeavyEngines
       ? await extractEntitiesWithAI({
@@ -580,146 +527,30 @@ export async function POST(req: Request) {
       await resolveNamedRelationship({ userId, message });
     }
 
-    // Letture in parallelo (profilo, retrieval, stati, ecc.)
-    let profileContext = "";
-    let memoryContext = "";
-    let cognitiveContext = "";
-    let lifeTopicsContext = "";
-    let episodicContext = "";
-    let summaryContext = "";
-    let linkedTopicsContext = "";
-    let mentalStateContext = "";
-    let goalsContext = "";
-    let timelineContext = "";
-    let dynamicSelfProfileContext = "";
-    let actionIntentContext = "";
-    let loadedLifeTopics: any[] = [];
-    let calendarContext = "";
+    const chatContext = await buildChatContext({ userId, detectedTopics });
+    const {
+      profileContext,
+      memoryContext,
+      cognitiveContext,
+      lifeTopicsContext,
+      episodicContext,
+      summaryContext,
+      linkedTopicsContext,
+      mentalStateContext,
+      goalsContext,
+      timelineContext,
+      dynamicSelfProfileContext,
+      actionIntentContext,
+      loadedLifeTopics,
+      calendarContext,
+      userLocation,
+      currentPlaceContext,
+      homeContext,
+      houseLearnedRulesContext,
+      houseAutomationContext,
+      behaviorRulesContext,
+    } = chatContext;
     let serviceContext = "";
-    let userLocation = "";
-    let currentPlaceContext = "";
-    let homeContext = "";
-    let houseLearnedRulesContext = "";
-    let houseAutomationContext = "";
-    if (userId) {
-      const [
-        userProfileRes,
-        contextualData,
-        mentalRes,
-        goalsRes,
-        timelineRes,
-        dynProfileRes,
-        actionIntentRes,
-        calendarRes,
-        currentLocationRes,
-        existingTopicsRes,
-      ] = await Promise.all([
-        supabase
-          .from("user_profiles")
-          .select("*")
-          .eq("user_id", userId)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle(),
-
-        buildContextualMemory({ userId, detectedTopics }),
-
-        getMentalStateContext(userId),
-        getGoalsDesiresContext(userId),
-        getTimelineContext(userId),
-        getDynamicSelfProfileContext(userId),
-        getActionIntentContext(userId),
-
-        supabaseAdmin
-          .from("calendar_events")
-          .select("type, title, description, start_at, remind_at, status")
-          .eq("user_id", userId)
-          .eq("status", "active")
-          .or(`start_at.gte.${new Date().toISOString()},remind_at.gte.${new Date().toISOString()}`)
-          .order("start_at", { ascending: true })
-          .limit(30),
-
-        supabaseAdmin
-          .from("user_location_state")
-          .select("current_place_label, latitude, longitude, source, updated_at")
-          .eq("user_id", userId)
-          .maybeSingle(),
-
-        supabase.from("life_topics").select("*").eq("user_id", userId),
-      ]);
-
-      const userProfile = userProfileRes.data;
-      profileContext = buildProfileContext(userProfile);
-      userLocation = userProfile?.location || "";
-
-      memoryContext = trimBlock(contextualData.memoryContext, 1100);
-      episodicContext = trimBlock(contextualData.episodicContext, 800);
-      lifeTopicsContext = trimBlock(contextualData.lifeTopicsContext, 1000);
-      summaryContext = trimBlock(contextualData.summaryContext, 800);
-      linkedTopicsContext = trimBlock(contextualData.linkedTopicsContext, 800);
-
-      linkedTopicsContext = trimBlock(
-        `${linkedTopicsContext}
-
-      ${contextualData.relatedTopicContext || ""}`,
-        1200
-      );
-
-      cognitiveContext = trimBlock(
-        contextualData.cognitiveContext || "",
-        2200
-      );
-
-      mentalRes && (mentalStateContext = trimBlock(mentalRes, 600));
-      goalsRes && (goalsContext = trimBlock(goalsRes, 800));
-      timelineRes && (timelineContext = trimBlock(timelineRes, 800));
-      dynProfileRes && (dynamicSelfProfileContext = trimBlock(dynProfileRes, 800));
-      actionIntentRes && (actionIntentContext = trimBlock(actionIntentRes, 600));
-      houseAutomationContext = trimBlock(
-      await buildHouseAutomationContext(userId),
-      1200
-    );
-
-
-      function formatRomeDateTime(value?: string | null) {
-        if (!value) return "orario non specificato";
-
-        return new Date(value).toLocaleString("it-IT", {
-          timeZone: "Europe/Rome",
-          day: "2-digit",
-          month: "2-digit",
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-      }
-
-      const calendarEvents = calendarRes.data || [];
-      calendarContext =
-        calendarEvents
-          .map((event) => {
-            const date = formatRomeDateTime(event.start_at || event.remind_at);
-            return `${event.type} | ${event.title} | ${date} | ${event.description || ""}`;
-          })
-          .join("\n") || "";
-
-      const currentLocation = currentLocationRes.data;
-
-    currentPlaceContext = currentLocation?.current_place_label
-      ? `Luogo attuale rilevato: ${currentLocation.current_place_label}`
-      : "Luogo attuale rilevato: sconosciuto";   
-      
-      homeContext = trimBlock(await buildCognitiveHouse(), 1400);
-      houseLearnedRulesContext = trimBlock(
-        await buildHouseLearnedRulesContext(userId),
-        1200
-      );
-      console.log("CURRENT PLACE CONTEXT:", currentPlaceContext);
-      console.log("LOCATION RAW:", currentLocation);
-      console.log("LOCATION LABEL:", currentLocation?.current_place_label);
-
-      loadedLifeTopics = existingTopicsRes.data || [];
-    }
-
     // Servizi esterni (web/meteo/news)
     const serviceDecision = decideGhostService(message);
 
@@ -853,10 +684,6 @@ export async function POST(req: Request) {
         }
       );
     }
-
-    const behaviorRulesContext = userId
-    ? await buildBehaviorPrompt(userId)
-    : "";
 
     const systemPrompt = buildSystemPrompt({
       traits,
