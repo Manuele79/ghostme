@@ -6,9 +6,6 @@ import {
   detectImportanceLevel,
 } from "@/lib/ghostme/topicDetector";
 
-import { parseCalendarIntent } from "@/lib/ghostme/calendar/calendarIntent";
-import { createCalendarEvent } from "@/lib/ghostme/calendar/calendarService";
-
 import { extractEntitiesWithAI } from "@/lib/ghostme/entityExtractor";
 import { applyMemoryDecay } from "@/lib/ghostme/memoryDecay";
 
@@ -21,6 +18,7 @@ import { buildSystemPrompt } from "@/lib/ghostme/chat/chatPromptBuilder";
 import { buildChatContext } from "@/lib/ghostme/chat/chatContextBuilder";
 import { runChatPostProcessing } from "@/lib/ghostme/chat/chatPostProcessing";
 import { resolveChatExternalService } from "@/lib/ghostme/chat/chatExternalServices";
+import { handleChatCalendarFlow } from "@/lib/ghostme/chat/chatCalendarFlow";
 
 export const runtime = "nodejs";
 
@@ -113,49 +111,11 @@ export async function POST(req: Request) {
       userLocation,
     });
     // Calendario (non bloccare la risposta se possibile)
-    let calendarCreatedText = "";
-    if (userId) {
-      try {
-        const calendarIntent = await parseCalendarIntent({
-          message,
-          nowIso: new Date().toLocaleString("sv-SE", {
-            timeZone: "Europe/Rome",
-          }).replace(" ", "T"),
-          location: userLocation,
-        });
-
-        const calendarTitle = calendarIntent.title?.trim();
-        if (calendarIntent.has_calendar_intent && calendarTitle) {
-          const savedEvent = await createCalendarEvent({
-            userId,
-            type: calendarIntent.type || "appointment",
-            title: calendarTitle,
-            description: calendarIntent.description || "",
-            startAt: calendarIntent.start_at || null,
-            endAt: calendarIntent.end_at || null,
-            remindAt: calendarIntent.remind_at || null,
-            source: "ghostme",
-          });
-        if (savedEvent) {
-          calendarCreatedText =
-            `✅ Fatto. Ho aggiunto "${calendarTitle}" al calendario.` +
-            (savedEvent.start_at
-              ? `\n📅 ${new Date(savedEvent.start_at).toLocaleString("it-IT", {
-                  dateStyle: "short",
-                  timeStyle: "short",
-                  timeZone: "Europe/Rome",
-                })}`
-              : "") +
-            (savedEvent.remind_at
-              ? `\n🔔 Promemoria impostato`
-              : "");
-        }
-        }
-      } catch (err) {
-        console.log("CALENDAR CREATE FLOW ERROR:", err);
-      }
-    }
-
+    const calendarCreatedText = await handleChatCalendarFlow({
+      userId,
+      message,
+      userLocation,
+    });
     if (calendarCreatedText) {
       const encoder = new TextEncoder();
 
