@@ -35,16 +35,16 @@ export async function handleChatCalendarFlow({
         });
       if (savedEvent) {
         calendarCreatedText =
-          `âœ… Fatto. Ho aggiunto "${calendarTitle}" al calendario.` +
+          `Fatto. Ho aggiunto "${calendarTitle}" al calendario.` +
           (savedEvent.start_at
-            ? `\nðŸ“… ${new Date(savedEvent.start_at).toLocaleString("it-IT", {
+            ? `\n${new Date(savedEvent.start_at).toLocaleString("it-IT", {
                 dateStyle: "short",
                 timeStyle: "short",
                 timeZone: "Europe/Rome",
               })}`
             : "") +
           (savedEvent.remind_at
-            ? `\nðŸ”” Promemoria impostato`
+            ? `\nPromemoria impostato`
             : "");
       }
       }
