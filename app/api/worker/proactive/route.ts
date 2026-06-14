@@ -16,6 +16,7 @@ import { generatePatternInsight } from "@/lib/ghostme/patterns/patternInsightEng
 import { applyPatternDecay } from "@/lib/ghostme/patterns/patternDecay";
 import { generateCuriosityMessage } from "@/lib/ghostme/curiosity/curiosityEngine";
 import { generateButlerMessage } from "@/lib/ghostme/butler/butlerEngine";
+import { syncPeopleGraphFromTopics } from "@/lib/ghostme/people/peopleGraphService";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -47,6 +48,7 @@ export async function GET() {
       await generateDailyConversationSummary(userId);
       await runRetentionCleanup(userId);
       await cleanupOldActionIntents(userId);
+      await syncPeopleGraphFromTopics(userId);
       await refreshReminderMessage(userId);
 
       const observationInsight = await generateObservationInsight(userId);
