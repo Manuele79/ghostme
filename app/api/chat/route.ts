@@ -1,16 +1,8 @@
 import { OpenAI } from "openai";
 import { NextResponse, after } from "next/server";
-import { classifyGhostMessage } from "@/lib/ghostme/core/messageClassifier";
-import {
-  detectTopicsFromMessage,
-  detectImportanceLevel,
-} from "@/lib/ghostme/topicDetector";
-
-import { extractEntitiesWithAI } from "@/lib/ghostme/entityExtractor";
 import { applyMemoryDecay } from "@/lib/ghostme/memoryDecay";
 
 import {
-  removeGenericRelationshipTopics,
   resolveNamedRelationship,
 } from "@/lib/ghostme/relationshipResolver";
 
@@ -19,6 +11,7 @@ import { buildChatContext } from "@/lib/ghostme/chat/chatContextBuilder";
 import { runChatPostProcessing } from "@/lib/ghostme/chat/chatPostProcessing";
 import { resolveChatExternalService } from "@/lib/ghostme/chat/chatExternalServices";
 import { handleChatCalendarFlow } from "@/lib/ghostme/chat/chatCalendarFlow";
+import { analyzeChatMessage } from "@/lib/ghostme/chat/chatMessageAnalyzer";
 
 export const runtime = "nodejs";
 
@@ -26,57 +19,16 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-type DetectedTopicLike = {
-  topic: string;
-  category: string;
-  entity_type: string;
-  needs_clarification?: boolean;
-  confidence?: number;
-  reason?: string;
-  description?: string;
-};
-
-function uniqueTopics(topics: DetectedTopicLike[]) {
-  const map = new Map<string, DetectedTopicLike>();
-  for (const topic of topics) {
-    if (!topic?.topic) continue;
-    const key = topic.topic.toLowerCase().trim();
-    const existing = map.get(key);
-    if (!existing || (topic.confidence || 0) > (existing.confidence || 0)) {
-      map.set(key, topic);
-    }
-  }
-  return Array.from(map.values()).slice(0, 8);
-}
-
 export async function POST(req: Request) {
   try {
     const body = await req.json();
 
     const message = body.message as string;
-    const messageClass = classifyGhostMessage(message);
     const traits = body.traits;
     const messages = body.messages || [];
     const userId = body.userId as string | undefined;
-
-    // Detection di base
-    const ruleBasedTopics = messageClass.shouldRunHeavyEngines
-  ? detectTopicsFromMessage(message)
-  : [];
-    const profileContextForExtractor = ""; // l’estrattore non ha bisogno del profilo completo qui
-
-    const aiTopics = messageClass.shouldRunHeavyEngines
-      ? await extractEntitiesWithAI({
-          message,
-          profileContext: profileContextForExtractor,
-        })
-      : [];
-
-    const detectedTopics = removeGenericRelationshipTopics(
-      uniqueTopics(aiTopics.length > 0 ? [...ruleBasedTopics, ...aiTopics] : ruleBasedTopics)
-    );
-
-    const importanceLevel = detectImportanceLevel(message);
+    const { messageClass, detectedTopics, importanceLevel } =
+      await analyzeChatMessage({ message });
 
     if (userId) {
       await applyMemoryDecay(userId);
