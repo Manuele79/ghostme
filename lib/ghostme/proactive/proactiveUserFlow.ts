@@ -1,20 +1,9 @@
 import { OpenAI } from "openai";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { buildCurrentContext } from "@/lib/ghostme/context/contextBuilder";
-import { buildGhostSituation } from "@/lib/ghostme/situation/situationEngine";
-import { buildAgendaMessage } from "@/lib/ghostme/agenda/agendaEngine";
 import { upsertProactiveMessage } from "@/lib/ghostme/proactive/proactiveMessageService";
-import { runRetentionCleanup } from "@/lib/ghostme/maintenance/retentionEngine";
-import { generateDailyConversationSummary } from "@/lib/ghostme/conversationSummary";
-import { decideProactiveMessage } from "@/lib/ghostme/proactive/proactiveDecisionEngine";
-import { refreshReminderMessage } from "@/lib/ghostme/agenda/reminderEngine";
-import { generateObservationInsight } from "@/lib/ghostme/observation/observationInsightEngine";
-import { cleanupOldActionIntents } from "@/lib/ghostme/actionLayer";
-import { generatePatternInsight } from "@/lib/ghostme/patterns/patternInsightEngine";
-import { applyPatternDecay } from "@/lib/ghostme/patterns/patternDecay";
-import { generateCuriosityMessage } from "@/lib/ghostme/curiosity/curiosityEngine";
-import { generateButlerMessage } from "@/lib/ghostme/butler/butlerEngine";
-import { syncPeopleGraphFromTopics } from "@/lib/ghostme/people/peopleGraphService";
+import { pickBestProactiveCandidate } from "@/lib/ghostme/proactive/proactiveCandidateRanker";
+import { runProactiveMaintenanceFlow } from "@/lib/ghostme/proactive/proactiveMaintenanceFlow";
+import { buildProactiveCandidatesForUser } from "@/lib/ghostme/proactive/proactiveCandidateBuilder";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -27,88 +16,12 @@ export async function runProactiveFlowForUser(user: any): Promise<{
   let created = 0;
   const userId = user.user_id;
 
-  await generateDailyConversationSummary(userId);
-  await runRetentionCleanup(userId);
-  await cleanupOldActionIntents(userId);
-  await syncPeopleGraphFromTopics(userId);
-  await refreshReminderMessage(userId);
+  await runProactiveMaintenanceFlow(userId);
 
-  const observationInsight = await generateObservationInsight(userId);
-  const patternInsight = await generatePatternInsight(userId);
-  const curiosityMessage = await generateCuriosityMessage(userId);
+  const { proactiveCandidates, agendaMessage } =
+    await buildProactiveCandidatesForUser(user);
 
-  await applyPatternDecay(userId);
-
-  const situation = await buildGhostSituation(userId);
-  const agendaMessage = buildAgendaMessage(situation);
-  const currentContext = await buildCurrentContext(userId);
-  const butlerMessage = await generateButlerMessage({
-    userName: user.full_name,
-    currentContext,
-  });
-
-  const proactiveDecision = await decideProactiveMessage({
-    userName: user.full_name,
-    currentContext,
-  });
-
-  const proactiveCandidates = [
-    proactiveDecision.shouldSpeak && proactiveDecision.message
-      ? {
-          title: proactiveDecision.title || "Osservazione GhostMe",
-          message: proactiveDecision.message,
-          category: proactiveDecision.category || "observation",
-          priority: proactiveDecision.priority || 2,
-          source: "decision",
-        }
-      : null,
-
-    observationInsight
-      ? {
-          title: "Osservazione GhostMe",
-          message: observationInsight,
-          category: "observation",
-          priority: 3,
-          source: "observation",
-        }
-      : null,
-
-    patternInsight
-      ? {
-          title: "Pattern GhostMe",
-          message: patternInsight,
-          category: "observation",
-          priority: 3,
-          source: "pattern",
-        }
-      : null,
-
-    curiosityMessage
-      ? {
-          title: "CuriositÃ  GhostMe",
-          message: curiosityMessage,
-          category: "curiosity",
-          priority: 2,
-          source: "curiosity",
-        }
-      : null,
-
-    butlerMessage
-    ? {
-        title: "Osservazione GhostMe",
-        message: butlerMessage,
-        category: "observation",
-        priority: 2,
-        source: "butler",
-      }
-    : null,
-
-
-  ].filter(Boolean) as any[];
-
-  const bestCandidate = proactiveCandidates.sort(
-    (a, b) => (b.priority || 0) - (a.priority || 0)
-  )[0];
+  const bestCandidate = pickBestProactiveCandidate(proactiveCandidates);
 
   if (bestCandidate) {
     await upsertProactiveMessage({
