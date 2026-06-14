@@ -6,40 +6,11 @@ import { buildChatContext } from "@/lib/ghostme/chat/chatContextBuilder";
 import { resolveChatExternalService } from "@/lib/ghostme/chat/chatExternalServices";
 import { handleChatCalendarFlow } from "@/lib/ghostme/chat/chatCalendarFlow";
 import { analyzeChatMessage } from "@/lib/ghostme/chat/chatMessageAnalyzer";
+import type { GhostChatFlowResult } from "@/lib/ghostme/chat/chatTypes";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-
-type DetectedTopicLike = {
-  topic: string;
-  category: string;
-  entity_type: string;
-  needs_clarification?: boolean;
-  confidence?: number;
-  reason?: string;
-  description?: string;
-};
-
-export type ChatPostProcessingPayload = {
-  userId: string;
-  message: string;
-  detectedTopics: DetectedTopicLike[];
-  importanceLevel: number;
-  loadedLifeTopics: any[];
-  shouldRunHeavyEngines: boolean;
-};
-
-export type GhostChatFlowResult =
-  | {
-      type: "immediate_text";
-      immediateTextResponse: string;
-    }
-  | {
-      type: "stream";
-      readable: ReadableStream<Uint8Array>;
-      postProcessingPayload: ChatPostProcessingPayload | null;
-    };
 
 export async function runGhostChatFlow({
   message,

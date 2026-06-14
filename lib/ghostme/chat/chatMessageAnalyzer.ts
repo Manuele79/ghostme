@@ -5,17 +5,10 @@ import {
 } from "@/lib/ghostme/topicDetector";
 import { extractEntitiesWithAI } from "@/lib/ghostme/entityExtractor";
 import { removeGenericRelationshipTopics } from "@/lib/ghostme/relationshipResolver";
-
-
-type DetectedTopicLike = {
-  topic: string;
-  category: string;
-  entity_type: string;
-  needs_clarification?: boolean;
-  confidence?: number;
-  reason?: string;
-  description?: string;
-};
+import type {
+  AnalyzeChatMessageResult,
+  DetectedTopicLike,
+} from "@/lib/ghostme/chat/chatTypes";
 
 function uniqueTopics(topics: DetectedTopicLike[]) {
   const map = new Map<string, DetectedTopicLike>();
@@ -30,7 +23,11 @@ function uniqueTopics(topics: DetectedTopicLike[]) {
   return Array.from(map.values()).slice(0, 8);
 }
 
-export async function analyzeChatMessage({ message }: { message: string }) {
+export async function analyzeChatMessage({
+  message,
+}: {
+  message: string;
+}): Promise<AnalyzeChatMessageResult> {
   const messageClass = classifyGhostMessage(message);
 
   // Detection di base

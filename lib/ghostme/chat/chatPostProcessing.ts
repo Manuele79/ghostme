@@ -17,6 +17,10 @@ import {
   detectAndSaveActionIntent,
   detectAndCompleteActionIntent,
 } from "@/lib/ghostme/actionLayer";
+import type {
+  ChatPostProcessingPayload,
+  DetectedTopicLike,
+} from "@/lib/ghostme/chat/chatTypes";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -28,15 +32,6 @@ function log(...args: any[]) {
   if (DEBUG) console.log(...args);
 }
 
-type DetectedTopicLike = {
-  topic: string;
-  category: string;
-  entity_type: string;
-  needs_clarification?: boolean;
-  confidence?: number;
-  reason?: string;
-  description?: string;
-};
 async function saveActiveMemory({
   userId,
   message,
@@ -450,14 +445,7 @@ export async function runChatPostProcessing({
   importanceLevel,
   loadedLifeTopics,
   shouldRunHeavyEngines,
-}: {
-  userId: string;
-  message: string;
-  detectedTopics: DetectedTopicLike[];
-  importanceLevel: number;
-  loadedLifeTopics: any[];
-  shouldRunHeavyEngines: boolean;
-}) {
+}: ChatPostProcessingPayload) {
   try {
     const possibleEpisode = isPossibleEpisode(message);
     const emotionalTone = detectEmotionalTone(message);

@@ -10,16 +10,7 @@ import { buildHouseLearnedRulesContext } from "@/lib/ghostme/homeAssistant/house
 import { buildContextualMemory } from "@/lib/ghostme/retrieval";
 import { getTimelineContext } from "@/lib/ghostme/timeline";
 import { trimBlock } from "@/lib/ghostme/chat/chatPromptBuilder";
-
-type DetectedTopicLike = {
-  topic: string;
-  category: string;
-  entity_type: string;
-  needs_clarification?: boolean;
-  confidence?: number;
-  reason?: string;
-  description?: string;
-};
+import type { DetectedTopicLike } from "@/lib/ghostme/chat/chatTypes";
 
 export type ChatContext = {
   profileContext: string;
