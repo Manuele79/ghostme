@@ -1,5 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getCurrentLocationState } from "@/lib/ghostme/location/placeService";
+import { getPeopleGraphContext } from "@/lib/ghostme/people/peopleGraphService";
+
 
 export type GhostSituation = {
   nowIso: string;
@@ -19,7 +21,7 @@ export type GhostSituation = {
   pendingActions: any[];
   dominantTopics: any[];
   mentalState: any | null;
-
+  peopleGraphContext: string;
   recentEpisodes: any[];
   recentTimelineEvents: any[];
   recentSummaries: any[];
@@ -36,6 +38,7 @@ export type GhostSituation = {
     homeContext: string | null;
     deviceContext: string | null;
     locationContext: string | null;
+    
   };
 
   situationSummary: string;
@@ -258,6 +261,7 @@ export async function buildGhostSituation(userId: string): Promise<GhostSituatio
 
   const profile = profileRes.data || null;
   const currentLocationState = await getCurrentLocationState(userId);
+  const peopleGraphContext = await getPeopleGraphContext(userId);
   const currentPlace = currentLocationState?.current_place_label || null;
   const currentPlaceCategory = currentLocationState?.place_category || null;
   const currentPlaceAddress = currentLocationState?.address || null;
@@ -401,6 +405,9 @@ ${formatList(
   6
 )}
 
+PEOPLE GRAPH:
+${peopleGraphContext || "nessuna persona rilevante nel grafo"}
+
 REGOLE COMPORTAMENTALI:
 ${formatList(
   behaviorRules,
@@ -463,8 +470,9 @@ device: ${externalSignals.deviceContext || "non collegato"}
     behaviorRules,
     behaviorPatterns,
     recentObservations,
-
+peopleGraphContext,
     externalSignals,
     situationSummary,
+    
   };
 }
