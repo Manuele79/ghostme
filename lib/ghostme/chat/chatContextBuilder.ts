@@ -116,6 +116,18 @@ function formatRomeDateTime(value?: string | null) {
   });
 }
 
+const LOCATION_FRESHNESS_WINDOW_MS = 2 * 60 * 60 * 1000;
+
+function isFreshLocationState(location: any) {
+  const timestamp = location?.updated_at || location?.last_changed_at;
+  if (!timestamp) return false;
+
+  const time = new Date(timestamp).getTime();
+  if (Number.isNaN(time)) return false;
+
+  return Date.now() - time <= LOCATION_FRESHNESS_WINDOW_MS;
+}
+
 export async function buildChatContext({
   userId,
   detectedTopics,
@@ -164,7 +176,7 @@ export async function buildChatContext({
 
     supabaseAdmin
       .from("user_location_state")
-      .select("current_place_label, latitude, longitude, source, updated_at")
+      .select("current_place_label, latitude, longitude, source, updated_at, last_changed_at")
       .eq("user_id", userId)
       .maybeSingle(),
 
@@ -222,9 +234,13 @@ export async function buildChatContext({
       })
       .join("\n") || "";
 
-context.currentPlaceContext = currentLocation?.current_place_label
-  ? `Luogo attuale rilevato: ${currentLocation.current_place_label}`
-  : "Luogo attuale rilevato: sconosciuto";
+  if (currentLocation?.current_place_label) {
+    context.currentPlaceContext = isFreshLocationState(currentLocation)
+      ? `Luogo attuale rilevato: ${currentLocation.current_place_label}`
+      : `Ultimo luogo rilevato: ${currentLocation.current_place_label}, ma il dato potrebbe non essere aggiornato.`;
+  } else {
+    context.currentPlaceContext = "Luogo attuale rilevato: sconosciuto";
+  }
 
   context.homeContext = trimBlock(await buildCognitiveHouse(), 1400);
   context.houseLearnedRulesContext = trimBlock(

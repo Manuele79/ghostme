@@ -34,6 +34,18 @@ function uniqueHints(values: string[]) {
   return result;
 }
 
+const LOCATION_FRESHNESS_WINDOW_MS = 2 * 60 * 60 * 1000;
+
+function isFreshLocationState(location: any) {
+  const timestamp = location?.updated_at || location?.last_changed_at;
+  if (!timestamp) return false;
+
+  const time = new Date(timestamp).getTime();
+  if (Number.isNaN(time)) return false;
+
+  return Date.now() - time <= LOCATION_FRESHNESS_WINDOW_MS;
+}
+
 export async function loadUserContextGraph(userId: string) {
   if (!userId) {
     return {
@@ -220,7 +232,9 @@ export async function loadUserContextGraph(userId: string) {
 
   const hints: string[] = [];
 
-  addHints(hints, [graph.currentLocation?.current_place_label]);
+  if (isFreshLocationState(graph.currentLocation)) {
+    addHints(hints, [graph.currentLocation?.current_place_label]);
+  }
   addHints(hints, graph.significantPlaces.map((place: any) => place.label));
   addHints(hints, graph.calendarUpcoming.map((event: any) => event.title));
   addHints(hints, graph.goals.map((goal: any) => goal.title));
