@@ -29,9 +29,11 @@ function includesAny(text: string, terms: string[]) {
 export async function buildContextualMemory({
   userId,
   detectedTopics,
+  searchHints = [],
 }: {
   userId: string;
   detectedTopics: DetectedTopic[];
+  searchHints?: string[];
 }) {
   if (!userId) {
     return {
@@ -108,7 +110,11 @@ export async function buildContextualMemory({
     ]),
   ]).slice(0, 18);
 
-  const searchTerms = networkTopics.map(norm);
+  const searchTerms = uniq(
+    [...networkTopics, ...searchHints]
+      .map(norm)
+      .filter(Boolean)
+  ).slice(0, 20);
 
  const linkedTopicsContext = trimBlock(
   [...firstLevelLinks, ...secondLevelLinks]

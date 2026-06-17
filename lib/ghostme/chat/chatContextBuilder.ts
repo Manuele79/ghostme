@@ -115,6 +115,22 @@ function formatRomeDateTime(value?: string | null) {
   });
 }
 
+function extractLeadingTitles(value: string, limit: number) {
+  return value
+    .split("\n")
+    .map((line) => line.split("|")[0]?.trim())
+    .filter(Boolean)
+    .slice(0, limit);
+}
+
+function extractActionTitles(value: string, limit: number) {
+  return value
+    .split("\n")
+    .map((line) => line.split("|")[1]?.trim())
+    .filter(Boolean)
+    .slice(0, limit);
+}
+
 export async function buildChatContext({
   userId,
   detectedTopics,
@@ -128,7 +144,6 @@ export async function buildChatContext({
 
   const [
     userProfileRes,
-    contextualData,
     mentalRes,
     goalsRes,
     timelineRes,
@@ -145,8 +160,6 @@ export async function buildChatContext({
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
-
-    buildContextualMemory({ userId, detectedTopics }),
 
     getMentalStateContext(userId),
     getGoalsDesiresContext(userId),
@@ -176,6 +189,25 @@ export async function buildChatContext({
   context.profileContext = buildProfileContext(userProfile);
   context.userLocation = userProfile?.location || "";
 
+  const calendarEvents = calendarRes.data || [];
+  const currentLocation = currentLocationRes.data;
+
+  const searchHints = [
+    currentLocation?.current_place_label || "",
+    ...calendarEvents
+      .map((event) => event.title)
+      .filter(Boolean)
+      .slice(0, 3),
+    ...extractLeadingTitles(goalsRes || "", 3),
+    ...extractActionTitles(actionIntentRes || "", 3),
+  ];
+
+  const contextualData = await buildContextualMemory({
+    userId,
+    detectedTopics,
+    searchHints,
+  });
+
   context.memoryContext = trimBlock(contextualData.memoryContext, 1100);
   context.episodicContext = trimBlock(contextualData.episodicContext, 800);
   context.lifeTopicsContext = trimBlock(contextualData.lifeTopicsContext, 1000);
@@ -204,7 +236,6 @@ export async function buildChatContext({
   1200
 );
 
-  const calendarEvents = calendarRes.data || [];
   context.calendarContext =
     calendarEvents
       .map((event) => {
@@ -212,8 +243,6 @@ export async function buildChatContext({
         return `${event.type} | ${event.title} | ${date} | ${event.description || ""}`;
       })
       .join("\n") || "";
-
-  const currentLocation = currentLocationRes.data;
 
 context.currentPlaceContext = currentLocation?.current_place_label
   ? `Luogo attuale rilevato: ${currentLocation.current_place_label}`
