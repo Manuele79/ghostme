@@ -8,6 +8,7 @@ import { buildHouseAutomationContext } from "@/lib/ghostme/homeAssistant/houseAu
 import { buildCognitiveHouse } from "@/lib/ghostme/homeAssistant/cognitiveHouseBuilder";
 import { buildHouseLearnedRulesContext } from "@/lib/ghostme/homeAssistant/houseLearnedRulesContext";
 import { buildContextualMemory } from "@/lib/ghostme/retrieval";
+import { loadUserContextGraph } from "@/lib/ghostme/context/userContextGraph";
 import { getTimelineContext } from "@/lib/ghostme/timeline";
 import { trimBlock } from "@/lib/ghostme/chat/chatPromptBuilder";
 import type { DetectedTopicLike } from "@/lib/ghostme/chat/chatTypes";
@@ -115,22 +116,6 @@ function formatRomeDateTime(value?: string | null) {
   });
 }
 
-function extractLeadingTitles(value: string, limit: number) {
-  return value
-    .split("\n")
-    .map((line) => line.split("|")[0]?.trim())
-    .filter(Boolean)
-    .slice(0, limit);
-}
-
-function extractActionTitles(value: string, limit: number) {
-  return value
-    .split("\n")
-    .map((line) => line.split("|")[1]?.trim())
-    .filter(Boolean)
-    .slice(0, limit);
-}
-
 export async function buildChatContext({
   userId,
   detectedTopics,
@@ -152,6 +137,7 @@ export async function buildChatContext({
     calendarRes,
     currentLocationRes,
     existingTopicsRes,
+    userContextGraph,
   ] = await Promise.all([
     supabase
       .from("user_profiles")
@@ -183,6 +169,8 @@ export async function buildChatContext({
       .maybeSingle(),
 
     supabase.from("life_topics").select("*").eq("user_id", userId),
+
+    loadUserContextGraph(userId),
   ]);
 
   const userProfile = userProfileRes.data;
@@ -192,20 +180,10 @@ export async function buildChatContext({
   const calendarEvents = calendarRes.data || [];
   const currentLocation = currentLocationRes.data;
 
-  const searchHints = [
-    currentLocation?.current_place_label || "",
-    ...calendarEvents
-      .map((event) => event.title)
-      .filter(Boolean)
-      .slice(0, 3),
-    ...extractLeadingTitles(goalsRes || "", 3),
-    ...extractActionTitles(actionIntentRes || "", 3),
-  ];
-
   const contextualData = await buildContextualMemory({
     userId,
     detectedTopics,
-    searchHints,
+    searchHints: userContextGraph.searchHints,
   });
 
   context.memoryContext = trimBlock(contextualData.memoryContext, 1100);
