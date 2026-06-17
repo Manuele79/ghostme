@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { getLocationCurrentStateFlow } from "@/lib/ghostme/location/locationCurrentStateFlow";
 
 export async function POST(req: Request) {
   try {
@@ -9,11 +9,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "userId mancante" }, { status: 400 });
     }
 
-    const { data, error } = await supabaseAdmin
-      .from("user_location_state")
-      .select("*")
-      .eq("user_id", body.userId)
-      .maybeSingle();
+    const { data, error } = await getLocationCurrentStateFlow(body.userId);
 
     if (error) {
       console.log("GET CURRENT STATE ERROR:", error);

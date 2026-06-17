@@ -1,14 +1,11 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { deleteLocationPlaceFlow } from "@/lib/ghostme/location/locationDeletePlaceFlow";
 
 export async function DELETE(req: Request) {
   try {
     const body = await req.json();
 
-    await supabaseAdmin
-      .from("significant_places")
-      .delete()
-      .eq("id", body.id);
+    await deleteLocationPlaceFlow(body.id);
 
     return NextResponse.json({
       success: true,
