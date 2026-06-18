@@ -128,7 +128,7 @@ export default function ChatPage() {
 
   async function markProactiveMessage(
     messageId?: string,
-    status: "read" | "answered" = "read"
+    status: "read" | "dismissed" | "answered" = "dismissed"
   ) {
     if (!messageId || !currentUserId) return;
 
@@ -149,7 +149,7 @@ export default function ChatPage() {
   }
 
   async function markProactiveAsRead(messageId?: string) {
-    await markProactiveMessage(messageId, "read");
+    await markProactiveMessage(messageId, "dismissed");
   }
 
   async function markProactiveAsAnswered(messageId?: string) {

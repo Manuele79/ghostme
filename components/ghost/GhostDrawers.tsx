@@ -405,7 +405,7 @@ useEffect(() => {
 
 async function markObservationHandled(
   item: any,
-  status: "read" | "answered" = "read"
+  status: "read" | "dismissed" | "answered" = "dismissed"
 ) {
   if (!currentUserId || !item?.id) return false;
 
@@ -617,7 +617,7 @@ useEffect(() => {
 
               <div className="flex justify-end">
                 <button
-                  onClick={() => markObservationHandled(item, "read")}
+                  onClick={() => markObservationHandled(item, "dismissed")}
                   className="rounded-full border border-zinc-700 px-2 py-1 text-xs text-zinc-500 hover:border-red-400 hover:text-red-300"
                   title="Nascondi dal pannello"
                 >

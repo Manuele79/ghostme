@@ -13,7 +13,7 @@ export async function POST(req: Request) {
       .from("ghost_proactive_messages")
       .select("*")
       .eq("user_id", body.userId)
-      .eq("status", "unread")
+      .in("status", ["unread", "read"])
       .in("category", ["observation", "curiosity"])
       .order("priority", { ascending: false })
       .order("created_at", { ascending: false })

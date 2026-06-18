@@ -12,7 +12,7 @@ export async function POST(req: Request) {
 
     const snapshot = await buildGhostBrainSnapshot(userId);
     const proactiveMessages = (snapshot.proactive.recent || []).filter(
-      (message: any) => message.status === "unread"
+      (message: any) => ["unread", "read"].includes(message.status)
     );
 
     return NextResponse.json({

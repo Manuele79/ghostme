@@ -43,10 +43,10 @@ export async function buildGoalsSnapshot(
       .from("goals_desires")
       .select("*")
       .eq("user_id", userId)
-      .in("status", ["active", "learning"])
+      .not("status", "in", "(completed,archived)")
       .order("importance", { ascending: false })
       .order("updated_at", { ascending: false })
-      .limit(10),
+      .limit(20),
 
     supabaseAdmin
       .from("goals_desires")
@@ -67,7 +67,9 @@ export async function buildGoalsSnapshot(
       .limit(10),
   ]);
 
-  const activeGoals = activeGoalsRes.data || [];
+  const activeGoals = (activeGoalsRes.data || [])
+    .filter((goal: any) => !["completed", "archived"].includes(goal.status))
+    .slice(0, 10);
   const pendingActions = actionsRes.data || [];
 
   return {
