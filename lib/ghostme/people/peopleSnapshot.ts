@@ -17,6 +17,47 @@ function normalizeName(value: any) {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
+const RELATION_TERMS = [
+  "moglie",
+  "marito",
+  "compagna",
+  "compagno",
+  "amica",
+  "amico",
+  "figlia",
+  "figlio",
+  "sorella",
+  "fratello",
+  "family",
+  "friend",
+];
+
+function hasRelationshipTerm(value: any) {
+  const text = clean(value);
+  return RELATION_TERMS.some((term) => text.includes(term));
+}
+
+function isPersonTopic(topic: any) {
+  return (
+    clean(topic.entity_type) === "person" ||
+    ["family", "friend"].includes(clean(topic.category)) ||
+    hasRelationshipTerm(topic.description) ||
+    hasRelationshipTerm(topic.notes)
+  );
+}
+
+function extractMemoryPersonNames(memory: any) {
+  const names: string[] = [];
+  const title = String(memory.title || "").trim();
+  const infoMatch = title.match(/^Info su\s+(.+)$/i);
+
+  if (infoMatch?.[1]) {
+    names.push(infoMatch[1].trim());
+  }
+
+  return names;
+}
+
 function latestTimestamp(values: Array<string | null | undefined>) {
   let latest: string | null = null;
   let latestTime = 0;
@@ -60,7 +101,7 @@ function mergePeople({
     });
   }
 
-  for (const topic of topicRows || []) {
+  for (const topic of (topicRows || []).filter(isPersonTopic)) {
     const key = normalizeName(topic.topic);
     if (!key) continue;
 
@@ -84,6 +125,31 @@ function mergePeople({
 
   for (const memory of memoryRows || []) {
     const text = `${memory.title || ""} ${memory.content || ""}`;
+    const memoryNames = extractMemoryPersonNames(memory);
+
+    for (const name of memoryNames) {
+      const key = normalizeName(name);
+      if (!key) continue;
+
+      const existing = map.get(key);
+      map.set(key, {
+        ...(existing || {}),
+        name: existing?.name || name,
+        relationship_type:
+          existing?.relationship_type || memory.category || null,
+        description: existing?.description || memory.content || null,
+        importance: Math.max(
+          Number(existing?.importance || 0),
+          Number(memory.importance || 0)
+        ),
+        mention_count: Number(existing?.mention_count || 0),
+        source: existing?.source || "memories_active",
+        memory_titles: [
+          ...(existing?.memory_titles || []),
+          memory.title,
+        ].filter(Boolean),
+      });
+    }
 
     for (const [key, person] of map.entries()) {
       if (!key || !clean(text).includes(key)) continue;
@@ -143,18 +209,17 @@ export async function buildPeopleSnapshot(
 
     supabaseAdmin
       .from("life_topics")
-      .select("topic, category, entity_type, description, weight, mention_count, relationship_strength, last_mentioned_at, updated_at")
+      .select("topic, category, entity_type, description, notes, weight, mention_count, relationship_strength, last_mentioned_at, updated_at")
       .eq("user_id", userId)
-      .eq("entity_type", "person")
       .neq("status", "archived")
       .order("relationship_strength", { ascending: false })
-      .limit(20),
+      .limit(80),
 
     supabaseAdmin
       .from("memories_active")
-      .select("title, content, category, importance, updated_at")
+      .select("title, content, category, importance, pinned, updated_at")
       .eq("user_id", userId)
-      .or("category.eq.family,category.eq.friend,title.ilike.%Info su%")
+      .or("category.eq.family,category.eq.friend,title.ilike.%Info su%,content.ilike.%moglie%,content.ilike.%marito%,content.ilike.%compagna%,content.ilike.%compagno%,content.ilike.%amica%,content.ilike.%amico%")
       .order("importance", { ascending: false })
       .limit(20),
   ]);
