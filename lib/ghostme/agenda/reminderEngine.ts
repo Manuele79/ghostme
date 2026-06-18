@@ -1,5 +1,8 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { upsertProactiveMessage } from "@/lib/ghostme/proactive/proactiveMessageService";
+import {
+  buildDailyProactiveLogicalKey,
+  upsertProactiveMessage,
+} from "@/lib/ghostme/proactive/proactiveMessageService";
 
 export async function refreshReminderMessage(userId: string) {
   if (!userId) return;
@@ -50,5 +53,6 @@ export async function refreshReminderMessage(userId: string) {
     message,
     category: "reminder",
     priority: 10,
+    logicalKey: buildDailyProactiveLogicalKey("reminder"),
   });
 }

@@ -2,7 +2,10 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { buildGhostSituation } from "@/lib/ghostme/situation/situationEngine";
 import { buildAgendaMessage } from "@/lib/ghostme/agenda/agendaEngine";
 import { refreshReminderMessage } from "@/lib/ghostme/agenda/reminderEngine";
-import { upsertProactiveMessage } from "@/lib/ghostme/proactive/proactiveMessageService";
+import {
+  buildDailyProactiveLogicalKey,
+  upsertProactiveMessage,
+} from "@/lib/ghostme/proactive/proactiveMessageService";
 import { runProactiveTrigger } from "@/lib/ghostme/proactive/proactiveTrigger";
 
 export type GhostCalendarEventType =
@@ -164,6 +167,7 @@ export async function refreshAgendaMessage(userId: string) {
     message: agendaMessage,
     category: "agenda",
     priority: 5,
+    logicalKey: buildDailyProactiveLogicalKey("agenda"),
   });
 
   const visibleAgendaMessages = await loadVisibleAgendaMessages();
