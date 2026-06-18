@@ -20,6 +20,21 @@ function dedupeProactiveMessages(messages: any[]) {
   return result;
 }
 
+function isVisibleProactiveMessage(message: any) {
+  if (!["unread", "read"].includes(message.status)) return false;
+
+  const dailyCategories = ["agenda", "daily_briefing", "reminder"];
+  if (!dailyCategories.includes(message.category)) return true;
+
+  const createdAt = new Date(message.created_at || message.scheduled_for || "");
+  if (Number.isNaN(createdAt.getTime())) return true;
+
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
+  return createdAt >= startOfToday;
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -31,9 +46,7 @@ export async function POST(req: Request) {
 
     const snapshot = await buildGhostBrainSnapshot(userId);
     const proactiveMessages = dedupeProactiveMessages(
-      (snapshot.proactive.recent || []).filter((message: any) =>
-        ["unread", "read"].includes(message.status)
-      )
+      (snapshot.proactive.recent || []).filter(isVisibleProactiveMessage)
     );
 
     return NextResponse.json({

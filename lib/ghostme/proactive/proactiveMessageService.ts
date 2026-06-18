@@ -1,6 +1,13 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
+const ONE_PER_DAY_CATEGORIES = new Set(["agenda", "daily_briefing", "reminder"]);
+const HANDLED_STATUSES = ["dismissed", "answered", "expired"];
 
+function startOfTodayIso() {
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  return startOfToday.toISOString();
+}
 
 export async function upsertProactiveMessage({
   userId,
@@ -17,11 +24,44 @@ export async function upsertProactiveMessage({
 }) {
   if (!userId || !message?.trim()) return;
 
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
+  const todayIso = startOfTodayIso();
+  const shouldKeepOnePerDay = ONE_PER_DAY_CATEGORIES.has(category);
 
-  const onePerDayCategories = new Set(["agenda", "daily_briefing", "reminder"]);
-  const shouldKeepOnePerDay = onePerDayCategories.has(category);
+  let handledQuery = supabaseAdmin
+    .from("ghost_proactive_messages")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("category", category)
+    .eq("title", title)
+    .eq("message", message)
+    .in("status", HANDLED_STATUSES);
+
+  if (shouldKeepOnePerDay) {
+    handledQuery = handledQuery.gte("created_at", todayIso);
+  }
+
+  const { data: handled } = await handledQuery.limit(1).maybeSingle();
+
+  if (handled?.id) {
+    let duplicateVisibleQuery = supabaseAdmin
+      .from("ghost_proactive_messages")
+      .update({
+        status: "dismissed",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", userId)
+      .eq("category", category)
+      .eq("title", title)
+      .eq("message", message)
+      .in("status", ["unread", "read"]);
+
+    if (shouldKeepOnePerDay) {
+      duplicateVisibleQuery = duplicateVisibleQuery.gte("created_at", todayIso);
+    }
+
+    await duplicateVisibleQuery;
+    return;
+  }
 
   let existingQuery = supabaseAdmin
     .from("ghost_proactive_messages")
@@ -31,7 +71,7 @@ export async function upsertProactiveMessage({
     .in("status", ["unread", "read"]);
 
   if (shouldKeepOnePerDay) {
-    existingQuery = existingQuery.gte("created_at", startOfToday.toISOString());
+    existingQuery = existingQuery.gte("created_at", todayIso);
   }
 
   const { data: existing } = await existingQuery

@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { upsertProactiveMessage } from "@/lib/ghostme/proactive/proactiveMessageService";
 
 export async function refreshReminderMessage(userId: string) {
   if (!userId) return;
@@ -16,27 +17,16 @@ export async function refreshReminderMessage(userId: string) {
     .order("remind_at", { ascending: true })
     .limit(5);
 
-  const { data: existing } = await supabaseAdmin
-    .from("ghost_proactive_messages")
-    .select("id")
-    .eq("user_id", userId)
-    .eq("category", "reminder")
-    .eq("status", "unread")
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
   if (!reminders?.length) {
-    if (existing?.id) {
-      await supabaseAdmin
-        .from("ghost_proactive_messages")
-        .update({
-          status: "read",
-          read_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", existing.id);
-    }
+    await supabaseAdmin
+      .from("ghost_proactive_messages")
+      .update({
+        status: "expired",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", userId)
+      .eq("category", "reminder")
+      .in("status", ["unread", "read"]);
     return;
   }
 
@@ -54,28 +44,11 @@ export async function refreshReminderMessage(userId: string) {
       })
       .join("\n");
 
-  if (existing?.id) {
-    await supabaseAdmin
-      .from("ghost_proactive_messages")
-      .update({
-        title: "Promemoria",
-        message,
-        priority: 10,
-        scheduled_for: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", existing.id);
-
-    return;
-  }
-
-  await supabaseAdmin.from("ghost_proactive_messages").insert({
-    user_id: userId,
+  await upsertProactiveMessage({
+    userId,
     title: "Promemoria",
     message,
     category: "reminder",
-    status: "unread",
     priority: 10,
-    scheduled_for: new Date().toISOString(),
   });
 }

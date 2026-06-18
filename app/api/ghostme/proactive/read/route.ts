@@ -9,7 +9,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Dati mancanti" }, { status: 400 });
     }
 
-    const allowedStatuses = ["read", "dismissed", "answered"];
+    const allowedStatuses = ["read", "dismissed", "answered", "expired"];
 
     const nextStatus = allowedStatuses.includes(body.status)
       ? body.status

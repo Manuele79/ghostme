@@ -2,6 +2,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { buildGhostSituation } from "@/lib/ghostme/situation/situationEngine";
 import { buildAgendaMessage } from "@/lib/ghostme/agenda/agendaEngine";
 import { refreshReminderMessage } from "@/lib/ghostme/agenda/reminderEngine";
+import { upsertProactiveMessage } from "@/lib/ghostme/proactive/proactiveMessageService";
 import { runProactiveTrigger } from "@/lib/ghostme/proactive/proactiveTrigger";
 
 export type GhostCalendarEventType =
@@ -112,20 +113,23 @@ export async function refreshAgendaMessage(userId: string) {
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
 
-  const { data: existingAgendaMessages } = await supabaseAdmin
-    .from("ghost_proactive_messages")
-    .select("id, message, created_at")
-    .eq("user_id", userId)
-    .eq("category", "agenda")
-    .in("status", ["unread", "read"])
-    .gte("created_at", startOfToday.toISOString())
-    .order("created_at", { ascending: false })
-    .limit(20);
+  async function loadVisibleAgendaMessages() {
+    const { data } = await supabaseAdmin
+      .from("ghost_proactive_messages")
+      .select("id, message, created_at")
+      .eq("user_id", userId)
+      .eq("category", "agenda")
+      .in("status", ["unread", "read"])
+      .gte("created_at", startOfToday.toISOString())
+      .order("created_at", { ascending: false })
+      .limit(20);
 
-  const existing = existingAgendaMessages?.[0] || null;
+    return data || [];
+  }
 
   async function dismissDuplicateAgendaMessages(keepId?: string | null) {
-    const duplicateIds = (existingAgendaMessages || [])
+    const visibleAgendaMessages = await loadVisibleAgendaMessages();
+    const duplicateIds = visibleAgendaMessages
       .map((message) => message.id)
       .filter((id) => id && id !== keepId);
 
@@ -141,49 +145,31 @@ export async function refreshAgendaMessage(userId: string) {
   }
 
   if (!agendaMessage) {
-    if (existing?.id) {
-      await supabaseAdmin
-        .from("ghost_proactive_messages")
-        .update({
-          status: "read",
-          read_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", existing.id);
-    }
-    await dismissDuplicateAgendaMessages(existing?.id || null);
-    return;
-  }
-
-  if (existing?.id) {
     await supabaseAdmin
       .from("ghost_proactive_messages")
       .update({
-        title: "Agenda di oggi",
-        message: agendaMessage,
-        status: "unread",
-        read_at: null,
-        priority: 5,
-        scheduled_for: new Date().toISOString(),
+        status: "expired",
         updated_at: new Date().toISOString(),
       })
-      .eq("id", existing.id);
-
-    await dismissDuplicateAgendaMessages(existing.id);
+      .eq("user_id", userId)
+      .eq("category", "agenda")
+      .in("status", ["unread", "read"])
+      .gte("created_at", startOfToday.toISOString());
     return;
   }
 
-  const { data: inserted } = await supabaseAdmin.from("ghost_proactive_messages").insert({
-    user_id: userId,
+  await upsertProactiveMessage({
+    userId,
     title: "Agenda di oggi",
     message: agendaMessage,
     category: "agenda",
-    status: "unread",
     priority: 5,
-    scheduled_for: new Date().toISOString(),
-  }).select("id").single();
+  });
 
-  await dismissDuplicateAgendaMessages(inserted?.id || null);
+  const visibleAgendaMessages = await loadVisibleAgendaMessages();
+  const keepId = visibleAgendaMessages[0]?.id || null;
+
+  await dismissDuplicateAgendaMessages(keepId);
 }
 
 export async function cleanupExpiredEvents(userId: string) {
