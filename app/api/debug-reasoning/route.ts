@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { buildReasoningSnapshot } from "@/lib/ghostme/context/reasoningService";
+import { buildGhostBrainSnapshot } from "@/lib/ghostme/context/reasoningService";
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
@@ -9,7 +9,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "userId mancante" }, { status: 400 });
   }
 
-  const snapshot = await buildReasoningSnapshot({ userId });
+  const snapshot = await buildGhostBrainSnapshot(userId);
 
   return NextResponse.json({
     success: true,

@@ -1,4 +1,10 @@
-import { buildContextSignals } from "@/lib/ghostme/context/contextSignals";
+import {
+  buildContextSignals,
+  buildGhostBrainSimpleSignals,
+  type ContextSignal,
+  type GhostBrainSimpleSignals,
+} from "@/lib/ghostme/context/contextSignals";
+import { loadUserContextGraph } from "@/lib/ghostme/context/userContextGraph";
 import { buildHomeReasoning } from "@/lib/ghostme/homeAssistant/homeReasoningBuilder";
 import {
   buildGhostSituation,
@@ -15,6 +21,53 @@ type ReasoningSnapshotInput = {
   userId: string;
   message?: string;
   detectedTopics?: DetectedTopicInput[];
+};
+
+export type GhostBrainSnapshot = {
+  profile: any | null;
+  memory: {
+    topics: any[];
+    memories: any[];
+    episodes: any[];
+    summaries: any[];
+    timeline: any[];
+    links: any[];
+  };
+  people: {
+    items: any[];
+    context: string;
+  };
+  location: {
+    current: any | null;
+    significantPlaces: any[];
+    situation: {
+      currentPlace: string | null;
+      category: string | null;
+      address: string | null;
+      confidence: number | null;
+      lastChangedAt: string | null;
+    };
+  };
+  calendar: {
+    upcoming: any[];
+    today: any[];
+  };
+  goals: any[];
+  actions: any[];
+  home: {
+    learnedRules: any[];
+    automationControls: any[];
+    presence: ReturnType<typeof parseHomePresenceSignal>;
+    context: string | null;
+  };
+  proactive: {
+    recent: any[];
+  };
+  signals: {
+    simple: GhostBrainSimpleSignals;
+    context: ContextSignal[];
+  };
+  generatedAt: string;
 };
 
 const LOCATION_FRESHNESS_WINDOW_MS = 2 * 60 * 60 * 1000;
@@ -466,5 +519,80 @@ export async function buildReasoningSnapshot({
     conflicts,
     certainty,
     contextSignals,
+  };
+}
+
+export async function buildGhostBrainSnapshot(
+  userId: string
+): Promise<GhostBrainSnapshot> {
+  const generatedAt = new Date().toISOString();
+
+  const [{ graph }, situation] = await Promise.all([
+    loadUserContextGraph(userId),
+    buildGhostSituation(userId),
+  ]);
+
+  const contextSignals = buildContextSignals(situation);
+
+  let homeContext = "";
+  try {
+    homeContext = await buildHomeReasoning();
+  } catch (err) {
+    console.log("GHOSTBRAIN HOME ERROR:", err);
+    homeContext = "";
+  }
+
+  const homePresence = parseHomePresenceSignal(homeContext);
+  const simpleSignals = buildGhostBrainSimpleSignals({
+    graph,
+    situation,
+    homeSignals: homePresence.signals,
+  });
+
+  return {
+    profile: graph.profile,
+    memory: {
+      topics: graph.topics || [],
+      memories: graph.memories || [],
+      episodes: graph.episodes || [],
+      summaries: graph.summaries || [],
+      timeline: situation.recentTimelineEvents || [],
+      links: situation.importantLinks || [],
+    },
+    people: {
+      items: graph.people || [],
+      context: situation.peopleGraphContext || "",
+    },
+    location: {
+      current: graph.currentLocation || null,
+      significantPlaces: graph.significantPlaces || [],
+      situation: {
+        currentPlace: situation.currentPlace || null,
+        category: situation.currentPlaceCategory || null,
+        address: situation.currentPlaceAddress || null,
+        confidence: situation.locationConfidence ?? null,
+        lastChangedAt: situation.lastLocationChange || null,
+      },
+    },
+    calendar: {
+      upcoming: graph.calendarUpcoming || [],
+      today: situation.calendarToday || [],
+    },
+    goals: graph.goals || [],
+    actions: graph.actionIntents || [],
+    home: {
+      learnedRules: graph.houseLearnedRules || [],
+      automationControls: graph.houseAutomationControls || [],
+      presence: homePresence,
+      context: homeContext || null,
+    },
+    proactive: {
+      recent: graph.proactiveRecent || [],
+    },
+    signals: {
+      simple: simpleSignals,
+      context: contextSignals,
+    },
+    generatedAt,
   };
 }

@@ -15,6 +15,16 @@ export type ContextSignal = {
   reason: string;
 };
 
+export type GhostBrainSimpleSignals = {
+  isHome: boolean;
+  hasUpcomingEvent: boolean;
+  hasOpenGoals: boolean;
+  hasPendingActions: boolean;
+  hasRecentProactive: boolean;
+  hasKnownPlace: boolean;
+  homeSignalsAvailable: boolean;
+};
+
 function minutesUntil(value?: string | null) {
   if (!value) return null;
 
@@ -34,6 +44,38 @@ function isHome(place: string) {
 
 function isWork(place: string) {
   return ["lavoro", "work", "ufficio"].includes(place);
+}
+
+export function buildGhostBrainSimpleSignals({
+  graph,
+  situation,
+  homeSignals = [],
+}: {
+  graph?: any;
+  situation?: GhostSituation | null;
+  homeSignals?: string[];
+}): GhostBrainSimpleSignals {
+  const place = cleanPlace(
+    graph?.currentLocation?.current_place_label || situation?.currentPlace
+  );
+  const placeCategory = cleanPlace(
+    graph?.currentLocation?.place_category || situation?.currentPlaceCategory
+  );
+
+  return {
+    isHome: isHome(place) || placeCategory === "home",
+    hasUpcomingEvent:
+      Boolean(graph?.calendarUpcoming?.length) ||
+      Boolean(situation?.upcomingEvents?.length),
+    hasOpenGoals:
+      Boolean(graph?.goals?.length) || Boolean(situation?.activeGoals?.length),
+    hasPendingActions:
+      Boolean(graph?.actionIntents?.length) ||
+      Boolean(situation?.pendingActions?.length),
+    hasRecentProactive: Boolean(graph?.proactiveRecent?.length),
+    hasKnownPlace: Boolean(place),
+    homeSignalsAvailable: homeSignals.length > 0,
+  };
 }
 
 export function buildContextSignals(
