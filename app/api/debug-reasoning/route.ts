@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { buildGhostBrainSnapshot } from "@/lib/ghostme/context/reasoningService";
+import { buildDecisionSnapshot } from "@/lib/ghostme/context/decisionSnapshot";
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
@@ -10,9 +11,11 @@ export async function GET(req: Request) {
   }
 
   const snapshot = await buildGhostBrainSnapshot(userId);
+  const decision = buildDecisionSnapshot(snapshot);
 
   return NextResponse.json({
     success: true,
     snapshot,
+    decision,
   });
 }
