@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { buildGhostBrainSnapshot } from "@/lib/ghostme/context/reasoningService";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 function dedupeProactiveMessages(messages: any[]) {
   const seen = new Set<string>();
@@ -47,8 +48,27 @@ export async function POST(req: Request) {
     }
 
     const snapshot = await buildGhostBrainSnapshot(userId);
+
+    const { data: proactiveRows } = await supabaseAdmin
+      .from("ghost_proactive_messages")
+      .select("*")
+      .eq("user_id", userId)
+      .in("status", ["unread", "read"])
+      .in("category", [
+        "agenda",
+        "reminder",
+        "daily_briefing",
+        "observation",
+        "curiosity",
+      ])
+      .order("priority", { ascending: false })
+      .order("scheduled_for", { ascending: false, nullsFirst: false })
+      .order("updated_at", { ascending: false, nullsFirst: false })
+      .order("created_at", { ascending: false })
+      .limit(20);
+
     const proactiveMessages = dedupeProactiveMessages(
-      (snapshot.proactive.recent || []).filter(isVisibleProactiveMessage)
+      (proactiveRows || []).filter(isVisibleProactiveMessage)
     );
 
     return NextResponse.json({

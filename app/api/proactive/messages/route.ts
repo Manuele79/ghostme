@@ -41,6 +41,8 @@ export async function POST(req: Request) {
         "curiosity",
       ])
       .order("priority", { ascending: false })
+      .order("scheduled_for", { ascending: false, nullsFirst: false })
+      .order("updated_at", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: false })
       .limit(20);
 
