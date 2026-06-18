@@ -1,6 +1,25 @@
 import { NextResponse } from "next/server";
 import { buildGhostBrainSnapshot } from "@/lib/ghostme/context/reasoningService";
 
+function dedupeProactiveMessages(messages: any[]) {
+  const seen = new Set<string>();
+  const result: any[] = [];
+
+  for (const message of messages || []) {
+    const key = [
+      message.category || "",
+      message.title || "",
+      message.message || "",
+    ].join("|");
+
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(message);
+  }
+
+  return result;
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -11,8 +30,10 @@ export async function POST(req: Request) {
     }
 
     const snapshot = await buildGhostBrainSnapshot(userId);
-    const proactiveMessages = (snapshot.proactive.recent || []).filter(
-      (message: any) => ["unread", "read"].includes(message.status)
+    const proactiveMessages = dedupeProactiveMessages(
+      (snapshot.proactive.recent || []).filter((message: any) =>
+        ["unread", "read"].includes(message.status)
+      )
     );
 
     return NextResponse.json({

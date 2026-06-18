@@ -17,12 +17,24 @@ export async function upsertProactiveMessage({
 }) {
   if (!userId || !message?.trim()) return;
 
-  const { data: existing } = await supabaseAdmin
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
+  const onePerDayCategories = new Set(["agenda", "daily_briefing", "reminder"]);
+  const shouldKeepOnePerDay = onePerDayCategories.has(category);
+
+  let existingQuery = supabaseAdmin
     .from("ghost_proactive_messages")
     .select("id, message, status")
     .eq("user_id", userId)
     .eq("category", category)
-    .in("status", ["unread", "read"])
+    .in("status", ["unread", "read"]);
+
+  if (shouldKeepOnePerDay) {
+    existingQuery = existingQuery.gte("created_at", startOfToday.toISOString());
+  }
+
+  const { data: existing } = await existingQuery
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -45,8 +57,8 @@ export async function upsertProactiveMessage({
       return;
     }
 
-    // Se era unread, aggiorna lo stesso record.
-    if (existing.status === "unread") {
+    // Se era unread, o Ã¨ una card giornaliera, aggiorna lo stesso record.
+    if (existing.status === "unread" || shouldKeepOnePerDay) {
       await supabaseAdmin
         .from("ghost_proactive_messages")
         .update({

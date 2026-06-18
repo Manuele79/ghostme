@@ -112,16 +112,33 @@ export async function refreshAgendaMessage(userId: string) {
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
 
-  const { data: existing } = await supabaseAdmin
+  const { data: existingAgendaMessages } = await supabaseAdmin
     .from("ghost_proactive_messages")
-    .select("id")
+    .select("id, message, created_at")
     .eq("user_id", userId)
     .eq("category", "agenda")
     .in("status", ["unread", "read"])
     .gte("created_at", startOfToday.toISOString())
     .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .limit(20);
+
+  const existing = existingAgendaMessages?.[0] || null;
+
+  async function dismissDuplicateAgendaMessages(keepId?: string | null) {
+    const duplicateIds = (existingAgendaMessages || [])
+      .map((message) => message.id)
+      .filter((id) => id && id !== keepId);
+
+    if (!duplicateIds.length) return;
+
+    await supabaseAdmin
+      .from("ghost_proactive_messages")
+      .update({
+        status: "dismissed",
+        updated_at: new Date().toISOString(),
+      })
+      .in("id", duplicateIds);
+  }
 
   if (!agendaMessage) {
     if (existing?.id) {
@@ -134,6 +151,7 @@ export async function refreshAgendaMessage(userId: string) {
         })
         .eq("id", existing.id);
     }
+    await dismissDuplicateAgendaMessages(existing?.id || null);
     return;
   }
 
@@ -151,10 +169,11 @@ export async function refreshAgendaMessage(userId: string) {
       })
       .eq("id", existing.id);
 
+    await dismissDuplicateAgendaMessages(existing.id);
     return;
   }
 
-  await supabaseAdmin.from("ghost_proactive_messages").insert({
+  const { data: inserted } = await supabaseAdmin.from("ghost_proactive_messages").insert({
     user_id: userId,
     title: "Agenda di oggi",
     message: agendaMessage,
@@ -162,7 +181,9 @@ export async function refreshAgendaMessage(userId: string) {
     status: "unread",
     priority: 5,
     scheduled_for: new Date().toISOString(),
-  });
+  }).select("id").single();
+
+  await dismissDuplicateAgendaMessages(inserted?.id || null);
 }
 
 export async function cleanupExpiredEvents(userId: string) {

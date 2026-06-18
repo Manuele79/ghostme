@@ -1,6 +1,25 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
+function dedupeMessages(messages: any[]) {
+  const seen = new Set<string>();
+  const result: any[] = [];
+
+  for (const message of messages || []) {
+    const key = [
+      message.category || "",
+      message.title || "",
+      message.message || "",
+    ].join("|");
+
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(message);
+  }
+
+  return result;
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -25,7 +44,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
-      messages: data || [],
+      messages: dedupeMessages(data || []),
     });
   } catch (err) {
     console.log("GET PROACTIVE MESSAGES ERROR:", err);
