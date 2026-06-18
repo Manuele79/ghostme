@@ -82,10 +82,7 @@ export async function upsertProactiveMessage({
       .select("id, message, status")
       .eq("user_id", userId)
       .eq("category", category)
-      .in(
-        "status",
-        shouldKeepOnePerDay ? ALL_LIFECYCLE_STATUSES : ["unread", "read"]
-      );
+      .in("status", ALL_LIFECYCLE_STATUSES);
 
     if (shouldKeepOnePerDay) {
       legacyQuery = legacyQuery.gte("created_at", todayIso);
@@ -118,8 +115,9 @@ export async function upsertProactiveMessage({
       updatePayload.status = "unread";
       updatePayload.read_at = null;
       updatePayload.answered_at = null;
-    } else if (!keepHandledHidden && existing.status === "read") {
-      updatePayload.status = "read";
+    } else if (!keepHandledHidden && ["unread", "read"].includes(existing.status)) {
+      updatePayload.status = "unread";
+      updatePayload.read_at = null;
     }
 
     if (stableLogicalKey && supportsLogicalKey) {

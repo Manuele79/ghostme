@@ -1,5 +1,7 @@
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { upsertProactiveMessage } from "@/lib/ghostme/proactive/proactiveMessageService";
+import {
+  buildDailyProactiveLogicalKey,
+  upsertProactiveMessage,
+} from "@/lib/ghostme/proactive/proactiveMessageService";
 import { pickBestProactiveCandidate } from "@/lib/ghostme/proactive/proactiveCandidateRanker";
 import { runProactiveMaintenanceFlow } from "@/lib/ghostme/proactive/proactiveMaintenanceFlow";
 import { buildProactiveCandidatesForUser } from "@/lib/ghostme/proactive/proactiveCandidateBuilder";
@@ -39,6 +41,7 @@ export async function runProactiveFlowForUser(user: any): Promise<{
       message: agendaMessage,
       category: "agenda",
       priority: 5,
+      logicalKey: buildDailyProactiveLogicalKey("agenda"),
     });
   }
 
@@ -53,27 +56,14 @@ export async function runProactiveFlowForUser(user: any): Promise<{
     topics: dailyContext.topics,
   });
 
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
-
-  const { data: existingDaily } = await supabaseAdmin
-    .from("ghost_proactive_messages")
-    .select("id")
-    .eq("user_id", userId)
-    .eq("category", "daily_briefing")
-    .gte("created_at", startOfToday.toISOString())
-    .limit(1)
-    .maybeSingle();
-
-  if (!existingDaily?.id) {
-    await upsertProactiveMessage({
-      userId,
-      title: "Daily Briefing",
-      message: dailyMessage,
-      category: "daily_briefing",
-      priority: 1,
-    });
-  }
+  await upsertProactiveMessage({
+    userId,
+    title: "Daily Briefing",
+    message: dailyMessage,
+    category: "daily_briefing",
+    priority: 1,
+    logicalKey: buildDailyProactiveLogicalKey("daily_briefing"),
+  });
 
   return { created };
 }

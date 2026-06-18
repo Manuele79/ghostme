@@ -33,7 +33,13 @@ export async function POST(req: Request) {
       .select("*")
       .eq("user_id", body.userId)
       .in("status", ["unread", "read"])
-      .in("category", ["observation", "curiosity"])
+      .in("category", [
+        "agenda",
+        "reminder",
+        "daily_briefing",
+        "observation",
+        "curiosity",
+      ])
       .order("priority", { ascending: false })
       .order("created_at", { ascending: false })
       .limit(20);

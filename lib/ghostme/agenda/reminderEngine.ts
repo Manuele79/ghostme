@@ -4,11 +4,30 @@ import {
   upsertProactiveMessage,
 } from "@/lib/ghostme/proactive/proactiveMessageService";
 
+function buildEventReminderLogicalKey(event: any) {
+  const dayKey = buildDailyProactiveLogicalKey(
+    "reminder",
+    new Date(event.remind_at || event.start_at || Date.now())
+  );
+
+  return `${dayKey}_${event.id}`;
+}
+
+function formatReminderTime(value?: string | null) {
+  if (!value) return "orario non specificato";
+
+  return new Date(value).toLocaleTimeString("it-IT", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Europe/Rome",
+  });
+}
+
 export async function refreshReminderMessage(userId: string) {
   if (!userId) return;
 
   const now = new Date();
-  const nextHour = new Date(Date.now() + 60 * 60 * 1000);
+  const nextReminderWindow = new Date(Date.now() + 30 * 60 * 1000);
 
   const { data: reminders } = await supabaseAdmin
     .from("calendar_events")
@@ -16,9 +35,9 @@ export async function refreshReminderMessage(userId: string) {
     .eq("user_id", userId)
     .eq("status", "active")
     .gte("remind_at", now.toISOString())
-    .lte("remind_at", nextHour.toISOString())
+    .lte("remind_at", nextReminderWindow.toISOString())
     .order("remind_at", { ascending: true })
-    .limit(5);
+    .limit(10);
 
   if (!reminders?.length) {
     await supabaseAdmin
@@ -33,26 +52,17 @@ export async function refreshReminderMessage(userId: string) {
     return;
   }
 
-  const message =
-    "Promemoria imminenti:\n" +
-    reminders
-      .map((event) => {
-        const time = new Date(event.remind_at).toLocaleTimeString("it-IT", {
-        hour: "2-digit",
-        minute: "2-digit",
-        timeZone: "Europe/Rome",
-        });
+  for (const event of reminders) {
+    const time = formatReminderTime(event.remind_at);
+    const message = `Promemoria appuntamento:\n- ${time} - ${event.title}`;
 
-        return `• ${time} — ${event.title}`;
-      })
-      .join("\n");
-
-  await upsertProactiveMessage({
-    userId,
-    title: "Promemoria",
-    message,
-    category: "reminder",
-    priority: 10,
-    logicalKey: buildDailyProactiveLogicalKey("reminder"),
-  });
+    await upsertProactiveMessage({
+      userId,
+      title: "Promemoria",
+      message,
+      category: "reminder",
+      priority: 10,
+      logicalKey: buildEventReminderLogicalKey(event),
+    });
+  }
 }
