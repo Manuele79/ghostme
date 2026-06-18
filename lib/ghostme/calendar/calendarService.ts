@@ -13,6 +13,32 @@ export type GhostCalendarEventType =
   | "note"
   | "voice_note";
 
+const GENERIC_TITLES = new Set(["appuntamento", "promemoria", "nota"]);
+
+function cleanText(value: any) {
+  return String(value || "").trim().replace(/\s+/g, " ");
+}
+
+function normalizeCalendarTitle({
+  title,
+  type,
+  description,
+}: {
+  title: string;
+  type: GhostCalendarEventType;
+  description?: string | null;
+}) {
+  const cleanTitle = cleanText(title);
+  const cleanDescription = cleanText(description);
+
+  if (!GENERIC_TITLES.has(cleanTitle.toLowerCase())) return cleanTitle;
+  if (!cleanDescription) return cleanTitle;
+
+  return type === "appointment"
+    ? `Appuntamento: ${cleanDescription}`
+    : cleanDescription;
+}
+
 export async function createCalendarEvent({
   userId,
   type = "appointment",
@@ -34,6 +60,7 @@ export async function createCalendarEvent({
 }) {
   if (!userId || !title?.trim()) return null;
 
+  const finalTitle = normalizeCalendarTitle({ title, type, description });
   let finalRemindAt = remindAt || null;
 
   if (type === "appointment" && startAt && !finalRemindAt) {
@@ -56,7 +83,7 @@ export async function createCalendarEvent({
       {
         user_id: userId,
         type,
-        title,
+        title: finalTitle,
         description,
         start_at: startAt || null,
         end_at: finalEndAt,
@@ -103,7 +130,6 @@ export async function getUpcomingCalendarEvents(userId: string) {
 export async function refreshAgendaMessage(userId: string) {
   if (!userId) return;
 
-  await cleanupExpiredEvents(userId);
   await refreshReminderMessage(userId);
 
   const situation = await buildGhostSituation(userId);
@@ -176,9 +202,17 @@ export async function cleanupExpiredEvents(userId: string) {
   if (!userId) return;
 
   const now = new Date().toISOString();
+  const graceDate = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+
+  function applyFreshnessGuard(query: any) {
+    return query
+      .lt("created_at", graceDate)
+      .or(`updated_at.is.null,updated_at.lt.${graceDate}`);
+  }
 
   // Appuntamenti con end_at passato
-  await supabaseAdmin
+  await applyFreshnessGuard(
+    supabaseAdmin
     .from("calendar_events")
     .update({
       status: "completed",
@@ -186,11 +220,14 @@ export async function cleanupExpiredEvents(userId: string) {
     })
     .eq("user_id", userId)
     .eq("status", "active")
+    .eq("type", "appointment")
     .not("end_at", "is", null)
-    .lt("end_at", now);
+    .lt("end_at", now)
+  );
 
-  // Eventi senza end_at ma con start_at passato
-  await supabaseAdmin
+  // Note/eventi non appointment senza end_at ma con start_at passato
+  await applyFreshnessGuard(
+    supabaseAdmin
     .from("calendar_events")
     .update({
       status: "completed",
@@ -200,10 +237,13 @@ export async function cleanupExpiredEvents(userId: string) {
     .eq("status", "active")
     .is("end_at", null)
     .not("start_at", "is", null)
-    .lt("start_at", now);
+    .neq("type", "appointment")
+    .lt("start_at", now)
+  );
 
   // Promemoria senza start_at/end_at ma remind_at passato
-  await supabaseAdmin
+  await applyFreshnessGuard(
+    supabaseAdmin
     .from("calendar_events")
     .update({
       status: "completed",
@@ -214,5 +254,6 @@ export async function cleanupExpiredEvents(userId: string) {
     .is("start_at", null)
     .is("end_at", null)
     .not("remind_at", "is", null)
-    .lt("remind_at", now);
+    .lt("remind_at", now)
+  );
 }

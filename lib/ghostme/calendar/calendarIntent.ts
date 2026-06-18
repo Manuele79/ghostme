@@ -68,6 +68,8 @@ Regole:
 - Se l'utente dice "ricordami", usa type "reminder".
 - Se l'utente dice "appuntamento", "ho il dentista", "riunione", usa type "appointment".
 - Se l'utente dice "nota", usa type "note".
+- Il title NON deve essere generico come "Appuntamento", "Promemoria" o "Nota" se nel messaggio c'è un oggetto reale.
+- Esempio: "crea un appuntamento alle 00:59, clima prova" -> title "clima prova".
 - Se manca l'ora ma c'è un giorno, usa start_at null e spiega nel title/description.
 - Usa formato ISO per start_at, end_at, remind_at.
 - Per reminder, remind_at deve essere la data/ora del promemoria.

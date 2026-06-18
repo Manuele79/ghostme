@@ -5,6 +5,54 @@ import {
   refreshAgendaMessage,
 } from "@/lib/ghostme/calendar/calendarService";
 
+const GENERIC_TITLES = new Set(["appuntamento", "promemoria", "nota"]);
+
+function cleanText(value: any) {
+  return String(value || "").trim().replace(/\s+/g, " ");
+}
+
+function normalizeTitle(title: any, type: any, description: any) {
+  const cleanTitle = cleanText(title);
+  const cleanDescription = cleanText(description);
+
+  if (!GENERIC_TITLES.has(cleanTitle.toLowerCase())) return cleanTitle;
+  if (!cleanDescription) return cleanTitle;
+
+  return type === "appointment"
+    ? `Appuntamento: ${cleanDescription}`
+    : cleanDescription;
+}
+
+function buildCalendarPatchPayload(body: any) {
+  const type = body.type || "note";
+  const startAt = body.startAt || null;
+  let endAt = body.endAt || null;
+  let remindAt = body.remindAt || null;
+
+  if (type === "appointment" && startAt && !endAt) {
+    const endDate = new Date(startAt);
+    endDate.setHours(endDate.getHours() + 1);
+    endAt = endDate.toISOString();
+  }
+
+  if (type === "appointment" && startAt && !remindAt) {
+    const remindDate = new Date(startAt);
+    remindDate.setHours(remindDate.getHours() - 1);
+    remindAt = remindDate.toISOString();
+  }
+
+  return {
+    type,
+    title: normalizeTitle(body.title, type, body.description),
+    description: body.description || "",
+    start_at: startAt,
+    end_at: endAt,
+    remind_at: remindAt,
+    status: "active",
+    updated_at: new Date().toISOString(),
+  };
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -41,15 +89,7 @@ export async function PATCH(req: Request) {
 
     const { data, error } = await supabaseAdmin
       .from("calendar_events")
-      .update({
-        type: body.type,
-        title: body.title,
-        description: body.description || "",
-        start_at: body.startAt || null,
-        end_at: body.endAt || null,
-        remind_at: body.remindAt || null,
-        updated_at: new Date().toISOString(),
-      })
+      .update(buildCalendarPatchPayload(body))
       .eq("id", body.id)
       .eq("user_id", body.userId)
       .select()

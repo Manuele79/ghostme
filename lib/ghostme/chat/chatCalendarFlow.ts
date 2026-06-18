@@ -1,6 +1,44 @@
 import { parseCalendarIntent } from "@/lib/ghostme/calendar/calendarIntent";
 import { createCalendarEvent } from "@/lib/ghostme/calendar/calendarService";
 
+const GENERIC_CALENDAR_TITLES = new Set(["appuntamento", "promemoria", "nota"]);
+
+function cleanText(value: any) {
+  return String(value || "").trim().replace(/\s+/g, " ");
+}
+
+function deriveCalendarTitle({
+  parsedTitle,
+  description,
+  message,
+  type,
+}: {
+  parsedTitle?: string | null;
+  description?: string | null;
+  message: string;
+  type: string;
+}) {
+  const cleanTitle = cleanText(parsedTitle);
+
+  if (cleanTitle && !GENERIC_CALENDAR_TITLES.has(cleanTitle.toLowerCase())) {
+    return cleanTitle;
+  }
+
+  const cleanDescription = cleanText(description);
+  if (cleanDescription && !GENERIC_CALENDAR_TITLES.has(cleanDescription.toLowerCase())) {
+    return type === "appointment"
+      ? `Appuntamento: ${cleanDescription}`
+      : cleanDescription;
+  }
+
+  const afterComma = cleanText(message.split(",").slice(1).join(","));
+  if (afterComma) {
+    return type === "appointment" ? `Appuntamento: ${afterComma}` : afterComma;
+  }
+
+  return cleanTitle;
+}
+
 export async function handleChatCalendarFlow({
   userId,
   message,
@@ -21,7 +59,12 @@ export async function handleChatCalendarFlow({
         location: userLocation,
       });
 
-      const calendarTitle = calendarIntent.title?.trim();
+      const calendarTitle = deriveCalendarTitle({
+        parsedTitle: calendarIntent.title,
+        description: calendarIntent.description,
+        message,
+        type: calendarIntent.type || "appointment",
+      });
       if (calendarIntent.has_calendar_intent && calendarTitle) {
         const savedEvent = await createCalendarEvent({
           userId,
@@ -35,7 +78,7 @@ export async function handleChatCalendarFlow({
         });
       if (savedEvent) {
         calendarCreatedText =
-          `Fatto. Ho aggiunto "${calendarTitle}" al calendario.` +
+          `Fatto. Ho aggiunto "${savedEvent.title || calendarTitle}" al calendario.` +
           (savedEvent.start_at
             ? `\n${new Date(savedEvent.start_at).toLocaleString("it-IT", {
                 dateStyle: "short",
