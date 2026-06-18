@@ -26,13 +26,15 @@ function isVisibleProactiveMessage(message: any) {
   const dailyCategories = ["agenda", "daily_briefing", "reminder"];
   if (!dailyCategories.includes(message.category)) return true;
 
-  const createdAt = new Date(message.created_at || message.scheduled_for || "");
-  if (Number.isNaN(createdAt.getTime())) return true;
+  const visibleAt = new Date(
+    message.updated_at || message.scheduled_for || message.created_at || ""
+  );
+  if (Number.isNaN(visibleAt.getTime())) return true;
 
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
 
-  return createdAt >= startOfToday;
+  return visibleAt >= startOfToday;
 }
 
 export async function POST(req: Request) {

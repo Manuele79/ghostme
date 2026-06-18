@@ -6,7 +6,6 @@ import {
   buildDailyProactiveLogicalKey,
   upsertProactiveMessage,
 } from "@/lib/ghostme/proactive/proactiveMessageService";
-import { runProactiveTrigger } from "@/lib/ghostme/proactive/proactiveTrigger";
 
 export type GhostCalendarEventType =
   | "appointment"
@@ -74,10 +73,7 @@ export async function createCalendarEvent({
     return null;
   }
 
-    await runProactiveTrigger({
-    userId,
-    trigger: "calendar_changed",
-  });
+  await refreshAgendaMessage(userId);
 
   return data;
 }

@@ -7,7 +7,7 @@ import {
 function buildEventReminderLogicalKey(event: any) {
   const dayKey = buildDailyProactiveLogicalKey(
     "reminder",
-    new Date(event.remind_at || event.start_at || Date.now())
+    new Date(event.start_at || event.remind_at || Date.now())
   );
 
   return `${dayKey}_${event.id}`;
@@ -34,9 +34,9 @@ export async function refreshReminderMessage(userId: string) {
     .select("*")
     .eq("user_id", userId)
     .eq("status", "active")
-    .gte("remind_at", now.toISOString())
-    .lte("remind_at", nextReminderWindow.toISOString())
-    .order("remind_at", { ascending: true })
+    .gte("start_at", now.toISOString())
+    .lte("start_at", nextReminderWindow.toISOString())
+    .order("start_at", { ascending: true })
     .limit(10);
 
   if (!reminders?.length) {
@@ -53,7 +53,7 @@ export async function refreshReminderMessage(userId: string) {
   }
 
   for (const event of reminders) {
-    const time = formatReminderTime(event.remind_at);
+    const time = formatReminderTime(event.start_at || event.remind_at);
     const message = `Promemoria appuntamento:\n- ${time} - ${event.title}`;
 
     await upsertProactiveMessage({
