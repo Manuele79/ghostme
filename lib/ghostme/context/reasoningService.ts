@@ -20,6 +20,10 @@ import {
   type HomeLocationConsistency,
 } from "@/lib/ghostme/home/homeLocationConsistency";
 import {
+  buildHouseRouteSnapshot,
+  type HouseRouteSnapshot,
+} from "@/lib/ghostme/home/houseRouteSnapshot";
+import {
   buildPeopleSnapshot,
   type PeopleSnapshot,
 } from "@/lib/ghostme/people/peopleSnapshot";
@@ -71,6 +75,7 @@ export type GhostBrainSnapshot = {
     automationControls: any[];
     presence: ReturnType<typeof parseHomePresenceSignal>;
     consistency: HomeLocationConsistency;
+    routes: HouseRouteSnapshot;
     context: string | null;
   };
   proactive: {
@@ -609,6 +614,24 @@ export async function buildGhostBrainSnapshot(
       situation.currentPlaceCategory || graph.currentLocation?.place_category || null,
     houseState,
   });
+  let houseRoutes: HouseRouteSnapshot | null = null;
+  try {
+    houseRoutes = await buildHouseRouteSnapshot({ userId, houseState });
+  } catch (err) {
+    console.log("GHOSTBRAIN HOUSE ROUTES ERROR:", err);
+  }
+
+  if (!houseRoutes) {
+    houseRoutes = {
+      knownRoutes: [],
+      recentRoute: null,
+      activeRooms: houseState.activeRooms || [],
+      possibleMovement: "no_movement",
+      confidence: 0,
+      lastUpdated: houseState.lastUpdated,
+    };
+  }
+
   const simpleSignals = buildGhostBrainSimpleSignals({
     graph,
     situation,
@@ -649,6 +672,7 @@ export async function buildGhostBrainSnapshot(
       automationControls: graph.houseAutomationControls || [],
       presence: homePresence,
       consistency: homeConsistency,
+      routes: houseRoutes,
       context: homeContext || null,
     },
     proactive: {

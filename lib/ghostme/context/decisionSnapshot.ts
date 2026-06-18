@@ -153,6 +153,10 @@ function buildWarnings(snapshot: GhostBrainSnapshot) {
     warnings.push("duplicate_recent_proactive");
   }
 
+  if (snapshot.home.routes?.possibleMovement === "uncertain_movement") {
+    warnings.push("home_route_uncertain_movement");
+  }
+
   return unique(warnings);
 }
 
