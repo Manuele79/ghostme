@@ -78,11 +78,11 @@ function buildPriorities(snapshot: GhostBrainSnapshot) {
     priorities.push("calendar_events_available");
   }
 
-  if (snapshot.actions.length) {
+  if (snapshot.goals.pendingActions.length) {
     priorities.push("pending_actions_available");
   }
 
-  if (snapshot.goals.length) {
+  if (snapshot.goals.activeGoals.length) {
     priorities.push("active_goals_available");
   }
 
@@ -125,7 +125,7 @@ function buildWarnings(snapshot: GhostBrainSnapshot) {
     warnings.push("people_empty_but_relationship_memory_present");
   }
 
-  if (snapshot.actions.length >= 6) {
+  if (snapshot.goals.pendingActions.length >= 6) {
     warnings.push("many_pending_actions");
   }
 
@@ -144,8 +144,8 @@ function buildMissingContext(snapshot: GhostBrainSnapshot) {
   if (!snapshot.calendar.today.length && !snapshot.calendar.upcoming.length) {
     missing.push("no_calendar_events");
   }
-  if (!snapshot.goals.length) missing.push("no_goals");
-  if (!snapshot.actions.length) missing.push("no_pending_actions");
+  if (!snapshot.goals.activeGoals.length) missing.push("no_goals");
+  if (!snapshot.goals.pendingActions.length) missing.push("no_pending_actions");
   if (!snapshot.location.situation.currentPlace || !locationFresh) {
     missing.push("no_fresh_location");
   }
@@ -177,8 +177,8 @@ function buildPossibleActions({
   if (snapshot.calendar.today.length || snapshot.calendar.upcoming.length) {
     actions.push("review_calendar");
   }
-  if (snapshot.actions.length) actions.push("review_pending_actions");
-  if (snapshot.goals.length) actions.push("review_active_goals");
+  if (snapshot.goals.pendingActions.length) actions.push("review_pending_actions");
+  if (snapshot.goals.activeGoals.length) actions.push("review_active_goals");
   if (warnings.includes("location_stale") || missingContext.includes("no_fresh_location")) {
     actions.push("clarify_location");
   }
@@ -203,7 +203,7 @@ function chooseSuggestedFocus({
     return "home_state_incoherent";
   }
 
-  if (snapshot.actions.length) {
+  if (snapshot.goals.pendingActions.length) {
     return "focus_on_pending_actions";
   }
 

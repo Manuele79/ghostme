@@ -19,7 +19,7 @@ export async function POST(req: Request) {
       traits: null,
       memories: snapshot.memory.activeMemories || [],
       timeline: snapshot.memory.timeline || [],
-      goals: snapshot.goals || [],
+      goals: snapshot.goals.activeGoals || [],
       mentalState: snapshot.profile?.mentalState || null,
       actions: snapshot.actions || [],
       calendarEvents: snapshot.calendar.upcoming || [],

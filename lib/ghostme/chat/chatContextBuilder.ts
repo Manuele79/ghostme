@@ -216,7 +216,7 @@ export async function buildChatContext({
         ? currentLocation?.current_place_label
         : null,
       ...calendarEvents.map((event: any) => event.title),
-      ...snapshot.goals.map((goal: any) => goal.title),
+      ...snapshot.goals.activeGoals.map((goal: any) => goal.title),
       ...snapshot.actions.map((action: any) => action.title),
       ...snapshot.people.items.map((person: any) => person.name),
       ...snapshot.memory.topics.map((topic: any) => topic.topic),
@@ -245,7 +245,10 @@ export async function buildChatContext({
     buildMentalStateContext(snapshot.profile?.mentalState),
     600
   );
-  context.goalsContext = trimBlock(buildGoalsContext(snapshot.goals), 800);
+  context.goalsContext = trimBlock(
+    buildGoalsContext(snapshot.goals.activeGoals),
+    800
+  );
   context.timelineContext = trimBlock(
     buildTimelineContext(snapshot.memory.timeline),
     800

@@ -63,7 +63,7 @@ function buildCurrentContextFromSnapshot({
     .filter((topic) => topic.category === "project" || topic.entity_type === "project")
     .map((topic) => topic.topic)
     .slice(0, 5);
-  const activeGoals = mapTitles(snapshot.goals, "goal", 5);
+  const activeGoals = mapTitles(snapshot.goals.activeGoals, "goal", 5);
   const pendingActions = (snapshot.actions || [])
     .map((action) => `${action.intent_type}: ${action.title}`)
     .slice(0, 5);

@@ -23,6 +23,10 @@ import {
   buildMemorySnapshot,
   type MemorySnapshot,
 } from "@/lib/ghostme/memory/memorySnapshot";
+import {
+  buildGoalsSnapshot,
+  type GoalsSnapshot,
+} from "@/lib/ghostme/goals/goalsSnapshot";
 
 type DetectedTopicInput = {
   topic: string;
@@ -55,7 +59,7 @@ export type GhostBrainSnapshot = {
     upcoming: any[];
     today: any[];
   };
-  goals: any[];
+  goals: GoalsSnapshot;
   actions: any[];
   home: {
     state: HouseStateSnapshot;
@@ -551,14 +555,27 @@ export async function buildGhostBrainSnapshot(
 ): Promise<GhostBrainSnapshot> {
   const generatedAt = new Date().toISOString();
 
-  const [{ graph }, situation, peopleSnapshot, memorySnapshot] = await Promise.all([
+  const [
+    { graph },
+    situation,
+    peopleSnapshot,
+    memorySnapshot,
+    goalsSnapshot,
+  ] = await Promise.all([
     loadUserContextGraph(userId),
     buildGhostSituation(userId),
     buildPeopleSnapshot(userId),
     buildMemorySnapshot(userId),
+    buildGoalsSnapshot(userId),
   ]);
 
-  const contextSignals = buildContextSignals(situation);
+  const signalSituation = {
+    ...situation,
+    activeGoals: goalsSnapshot.activeGoals,
+    pendingActions: goalsSnapshot.pendingActions,
+  };
+
+  const contextSignals = buildContextSignals(signalSituation);
 
   let houseState: HouseStateSnapshot | null = null;
   try {
@@ -610,8 +627,8 @@ export async function buildGhostBrainSnapshot(
       upcoming: graph.calendarUpcoming || [],
       today: situation.calendarToday || [],
     },
-    goals: graph.goals || [],
-    actions: graph.actionIntents || [],
+    goals: goalsSnapshot,
+    actions: goalsSnapshot.pendingActions,
     home: {
       state: houseState,
       learnedRules: graph.houseLearnedRules || [],
