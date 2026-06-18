@@ -516,8 +516,10 @@ useEffect(() => {
 
     setSaving(true);
 
-    const [hour, minute] = newTime.split(":").map(Number);
-    const eventDate = new Date(year, month, selectedDay, hour || 9, minute || 0);
+    const [rawHour, rawMinute] = newTime.split(":").map(Number);
+    const hour = Number.isNaN(rawHour) ? 9 : rawHour;
+    const minute = Number.isNaN(rawMinute) ? 0 : rawMinute;
+    const eventDate = new Date(year, month, selectedDay, hour, minute);
 
     const remindDate = new Date(eventDate);
 
