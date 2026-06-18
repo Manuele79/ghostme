@@ -17,7 +17,7 @@ export async function POST(req: Request) {
       snapshot,
       profile: snapshot.profile || null,
       traits: null,
-      memories: snapshot.memory.memories || [],
+      memories: snapshot.memory.activeMemories || [],
       timeline: snapshot.memory.timeline || [],
       goals: snapshot.goals || [],
       mentalState: snapshot.profile?.mentalState || null,

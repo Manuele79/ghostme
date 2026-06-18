@@ -10,6 +10,19 @@ import {
   buildGhostSituation,
   type GhostSituation,
 } from "@/lib/ghostme/situation/situationEngine";
+import {
+  buildHouseStateSnapshot,
+  formatHouseStateContext,
+  type HouseStateSnapshot,
+} from "@/lib/ghostme/home/houseStateSnapshot";
+import {
+  buildPeopleSnapshot,
+  type PeopleSnapshot,
+} from "@/lib/ghostme/people/peopleSnapshot";
+import {
+  buildMemorySnapshot,
+  type MemorySnapshot,
+} from "@/lib/ghostme/memory/memorySnapshot";
 
 type DetectedTopicInput = {
   topic: string;
@@ -25,18 +38,8 @@ type ReasoningSnapshotInput = {
 
 export type GhostBrainSnapshot = {
   profile: any | null;
-  memory: {
-    topics: any[];
-    memories: any[];
-    episodes: any[];
-    summaries: any[];
-    timeline: any[];
-    links: any[];
-  };
-  people: {
-    items: any[];
-    context: string;
-  };
+  memory: MemorySnapshot;
+  people: PeopleSnapshot;
   location: {
     current: any | null;
     significantPlaces: any[];
@@ -55,6 +58,7 @@ export type GhostBrainSnapshot = {
   goals: any[];
   actions: any[];
   home: {
+    state: HouseStateSnapshot;
     learnedRules: any[];
     automationControls: any[];
     presence: ReturnType<typeof parseHomePresenceSignal>;
@@ -339,6 +343,26 @@ function parseHomePresenceSignal(homeContext: string) {
   };
 }
 
+function buildHomePresenceFromHouseState(houseState: HouseStateSnapshot) {
+  let status = "unknown";
+  if (houseState.occupancyStatus === "empty") status = "empty";
+  if (houseState.occupancyStatus === "one_person_home") status = "one_person_home";
+  if (houseState.occupancyStatus === "multiple_people_home") {
+    status = "two_people_home";
+  }
+  if (houseState.occupancyStatus === "activity_detected") {
+    status = "activity_detected";
+  }
+
+  return {
+    status,
+    signals: houseState.signals,
+    reason: houseState.signals.length
+      ? "house_state_snapshot"
+      : "no_home_signal",
+  };
+}
+
 function buildMemoryAnchors(situation: GhostSituation, detectedTopics: DetectedTopicInput[]) {
   const detected = detectedTopics.map((topic) => clean(topic.topic));
   const anchors: string[] = [];
@@ -527,22 +551,36 @@ export async function buildGhostBrainSnapshot(
 ): Promise<GhostBrainSnapshot> {
   const generatedAt = new Date().toISOString();
 
-  const [{ graph }, situation] = await Promise.all([
+  const [{ graph }, situation, peopleSnapshot, memorySnapshot] = await Promise.all([
     loadUserContextGraph(userId),
     buildGhostSituation(userId),
+    buildPeopleSnapshot(userId),
+    buildMemorySnapshot(userId),
   ]);
 
   const contextSignals = buildContextSignals(situation);
 
-  let homeContext = "";
+  let houseState: HouseStateSnapshot | null = null;
   try {
-    homeContext = await buildHomeReasoning();
+    houseState = await buildHouseStateSnapshot(userId);
   } catch (err) {
-    console.log("GHOSTBRAIN HOME ERROR:", err);
-    homeContext = "";
+    console.log("GHOSTBRAIN HOUSE STATE ERROR:", err);
   }
 
-  const homePresence = parseHomePresenceSignal(homeContext);
+  if (!houseState) {
+    houseState = {
+      occupancyStatus: "unknown",
+      people: [],
+      activeRooms: [],
+      media: [],
+      signals: [],
+      confidence: 0,
+      lastUpdated: null,
+    };
+  }
+
+  const homeContext = formatHouseStateContext(houseState);
+  const homePresence = buildHomePresenceFromHouseState(houseState);
   const simpleSignals = buildGhostBrainSimpleSignals({
     graph,
     situation,
@@ -555,18 +593,8 @@ export async function buildGhostBrainSnapshot(
       mentalState: situation.mentalState || null,
       dynamicProfile: situation.dynamicProfile || [],
     },
-    memory: {
-      topics: graph.topics || [],
-      memories: graph.memories || [],
-      episodes: graph.episodes || [],
-      summaries: graph.summaries || [],
-      timeline: situation.recentTimelineEvents || [],
-      links: situation.importantLinks || [],
-    },
-    people: {
-      items: graph.people || [],
-      context: situation.peopleGraphContext || "",
-    },
+    memory: memorySnapshot,
+    people: peopleSnapshot,
     location: {
       current: graph.currentLocation || null,
       significantPlaces: graph.significantPlaces || [],
@@ -585,6 +613,7 @@ export async function buildGhostBrainSnapshot(
     goals: graph.goals || [],
     actions: graph.actionIntents || [],
     home: {
+      state: houseState,
       learnedRules: graph.houseLearnedRules || [],
       automationControls: graph.houseAutomationControls || [],
       presence: homePresence,

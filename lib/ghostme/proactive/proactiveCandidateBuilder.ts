@@ -77,15 +77,13 @@ function buildCurrentContextFromSnapshot({
     .map((topic) => topic.topic)
     .slice(0, 8);
   const mentalState = formatMentalState(snapshot.profile?.mentalState);
-  const recentEpisodes = mapTitles(snapshot.memory.episodes, "episodio", 5);
+  const recentEpisodes = mapTitles(snapshot.memory.episodicMemories, "episodio", 5);
   const recentTimelineEvents = mapTitles(snapshot.memory.timeline, "evento timeline", 5);
   const recentSummaries = mapTitles(snapshot.memory.summaries, "riassunto", 5);
   const dynamicProfile = (snapshot.profile?.dynamicProfile || [])
     .map((item: any) => `${item.trait}: ${item.description || ""}`)
     .slice(0, 5);
-  const importantLinks = (snapshot.memory.links || [])
-    .map((link) => `${link.source_topic} -> ${link.target_topic}`)
-    .slice(0, 8);
+  const importantLinks: string[] = [];
   const recentProactiveMessages = (snapshot.proactive.recent || [])
     .map(
       (message) =>
