@@ -47,6 +47,9 @@ export default function ChatPage() {
   const [memoryOpen, setMemoryOpen] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [pendingProactiveReplyId, setPendingProactiveReplyId] = useState<
+    string | null
+  >(null);
 
   const [activeMemoryTab, setActiveMemoryTab] = useState<
     "memory" | "timeline" | "goals" | "state"
@@ -81,7 +84,7 @@ export default function ChatPage() {
     setLoadingChat,
   } = ghostChat;
 
-  const { brainData, loadBrainData } = ghostBrain;
+  const { brainData, setBrainData, loadBrainData } = ghostBrain;
 
   const currentModeLabel = useMemo(() => modeLabels[mode], [mode]);
 
@@ -104,8 +107,32 @@ export default function ChatPage() {
     });
   }
 
-  async function markProactiveAsRead(messageId?: string) {
+  function hideProactiveMessage(messageId?: string) {
+    if (!messageId) return;
+
+    setBrainData((prev) => {
+      const proactiveMessages = (prev.proactiveMessages || []).filter(
+        (message) => message.id !== messageId
+      );
+
+      return {
+        ...prev,
+        proactiveMessage:
+          prev.proactiveMessage?.id === messageId
+            ? proactiveMessages[0] || null
+            : prev.proactiveMessage,
+        proactiveMessages,
+      };
+    });
+  }
+
+  async function markProactiveMessage(
+    messageId?: string,
+    status: "read" | "answered" = "read"
+  ) {
     if (!messageId || !currentUserId) return;
+
+    hideProactiveMessage(messageId);
 
     await fetch("/api/ghostme/proactive/read", {
       method: "POST",
@@ -115,27 +142,19 @@ export default function ChatPage() {
       body: JSON.stringify({
         id: messageId,
         userId: currentUserId,
+        status,
       }),
     });
     await refreshBrain(currentUserId);
   }
 
+  async function markProactiveAsRead(messageId?: string) {
+    await markProactiveMessage(messageId, "read");
+  }
+
   async function markProactiveAsAnswered(messageId?: string) {
-  if (!messageId || !currentUserId) return;
-
-  await fetch("/api/ghostme/proactive/read", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      id: messageId,
-      userId: currentUserId,
-      status: "answered",
-    }),
-  });
-
-  await refreshBrain(currentUserId);
+    if (!messageId) return;
+    setPendingProactiveReplyId(messageId);
 }
 
   async function saveConversationInBackground({
@@ -551,6 +570,12 @@ export default function ChatPage() {
       userText,
       assistantReply: assistant.content,
     });
+
+    if (pendingProactiveReplyId) {
+      const answeredMessageId = pendingProactiveReplyId;
+      setPendingProactiveReplyId(null);
+      await markProactiveMessage(answeredMessageId, "answered");
+    }
   } catch (err) {
     console.log(err);
 
@@ -567,7 +592,11 @@ export default function ChatPage() {
   }
 }
 
-  function replyToProactiveMessage(message: string) {
+  function replyToProactiveMessage(message: string, messageId?: string) {
+    if (messageId) {
+      setPendingProactiveReplyId(messageId);
+    }
+
     setInput(
       `Sto rispondendo alla tua osservazione:\n\n"${message}"\n\nRisposta: `
     );

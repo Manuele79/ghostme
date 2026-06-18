@@ -11,7 +11,9 @@ export async function POST(req: Request) {
     }
 
     const snapshot = await buildGhostBrainSnapshot(userId);
-    const proactiveMessages = snapshot.proactive.recent || [];
+    const proactiveMessages = (snapshot.proactive.recent || []).filter(
+      (message: any) => message.status === "unread"
+    );
 
     return NextResponse.json({
       snapshot,

@@ -130,7 +130,7 @@ export function ServicesDrawer ({
   refreshBrain: (userId: string) => Promise<void>;
   currentUserId: string;
   logout: () => void;
-  onReplyObservation: (message: string) => void;
+  onReplyObservation: (message: string, messageId?: string) => void;
 }) {
   if (!open) return null;
 
@@ -270,7 +270,7 @@ function ServicePanelContent({
   calendarEvents: CalendarEvent[];
   refreshBrain: (userId: string) => Promise<void>;
   currentUserId: string;
-  onReplyObservation: (message: string) => void;
+  onReplyObservation: (message: string, messageId?: string) => void;
 }) {
   const today = new Date();
 
@@ -402,6 +402,48 @@ useEffect(() => {
 
   loadPlaces();
 }, [activeTab, currentUserId]);
+
+async function markObservationHandled(
+  item: any,
+  status: "read" | "answered" = "read"
+) {
+  if (!currentUserId || !item?.id) return false;
+
+  setObservations((prev) =>
+    prev.filter((observation) => observation.id !== item.id)
+  );
+  setHiddenObservations((prev) =>
+    prev.includes(item.id) ? prev : [...prev, item.id]
+  );
+
+  try {
+    const res = await fetch("/api/ghostme/proactive/read", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        id: item.id,
+        userId: currentUserId,
+        status,
+      }),
+    });
+
+    if (!res.ok) {
+      console.log("MARK OBSERVATION READ ERROR:", await res.text());
+      return false;
+    }
+
+    if (currentUserId) {
+      await refreshBrain(currentUserId);
+    }
+
+    return true;
+  } catch (err) {
+    console.log("MARK OBSERVATION READ FRONT ERROR:", err);
+    return false;
+  }
+}
 
 useEffect(() => {
   if (!currentUserId) return;
@@ -575,11 +617,7 @@ useEffect(() => {
 
               <div className="flex justify-end">
                 <button
-                  onClick={() =>
-                    setHiddenObservations((prev) =>
-                      prev.includes(item.id) ? prev : [...prev, item.id]
-                    )
-                  }
+                  onClick={() => markObservationHandled(item, "read")}
                   className="rounded-full border border-zinc-700 px-2 py-1 text-xs text-zinc-500 hover:border-red-400 hover:text-red-300"
                   title="Nascondi dal pannello"
                 >
@@ -599,7 +637,9 @@ useEffect(() => {
                   {item.category || "observation"} · priorità {item.priority || 1}
                 </p>
                 <button
-                  onClick={() => onReplyObservation(item.message || "")}
+                  onClick={() => {
+                    onReplyObservation(item.message || "", item.id);
+                  }}
                   className="mt-3 rounded-xl border border-cyan-400/30 px-3 py-2 text-xs font-bold text-cyan-300"
                 >
                   Rispondi
