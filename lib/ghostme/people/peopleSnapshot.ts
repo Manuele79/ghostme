@@ -24,12 +24,84 @@ const RELATION_TERMS = [
   "compagno",
   "amica",
   "amico",
+  "amici",
+  "collega",
+  "colleghi",
   "figlia",
   "figlio",
+  "madre",
+  "padre",
+  "mamma",
+  "papa",
   "sorella",
   "fratello",
+  "famiglia",
+  "persona",
   "family",
   "friend",
+  "relationship",
+  "colleague",
+];
+
+const HUMAN_CATEGORIES = [
+  "person",
+  "family",
+  "friend",
+  "relationship",
+  "colleague",
+];
+
+const NON_PERSON_CATEGORIES = [
+  "project",
+  "home",
+  "work",
+  "object",
+  "system",
+  "vehicle",
+  "place",
+  "automation",
+  "calendar",
+  "service",
+  "animal",
+];
+
+const EXCLUDED_NAME_TERMS = [
+  "ghostme",
+  "home assistant",
+  "vespa",
+  "piaggio",
+  "ciao",
+  "osservazione",
+  "osservazione dei luoghi",
+  "risposta",
+  "programma",
+  "progetto",
+  "automazione",
+  "luogo",
+  "luoghi",
+  "sistema",
+  "calendario",
+  "agenda",
+  "promemoria",
+  "appuntamento",
+];
+
+const NON_PERSON_TEXT_TERMS = [
+  "progetto",
+  "programma",
+  "sistema",
+  "automazione",
+  "home assistant",
+  "ghostme",
+  "luogo",
+  "luoghi",
+  "mezzo",
+  "veicolo",
+  "vespa",
+  "piaggio",
+  "scooter",
+  "moto",
+  "osservazione dei luoghi",
 ];
 
 function hasRelationshipTerm(value: any) {
@@ -37,13 +109,72 @@ function hasRelationshipTerm(value: any) {
   return RELATION_TERMS.some((term) => text.includes(term));
 }
 
-function isPersonTopic(topic: any) {
+function hasAnyTerm(value: any, terms: string[]) {
+  const text = clean(value);
+  return terms.some((term) => text.includes(term));
+}
+
+function hasHumanCategory(value: any) {
+  return HUMAN_CATEGORIES.includes(clean(value));
+}
+
+function hasNonPersonCategory(value: any) {
+  return NON_PERSON_CATEGORIES.includes(clean(value));
+}
+
+function isExcludedName(value: any) {
+  const name = normalizeName(value);
+  return Boolean(name) && EXCLUDED_NAME_TERMS.some((term) => name.includes(term));
+}
+
+function hasNonPersonText(value: any) {
+  return hasAnyTerm(value, NON_PERSON_TEXT_TERMS);
+}
+
+function hasHumanEvidence(row: any) {
+  const text = [
+    row.name,
+    row.topic,
+    row.relationship_type,
+    row.category,
+    row.entity_type,
+    row.description,
+    row.notes,
+    row.content,
+  ].join(" ");
+
   return (
-    clean(topic.entity_type) === "person" ||
-    ["family", "friend"].includes(clean(topic.category)) ||
-    hasRelationshipTerm(topic.description) ||
-    hasRelationshipTerm(topic.notes)
+    clean(row.entity_type) === "person" ||
+    hasHumanCategory(row.category) ||
+    hasHumanCategory(row.relationship_type) ||
+    hasRelationshipTerm(text)
   );
+}
+
+function isLikelyRealPerson(row: any) {
+  const name = row.name || row.topic;
+  const text = `${row.description || ""} ${row.notes || ""} ${row.content || ""}`;
+
+  if (!name || isExcludedName(name)) return false;
+  if (hasNonPersonCategory(row.category) || hasNonPersonCategory(row.entity_type)) {
+    return false;
+  }
+  if (hasNonPersonText(text) && !hasRelationshipTerm(text)) return false;
+
+  return hasHumanEvidence(row);
+}
+
+function isPersonTopic(topic: any) {
+  return isLikelyRealPerson(topic);
+}
+
+function isPersonMemory(memory: any) {
+  const text = `${memory.title || ""} ${memory.content || ""} ${memory.category || ""}`;
+
+  if (hasNonPersonCategory(memory.category)) return false;
+  if (hasNonPersonText(text) && !hasRelationshipTerm(text)) return false;
+
+  return hasHumanCategory(memory.category) || hasRelationshipTerm(text);
 }
 
 function extractMemoryPersonNames(memory: any) {
@@ -51,11 +182,26 @@ function extractMemoryPersonNames(memory: any) {
   const title = String(memory.title || "").trim();
   const infoMatch = title.match(/^Info su\s+(.+)$/i);
 
-  if (infoMatch?.[1]) {
+  if (infoMatch?.[1] && isPersonMemory(memory) && !isExcludedName(infoMatch[1])) {
     names.push(infoMatch[1].trim());
   }
 
   return names;
+}
+
+function mergeUnique(values: any[]) {
+  const seen = new Set<string>();
+  const result: any[] = [];
+
+  for (const value of values || []) {
+    const key = clean(value);
+    if (!key || seen.has(key)) continue;
+
+    seen.add(key);
+    result.push(value);
+  }
+
+  return result;
 }
 
 function latestTimestamp(values: Array<string | null | undefined>) {
@@ -88,7 +234,7 @@ function mergePeople({
 
   for (const person of peopleRows || []) {
     const key = normalizeName(person.normalized_name || person.name);
-    if (!key) continue;
+    if (!key || !isLikelyRealPerson(person)) continue;
 
     map.set(key, {
       ...person,
@@ -144,10 +290,10 @@ function mergePeople({
         ),
         mention_count: Number(existing?.mention_count || 0),
         source: existing?.source || "memories_active",
-        memory_titles: [
+        memory_titles: mergeUnique([
           ...(existing?.memory_titles || []),
           memory.title,
-        ].filter(Boolean),
+        ]),
       });
     }
 
@@ -156,12 +302,12 @@ function mergePeople({
 
       map.set(key, {
         ...person,
-        memory_titles: [...(person.memory_titles || []), memory.title].filter(Boolean),
+        memory_titles: mergeUnique([...(person.memory_titles || []), memory.title]),
       });
     }
   }
 
-  return Array.from(map.values()).sort(
+  return Array.from(map.values()).filter(isLikelyRealPerson).sort(
     (a, b) =>
       Number(b.importance || 0) +
       Number(b.mention_count || 0) -
