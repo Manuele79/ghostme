@@ -24,6 +24,9 @@ export type DecisionSnapshot = {
   nextBestAction:
     | "review_pending_actions"
     | "clarify_home_location"
+    | "review_appliance_load"
+    | "consider_climate_cooling"
+    | "consider_light_for_active_room"
     | "check_calendar"
     | "enrich_people_graph"
     | "continue_project"
@@ -93,6 +96,8 @@ function hasHomeLocationMismatch(snapshot: GhostBrainSnapshot) {
 
 function buildPriorities(snapshot: GhostBrainSnapshot) {
   const priorities: string[] = [];
+  const comfortSignals = snapshot.home.comfortRisk?.comfortSignals || [];
+  const riskSignals = snapshot.home.comfortRisk?.riskSignals || [];
 
   if (snapshot.calendar.today.length || snapshot.calendar.upcoming.length) {
     priorities.push("calendar_events_available");
@@ -108,6 +113,31 @@ function buildPriorities(snapshot: GhostBrainSnapshot) {
 
   if (snapshot.home.state.occupancyStatus !== "unknown") {
     priorities.push(`home_${snapshot.home.state.occupancyStatus}`);
+  }
+
+  if (hasHomeLocationMismatch(snapshot)) {
+    priorities.push("home_mismatch");
+  }
+
+  if (
+    riskSignals.includes("possible_power_overload") ||
+    riskSignals.includes("multiple_appliances_active") ||
+    riskSignals.includes("appliance_conflict")
+  ) {
+    priorities.push("home_power_risk");
+  }
+
+  if (
+    comfortSignals.includes("hot_home") ||
+    comfortSignals.includes("cold_home") ||
+    comfortSignals.includes("humid_home") ||
+    comfortSignals.includes("low_light_with_presence")
+  ) {
+    priorities.push("home_comfort_attention");
+  }
+
+  if (snapshot.home.routes?.possibleMovement === "uncertain_movement") {
+    priorities.push("home_route_attention");
   }
 
   if (snapshot.proactive.recent.length) {
@@ -132,6 +162,8 @@ function buildPriorities(snapshot: GhostBrainSnapshot) {
 function buildWarnings(snapshot: GhostBrainSnapshot) {
   const warnings: string[] = [];
   const locationFresh = isRecent(snapshot.location.situation.lastChangedAt);
+  const comfortSignals = snapshot.home.comfortRisk?.comfortSignals || [];
+  const riskSignals = snapshot.home.comfortRisk?.riskSignals || [];
 
   if (snapshot.location.situation.currentPlace && !locationFresh) {
     warnings.push("location_stale");
@@ -157,12 +189,27 @@ function buildWarnings(snapshot: GhostBrainSnapshot) {
     warnings.push("home_route_uncertain_movement");
   }
 
-  if (snapshot.home.comfortRisk?.riskSignals.includes("possible_power_overload")) {
-    warnings.push("home_possible_power_overload");
+  if (
+    riskSignals.includes("possible_power_overload") ||
+    riskSignals.includes("multiple_appliances_active")
+  ) {
+    warnings.push("home_power_risk");
   }
 
-  if (snapshot.home.comfortRisk?.riskSignals.includes("appliance_conflict")) {
+  if (riskSignals.includes("appliance_conflict")) {
     warnings.push("home_appliance_conflict");
+  }
+
+  if (comfortSignals.includes("hot_home")) {
+    warnings.push("home_comfort_hot");
+  }
+
+  if (comfortSignals.includes("cold_home")) {
+    warnings.push("home_comfort_cold");
+  }
+
+  if (comfortSignals.includes("humid_home")) {
+    warnings.push("home_humidity_high");
   }
 
   return unique(warnings);
@@ -211,6 +258,7 @@ function buildPossibleActions({
   missingContext: string[];
 }) {
   const actions: string[] = [];
+  const homeSuggestions = snapshot.home.comfortRisk?.suggestions || [];
 
   if (snapshot.signals.simple?.hasUpcomingEvent) {
     actions.push("review_calendar");
@@ -220,6 +268,30 @@ function buildPossibleActions({
   }
   if (snapshot.signals.simple?.homeMismatch || warnings.includes("home_location_mismatch")) {
     actions.push("clarify_home_location");
+  }
+  if (warnings.includes("home_route_uncertain_movement")) {
+    actions.push("review_house_route");
+  }
+  if (
+    warnings.includes("home_power_risk") ||
+    homeSuggestions.includes("review_appliance_load")
+  ) {
+    actions.push("review_appliance_load");
+  }
+  if (
+    warnings.includes("home_comfort_hot") ||
+    homeSuggestions.includes("consider_climate_cooling")
+  ) {
+    actions.push("consider_climate_cooling");
+  }
+  if (
+    warnings.includes("home_comfort_cold") ||
+    homeSuggestions.includes("consider_climate_heating")
+  ) {
+    actions.push("consider_heating");
+  }
+  if (homeSuggestions.includes("consider_light_for_active_room")) {
+    actions.push("consider_light_for_active_room");
   }
   if (snapshot.signals.simple?.needsGoalReview) actions.push("review_active_goals");
   if (warnings.includes("location_stale") || missingContext.includes("no_fresh_location")) {
@@ -333,8 +405,25 @@ function chooseNextBestAction({
   warnings: string[];
   missingContext: string[];
 }): DecisionSnapshot["nextBestAction"] {
+  const homeSuggestions = snapshot.home.comfortRisk?.suggestions || [];
+
+  if (warnings.includes("home_power_risk")) {
+    return "review_appliance_load";
+  }
+
   if (snapshot.signals.simple?.homeMismatch || warnings.includes("home_location_mismatch")) {
     return "clarify_home_location";
+  }
+
+  if (
+    warnings.includes("home_comfort_hot") ||
+    homeSuggestions.includes("consider_climate_cooling")
+  ) {
+    return "consider_climate_cooling";
+  }
+
+  if (homeSuggestions.includes("consider_light_for_active_room")) {
+    return "consider_light_for_active_room";
   }
 
   if (snapshot.signals.simple?.hasPendingActions) {
