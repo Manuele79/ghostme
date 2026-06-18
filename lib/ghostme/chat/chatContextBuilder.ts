@@ -1,15 +1,6 @@
-import { supabase } from "@/lib/supabase";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { buildBehaviorPrompt } from "@/lib/ghostme/behavior/behaviorRulesEngine";
-import { getActionIntentContext } from "@/lib/ghostme/actionLayer";
-import { getDynamicSelfProfileContext } from "@/lib/ghostme/dynamicSelfProfile";
-import { getGoalsDesiresContext } from "@/lib/ghostme/goalsDesires";
-import { buildHouseAutomationContext } from "@/lib/ghostme/homeAssistant/houseAutomationContext";
-import { buildCognitiveHouse } from "@/lib/ghostme/homeAssistant/cognitiveHouseBuilder";
-import { buildHouseLearnedRulesContext } from "@/lib/ghostme/homeAssistant/houseLearnedRulesContext";
 import { buildContextualMemory } from "@/lib/ghostme/retrieval";
-import { loadUserContextGraph } from "@/lib/ghostme/context/userContextGraph";
-import { getTimelineContext } from "@/lib/ghostme/timeline";
+import { buildGhostBrainSnapshot } from "@/lib/ghostme/context/reasoningService";
 import { trimBlock } from "@/lib/ghostme/chat/chatPromptBuilder";
 import type { DetectedTopicLike } from "@/lib/ghostme/chat/chatTypes";
 
@@ -79,17 +70,9 @@ Bio: ${userProfile.short_bio || ""}
 `;
 }
 
-async function getMentalStateContext(userId: string) {
-  if (!userId) return "";
-  const { data } = await supabaseAdmin
-    .from("mental_states")
-    .select("*")
-    .eq("user_id", userId)
-    .order("updated_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
+function buildMentalStateContext(data: any) {
   if (!data) return "";
+
   return `
 stress: ${data.stress ?? 0}
 entusiasmo: ${data.entusiasmo ?? 0}
@@ -128,6 +111,84 @@ function isFreshLocationState(location: any) {
   return Date.now() - time <= LOCATION_FRESHNESS_WINDOW_MS;
 }
 
+function buildGoalsContext(goals: any[]) {
+  if (!goals?.length) return "";
+
+  return goals
+    .map(
+      (goal) =>
+        `- ${goal.title || "Goal"} | ${goal.category || ""} | importanza ${
+          goal.importance ?? ""
+        }\n${goal.description || ""}`
+    )
+    .join("\n");
+}
+
+function buildTimelineContext(events: any[]) {
+  if (!events?.length) return "";
+
+  return events
+    .map(
+      (event) =>
+        `- ${event.title || event.summary || "Evento"} | ${
+          event.event_date || event.created_at || ""
+        }\n${event.summary || event.description || ""}`
+    )
+    .join("\n");
+}
+
+function buildDynamicSelfProfileContext(items: any[]) {
+  if (!items?.length) return "";
+
+  return items
+    .map(
+      (item) =>
+        `- ${item.trait || "tratto"} | confidenza ${item.confidence ?? ""}\n${
+          item.description || ""
+        }`
+    )
+    .join("\n");
+}
+
+function buildActionIntentContext(actions: any[]) {
+  if (!actions?.length) return "";
+
+  return actions
+    .map(
+      (action) =>
+        `- ${action.intent_type || "azione"}: ${action.title || ""} | priorita ${
+          action.priority ?? ""
+        }\n${action.description || ""}`
+    )
+    .join("\n");
+}
+
+function buildHouseLearnedRulesContext(rules: any[]) {
+  if (!rules?.length) return "";
+
+  return rules
+    .map(
+      (rule) =>
+        `- ${rule.title || rule.rule_key || "Regola casa"} | stato ${
+          rule.status || ""
+        } | confidenza ${rule.confidence ?? ""}\n${rule.description || ""}`
+    )
+    .join("\n");
+}
+
+function buildHouseAutomationControlsContext(controls: any[]) {
+  if (!controls?.length) return "";
+
+  return controls
+    .map(
+      (control) =>
+        `- ${control.automation_name || control.automation_key || "Automazione"} | ${
+          control.room_key || ""
+        } | ${control.control_type || ""} | stato ${control.status || ""}`
+    )
+    .join("\n");
+}
+
 export async function buildChatContext({
   userId,
   detectedTopics,
@@ -139,63 +200,27 @@ export async function buildChatContext({
 
   if (!userId) return context;
 
-  const [
-    userProfileRes,
-    mentalRes,
-    goalsRes,
-    timelineRes,
-    dynProfileRes,
-    actionIntentRes,
-    calendarRes,
-    currentLocationRes,
-    existingTopicsRes,
-    userContextGraph,
-  ] = await Promise.all([
-    supabase
-      .from("user_profiles")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-
-    getMentalStateContext(userId),
-    getGoalsDesiresContext(userId),
-    getTimelineContext(userId),
-    getDynamicSelfProfileContext(userId),
-    getActionIntentContext(userId),
-
-    supabaseAdmin
-      .from("calendar_events")
-      .select("type, title, description, start_at, remind_at, status")
-      .eq("user_id", userId)
-      .eq("status", "active")
-      .or(`start_at.gte.${new Date().toISOString()},remind_at.gte.${new Date().toISOString()}`)
-      .order("start_at", { ascending: true })
-      .limit(30),
-
-    supabaseAdmin
-      .from("user_location_state")
-      .select("current_place_label, latitude, longitude, source, updated_at, last_changed_at")
-      .eq("user_id", userId)
-      .maybeSingle(),
-
-    supabase.from("life_topics").select("*").eq("user_id", userId),
-
-    loadUserContextGraph(userId),
-  ]);
-
-  const userProfile = userProfileRes.data;
+  const snapshot = await buildGhostBrainSnapshot(userId);
+  const userProfile = snapshot.profile;
   context.profileContext = buildProfileContext(userProfile);
   context.userLocation = userProfile?.location || "";
 
-  const calendarEvents = calendarRes.data || [];
-  const currentLocation = currentLocationRes.data;
+  const calendarEvents = snapshot.calendar.upcoming || [];
+  const currentLocation = snapshot.location.current;
 
   const contextualData = await buildContextualMemory({
     userId,
     detectedTopics,
-    searchHints: userContextGraph.searchHints,
+    searchHints: [
+      isFreshLocationState(currentLocation)
+        ? currentLocation?.current_place_label
+        : null,
+      ...calendarEvents.map((event: any) => event.title),
+      ...snapshot.goals.map((goal: any) => goal.title),
+      ...snapshot.actions.map((action: any) => action.title),
+      ...snapshot.people.items.map((person: any) => person.name),
+      ...snapshot.memory.topics.map((topic: any) => topic.topic),
+    ],
   });
 
   context.memoryContext = trimBlock(contextualData.memoryContext, 1100);
@@ -216,15 +241,27 @@ export async function buildChatContext({
     2200
   );
 
-  mentalRes && (context.mentalStateContext = trimBlock(mentalRes, 600));
-  goalsRes && (context.goalsContext = trimBlock(goalsRes, 800));
-  timelineRes && (context.timelineContext = trimBlock(timelineRes, 800));
-  dynProfileRes && (context.dynamicSelfProfileContext = trimBlock(dynProfileRes, 800));
-  actionIntentRes && (context.actionIntentContext = trimBlock(actionIntentRes, 600));
+  context.mentalStateContext = trimBlock(
+    buildMentalStateContext(snapshot.profile?.mentalState),
+    600
+  );
+  context.goalsContext = trimBlock(buildGoalsContext(snapshot.goals), 800);
+  context.timelineContext = trimBlock(
+    buildTimelineContext(snapshot.memory.timeline),
+    800
+  );
+  context.dynamicSelfProfileContext = trimBlock(
+    buildDynamicSelfProfileContext(snapshot.profile?.dynamicProfile || []),
+    800
+  );
+  context.actionIntentContext = trimBlock(
+    buildActionIntentContext(snapshot.actions),
+    600
+  );
   context.houseAutomationContext = trimBlock(
-  await buildHouseAutomationContext(userId),
-  1200
-);
+    buildHouseAutomationControlsContext(snapshot.home.automationControls),
+    1200
+  );
 
   context.calendarContext =
     calendarEvents
@@ -242,16 +279,16 @@ export async function buildChatContext({
     context.currentPlaceContext = "Luogo attuale rilevato: sconosciuto";
   }
 
-  context.homeContext = trimBlock(await buildCognitiveHouse(), 1400);
+  context.homeContext = trimBlock(snapshot.home.context || "", 1400);
   context.houseLearnedRulesContext = trimBlock(
-    await buildHouseLearnedRulesContext(userId),
+    buildHouseLearnedRulesContext(snapshot.home.learnedRules),
     1200
   );
   console.log("CURRENT PLACE CONTEXT:", context.currentPlaceContext);
   console.log("LOCATION RAW:", currentLocation);
   console.log("LOCATION LABEL:", currentLocation?.current_place_label);
 
-  context.loadedLifeTopics = existingTopicsRes.data || [];
+  context.loadedLifeTopics = snapshot.memory.topics || [];
   context.behaviorRulesContext = await buildBehaviorPrompt(userId);
 
   return context;

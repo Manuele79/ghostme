@@ -550,7 +550,11 @@ export async function buildGhostBrainSnapshot(
   });
 
   return {
-    profile: graph.profile,
+    profile: {
+      ...(graph.profile || {}),
+      mentalState: situation.mentalState || null,
+      dynamicProfile: situation.dynamicProfile || [],
+    },
     memory: {
       topics: graph.topics || [],
       memories: graph.memories || [],

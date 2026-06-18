@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { buildGhostBrainSnapshot } from "@/lib/ghostme/context/reasoningService";
 
 export async function POST(req: Request) {
   try {
@@ -10,116 +10,21 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "userId mancante" }, { status: 400 });
     }
 
-    const now = new Date().toISOString();
-
-    const [
-      profileRes,
-      traitsRes,
-      memoriesRes,
-      timelineRes,
-      goalsRes,
-      mentalRes,
-      actionsRes,
-      calendarEventsRes,
-      proactiveRes,
-      proactiveListRes,
-    ] = await Promise.all([
-      supabaseAdmin
-        .from("user_profiles")
-        .select("*")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle(),
-
-      supabaseAdmin
-        .from("traits")
-        .select("*")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle(),
-
-      supabaseAdmin
-        .from("memories_active")
-        .select("*")
-        .eq("user_id", userId)
-        .order("pinned", { ascending: false })
-        .order("importance", { ascending: false })
-        .limit(40),
-
-      supabaseAdmin
-        .from("autobiographical_timeline")
-        .select("*")
-        .eq("user_id", userId)
-        .order("event_date", { ascending: false })
-        .limit(40),
-
-      supabaseAdmin
-        .from("goals_desires")
-        .select("*")
-        .eq("user_id", userId)
-        .order("importance", { ascending: false })
-        .limit(40),
-
-      supabaseAdmin
-        .from("mental_states")
-        .select("*")
-        .eq("user_id", userId)
-        .order("updated_at", { ascending: false })
-        .limit(1)
-        .maybeSingle(),
-
-      supabaseAdmin
-        .from("action_intents")
-        .select("*")
-        .eq("user_id", userId)
-        .order("priority", { ascending: false })
-        .limit(40),
-
-      supabaseAdmin
-        .from("calendar_events")
-        .select("*")
-        .eq("user_id", userId)
-        .eq("status", "active")
-        .or(`start_at.gte.${now},remind_at.gte.${now}`)
-        .order("start_at", { ascending: true })
-        .limit(80),
-
-      supabaseAdmin
-        .from("ghost_proactive_messages")
-        .select("*")
-        .eq("user_id", userId)
-        .eq("status", "unread")
-        .lte("scheduled_for", new Date().toISOString())
-        .order("priority", { ascending: false })
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle(),
-
-      supabaseAdmin
-      .from("ghost_proactive_messages")
-      .select("*")
-      .eq("user_id", userId)
-      .eq("status", "unread")
-      .lte("scheduled_for", new Date().toISOString())
-      .order("priority", { ascending: false })
-      .order("created_at", { ascending: false })
-      .limit(5),     
-
-    ]);
+    const snapshot = await buildGhostBrainSnapshot(userId);
+    const proactiveMessages = snapshot.proactive.recent || [];
 
     return NextResponse.json({
-      profile: profileRes.data || null,
-      traits: traitsRes.data || null,
-      memories: memoriesRes.data || [],
-      timeline: timelineRes.data || [],
-      goals: goalsRes.data || [],
-      mentalState: mentalRes.data || null,
-      actions: actionsRes.data || [],
-      calendarEvents: calendarEventsRes.data || [],
-      proactiveMessage: proactiveRes.data || null,
-      proactiveMessages: proactiveListRes.data || [],
+      snapshot,
+      profile: snapshot.profile || null,
+      traits: null,
+      memories: snapshot.memory.memories || [],
+      timeline: snapshot.memory.timeline || [],
+      goals: snapshot.goals || [],
+      mentalState: snapshot.profile?.mentalState || null,
+      actions: snapshot.actions || [],
+      calendarEvents: snapshot.calendar.upcoming || [],
+      proactiveMessage: proactiveMessages[0] || null,
+      proactiveMessages,
     });
   } catch (err) {
     console.log("BRAIN API ERROR:", err);
