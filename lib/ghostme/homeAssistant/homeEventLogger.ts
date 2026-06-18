@@ -1,6 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getHAStates } from "./haClient";
 import { getEntityInfo } from "./homeEntityMapper";
+import { classifyHomeEventSignificance } from "./homeEventSignificance";
 
 type HAState = {
   entity_id: string;
@@ -16,11 +17,6 @@ function friendlyName(s: HAState) {
 
 function clean(value: any) {
   return String(value ?? "").toLowerCase().trim();
-}
-
-function numericState(value: any) {
-  const n = Number(String(value ?? "").replace(",", "."));
-  return Number.isFinite(n) ? n : null;
 }
 
 function isMainIndoorTemperature(entityId: string) {
@@ -45,6 +41,11 @@ function isUsefulEvent(entityType: string, entityId?: string) {
       "weather",
       "sun",
       "climate",
+      "humidity",
+      "lux",
+      "co2",
+      "noise",
+      "pressure",
       "fan",
       "appliance",
       "automation",
@@ -66,6 +67,11 @@ function getEventType(entityType: string, state: string) {
   if (entityType === "motion") return cleanState === "on" ? "motion_on" : "motion_off";
   if (entityType === "presence") return cleanState === "on" ? "presence_on" : "presence_off";
   if (entityType === "temperature") return "temperature_changed";
+  if (entityType === "humidity") return "humidity_changed";
+  if (entityType === "lux") return "lux_changed";
+  if (entityType === "pressure") return "pressure_changed";
+  if (entityType === "co2") return "co2_changed";
+  if (entityType === "noise") return "noise_changed";
   if (entityType === "light") return cleanState === "on" ? "light_on" : "light_off";
   if (entityType === "switch") return cleanState === "on" ? "switch_on" : "switch_off";
 
@@ -119,64 +125,6 @@ async function getLastHouseEvent({
   }
 
   return data || null;
-}
-
-function shouldSaveStateChange({
-  entityType,
-  entityId,
-  oldState,
-  newState,
-  eventType,
-}: {
-  entityType: string;
-  entityId: string;
-  oldState?: string | null;
-  newState: string;
-  eventType: string;
-}) {
-  const oldClean = clean(oldState);
-  const newClean = clean(newState);
-
-  if (oldClean === newClean) {
-    return { save: false, reason: "same_state" };
-  }
-
-  if (["unknown", "unavailable", "none", ""].includes(newClean)) {
-    return { save: false, reason: "invalid_state" };
-  }
-
-  if (entityType === "temperature") {
-    if (!isMainIndoorTemperature(entityId)) {
-      return { save: false, reason: "temperature_not_primary" };
-    }
-
-    const oldNum = numericState(oldState);
-    const newNum = numericState(newState);
-
-    if (oldNum === null || newNum === null) {
-      return { save: true, reason: "temperature_first_or_non_numeric" };
-    }
-
-    if (Math.abs(newNum - oldNum) < 1) {
-      return { save: false, reason: "temperature_delta_under_1" };
-    }
-
-    return { save: true, reason: "temperature_delta_ok" };
-  }
-
-  if (["humidity_changed", "pressure_changed", "co2_changed", "noise_changed", "lux_changed"].includes(eventType)) {
-    return { save: false, reason: "raw_environment_ignored" };
-  }
-
-  if (entityType === "weather") {
-    return { save: true, reason: "weather_state_changed" };
-  }
-
-  if (entityType === "sun") {
-    return { save: true, reason: "sun_state_changed" };
-  }
-
-  return { save: true, reason: "useful_state_change" };
 }
 
 export async function logHomeAssistantSnapshot(userId: string) {
@@ -237,16 +185,17 @@ export async function logHomeAssistantSnapshot(userId: string) {
 
     const eventType = getEventType(info.type, newState);
 
-    const decision = shouldSaveStateChange({
+    const decision = classifyHomeEventSignificance({
       entityType: info.type,
       entityId: state.entity_id,
       oldState: last?.new_state || null,
       newState,
       eventType,
+      lastOccurredAt: last?.occurred_at || null,
     });
 
-    if (!decision.save) {
-      if (decision.reason === "same_state") {
+    if (!decision.significant) {
+      if (decision.reason === "same_state" || decision.reason === "same_state_recent") {
         skippedSame++;
       } else {
         skippedFiltered++;
@@ -271,6 +220,8 @@ export async function logHomeAssistantSnapshot(userId: string) {
         last_updated: state.last_updated || null,
         person: info.person || null,
         save_reason: decision.reason,
+        significance_category: decision.category,
+        significance_priority: decision.priority,
       },
       people_home_count: peopleHomeCount,
       target_user: info.person || null,
