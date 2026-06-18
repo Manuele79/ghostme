@@ -12,6 +12,23 @@ export type DecisionSnapshot = {
   possibleActions: string[];
   warnings: string[];
   missingContext: string[];
+  userSituation: {
+    currentPlace: string | null;
+    homeConsistency: GhostBrainSnapshot["home"]["consistency"];
+    pendingActionsCount: number;
+    upcomingEventsCount: number;
+    activeGoalsCount: number;
+    importantPeopleCount: number;
+    mentalLoad: "low" | "medium" | "high";
+  };
+  nextBestAction:
+    | "review_pending_actions"
+    | "clarify_home_location"
+    | "check_calendar"
+    | "enrich_people_graph"
+    | "continue_project"
+    | "no_action";
+  doNotDisturb: boolean;
   generatedAt: string;
 };
 
@@ -180,6 +197,9 @@ function buildPossibleActions({
     actions.push("review_calendar");
   }
   if (snapshot.goals.pendingActions.length) actions.push("review_pending_actions");
+  if (warnings.includes("home_location_mismatch")) {
+    actions.push("clarify_home_location");
+  }
   if (snapshot.goals.activeGoals.length) actions.push("review_active_goals");
   if (warnings.includes("location_stale") || missingContext.includes("no_fresh_location")) {
     actions.push("clarify_location");
@@ -228,6 +248,114 @@ function chooseSuggestedFocus({
   return "no_priority";
 }
 
+function getUpcomingEventsCount(snapshot: GhostBrainSnapshot) {
+  return snapshot.calendar.today.length + snapshot.calendar.upcoming.length;
+}
+
+function mentalMetric(snapshot: GhostBrainSnapshot, key: string) {
+  const value = snapshot.profile?.mentalState?.[key];
+  return typeof value === "number" ? value : 0;
+}
+
+function buildMentalLoad(snapshot: GhostBrainSnapshot): DecisionSnapshot["userSituation"]["mentalLoad"] {
+  const pendingActionsCount = snapshot.goals.pendingActions.length;
+  const activeGoalsCount = snapshot.goals.activeGoals.length;
+  const upcomingEventsCount = getUpcomingEventsCount(snapshot);
+  const stress = mentalMetric(snapshot, "stress");
+  const tiredness = mentalMetric(snapshot, "stanchezza");
+
+  if (
+    pendingActionsCount >= 6 ||
+    activeGoalsCount >= 4 ||
+    upcomingEventsCount >= 4 ||
+    stress >= 7 ||
+    tiredness >= 7
+  ) {
+    return "high";
+  }
+
+  if (
+    pendingActionsCount >= 3 ||
+    activeGoalsCount >= 2 ||
+    upcomingEventsCount >= 2 ||
+    stress >= 4 ||
+    tiredness >= 4
+  ) {
+    return "medium";
+  }
+
+  return "low";
+}
+
+function buildUserSituation(snapshot: GhostBrainSnapshot): DecisionSnapshot["userSituation"] {
+  return {
+    currentPlace: snapshot.location.situation.currentPlace || null,
+    homeConsistency: snapshot.home.consistency,
+    pendingActionsCount: snapshot.goals.pendingActions.length,
+    upcomingEventsCount: getUpcomingEventsCount(snapshot),
+    activeGoalsCount: snapshot.goals.activeGoals.length,
+    importantPeopleCount: snapshot.people.importantPeople.length,
+    mentalLoad: buildMentalLoad(snapshot),
+  };
+}
+
+function chooseNextBestAction({
+  snapshot,
+  warnings,
+  missingContext,
+}: {
+  snapshot: GhostBrainSnapshot;
+  warnings: string[];
+  missingContext: string[];
+}): DecisionSnapshot["nextBestAction"] {
+  if (warnings.includes("home_location_mismatch")) {
+    return "clarify_home_location";
+  }
+
+  if (snapshot.goals.pendingActions.length) {
+    return "review_pending_actions";
+  }
+
+  if (snapshot.calendar.today.length || snapshot.calendar.upcoming.length) {
+    return "check_calendar";
+  }
+
+  if (missingContext.includes("no_people_graph")) {
+    return "enrich_people_graph";
+  }
+
+  if (snapshot.goals.activeGoals.length) {
+    return "continue_project";
+  }
+
+  return "no_action";
+}
+
+function hasRelaxOrNightSignal(snapshot: GhostBrainSnapshot) {
+  const signalText = [
+    ...((snapshot.home.presence?.signals || []) as string[]),
+    ...(snapshot.home.state.signals || []),
+    ...(snapshot.signals.context || []).map(
+      (signal) => `${signal.key} ${signal.category} ${signal.reason}`
+    ),
+  ]
+    .map(clean)
+    .join(" ");
+
+  return (
+    signalText.includes("night_mode") ||
+    signalText.includes("notte") ||
+    signalText.includes("relax")
+  );
+}
+
+function buildDoNotDisturb(snapshot: GhostBrainSnapshot) {
+  const hour = new Date().getHours();
+  const tiredness = mentalMetric(snapshot, "stanchezza");
+
+  return hour >= 23 || hour < 7 || tiredness >= 7 || hasRelaxOrNightSignal(snapshot);
+}
+
 export function buildDecisionSnapshot(
   snapshot: GhostBrainSnapshot
 ): DecisionSnapshot {
@@ -244,6 +372,13 @@ export function buildDecisionSnapshot(
     }),
     warnings,
     missingContext,
+    userSituation: buildUserSituation(snapshot),
+    nextBestAction: chooseNextBestAction({
+      snapshot,
+      warnings,
+      missingContext,
+    }),
+    doNotDisturb: buildDoNotDisturb(snapshot),
     generatedAt: new Date().toISOString(),
   };
 }
