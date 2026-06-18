@@ -5,6 +5,7 @@ import { learnHouseRoutes } from "@/lib/ghostme/homeAssistant/houseRouteLearning
 import { generateHouseAutomationSuggestions } from "@/lib/ghostme/homeAssistant/houseAutomationSuggestionEngine";
 import { planHouseAutomationControls } from "@/lib/ghostme/homeAssistant/houseAutomationControlPlanner";
 import { syncHouseEntities } from "@/lib/ghostme/homeAssistant/houseEntityRegistry";
+import { bridgeHomeAssistantLocationFlow } from "@/lib/ghostme/location/haLocationBridgeFlow";
 
 export async function houseWorkerFlow(req: Request) {
   const secret = process.env.WORKER_SECRET;
@@ -34,6 +35,9 @@ export async function houseWorkerFlow(req: Request) {
 
   for (const user of users || []) {
     const logResult = await logHomeAssistantSnapshot(user.user_id);
+    const locationBridge = await bridgeHomeAssistantLocationFlow({
+      userId: user.user_id,
+    });
     const entitySync = await syncHouseEntities(user.user_id);
     const patterns = await analyzeHousePatterns(user.user_id);
     const routes = await learnHouseRoutes(user.user_id);
@@ -46,6 +50,7 @@ export async function houseWorkerFlow(req: Request) {
     results.push({
       userId: user.user_id,
       logResult,
+      locationBridge,
       entitySync,
       patterns,
       routes,
