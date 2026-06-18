@@ -613,6 +613,9 @@ export async function buildGhostBrainSnapshot(
     graph,
     situation,
     homeSignals: homePresence.signals,
+    homeMismatch: homeConsistency.mismatch,
+    importantPeople: peopleSnapshot.importantPeople,
+    mentalState: situation.mentalState,
   });
 
   return {

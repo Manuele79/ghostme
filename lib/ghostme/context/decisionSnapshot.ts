@@ -80,6 +80,7 @@ function isHomeLocation(snapshot: GhostBrainSnapshot) {
 }
 
 function hasHomeLocationMismatch(snapshot: GhostBrainSnapshot) {
+  if (snapshot.signals.simple?.homeMismatch) return true;
   if (snapshot.home.consistency?.mismatch) return true;
 
   const occupancy = snapshot.home.state.occupancyStatus;
@@ -159,13 +160,19 @@ function buildMissingContext(snapshot: GhostBrainSnapshot) {
   const missing: string[] = [];
   const locationFresh = isRecent(snapshot.location.situation.lastChangedAt);
 
-  if (!snapshot.people.items.length) missing.push("no_people_graph");
+  if (snapshot.signals.simple?.needsPeopleEnrichment || !snapshot.people.items.length) {
+    missing.push("no_people_graph");
+  }
   if (!snapshot.calendar.today.length && !snapshot.calendar.upcoming.length) {
     missing.push("no_calendar_events");
   }
   if (!snapshot.goals.activeGoals.length) missing.push("no_goals");
   if (!snapshot.goals.pendingActions.length) missing.push("no_pending_actions");
-  if (!snapshot.location.situation.currentPlace || !locationFresh) {
+  if (
+    snapshot.signals.simple?.needsLocationClarification ||
+    !snapshot.location.situation.currentPlace ||
+    !locationFresh
+  ) {
     missing.push("no_fresh_location");
   }
   if (
@@ -193,14 +200,16 @@ function buildPossibleActions({
 }) {
   const actions: string[] = [];
 
-  if (snapshot.calendar.today.length || snapshot.calendar.upcoming.length) {
+  if (snapshot.signals.simple?.hasUpcomingEvent) {
     actions.push("review_calendar");
   }
-  if (snapshot.goals.pendingActions.length) actions.push("review_pending_actions");
-  if (warnings.includes("home_location_mismatch")) {
+  if (snapshot.signals.simple?.hasPendingActions) {
+    actions.push("review_pending_actions");
+  }
+  if (snapshot.signals.simple?.homeMismatch || warnings.includes("home_location_mismatch")) {
     actions.push("clarify_home_location");
   }
-  if (snapshot.goals.activeGoals.length) actions.push("review_active_goals");
+  if (snapshot.signals.simple?.needsGoalReview) actions.push("review_active_goals");
   if (warnings.includes("location_stale") || missingContext.includes("no_fresh_location")) {
     actions.push("clarify_location");
   }
@@ -217,7 +226,7 @@ function chooseSuggestedFocus({
   snapshot: GhostBrainSnapshot;
   warnings: string[];
 }): DecisionSnapshot["suggestedFocus"] {
-  if (snapshot.calendar.today.length || snapshot.calendar.upcoming.length) {
+  if (snapshot.signals.simple?.calendarPressure) {
     return "calendar_attention";
   }
 
@@ -225,7 +234,7 @@ function chooseSuggestedFocus({
     return "home_state_incoherent";
   }
 
-  if (snapshot.goals.pendingActions.length) {
+  if (snapshot.signals.simple?.hasPendingActions) {
     return "focus_on_pending_actions";
   }
 
@@ -274,6 +283,10 @@ function buildMentalLoad(snapshot: GhostBrainSnapshot): DecisionSnapshot["userSi
     return "high";
   }
 
+  if (snapshot.signals.simple?.highMentalLoad) {
+    return "high";
+  }
+
   if (
     pendingActionsCount >= 3 ||
     activeGoalsCount >= 2 ||
@@ -308,23 +321,26 @@ function chooseNextBestAction({
   warnings: string[];
   missingContext: string[];
 }): DecisionSnapshot["nextBestAction"] {
-  if (warnings.includes("home_location_mismatch")) {
+  if (snapshot.signals.simple?.homeMismatch || warnings.includes("home_location_mismatch")) {
     return "clarify_home_location";
   }
 
-  if (snapshot.goals.pendingActions.length) {
+  if (snapshot.signals.simple?.hasPendingActions) {
     return "review_pending_actions";
   }
 
-  if (snapshot.calendar.today.length || snapshot.calendar.upcoming.length) {
+  if (snapshot.signals.simple?.calendarPressure) {
     return "check_calendar";
   }
 
-  if (missingContext.includes("no_people_graph")) {
+  if (
+    snapshot.signals.simple?.needsPeopleEnrichment ||
+    missingContext.includes("no_people_graph")
+  ) {
     return "enrich_people_graph";
   }
 
-  if (snapshot.goals.activeGoals.length) {
+  if (snapshot.signals.simple?.hasOpenGoals) {
     return "continue_project";
   }
 
@@ -350,6 +366,8 @@ function hasRelaxOrNightSignal(snapshot: GhostBrainSnapshot) {
 }
 
 function buildDoNotDisturb(snapshot: GhostBrainSnapshot) {
+  if (snapshot.signals.simple?.doNotDisturb) return true;
+
   const hour = new Date().getHours();
   const tiredness = mentalMetric(snapshot, "stanchezza");
 

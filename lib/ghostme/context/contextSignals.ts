@@ -23,6 +23,14 @@ export type GhostBrainSimpleSignals = {
   hasRecentProactive: boolean;
   hasKnownPlace: boolean;
   homeSignalsAvailable: boolean;
+  homeMismatch: boolean;
+  hasImportantPeople: boolean;
+  highMentalLoad: boolean;
+  calendarPressure: boolean;
+  needsLocationClarification: boolean;
+  needsPeopleEnrichment: boolean;
+  needsGoalReview: boolean;
+  doNotDisturb: boolean;
 };
 
 function minutesUntil(value?: string | null) {
@@ -50,10 +58,16 @@ export function buildGhostBrainSimpleSignals({
   graph,
   situation,
   homeSignals = [],
+  homeMismatch = false,
+  importantPeople = [],
+  mentalState,
 }: {
   graph?: any;
   situation?: GhostSituation | null;
   homeSignals?: string[];
+  homeMismatch?: boolean;
+  importantPeople?: any[];
+  mentalState?: any;
 }): GhostBrainSimpleSignals {
   const place = cleanPlace(
     graph?.currentLocation?.current_place_label || situation?.currentPlace
@@ -61,20 +75,62 @@ export function buildGhostBrainSimpleSignals({
   const placeCategory = cleanPlace(
     graph?.currentLocation?.place_category || situation?.currentPlaceCategory
   );
+  const hasUpcomingEvent =
+    Boolean(graph?.calendarUpcoming?.length) ||
+    Boolean(situation?.upcomingEvents?.length);
+  const hasOpenGoals =
+    Boolean(graph?.goals?.length) || Boolean(situation?.activeGoals?.length);
+  const hasPendingActions =
+    Boolean(graph?.actionIntents?.length) ||
+    Boolean(situation?.pendingActions?.length);
+  const hasKnownPlace = Boolean(place);
+  const pendingActionsCount =
+    graph?.actionIntents?.length || situation?.pendingActions?.length || 0;
+  const activeGoalsCount =
+    graph?.goals?.length || situation?.activeGoals?.length || 0;
+  const upcomingEventsCount =
+    graph?.calendarUpcoming?.length || situation?.upcomingEvents?.length || 0;
+  const stress =
+    typeof mentalState?.stress === "number" ? mentalState.stress : 0;
+  const tiredness =
+    typeof mentalState?.stanchezza === "number" ? mentalState.stanchezza : 0;
+  const nextEvent = situation?.upcomingEvents?.[0] || graph?.calendarUpcoming?.[0];
+  const nextEventMinutes = minutesUntil(nextEvent?.start_at || nextEvent?.remind_at);
+  const calendarPressure =
+    Boolean(situation?.calendarToday?.length) ||
+    (nextEventMinutes !== null && nextEventMinutes >= 0 && nextEventMinutes <= 90);
+  const highMentalLoad =
+    pendingActionsCount >= 6 ||
+    activeGoalsCount >= 4 ||
+    upcomingEventsCount >= 4 ||
+    stress >= 7 ||
+    tiredness >= 7;
+  const hasImportantPeople =
+    Boolean(importantPeople?.length) || Boolean(graph?.people?.length);
+  const signalText = homeSignals.map(cleanPlace).join(" ");
+  const doNotDisturb =
+    new Date().getHours() >= 23 ||
+    new Date().getHours() < 7 ||
+    tiredness >= 7 ||
+    signalText.includes("night_mode") ||
+    signalText.includes("relax");
 
   return {
     isHome: isHome(place) || placeCategory === "home",
-    hasUpcomingEvent:
-      Boolean(graph?.calendarUpcoming?.length) ||
-      Boolean(situation?.upcomingEvents?.length),
-    hasOpenGoals:
-      Boolean(graph?.goals?.length) || Boolean(situation?.activeGoals?.length),
-    hasPendingActions:
-      Boolean(graph?.actionIntents?.length) ||
-      Boolean(situation?.pendingActions?.length),
+    hasUpcomingEvent,
+    hasOpenGoals,
+    hasPendingActions,
     hasRecentProactive: Boolean(graph?.proactiveRecent?.length),
-    hasKnownPlace: Boolean(place),
+    hasKnownPlace,
     homeSignalsAvailable: homeSignals.length > 0,
+    homeMismatch,
+    hasImportantPeople,
+    highMentalLoad,
+    calendarPressure,
+    needsLocationClarification: homeMismatch || !hasKnownPlace,
+    needsPeopleEnrichment: !hasImportantPeople,
+    needsGoalReview: hasPendingActions || hasOpenGoals,
+    doNotDisturb,
   };
 }
 
