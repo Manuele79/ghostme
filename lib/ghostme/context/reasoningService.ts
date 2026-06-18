@@ -16,6 +16,10 @@ import {
   type HouseStateSnapshot,
 } from "@/lib/ghostme/home/houseStateSnapshot";
 import {
+  buildHomeLocationConsistency,
+  type HomeLocationConsistency,
+} from "@/lib/ghostme/home/homeLocationConsistency";
+import {
   buildPeopleSnapshot,
   type PeopleSnapshot,
 } from "@/lib/ghostme/people/peopleSnapshot";
@@ -66,6 +70,7 @@ export type GhostBrainSnapshot = {
     learnedRules: any[];
     automationControls: any[];
     presence: ReturnType<typeof parseHomePresenceSignal>;
+    consistency: HomeLocationConsistency;
     context: string | null;
   };
   proactive: {
@@ -598,6 +603,12 @@ export async function buildGhostBrainSnapshot(
 
   const homeContext = formatHouseStateContext(houseState);
   const homePresence = buildHomePresenceFromHouseState(houseState);
+  const homeConsistency = buildHomeLocationConsistency({
+    currentPlace: situation.currentPlace || graph.currentLocation?.current_place_label || null,
+    currentCategory:
+      situation.currentPlaceCategory || graph.currentLocation?.place_category || null,
+    houseState,
+  });
   const simpleSignals = buildGhostBrainSimpleSignals({
     graph,
     situation,
@@ -634,6 +645,7 @@ export async function buildGhostBrainSnapshot(
       learnedRules: graph.houseLearnedRules || [],
       automationControls: graph.houseAutomationControls || [],
       presence: homePresence,
+      consistency: homeConsistency,
       context: homeContext || null,
     },
     proactive: {

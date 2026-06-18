@@ -63,6 +63,8 @@ function isHomeLocation(snapshot: GhostBrainSnapshot) {
 }
 
 function hasHomeLocationMismatch(snapshot: GhostBrainSnapshot) {
+  if (snapshot.home.consistency?.mismatch) return true;
+
   const occupancy = snapshot.home.state.occupancyStatus;
   return (
     ["one_person_home", "multiple_people_home"].includes(occupancy) &&
