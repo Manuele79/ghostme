@@ -157,6 +157,14 @@ function buildWarnings(snapshot: GhostBrainSnapshot) {
     warnings.push("home_route_uncertain_movement");
   }
 
+  if (snapshot.home.comfortRisk?.riskSignals.includes("possible_power_overload")) {
+    warnings.push("home_possible_power_overload");
+  }
+
+  if (snapshot.home.comfortRisk?.riskSignals.includes("appliance_conflict")) {
+    warnings.push("home_appliance_conflict");
+  }
+
   return unique(warnings);
 }
 

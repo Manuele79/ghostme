@@ -24,6 +24,10 @@ import {
   type HouseRouteSnapshot,
 } from "@/lib/ghostme/home/houseRouteSnapshot";
 import {
+  buildHomeComfortRiskSnapshot,
+  type HomeComfortRiskSnapshot,
+} from "@/lib/ghostme/home/homeComfortRiskSnapshot";
+import {
   buildPeopleSnapshot,
   type PeopleSnapshot,
 } from "@/lib/ghostme/people/peopleSnapshot";
@@ -76,6 +80,7 @@ export type GhostBrainSnapshot = {
     presence: ReturnType<typeof parseHomePresenceSignal>;
     consistency: HomeLocationConsistency;
     routes: HouseRouteSnapshot;
+    comfortRisk: HomeComfortRiskSnapshot;
     context: string | null;
   };
   proactive: {
@@ -632,6 +637,30 @@ export async function buildGhostBrainSnapshot(
     };
   }
 
+  let homeComfortRisk: HomeComfortRiskSnapshot | null = null;
+  try {
+    homeComfortRisk = await buildHomeComfortRiskSnapshot({
+      userId,
+      houseState,
+      routes: houseRoutes,
+      learnedRules: graph.houseLearnedRules || [],
+      automationControls: graph.houseAutomationControls || [],
+    });
+  } catch (err) {
+    console.log("GHOSTBRAIN HOME COMFORT RISK ERROR:", err);
+  }
+
+  if (!homeComfortRisk) {
+    homeComfortRisk = {
+      comfortSignals: [],
+      riskSignals: [],
+      automationSignals: [],
+      suggestions: [],
+      confidence: 0,
+      lastUpdated: houseState.lastUpdated,
+    };
+  }
+
   const simpleSignals = buildGhostBrainSimpleSignals({
     graph,
     situation,
@@ -673,6 +702,7 @@ export async function buildGhostBrainSnapshot(
       presence: homePresence,
       consistency: homeConsistency,
       routes: houseRoutes,
+      comfortRisk: homeComfortRisk,
       context: homeContext || null,
     },
     proactive: {
