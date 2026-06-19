@@ -43,6 +43,10 @@ import {
   buildGoalsSnapshot,
   type GoalsSnapshot,
 } from "@/lib/ghostme/goals/goalsSnapshot";
+import {
+  buildProjectMemorySnapshot,
+  type ProjectMemorySnapshot,
+} from "@/lib/ghostme/projects/projectMemorySnapshot";
 
 type DetectedTopicInput = {
   topic: string;
@@ -79,6 +83,7 @@ export type GhostBrainSnapshot = {
   };
   goals: GoalsSnapshot;
   actions: any[];
+  projects: ProjectMemorySnapshot;
   home: {
     state: HouseStateSnapshot;
     patterns: any[];
@@ -607,6 +612,15 @@ export async function buildGhostBrainSnapshot(
     ],
     actions: goalsSnapshot.pendingActions,
   });
+  const projectMemory = buildProjectMemorySnapshot({
+    memory: memorySnapshot,
+    goals: goalsSnapshot,
+    people: peopleSnapshot,
+    calendarEvents: [
+      ...(graph.calendarUpcoming || []),
+      ...(situation.calendarToday || []),
+    ],
+  });
 
   let houseState: HouseStateSnapshot | null = null;
   try {
@@ -714,6 +728,7 @@ export async function buildGhostBrainSnapshot(
     },
     goals: goalsSnapshot,
     actions: goalsSnapshot.pendingActions,
+    projects: projectMemory,
     home: {
       state: houseState,
       patterns: graph.housePatterns || [],
