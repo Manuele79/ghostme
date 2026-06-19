@@ -69,10 +69,13 @@ export async function createCalendarEvent({
     finalRemindAt = reminderDate.toISOString();
   }
 
+  const finalStartAt =
+    startAt || (type === "reminder" ? finalRemindAt : null);
+
   let finalEndAt = endAt || null;
 
-  if (type === "appointment" && startAt && !finalEndAt) {
-    const endDate = new Date(startAt);
+  if (type === "appointment" && finalStartAt && !finalEndAt) {
+    const endDate = new Date(finalStartAt);
     endDate.setHours(endDate.getHours() + 1);
     finalEndAt = endDate.toISOString();
   }
@@ -85,7 +88,7 @@ export async function createCalendarEvent({
         type,
         title: finalTitle,
         description,
-        start_at: startAt || null,
+        start_at: finalStartAt,
         end_at: finalEndAt,
         remind_at: finalRemindAt,
         source,

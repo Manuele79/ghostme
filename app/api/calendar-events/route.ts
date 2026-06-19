@@ -25,9 +25,11 @@ function normalizeTitle(title: any, type: any, description: any) {
 
 function buildCalendarPatchPayload(body: any) {
   const type = body.type || "note";
-  const startAt = body.startAt || null;
+  const remindAtInput = body.remindAt || null;
+  const startAt =
+    body.startAt || (type === "reminder" ? remindAtInput : null);
   let endAt = body.endAt || null;
-  let remindAt = body.remindAt || null;
+  let remindAt = remindAtInput;
 
   if (type === "appointment" && startAt && !endAt) {
     const endDate = new Date(startAt);
