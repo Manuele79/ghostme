@@ -6,10 +6,10 @@ import { runRetentionCleanup } from "@/lib/ghostme/maintenance/retentionEngine";
 import { syncPeopleGraphFromTopics } from "@/lib/ghostme/people/peopleGraphService";
 
 export async function runProactiveMaintenanceFlow(userId: string) {
+  await refreshReminderMessage(userId);
   await generateDailyConversationSummary(userId);
   await runRetentionCleanup(userId);
   await cleanupOldActionIntents(userId);
   await syncPeopleGraphFromTopics(userId);
   await cleanupExpiredEvents(userId);
-  await refreshReminderMessage(userId);
 }

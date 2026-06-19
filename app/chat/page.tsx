@@ -340,12 +340,15 @@ export default function ChatPage() {
         const now = Date.now();
 
         if (!lastRun || now - Number(lastRun) > 1000 * 60 * 30) {
-          localStorage.setItem("ghost_proactive_last_run", String(now));
-
           fetch("/api/worker/proactive", {
             method: "GET",
           })
-            .then(async () => {
+            .then(async (res) => {
+              if (!res.ok) {
+                throw new Error(`Proactive worker HTTP ${res.status}`);
+              }
+
+              localStorage.setItem("ghost_proactive_last_run", String(Date.now()));
               await refreshBrain(user.id);
             })
             .catch((err) => {

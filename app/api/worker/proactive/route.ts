@@ -23,8 +23,12 @@ export async function GET() {
     let created = 0;
 
     for (const user of users) {
-      const result = await runProactiveFlowForUser(user);
-      created += result.created;
+      try {
+        const result = await runProactiveFlowForUser(user);
+        created += result.created;
+      } catch (err) {
+        console.log("PROACTIVE USER ERROR:", user.user_id, err);
+      }
     }
 
     return NextResponse.json({
