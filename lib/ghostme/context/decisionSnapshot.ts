@@ -29,6 +29,9 @@ export type DecisionSnapshot = {
     | "consider_light_for_active_room"
     | "check_calendar"
     | "enrich_people_graph"
+    | "review_relationship_open_loop"
+    | "check_shared_event"
+    | "enrich_relationship_context"
     | "continue_project"
     | "no_action";
   doNotDisturb: boolean;
@@ -98,6 +101,7 @@ function buildPriorities(snapshot: GhostBrainSnapshot) {
   const priorities: string[] = [];
   const comfortSignals = snapshot.home.comfortRisk?.comfortSignals || [];
   const riskSignals = snapshot.home.comfortRisk?.riskSignals || [];
+  const relationshipMemory = snapshot.people.relationshipMemory;
 
   if (snapshot.calendar.today.length || snapshot.calendar.upcoming.length) {
     priorities.push("calendar_events_available");
@@ -156,6 +160,22 @@ function buildPriorities(snapshot: GhostBrainSnapshot) {
     priorities.push("known_location");
   }
 
+  if (relationshipMemory?.sharedEvents.length) {
+    priorities.push("relationship_event");
+  }
+
+  if (relationshipMemory?.openLoops.length) {
+    priorities.push("relationship_open_loop");
+  }
+
+  if (
+    relationshipMemory?.recentMentions.length ||
+    relationshipMemory?.sharedEvents.length ||
+    relationshipMemory?.openLoops.length
+  ) {
+    priorities.push("relationship_attention");
+  }
+
   return unique(priorities).slice(0, 8);
 }
 
@@ -164,6 +184,7 @@ function buildWarnings(snapshot: GhostBrainSnapshot) {
   const locationFresh = isRecent(snapshot.location.situation.lastChangedAt);
   const comfortSignals = snapshot.home.comfortRisk?.comfortSignals || [];
   const riskSignals = snapshot.home.comfortRisk?.riskSignals || [];
+  const relationshipMemory = snapshot.people.relationshipMemory;
 
   if (snapshot.location.situation.currentPlace && !locationFresh) {
     warnings.push("location_stale");
@@ -179,11 +200,15 @@ function buildWarnings(snapshot: GhostBrainSnapshot) {
 
   if (
     snapshot.people.items.length > 0 &&
-    !snapshot.people.relationshipMemory?.recentMentions.length &&
-    !snapshot.people.relationshipMemory?.sharedEvents.length &&
-    !snapshot.people.relationshipMemory?.openLoops.length
+    !relationshipMemory?.recentMentions.length &&
+    !relationshipMemory?.sharedEvents.length &&
+    !relationshipMemory?.openLoops.length
   ) {
     warnings.push("relationship_context_sparse");
+  }
+
+  if ((relationshipMemory?.openLoops.length || 0) >= 3) {
+    warnings.push("relationship_open_loops_many");
   }
 
   if (snapshot.goals.pendingActions.length >= 6) {
@@ -268,6 +293,7 @@ function buildPossibleActions({
 }) {
   const actions: string[] = [];
   const homeSuggestions = snapshot.home.comfortRisk?.suggestions || [];
+  const relationshipMemory = snapshot.people.relationshipMemory;
 
   if (snapshot.signals.simple?.hasUpcomingEvent) {
     actions.push("review_calendar");
@@ -307,6 +333,25 @@ function buildPossibleActions({
     actions.push("clarify_location");
   }
   if (missingContext.includes("no_people_graph")) actions.push("enrich_people_graph");
+  if (relationshipMemory?.openLoops.length) {
+    actions.push("review_relationship_open_loops");
+  }
+  if (
+    warnings.includes("relationship_context_sparse") ||
+    (snapshot.people.items.length > 0 && !relationshipMemory?.recentMentions.length)
+  ) {
+    actions.push("enrich_relationship_context");
+  }
+  if (relationshipMemory?.sharedEvents.length) {
+    actions.push("check_shared_event");
+  }
+  if (
+    relationshipMemory?.relationships.length &&
+    !relationshipMemory?.recentMentions.length &&
+    !relationshipMemory?.openLoops.length
+  ) {
+    actions.push("reconnect_with_person");
+  }
   if (snapshot.memory.activeMemories.length) actions.push("review_memory_anchors");
 
   return unique(actions).slice(0, 8);
@@ -415,6 +460,7 @@ function chooseNextBestAction({
   missingContext: string[];
 }): DecisionSnapshot["nextBestAction"] {
   const homeSuggestions = snapshot.home.comfortRisk?.suggestions || [];
+  const relationshipMemory = snapshot.people.relationshipMemory;
 
   if (warnings.includes("home_power_risk")) {
     return "review_appliance_load";
@@ -435,6 +481,14 @@ function chooseNextBestAction({
     return "consider_light_for_active_room";
   }
 
+  if (relationshipMemory?.openLoops.length) {
+    return "review_relationship_open_loop";
+  }
+
+  if (relationshipMemory?.sharedEvents.length) {
+    return "check_shared_event";
+  }
+
   if (snapshot.signals.simple?.hasPendingActions) {
     return "review_pending_actions";
   }
@@ -448,6 +502,10 @@ function chooseNextBestAction({
     missingContext.includes("no_people_graph")
   ) {
     return "enrich_people_graph";
+  }
+
+  if (warnings.includes("relationship_context_sparse")) {
+    return "enrich_relationship_context";
   }
 
   if (snapshot.signals.simple?.hasOpenGoals) {
