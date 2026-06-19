@@ -33,6 +33,9 @@ export type DecisionSnapshot = {
     | "check_shared_event"
     | "enrich_relationship_context"
     | "continue_project"
+    | "review_project_tasks"
+    | "revive_project"
+    | "reduce_project_load"
     | "no_action";
   doNotDisturb: boolean;
   generatedAt: string;
@@ -113,6 +116,21 @@ function buildPriorities(snapshot: GhostBrainSnapshot) {
 
   if (snapshot.goals.activeGoals.length) {
     priorities.push("active_goals_available");
+  }
+
+  if (snapshot.projects.importantProject?.status === "active") {
+    priorities.push("project_focus");
+  }
+
+  if (snapshot.projects.stalledProjects.length || snapshot.projects.openTasks.length >= 6) {
+    priorities.push("project_attention");
+  }
+
+  if (
+    snapshot.projects.importantProject &&
+    ["paused", "stalled"].includes(snapshot.projects.importantProject.status)
+  ) {
+    priorities.push("project_recovery");
   }
 
   if (snapshot.home.state.occupancyStatus !== "unknown") {
@@ -213,6 +231,18 @@ function buildWarnings(snapshot: GhostBrainSnapshot) {
 
   if (snapshot.goals.pendingActions.length >= 6) {
     warnings.push("many_pending_actions");
+  }
+
+  if (snapshot.projects.stalledProjects.length) {
+    warnings.push("project_stalled");
+  }
+
+  if (snapshot.projects.openTasks.length >= 6) {
+    warnings.push("project_overloaded");
+  }
+
+  if (!snapshot.projects.activeProjects.length) {
+    warnings.push("no_active_project");
   }
 
   if (hasDuplicateProactive(snapshot)) {
@@ -327,6 +357,21 @@ function buildPossibleActions({
   }
   if (homeSuggestions.includes("consider_light_for_active_room")) {
     actions.push("consider_light_for_active_room");
+  }
+  if (snapshot.projects.importantProject?.status === "active") {
+    actions.push("continue_project");
+  }
+  if (snapshot.projects.openTasks.length) {
+    actions.push("review_project_tasks");
+  }
+  if (snapshot.projects.stalledProjects.length) {
+    actions.push("revive_project");
+  }
+  if (warnings.includes("project_overloaded")) {
+    actions.push("reduce_project_load");
+  }
+  if (snapshot.projects.importantProject?.relatedGoals.length) {
+    actions.push("review_project_goal");
   }
   if (snapshot.signals.simple?.needsGoalReview) actions.push("review_active_goals");
   if (warnings.includes("location_stale") || missingContext.includes("no_fresh_location")) {
@@ -479,6 +524,28 @@ function chooseNextBestAction({
 
   if (homeSuggestions.includes("consider_light_for_active_room")) {
     return "consider_light_for_active_room";
+  }
+
+  if (warnings.includes("project_overloaded")) {
+    return "reduce_project_load";
+  }
+
+  if (
+    snapshot.projects.importantProject?.status === "stalled" ||
+    (!snapshot.projects.activeProjects.length && snapshot.projects.stalledProjects.length)
+  ) {
+    return "revive_project";
+  }
+
+  if (
+    snapshot.projects.importantProject?.status === "active" &&
+    snapshot.projects.importantProject.pendingActions.length
+  ) {
+    return "review_project_tasks";
+  }
+
+  if (snapshot.projects.importantProject?.status === "active") {
+    return "continue_project";
   }
 
   if (relationshipMemory?.openLoops.length) {
