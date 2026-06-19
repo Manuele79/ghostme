@@ -63,6 +63,11 @@ import {
   buildCuriositySnapshot,
   type CuriositySnapshot,
 } from "@/lib/ghostme/curiosity/curiositySnapshot";
+import { buildDecisionSnapshot } from "@/lib/ghostme/context/decisionSnapshot";
+import {
+  buildTrueProactiveSnapshot,
+  type TrueProactiveSnapshot,
+} from "@/lib/ghostme/proactive/trueProactiveSnapshot";
 
 type DetectedTopicInput = {
   topic: string;
@@ -76,7 +81,7 @@ type ReasoningSnapshotInput = {
   detectedTopics?: DetectedTopicInput[];
 };
 
-export type GhostBrainSnapshot = {
+export type GhostBrainSnapshotCore = {
   profile: any | null;
   memory: MemorySnapshot;
   people: PeopleSnapshot & {
@@ -118,12 +123,17 @@ export type GhostBrainSnapshot = {
   };
   proactive: {
     recent: any[];
+    handledRecent: any[];
   };
   signals: {
     simple: GhostBrainSimpleSignals;
     context: ContextSignal[];
   };
   generatedAt: string;
+};
+
+export type GhostBrainSnapshot = GhostBrainSnapshotCore & {
+  trueProactive: TrueProactiveSnapshot;
 };
 
 const LOCATION_FRESHNESS_WINDOW_MS = 2 * 60 * 60 * 1000;
@@ -753,7 +763,7 @@ export async function buildGhostBrainSnapshot(
     contextSignals,
   });
 
-  return {
+  const coreSnapshot: GhostBrainSnapshotCore = {
     profile: {
       ...(graph.profile || {}),
       mentalState: situation.mentalState || null,
@@ -801,11 +811,23 @@ export async function buildGhostBrainSnapshot(
     },
     proactive: {
       recent: graph.proactiveRecent || [],
+      handledRecent: graph.proactiveHandledRecent || [],
     },
     signals: {
       simple: simpleSignals,
       context: contextSignals,
     },
     generatedAt,
+  };
+
+  const decision = buildDecisionSnapshot(coreSnapshot);
+  const trueProactive = buildTrueProactiveSnapshot({
+    snapshot: coreSnapshot,
+    decision,
+  });
+
+  return {
+    ...coreSnapshot,
+    trueProactive,
   };
 }

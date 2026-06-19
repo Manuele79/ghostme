@@ -1,4 +1,6 @@
-import type { GhostBrainSnapshot } from "@/lib/ghostme/context/reasoningService";
+import type { GhostBrainSnapshotCore } from "@/lib/ghostme/context/reasoningService";
+
+type GhostBrainSnapshot = GhostBrainSnapshotCore;
 
 export type DecisionSnapshot = {
   priorities: string[];

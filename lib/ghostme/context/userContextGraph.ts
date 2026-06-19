@@ -58,6 +58,7 @@ export async function loadUserContextGraph(userId: string) {
         actionIntents: [],
         people: [],
         proactiveRecent: [],
+        proactiveHandledRecent: [],
         houseLearnedRules: [],
         houseAutomationControls: [],
         housePatterns: [],
@@ -82,6 +83,7 @@ export async function loadUserContextGraph(userId: string) {
     actionsRes,
     peopleRes,
     proactiveRes,
+    proactiveHandledRes,
     houseRulesRes,
     houseControlsRes,
     housePatternsRes,
@@ -158,6 +160,14 @@ export async function loadUserContextGraph(userId: string) {
       .limit(5),
 
     supabaseAdmin
+      .from("ghost_proactive_messages")
+      .select("id, category, title, message, status, priority, created_at")
+      .eq("user_id", userId)
+      .in("status", ["dismissed", "answered", "expired"])
+      .order("created_at", { ascending: false })
+      .limit(10),
+
+    supabaseAdmin
       .from("house_learned_rules")
       .select("id, rule_key, title, description, status, confidence, updated_at")
       .eq("user_id", userId)
@@ -232,6 +242,7 @@ export async function loadUserContextGraph(userId: string) {
     actionIntents: actionsRes.data || [],
     people: peopleRes.data || [],
     proactiveRecent: proactiveRes.data || [],
+    proactiveHandledRecent: proactiveHandledRes.data || [],
     houseLearnedRules: houseRulesRes.data || [],
     houseAutomationControls: houseControlsRes.data || [],
     housePatterns: housePatternsRes.data || [],
