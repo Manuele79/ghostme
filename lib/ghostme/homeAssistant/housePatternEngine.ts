@@ -54,6 +54,89 @@ function addUnique(list: string[], value: string) {
   if (!list.includes(value)) list.push(value);
 }
 
+function patternTypeFromTitle(title: string) {
+  return title
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 80);
+}
+
+async function upsertHousePattern({
+  userId,
+  title,
+  occurrences,
+}: {
+  userId: string;
+  title: string;
+  occurrences: number;
+}) {
+  const patternType = patternTypeFromTitle(title);
+  if (!patternType) return null;
+
+  const confidence = Math.min(10, Math.max(3, Math.round(occurrences / 2)));
+  const now = new Date().toISOString();
+  const payload = {
+    pattern_type: patternType,
+    title,
+    description: title,
+    trigger_conditions: { source: "house_events" },
+    learned_from: { table: "house_events" },
+    confidence,
+    occurrences,
+    status: confidence >= 7 ? "active" : "learning",
+    last_seen_at: now,
+    updated_at: now,
+  };
+
+  const { data: existing, error: readError } = await supabaseAdmin
+    .from("house_patterns")
+    .select("id, first_seen_at")
+    .eq("user_id", userId)
+    .eq("pattern_type", patternType)
+    .maybeSingle();
+
+  if (readError) {
+    console.log("HOUSE PATTERN READ ERROR:", readError);
+    return null;
+  }
+
+  if (existing?.id) {
+    const { data, error } = await supabaseAdmin
+      .from("house_patterns")
+      .update(payload)
+      .eq("id", existing.id)
+      .select()
+      .single();
+
+    if (error) {
+      console.log("HOUSE PATTERN UPDATE ERROR:", error);
+      return null;
+    }
+
+    return data;
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from("house_patterns")
+    .insert({
+      user_id: userId,
+      ...payload,
+      first_seen_at: now,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.log("HOUSE PATTERN INSERT ERROR:", error);
+    return null;
+  }
+
+  return data;
+}
+
 export async function analyzeHousePatterns(userId: string) {
   if (!userId) return [];
 
@@ -285,6 +368,17 @@ export async function analyzeHousePatterns(userId: string) {
       patterns,
       `Quando siete in due, risultano spesso più luci o zone attive`
     );
+  }
+
+  for (const pattern of patterns) {
+    const match = pattern.match(/\((\d+)\s/);
+    const occurrences = match?.[1] ? Number(match[1]) : 3;
+    const saved = await upsertHousePattern({
+      userId,
+      title: pattern,
+      occurrences,
+    });
+
   }
 
   return patterns;

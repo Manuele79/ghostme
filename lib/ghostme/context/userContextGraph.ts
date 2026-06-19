@@ -60,6 +60,7 @@ export async function loadUserContextGraph(userId: string) {
         proactiveRecent: [],
         houseLearnedRules: [],
         houseAutomationControls: [],
+        housePatterns: [],
         behaviorPatterns: [],
         topics: [],
         memories: [],
@@ -83,6 +84,7 @@ export async function loadUserContextGraph(userId: string) {
     proactiveRes,
     houseRulesRes,
     houseControlsRes,
+    housePatternsRes,
     patternsRes,
     topicsRes,
     memoriesRes,
@@ -172,6 +174,15 @@ export async function loadUserContextGraph(userId: string) {
       .limit(5),
 
     supabaseAdmin
+      .from("house_patterns")
+      .select("id, pattern_type, title, description, status, confidence, occurrences, last_seen_at, updated_at")
+      .eq("user_id", userId)
+      .in("status", ["active", "learning"])
+      .order("confidence", { ascending: false })
+      .order("last_seen_at", { ascending: false })
+      .limit(5),
+
+    supabaseAdmin
       .from("behavior_patterns")
       .select("id, pattern_type, title, description, status, confidence, occurrences, last_seen_at")
       .eq("user_id", userId)
@@ -223,6 +234,7 @@ export async function loadUserContextGraph(userId: string) {
     proactiveRecent: proactiveRes.data || [],
     houseLearnedRules: houseRulesRes.data || [],
     houseAutomationControls: houseControlsRes.data || [],
+    housePatterns: housePatternsRes.data || [],
     behaviorPatterns: patternsRes.data || [],
     topics: topicsRes.data || [],
     memories: memoriesRes.data || [],
@@ -245,6 +257,7 @@ export async function loadUserContextGraph(userId: string) {
     hints,
     graph.houseLearnedRules.flatMap((rule: any) => [rule.title, rule.rule_key])
   );
+  addHints(hints, graph.housePatterns.map((pattern: any) => pattern.title));
   addHints(hints, graph.topics.map((topic: any) => topic.topic));
   addHints(
     hints,

@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { upsertProactiveMessage } from "@/lib/ghostme/proactive/proactiveMessageService";
 
 async function recentSuggestionExists(
   userId: string,
@@ -6,6 +7,17 @@ async function recentSuggestionExists(
   hours = 6
 ) {
   const since = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
+
+  const { data: openSuggestion } = await supabaseAdmin
+    .from("house_suggestions")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("suggestion_type", suggestionType)
+    .in("status", ["pending", "learning", "active"])
+    .limit(1)
+    .maybeSingle();
+
+  if (openSuggestion?.id) return true;
 
   const { data } = await supabaseAdmin
     .from("house_suggestions")
@@ -55,14 +67,12 @@ async function createSuggestion({
     return null;
   }
 
-  await supabaseAdmin.from("ghost_proactive_messages").insert({
-    user_id: userId,
+  await upsertProactiveMessage({
+    userId,
     title,
     message,
     category: "home_question",
-    status: "unread",
     priority: 4,
-    scheduled_for: new Date().toISOString(),
   });
 
   return data;

@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { upsertProactiveMessage } from "@/lib/ghostme/proactive/proactiveMessageService";
 
 async function recentControlExists(
   userId: string,
@@ -64,14 +65,12 @@ async function createControlPlan({
     return null;
   }
 
-  await supabaseAdmin.from("ghost_proactive_messages").insert({
-    user_id: userId,
+  await upsertProactiveMessage({
+    userId,
     title: "Controllo automazione suggerito",
     message: `${reason}\n\nVuoi che GhostMe prepari questa azione come regola confermata?`,
     category: "home_question",
-    status: "unread",
     priority: 5,
-    scheduled_for: new Date().toISOString(),
   });
 
   return data;

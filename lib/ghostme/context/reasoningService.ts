@@ -75,6 +75,7 @@ export type GhostBrainSnapshot = {
   actions: any[];
   home: {
     state: HouseStateSnapshot;
+    patterns: any[];
     learnedRules: any[];
     automationControls: any[];
     presence: ReturnType<typeof parseHomePresenceSignal>;
@@ -697,6 +698,7 @@ export async function buildGhostBrainSnapshot(
     actions: goalsSnapshot.pendingActions,
     home: {
       state: houseState,
+      patterns: graph.housePatterns || [],
       learnedRules: graph.houseLearnedRules || [],
       automationControls: graph.houseAutomationControls || [],
       presence: homePresence,
