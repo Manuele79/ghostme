@@ -137,9 +137,7 @@ export default function ChatPage() {
 
     await fetch("/api/ghostme/proactive/read", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: await getAuthenticatedJsonHeaders(),
       body: JSON.stringify({
         id: messageId,
         userId: currentUserId,

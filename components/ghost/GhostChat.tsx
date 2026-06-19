@@ -108,7 +108,7 @@ export default function GhostChat({
                   <button
                     onClick={() => onProactiveSeen?.(message.id)}
                     className="rounded-lg px-2 py-1 text-cyan-300 hover:bg-cyan-400/10"
-                    title="Segna come letto"
+                    title="Archivia"
                   >
                     ✓
                   </button>

@@ -3,6 +3,7 @@
 import { BrainData, ChatMessage, CalendarEvent } from "./types";
 
 import { useEffect, useMemo, useState } from "react";
+import { getAuthenticatedJsonHeaders } from "@/lib/ghostme/auth/clientAuthHeaders";
 
 
 
@@ -295,36 +296,8 @@ function ServicePanelContent({
   const [loadingObservations, setLoadingObservations] = useState(false);
 
 
-  const [hiddenObservations, setHiddenObservations] = useState<string[]>(() => {
-    if (typeof window === "undefined") return [];
-
-    try {
-      return JSON.parse(localStorage.getItem("ghost_hidden_observations") || "[]");
-    } catch {
-      return [];
-    }
-  });
-
-  useEffect(() => {
-    localStorage.setItem(
-      "ghost_hidden_observations",
-      JSON.stringify(hiddenObservations)
-    );
-  }, [hiddenObservations]);
-
-  const [hiddenActions, setHiddenActions] = useState<string[]>(() => {
-    if (typeof window === "undefined") return [];
-
-    try {
-      return JSON.parse(localStorage.getItem("ghost_hidden_actions") || "[]");
-    } catch {
-      return [];
-    }
-  });
-
-  useEffect(() => {
-    localStorage.setItem("ghost_hidden_actions", JSON.stringify(hiddenActions));
-  }, [hiddenActions]);
+  const [hiddenObservations, setHiddenObservations] = useState<string[]>([]);
+  const [hiddenActions, setHiddenActions] = useState<string[]>([]);
 
 
   useEffect(() => {
@@ -419,9 +392,7 @@ async function markObservationHandled(
   try {
     const res = await fetch("/api/ghostme/proactive/read", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: await getAuthenticatedJsonHeaders(),
       body: JSON.stringify({
         id: item.id,
         userId: currentUserId,
@@ -430,6 +401,12 @@ async function markObservationHandled(
     });
 
     if (!res.ok) {
+      setObservations((prev) =>
+        prev.some((observation) => observation.id === item.id)
+          ? prev
+          : [item, ...prev]
+      );
+      setHiddenObservations((prev) => prev.filter((id) => id !== item.id));
       console.log("MARK OBSERVATION READ ERROR:", await res.text());
       return false;
     }
@@ -440,6 +417,12 @@ async function markObservationHandled(
 
     return true;
   } catch (err) {
+    setObservations((prev) =>
+      prev.some((observation) => observation.id === item.id)
+        ? prev
+        : [item, ...prev]
+    );
+    setHiddenObservations((prev) => prev.filter((id) => id !== item.id));
     console.log("MARK OBSERVATION READ FRONT ERROR:", err);
     return false;
   }
@@ -455,9 +438,7 @@ useEffect(() => {
     try {
       const res = await fetch("/api/proactive/messages", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: await getAuthenticatedJsonHeaders(),
         body: JSON.stringify({
           userId: currentUserId,
         }),
@@ -475,6 +456,40 @@ useEffect(() => {
 
   loadObservations();
 }, [activeTab, currentUserId]);
+
+async function updateActionStatus(
+  item: any,
+  status: "completed" | "archived" | "pending"
+) {
+  if (!currentUserId || !item?.id) return;
+
+  setHiddenActions((prev) =>
+    prev.includes(item.id) ? prev : [...prev, item.id]
+  );
+
+  try {
+    const res = await fetch("/api/actions/update-status", {
+      method: "PATCH",
+      headers: await getAuthenticatedJsonHeaders(),
+      body: JSON.stringify({
+        id: item.id,
+        userId: currentUserId,
+        status,
+      }),
+    });
+
+    if (!res.ok) {
+      setHiddenActions((prev) => prev.filter((id) => id !== item.id));
+      console.log("UPDATE ACTION STATUS ERROR:", await res.text());
+      return;
+    }
+
+    await refreshBrain(currentUserId);
+  } catch (err) {
+    setHiddenActions((prev) => prev.filter((id) => id !== item.id));
+    console.log("UPDATE ACTION STATUS FRONT ERROR:", err);
+  }
+}
 
 
 
@@ -617,16 +632,6 @@ useEffect(() => {
                 className="rounded-3xl border border-zinc-800 bg-black/60 p-4"
               >
 
-              <div className="flex justify-end">
-                <button
-                  onClick={() => markObservationHandled(item, "dismissed")}
-                  className="rounded-full border border-zinc-700 px-2 py-1 text-xs text-zinc-500 hover:border-red-400 hover:text-red-300"
-                  title="Nascondi dal pannello"
-                >
-                  ✕
-                </button>
-              </div>
-
                 <p className="text-sm font-black text-cyan-200">
                   {item.title || "Osservazione GhostMe"}
                 </p>
@@ -638,14 +643,22 @@ useEffect(() => {
                 <p className="mt-3 text-xs text-zinc-500">
                   {item.category || "observation"} · priorità {item.priority || 1}
                 </p>
-                <button
-                  onClick={() => {
-                    onReplyObservation(item.message || "", item.id);
-                  }}
-                  className="mt-3 rounded-xl border border-cyan-400/30 px-3 py-2 text-xs font-bold text-cyan-300"
-                >
-                  Rispondi
-                </button>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    onClick={() => {
+                      onReplyObservation(item.message || "", item.id);
+                    }}
+                    className="rounded-xl border border-cyan-400/30 px-3 py-2 text-xs font-bold text-cyan-300"
+                  >
+                    Rispondi
+                  </button>
+                  <button
+                    onClick={() => markObservationHandled(item, "dismissed")}
+                    className="rounded-xl border border-zinc-700 px-3 py-2 text-xs font-bold text-zinc-300 hover:border-red-400 hover:text-red-300"
+                  >
+                    Archivia
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -1258,20 +1271,6 @@ useEffect(() => {
             className="rounded-3xl border border-zinc-800 bg-black/60 p-4"
           >
 
-          <div className="flex justify-end">
-            <button
-              onClick={() =>
-                setHiddenActions((prev) =>
-                  prev.includes(item.id) ? prev : [...prev, item.id]
-                )
-              }
-              className="rounded-full border border-zinc-700 px-2 py-1 text-xs text-zinc-500 hover:border-red-400 hover:text-red-300"
-              title="Nascondi dal pannello"
-            >
-              ✕
-            </button>
-          </div>
-
             <p className="text-sm font-black text-cyan-200">
               {item.title || item.intent_type}
             </p>
@@ -1281,6 +1280,20 @@ useEffect(() => {
             <p className="mt-3 text-xs text-zinc-500">
               {item.intent_type} · priorità {item.priority}
             </p>
+            <div className="mt-3 flex gap-2">
+              <button
+                onClick={() => updateActionStatus(item, "completed")}
+                className="rounded-xl border border-emerald-400/40 px-3 py-2 text-xs font-bold text-emerald-300"
+              >
+                Completa
+              </button>
+              <button
+                onClick={() => updateActionStatus(item, "archived")}
+                className="rounded-xl border border-zinc-700 px-3 py-2 text-xs font-bold text-zinc-300 hover:border-red-400 hover:text-red-300"
+              >
+                Archivia
+              </button>
+            </div>
           </div>
         ))}
       </div>

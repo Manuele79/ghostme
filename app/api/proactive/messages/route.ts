@@ -1,37 +1,21 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-
-function dedupeMessages(messages: any[]) {
-  const seen = new Set<string>();
-  const result: any[] = [];
-
-  for (const message of messages || []) {
-    const key = [
-      message.category || "",
-      message.title || "",
-      message.message || "",
-    ].join("|");
-
-    if (seen.has(key)) continue;
-    seen.add(key);
-    result.push(message);
-  }
-
-  return result;
-}
+import {
+  getAuthenticatedUserId,
+  UserContextAuthError,
+} from "@/lib/ghostme/auth/serverAuth";
+import { dedupeProactiveMessages } from "@/lib/ghostme/proactive/proactiveMessageDedupe";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    if (!body.userId) {
-      return NextResponse.json({ error: "userId mancante" }, { status: 400 });
-    }
+    const userId = await getAuthenticatedUserId(req, body.userId);
 
     const { data, error } = await supabaseAdmin
       .from("ghost_proactive_messages")
       .select("*")
-      .eq("user_id", body.userId)
+      .eq("user_id", userId)
       .in("status", ["unread", "read"])
       .in("category", [
         "agenda",
@@ -53,9 +37,13 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
-      messages: dedupeMessages(data || []),
+      messages: dedupeProactiveMessages(data || []),
     });
   } catch (err) {
+    if (err instanceof UserContextAuthError) {
+      return NextResponse.json({ error: err.message }, { status: err.status });
+    }
+
     console.log("GET PROACTIVE MESSAGES ERROR:", err);
     return NextResponse.json({ error: "Errore lettura osservazioni" }, { status: 500 });
   }

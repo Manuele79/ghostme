@@ -5,25 +5,7 @@ import {
   getAuthenticatedUserId,
   UserContextAuthError,
 } from "@/lib/ghostme/auth/serverAuth";
-
-function dedupeProactiveMessages(messages: any[]) {
-  const seen = new Set<string>();
-  const result: any[] = [];
-
-  for (const message of messages || []) {
-    const key = [
-      message.category || "",
-      message.title || "",
-      message.message || "",
-    ].join("|");
-
-    if (seen.has(key)) continue;
-    seen.add(key);
-    result.push(message);
-  }
-
-  return result;
-}
+import { dedupeProactiveMessages } from "@/lib/ghostme/proactive/proactiveMessageDedupe";
 
 function isVisibleProactiveMessage(message: any) {
   if (!["unread", "read"].includes(message.status)) return false;
