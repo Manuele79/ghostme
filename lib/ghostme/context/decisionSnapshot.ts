@@ -36,6 +36,8 @@ export type DecisionSnapshot = {
     | "review_project_tasks"
     | "revive_project"
     | "reduce_project_load"
+    | "review_goal_structure"
+    | "connect_orphan_actions"
     | "no_action";
   doNotDisturb: boolean;
   generatedAt: string;
@@ -131,6 +133,10 @@ function buildPriorities(snapshot: GhostBrainSnapshot) {
     ["paused", "stalled"].includes(snapshot.projects.importantProject.status)
   ) {
     priorities.push("project_recovery");
+  }
+
+  if (snapshot.projects.consistency.consistencyIssues.length) {
+    priorities.push("consistency_review");
   }
 
   if (snapshot.home.state.occupancyStatus !== "unknown") {
@@ -243,6 +249,32 @@ function buildWarnings(snapshot: GhostBrainSnapshot) {
 
   if (!snapshot.projects.activeProjects.length) {
     warnings.push("no_active_project");
+  }
+
+  if (snapshot.projects.consistency.consistencyIssues.length) {
+    warnings.push("goal_project_inconsistency");
+  }
+
+  if (snapshot.projects.consistency.orphanActions.length) {
+    warnings.push("orphan_actions");
+  }
+
+  if (snapshot.projects.consistency.orphanGoals.length) {
+    warnings.push("orphan_goals");
+  }
+
+  if (
+    snapshot.projects.consistency.consistencyIssues.some((item) =>
+      [
+        "completed_goal_with_open_tasks",
+        "active_project_without_recent_activity",
+        "too_many_open_tasks",
+        "important_goal_without_actions",
+        "pending_action_for_completed_project",
+      ].includes(item.type)
+    )
+  ) {
+    warnings.push("project_task_mismatch");
   }
 
   if (hasDuplicateProactive(snapshot)) {
@@ -372,6 +404,15 @@ function buildPossibleActions({
   }
   if (snapshot.projects.importantProject?.relatedGoals.length) {
     actions.push("review_project_goal");
+  }
+  if (warnings.includes("goal_project_inconsistency")) {
+    actions.push("review_goal_structure");
+  }
+  if (warnings.includes("orphan_actions")) {
+    actions.push("connect_orphan_actions");
+  }
+  if (warnings.includes("orphan_goals")) {
+    actions.push("reconnect_goal_project");
   }
   if (snapshot.signals.simple?.needsGoalReview) actions.push("review_active_goals");
   if (warnings.includes("location_stale") || missingContext.includes("no_fresh_location")) {
@@ -526,8 +567,20 @@ function chooseNextBestAction({
     return "consider_light_for_active_room";
   }
 
+  if (warnings.includes("orphan_actions")) {
+    return "connect_orphan_actions";
+  }
+
   if (warnings.includes("project_overloaded")) {
     return "reduce_project_load";
+  }
+
+  if (warnings.includes("project_task_mismatch")) {
+    return "review_project_tasks";
+  }
+
+  if (warnings.includes("goal_project_inconsistency")) {
+    return "review_goal_structure";
   }
 
   if (
