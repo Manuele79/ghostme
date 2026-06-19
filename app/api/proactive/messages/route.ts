@@ -39,6 +39,7 @@ export async function POST(req: Request) {
         "daily_briefing",
         "observation",
         "curiosity",
+        "home_question",
       ])
       .order("priority", { ascending: false })
       .order("scheduled_for", { ascending: false, nullsFirst: false })

@@ -71,6 +71,7 @@ async function createControlPlan({
     message: `${reason}\n\nVuoi che GhostMe prepari questa azione come regola confermata?`,
     category: "home_question",
     priority: 5,
+    logicalKey: `home_control_${automationKey}_${controlType}`,
   });
 
   return data;

@@ -11,23 +11,25 @@ function hasText(value: string, terms: string[]) {
 async function recentSuggestionExists(userId: string, suggestionType: string) {
   const since = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString();
 
-  const { data: openSuggestion } = await supabaseAdmin
-    .from("house_suggestions")
-    .select("id")
-    .eq("user_id", userId)
-    .eq("suggestion_type", suggestionType)
-    .in("status", ["pending", "learning", "active"])
-    .limit(1)
-    .maybeSingle();
-
-  if (openSuggestion?.id) return true;
-
   const { data } = await supabaseAdmin
     .from("house_suggestions")
     .select("id")
     .eq("user_id", userId)
     .eq("suggestion_type", suggestionType)
     .gte("created_at", since)
+    .limit(1)
+    .maybeSingle();
+
+  return !!data?.id;
+}
+
+async function openSuggestionExists(userId: string, suggestionType: string) {
+  const { data } = await supabaseAdmin
+    .from("house_suggestions")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("suggestion_type", suggestionType)
+    .in("status", ["pending", "learning", "active"])
     .limit(1)
     .maybeSingle();
 
@@ -49,6 +51,21 @@ async function createHouseSuggestion({
   roomKey?: string | null;
   confidence?: number;
 }) {
+  const logicalKey = `home_suggestion_${suggestionType}`;
+
+  if (await openSuggestionExists(userId, suggestionType)) {
+    await upsertProactiveMessage({
+      userId,
+      title,
+      message,
+      category: "home_question",
+      priority: 4,
+      logicalKey,
+    });
+
+    return null;
+  }
+
   if (await recentSuggestionExists(userId, suggestionType)) return null;
 
   const { data, error } = await supabaseAdmin
@@ -76,6 +93,7 @@ async function createHouseSuggestion({
     message,
     category: "home_question",
     priority: 4,
+    logicalKey,
   });
 
   return data;
