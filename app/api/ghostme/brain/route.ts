@@ -1,28 +1,10 @@
 import { NextResponse } from "next/server";
 import { buildGhostBrainSnapshot } from "@/lib/ghostme/context/reasoningService";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import {
   getAuthenticatedUserId,
   UserContextAuthError,
 } from "@/lib/ghostme/auth/serverAuth";
-import { dedupeProactiveMessages } from "@/lib/ghostme/proactive/proactiveMessageDedupe";
-
-function isVisibleProactiveMessage(message: any) {
-  if (!["unread", "read"].includes(message.status)) return false;
-
-  const dailyCategories = ["agenda", "daily_briefing", "reminder"];
-  if (!dailyCategories.includes(message.category)) return true;
-
-  const visibleAt = new Date(
-    message.updated_at || message.scheduled_for || message.created_at || ""
-  );
-  if (Number.isNaN(visibleAt.getTime())) return true;
-
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
-
-  return visibleAt >= startOfToday;
-}
+import { loadVisibleProactiveMessages } from "@/lib/ghostme/proactive/visibleProactiveMessages";
 
 export async function POST(req: Request) {
   try {
@@ -31,28 +13,7 @@ export async function POST(req: Request) {
 
     const snapshot = await buildGhostBrainSnapshot(userId);
 
-    const { data: proactiveRows } = await supabaseAdmin
-      .from("ghost_proactive_messages")
-      .select("*")
-      .eq("user_id", userId)
-      .in("status", ["unread", "read"])
-      .in("category", [
-        "agenda",
-        "reminder",
-        "daily_briefing",
-        "observation",
-        "curiosity",
-        "home_question",
-      ])
-      .order("priority", { ascending: false })
-      .order("scheduled_for", { ascending: false, nullsFirst: false })
-      .order("updated_at", { ascending: false, nullsFirst: false })
-      .order("created_at", { ascending: false })
-      .limit(20);
-
-    const proactiveMessages = dedupeProactiveMessages(
-      (proactiveRows || []).filter(isVisibleProactiveMessage)
-    );
+    const proactiveMessages = await loadVisibleProactiveMessages(userId);
 
     return NextResponse.json({
       snapshot,

@@ -4,6 +4,7 @@ import {
   getAuthenticatedUserId,
   UserContextAuthError,
 } from "@/lib/ghostme/auth/serverAuth";
+import { refreshCalendarMessages } from "@/lib/ghostme/calendar/calendarService";
 
 export async function POST(req: Request) {
   try {
@@ -40,7 +41,7 @@ export async function POST(req: Request) {
 
     const now = new Date().toISOString();
 
-    const payload: any = {
+    const payload: Record<string, string> = {
       status: nextStatus,
       read_at: now,
       updated_at: now,
@@ -51,8 +52,10 @@ export async function POST(req: Request) {
     }
 
     if (nextStatus === "answered" && proactiveMessage.category === "reminder") {
-      const logicalKeyParts = String(proactiveMessage.logical_key || "").split("_");
-      const calendarEventId = logicalKeyParts[logicalKeyParts.length - 1] || null;
+      const logicalKeyMatch = String(proactiveMessage.logical_key || "").match(
+        /^reminder_\d{4}-\d{2}-\d{2}_(.+)$/
+      );
+      const calendarEventId = logicalKeyMatch?.[1] || null;
 
       if (!calendarEventId) {
         return NextResponse.json(
@@ -61,16 +64,18 @@ export async function POST(req: Request) {
         );
       }
 
-      const { data: calendarEvent, error: calendarError } = await supabaseAdmin
+      const { data: calendarEvent, error: calendarLookupError } = await supabaseAdmin
         .from("calendar_events")
-        .update({ status: "completed", updated_at: now })
+        .select("id, status")
         .eq("id", calendarEventId)
         .eq("user_id", userId)
-        .select("id")
         .maybeSingle();
 
-      if (calendarError) {
-        return NextResponse.json({ error: calendarError.message }, { status: 500 });
+      if (calendarLookupError) {
+        return NextResponse.json(
+          { error: calendarLookupError.message },
+          { status: 500 }
+        );
       }
 
       if (!calendarEvent) {
@@ -79,6 +84,25 @@ export async function POST(req: Request) {
           { status: 404 }
         );
       }
+
+      if (!["active", "completed"].includes(calendarEvent.status)) {
+        return NextResponse.json(
+          { error: "Evento calendario non completabile" },
+          { status: 409 }
+        );
+      }
+
+      const { error: calendarError } = await supabaseAdmin
+        .from("calendar_events")
+        .update({ status: "completed", updated_at: now })
+        .eq("id", calendarEventId)
+        .eq("user_id", userId)
+        .eq("status", "active");
+
+      if (calendarError) {
+        return NextResponse.json({ error: calendarError.message }, { status: 500 });
+      }
+
     }
 
     const { error } = await supabaseAdmin
@@ -92,12 +116,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    if (nextStatus === "answered" && proactiveMessage.category === "reminder") {
+      await refreshCalendarMessages(userId);
+    }
+
     return NextResponse.json({ ok: true, status: nextStatus });
   } catch (err) {
     if (err instanceof UserContextAuthError) {
       return NextResponse.json({ error: err.message }, { status: err.status });
     }
-
     console.log("MARK PROACTIVE READ API ERROR:", err);
     return NextResponse.json({ error: "Errore API" }, { status: 500 });
   }

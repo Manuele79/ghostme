@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import {
   getAuthenticatedUserId,
   UserContextAuthError,
 } from "@/lib/ghostme/auth/serverAuth";
-import { dedupeProactiveMessages } from "@/lib/ghostme/proactive/proactiveMessageDedupe";
+import { loadVisibleProactiveMessages } from "@/lib/ghostme/proactive/visibleProactiveMessages";
 
 export async function POST(req: Request) {
   try {
@@ -12,32 +11,11 @@ export async function POST(req: Request) {
 
     const userId = await getAuthenticatedUserId(req, body.userId);
 
-    const { data, error } = await supabaseAdmin
-      .from("ghost_proactive_messages")
-      .select("*")
-      .eq("user_id", userId)
-      .in("status", ["unread", "read"])
-      .in("category", [
-        "agenda",
-        "reminder",
-        "daily_briefing",
-        "observation",
-        "curiosity",
-        "home_question",
-      ])
-      .order("priority", { ascending: false })
-      .order("scheduled_for", { ascending: false, nullsFirst: false })
-      .order("updated_at", { ascending: false, nullsFirst: false })
-      .order("created_at", { ascending: false })
-      .limit(20);
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    const messages = await loadVisibleProactiveMessages(userId);
 
     return NextResponse.json({
       success: true,
-      messages: dedupeProactiveMessages(data || []),
+      messages,
     });
   } catch (err) {
     if (err instanceof UserContextAuthError) {

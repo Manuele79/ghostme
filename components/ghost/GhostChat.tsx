@@ -121,7 +121,9 @@ export default function GhostChat({
                   {message.message}
                 </div>
 
-              {message.category !== "home_question" && message.category !== "reminder" && (
+              {message.category !== "home_question" &&
+                message.category !== "reminder" &&
+                message.category !== "agenda" && (
               <div className="mt-4">
                 <button
                   onClick={() => replyToProactive(message)}

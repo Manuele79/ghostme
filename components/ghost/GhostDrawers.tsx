@@ -288,7 +288,7 @@ function ServicePanelContent({
   const [loadingPlaces, setLoadingPlaces] = useState(false);
   const [detectedPlaceId, setDetectedPlaceId] = useState<string | null>(null);
   const [currentPlace, setCurrentPlace] = useState<string | null>(null);
-  const [newType, setNewType] = useState<"note" | "appointment">("note");
+  const [newType, setNewType] = useState<CalendarEvent["type"]>("note");
   const [newTitle, setNewTitle] = useState("");
   const [newDescription, setNewDescription] = useState("");
   const [newTime, setNewTime] = useState("00:00");
@@ -493,7 +493,7 @@ async function updateActionStatus(
 
 
   function getEventDate(event: CalendarEvent) {
-    return event.remind_at || event.start_at || null;
+    return event.start_at || event.remind_at || null;
   }
 
   function eventsForDay(day: number) {
@@ -535,12 +535,6 @@ async function updateActionStatus(
     const minute = Number.isNaN(rawMinute) ? 0 : rawMinute;
     const eventDate = new Date(year, month, selectedDay, hour, minute);
 
-    const remindDate = new Date(eventDate);
-
-    if (newType === "appointment") {
-      remindDate.setHours(remindDate.getHours() - 1);
-    }
-
     const endDate = new Date(eventDate);
 
     if (newType === "appointment") {
@@ -554,11 +548,13 @@ async function updateActionStatus(
       title: newTitle.trim(),
       description: newDescription.trim(),
       startAt: eventDate.toISOString(),
-      endAt: newType === "appointment" ? endDate.toISOString() : eventDate.toISOString(),
+      endAt: newType === "appointment" ? endDate.toISOString() : null,
       remindAt:
-        newType === "appointment"
-          ? remindDate.toISOString()
-          : eventDate.toISOString(),
+        newType === "reminder"
+          ? eventDate.toISOString()
+          : editingEventId
+            ? undefined
+            : null,
     };
 
     const res = await fetch("/api/calendar-events", {
@@ -595,6 +591,7 @@ async function updateActionStatus(
     setNewTitle("");
     setNewDescription("");
     setNewTime("00:00");
+    setNewType("note");
 
     setTimeout(() => {
       setSavedMessage("");
@@ -648,7 +645,7 @@ async function updateActionStatus(
                     >
                       Fatto
                     </button>
-                  ) : (
+                  ) : item.category !== "agenda" ? (
                     <button
                       onClick={() => {
                         onReplyObservation(item.message || "", item.id);
@@ -657,7 +654,7 @@ async function updateActionStatus(
                     >
                       Rispondi
                     </button>
-                  )}
+                  ) : null}
                   <button
                     onClick={() => markObservationHandled(item, "dismissed")}
                     className="rounded-xl border border-zinc-700 px-3 py-2 text-xs font-bold text-zinc-300 hover:border-red-400 hover:text-red-300"
@@ -893,6 +890,7 @@ async function updateActionStatus(
   if (activeTab === "calendar") {
 
       const upcomingReminders = localEvents.filter((event) => {
+        if (event.status && event.status !== "active") return false;
         if (!event.remind_at) return false;
 
         const remindDate = new Date(event.remind_at);
@@ -1071,11 +1069,7 @@ async function updateActionStatus(
                   onClick={() => {
                     setEditingEventId(event.id);
 
-                    setNewType(
-                      event.type === "appointment"
-                        ? "appointment"
-                        : "note"
-                    );
+                    setNewType(event.type);
 
                     setNewTitle(event.title || "");
                     setNewDescription(event.description || "");

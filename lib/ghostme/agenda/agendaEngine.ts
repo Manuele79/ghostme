@@ -10,51 +10,31 @@ function formatTime(value?: string | null) {
   });
 }
 
-function formatDate(value?: string | null) {
-  if (!value) return "";
+type AgendaEvent = {
+  title: string;
+  start_at?: string | null;
+  remind_at?: string | null;
+};
 
-  return new Date(value).toLocaleDateString("it-IT", {
-    day: "2-digit",
-    month: "2-digit",
-    timeZone: "Europe/Rome",
-  });
-}
-
-function eventDateValue(event: any) {
+function eventDateValue(event: AgendaEvent) {
   return event.start_at || event.remind_at || null;
 }
 
-export function buildAgendaMessage(situation: GhostSituation) {
-  const today = situation.calendarToday || [];
-  const upcoming = (situation.upcomingEvents || []).filter((event) => {
-    const value = eventDateValue(event);
-    if (!value) return false;
+export function buildAgendaMessage(input: GhostSituation | AgendaEvent[]) {
+  const today = (Array.isArray(input) ? input : input.calendarToday || []) as AgendaEvent[];
+  if (!today.length) return null;
 
-    return !today.some((t) => t.id === event.id);
-  });
-
-  if (!today.length && !upcoming.length) return null;
-
-  const todayRows = today
+  return today
+    .slice()
+    .sort((left, right) => {
+      const leftTime = new Date(eventDateValue(left) || 0).getTime();
+      const rightTime = new Date(eventDateValue(right) || 0).getTime();
+      return leftTime - rightTime;
+    })
     .slice(0, 5)
     .map((event) => {
       const value = eventDateValue(event);
       return `• ${formatTime(value)} — ${event.title}`;
     })
     .join("\n");
-
-  const upcomingRows = upcoming
-    .slice(0, 5)
-    .map((event) => {
-      const value = eventDateValue(event);
-      return `• ${formatDate(value)} ${formatTime(value)} — ${event.title}`;
-    })
-    .join("\n");
-
-  return [
-    todayRows ? `Oggi:\n${todayRows}` : "",
-    upcomingRows ? `Prossimi eventi:\n${upcomingRows}` : "",
-  ]
-    .filter(Boolean)
-    .join("\n\n");
 }

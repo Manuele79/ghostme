@@ -1,6 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
-const ONE_PER_DAY_CATEGORIES = new Set(["agenda", "daily_briefing", "reminder"]);
+const ONE_PER_DAY_CATEGORIES = new Set(["agenda", "daily_briefing"]);
 const ALL_LIFECYCLE_STATUSES = [
   "unread",
   "read",
@@ -76,7 +76,7 @@ export async function upsertProactiveMessage({
     }
   }
 
-  if (!existing) {
+  if (!existing && (!stableLogicalKey || !supportsLogicalKey)) {
     let legacyQuery = supabaseAdmin
       .from("ghost_proactive_messages")
       .select("id, message, status")
