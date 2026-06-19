@@ -36,6 +36,10 @@ import {
   type RelationshipMemorySnapshot,
 } from "@/lib/ghostme/people/relationshipMemorySnapshot";
 import {
+  buildSocialSuggestionSnapshot,
+  type SocialSuggestionSnapshot,
+} from "@/lib/ghostme/people/socialSuggestionSnapshot";
+import {
   buildMemorySnapshot,
   type MemorySnapshot,
 } from "@/lib/ghostme/memory/memorySnapshot";
@@ -69,6 +73,7 @@ export type GhostBrainSnapshot = {
   memory: MemorySnapshot;
   people: PeopleSnapshot & {
     relationshipMemory: RelationshipMemorySnapshot;
+    socialSuggestions: SocialSuggestionSnapshot;
   };
   location: {
     current: any | null;
@@ -618,6 +623,10 @@ export async function buildGhostBrainSnapshot(
     ],
     actions: goalsSnapshot.pendingActions,
   });
+  const socialSuggestions = buildSocialSuggestionSnapshot({
+    people: peopleSnapshot,
+    relationshipMemory,
+  });
   const projectMemory = buildProjectMemorySnapshot({
     memory: memorySnapshot,
     goals: goalsSnapshot,
@@ -720,6 +729,7 @@ export async function buildGhostBrainSnapshot(
     people: {
       ...peopleSnapshot,
       relationshipMemory,
+      socialSuggestions,
     },
     location: {
       current: graph.currentLocation || null,
