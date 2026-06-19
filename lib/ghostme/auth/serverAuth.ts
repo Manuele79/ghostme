@@ -87,20 +87,26 @@ export function isDevelopmentEnvironment() {
 }
 
 export function hasValidWorkerOverride(req: Request) {
-  const secret = process.env.WORKER_SECRET;
-  if (!secret) return false;
+  const allowedSecrets = [
+    process.env.WORKER_SECRET,
+    process.env.CRON_SECRET,
+  ].filter(Boolean) as string[];
+  if (!allowedSecrets.length) return false;
 
   const url = new URL(req.url);
+  const authorization = req.headers.get("authorization") || "";
+  const bearer = authorization.match(/^Bearer\s+(.+)$/i)?.[1]?.trim();
   const provided =
     req.headers.get("x-worker-secret") ||
     req.headers.get("x-ghostme-worker-secret") ||
-    url.searchParams.get("token");
+    url.searchParams.get("token") ||
+    bearer;
 
-  return provided === secret;
+  return Boolean(provided && allowedSecrets.includes(provided));
 }
 
 export function requireWorkerRequest(req: Request) {
-  if (!process.env.WORKER_SECRET) {
+  if (!process.env.WORKER_SECRET && !process.env.CRON_SECRET) {
     throw new UserContextAuthError("Worker secret non configurato", 403);
   }
 
