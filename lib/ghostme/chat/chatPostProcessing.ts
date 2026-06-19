@@ -17,6 +17,7 @@ import {
   detectAndSaveActionIntent,
   detectAndCompleteActionIntent,
 } from "@/lib/ghostme/actionLayer";
+import { linkOpenOrphanActionsToGoal } from "@/lib/ghostme/goals/goalsActionsLifecycle";
 import type {
   ChatPostProcessingPayload,
   DetectedTopicLike,
@@ -473,11 +474,31 @@ export async function runChatPostProcessing({
     jobs.push(classifyClarificationIfNeeded({ userId, message, detectedTopics }));
     jobs.push(detectAndSaveContradictions({ userId, message }));
     jobs.push(updateMentalState({ userId, message }));
-    jobs.push(detectAndSaveGoalsDesires({ userId, message, detectedTopics }));
     jobs.push(detectAndSaveTimelineEvent({ userId, message, detectedTopics }));
     jobs.push(updateDynamicSelfProfile({ userId, message }));
-    jobs.push(detectAndCompleteActionIntent({ userId, message }));
-    jobs.push(detectAndSaveActionIntent({ userId, message, detectedTopics }));
+    jobs.push(
+      (async () => {
+        await detectAndCompleteActionIntent({ userId, message });
+
+        const savedGoals = await detectAndSaveGoalsDesires({
+          userId,
+          message,
+          detectedTopics,
+        });
+        const goal = Array.isArray(savedGoals) ? savedGoals[0] : null;
+
+        if (goal?.id) {
+          await linkOpenOrphanActionsToGoal({ userId, goal });
+        }
+
+        await detectAndSaveActionIntent({
+          userId,
+          message,
+          detectedTopics,
+          preferredGoalId: goal?.id || null,
+        });
+      })()
+    );
 
     jobs.push(detectAndSaveBehaviorRule({ userId, message }));
 

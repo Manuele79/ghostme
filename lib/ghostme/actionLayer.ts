@@ -1,5 +1,10 @@
 import { OpenAI } from "openai";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import {
+  clearGoalReviewForOpenAction,
+  completeActionIntentById,
+  findGoalIdForAction,
+} from "@/lib/ghostme/goals/goalsActionsLifecycle";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -31,10 +36,12 @@ export async function detectAndSaveActionIntent({
   userId,
   message,
   detectedTopics,
+  preferredGoalId,
 }: {
   userId: string;
   message: string;
   detectedTopics: { topic: string }[];
+  preferredGoalId?: string | null;
 }) {
   if (!userId || !message?.trim()) return null;
 
@@ -108,14 +115,54 @@ Se non c'è azione:
   if (!parsed?.has_action || !parsed?.intent_type) return null;
 
   const relatedTopics = detectedTopics.map((t) => t.topic);
+  const title = parsed.title || "Azione rilevata";
+  const goalId = await findGoalIdForAction({
+    userId,
+    preferredGoalId,
+    action: {
+      title,
+      description: parsed.description || "",
+      sourceMessage: message,
+      relatedTopics,
+    },
+  });
+
+  const { data: existing } = await supabaseAdmin
+    .from("action_intents")
+    .select("*")
+    .eq("user_id", userId)
+    .in("status", ["detected", "pending"])
+    .ilike("title", title)
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (existing) {
+    if (!existing.goal_id && goalId) {
+      const { data } = await supabaseAdmin
+        .from("action_intents")
+        .update({ goal_id: goalId, updated_at: new Date().toISOString() })
+        .eq("id", existing.id)
+        .eq("user_id", userId)
+        .is("goal_id", null)
+        .select();
+
+      await clearGoalReviewForOpenAction(userId, goalId);
+
+      return data || [existing];
+    }
+
+    return [existing];
+  }
 
   const { data, error } = await supabaseAdmin
     .from("action_intents")
     .insert([
       {
         user_id: userId,
+        goal_id: goalId,
         intent_type: parsed.intent_type,
-        title: parsed.title || "Azione rilevata",
+        title,
         description: parsed.description || "",
         status: "detected",
         priority: Math.min(Math.max(parsed.priority || 5, 1), 10),
@@ -127,6 +174,10 @@ Se non c'è azione:
 
   console.log("ACTION INTENT INSERT:", data);
   console.log("ACTION INTENT INSERT ERROR:", error);
+
+  if (!error && data?.length && goalId) {
+    await clearGoalReviewForOpenAction(userId, goalId);
+  }
 
   return data;
 }
@@ -163,7 +214,7 @@ export async function detectAndCompleteActionIntent({
 
   const { data: pendingActions } = await supabaseAdmin
     .from("action_intents")
-    .select("id, intent_type, title, description, source_message, priority, updated_at")
+    .select("id, goal_id, intent_type, title, description, source_message, priority, updated_at")
     .eq("user_id", userId)
     .in("status", ["detected", "pending"])
     .order("priority", { ascending: false })
@@ -239,20 +290,15 @@ ${message}
 
   if (!validAction) return null;
 
-  const { data, error } = await supabaseAdmin
-    .from("action_intents")
-    .update({
-      status: "completed",
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", validAction.id)
-    .eq("user_id", userId)
-    .select();
+  const result = await completeActionIntentById({
+    userId,
+    actionId: validAction.id,
+  });
 
-  if (error) {
-    console.log("ACTION COMPLETE UPDATE ERROR:", error);
+  if (result.error || !result.action) {
+    console.log("ACTION COMPLETE UPDATE ERROR:", result.error);
     return null;
   }
 
-  return data;
+  return [result.action];
 }

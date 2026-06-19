@@ -233,7 +233,7 @@ Se non c'è nulla:
     .maybeSingle();
 
   if (existing) {
-    if (existing.status === "archived") {
+    if (["completed", "archived"].includes(existing.status)) {
       return null;
     }
 
@@ -242,8 +242,7 @@ Se non c'è nulla:
       .update({
         description: parsed.description || "",
         category: parsed.category || "general",
-        status: "active",
-        completed_at: null,
+        status: existing.status,
         importance: Math.min(
           Math.max(existing.importance || 5, parsed.importance || 5) + 1,
           10
