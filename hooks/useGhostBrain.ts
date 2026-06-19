@@ -6,6 +6,7 @@ import {
   buildGhostMeMessage,
   buildPersonalitySummary,
 } from "../lib/personality";
+import { getAuthenticatedJsonHeaders } from "../lib/ghostme/auth/clientAuthHeaders";
 
 type LoadBrainArgs = {
   userId: string;
@@ -40,9 +41,7 @@ export function useGhostBrain() {
 
     const res = await fetch("/api/ghostme/brain", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: await getAuthenticatedJsonHeaders(),
       body: JSON.stringify({ userId }),
     });
 

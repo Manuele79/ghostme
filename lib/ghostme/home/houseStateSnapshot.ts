@@ -1,6 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getHAStates } from "@/lib/ghostme/homeAssistant/haClient";
 import { getEntityInfo } from "@/lib/ghostme/homeAssistant/homeEntityMapper";
+import { canAccessHomeAssistant } from "@/lib/ghostme/homeAssistant/homeAssistantAccess";
 
 type HAState = {
   entity_id: string;
@@ -12,6 +13,7 @@ type HAState = {
 
 export type HouseStateSnapshot = {
   occupancyStatus:
+    | "not_configured"
     | "empty"
     | "one_person_home"
     | "multiple_people_home"
@@ -121,6 +123,10 @@ function confidenceFor({
 }
 
 export function formatHouseStateContext(snapshot: HouseStateSnapshot) {
+  if (snapshot.occupancyStatus === "not_configured") {
+    return "Home Assistant non configurato per questo utente.";
+  }
+
   const peopleLines = snapshot.people.map(
     (person) =>
       `${person.name}: ${person.isHome ? "a casa" : person.state || "sconosciuto"}`
@@ -150,6 +156,18 @@ ${[
 export async function buildHouseStateSnapshot(
   userId: string
 ): Promise<HouseStateSnapshot> {
+  if (!canAccessHomeAssistant(userId)) {
+    return {
+      occupancyStatus: "not_configured",
+      people: [],
+      activeRooms: [],
+      media: [],
+      signals: [],
+      confidence: 0,
+      lastUpdated: null,
+    };
+  }
+
   const [states, entitiesRes, eventsRes] = await Promise.all([
     getHAStates() as Promise<HAState[]>,
     supabaseAdmin

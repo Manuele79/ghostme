@@ -1,6 +1,10 @@
 import { NextResponse, after } from "next/server";
 import { runChatPostProcessing } from "@/lib/ghostme/chat/chatPostProcessing";
 import { runGhostChatFlow } from "@/lib/ghostme/chat/ghostChatOrchestrator";
+import {
+  getAuthenticatedUserId,
+  UserContextAuthError,
+} from "@/lib/ghostme/auth/serverAuth";
 
 export const runtime = "nodejs";
 
@@ -11,7 +15,10 @@ export async function POST(req: Request) {
     const message = body.message as string;
     const traits = body.traits;
     const messages = body.messages || [];
-    const userId = body.userId as string | undefined;
+    const userId = await getAuthenticatedUserId(
+      req,
+      body.userId as string | undefined
+    );
 
     const result = await runGhostChatFlow({
       message,
@@ -55,6 +62,10 @@ export async function POST(req: Request) {
       },
     });
   } catch (err) {
+    if (err instanceof UserContextAuthError) {
+      return NextResponse.json({ error: err.message }, { status: err.status });
+    }
+
     console.log(err);
     return NextResponse.json({ error: "Errore GhostMe AI" }, { status: 500 });
   }

@@ -141,7 +141,11 @@ function buildPriorities(snapshot: GhostBrainSnapshot) {
     priorities.push("consistency_review");
   }
 
-  if (snapshot.home.state.occupancyStatus !== "unknown") {
+  if (
+    !["unknown", "not_configured"].includes(
+      snapshot.home.state.occupancyStatus
+    )
+  ) {
     priorities.push(`home_${snapshot.home.state.occupancyStatus}`);
   }
 
@@ -339,7 +343,11 @@ function buildMissingContext(snapshot: GhostBrainSnapshot) {
   ) {
     missing.push("no_memory");
   }
-  if (snapshot.home.state.occupancyStatus === "unknown") {
+  if (
+    ["unknown", "not_configured"].includes(
+      snapshot.home.state.occupancyStatus
+    )
+  ) {
     missing.push("no_home_state");
   }
 

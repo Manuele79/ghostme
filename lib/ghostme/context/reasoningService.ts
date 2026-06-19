@@ -68,6 +68,7 @@ import {
   buildTrueProactiveSnapshot,
   type TrueProactiveSnapshot,
 } from "@/lib/ghostme/proactive/trueProactiveSnapshot";
+import { canAccessHomeAssistant } from "@/lib/ghostme/homeAssistant/homeAssistantAccess";
 
 type DetectedTopicInput = {
   topic: string;
@@ -406,6 +407,14 @@ function parseHomePresenceSignal(homeContext: string) {
 }
 
 function buildHomePresenceFromHouseState(houseState: HouseStateSnapshot) {
+  if (houseState.occupancyStatus === "not_configured") {
+    return {
+      status: "not_configured",
+      signals: [],
+      reason: "home_assistant_not_configured_for_user",
+    };
+  }
+
   let status = "unknown";
   if (houseState.occupancyStatus === "empty") status = "empty";
   if (houseState.occupancyStatus === "one_person_home") status = "one_person_home";
@@ -569,11 +578,13 @@ export async function buildReasoningSnapshot({
     return buildFallbackSnapshot("situation_unavailable");
   }
 
-  try {
-    homeContext = await buildHomeReasoning();
-  } catch (err) {
-    console.log("REASONING HOME ERROR:", err);
-    homeContext = "";
+  if (canAccessHomeAssistant(userId)) {
+    try {
+      homeContext = await buildHomeReasoning();
+    } catch (err) {
+      console.log("REASONING HOME ERROR:", err);
+      homeContext = "";
+    }
   }
 
   const whereIsUser = buildWhereIsUser(situation);
@@ -612,6 +623,7 @@ export async function buildGhostBrainSnapshot(
   userId: string
 ): Promise<GhostBrainSnapshot> {
   const generatedAt = new Date().toISOString();
+  const homeAssistantAccess = canAccessHomeAssistant(userId);
 
   const [
     { graph },
@@ -695,10 +707,12 @@ export async function buildGhostBrainSnapshot(
     houseState,
   });
   let houseRoutes: HouseRouteSnapshot | null = null;
-  try {
-    houseRoutes = await buildHouseRouteSnapshot({ userId, houseState });
-  } catch (err) {
-    console.log("GHOSTBRAIN HOUSE ROUTES ERROR:", err);
+  if (homeAssistantAccess) {
+    try {
+      houseRoutes = await buildHouseRouteSnapshot({ userId, houseState });
+    } catch (err) {
+      console.log("GHOSTBRAIN HOUSE ROUTES ERROR:", err);
+    }
   }
 
   if (!houseRoutes) {
@@ -713,16 +727,18 @@ export async function buildGhostBrainSnapshot(
   }
 
   let homeComfortRisk: HomeComfortRiskSnapshot | null = null;
-  try {
-    homeComfortRisk = await buildHomeComfortRiskSnapshot({
-      userId,
-      houseState,
-      routes: houseRoutes,
-      learnedRules: graph.houseLearnedRules || [],
-      automationControls: graph.houseAutomationControls || [],
-    });
-  } catch (err) {
-    console.log("GHOSTBRAIN HOME COMFORT RISK ERROR:", err);
+  if (homeAssistantAccess) {
+    try {
+      homeComfortRisk = await buildHomeComfortRiskSnapshot({
+        userId,
+        houseState,
+        routes: houseRoutes,
+        learnedRules: graph.houseLearnedRules || [],
+        automationControls: graph.houseAutomationControls || [],
+      });
+    } catch (err) {
+      console.log("GHOSTBRAIN HOME COMFORT RISK ERROR:", err);
+    }
   }
 
   if (!homeComfortRisk) {
@@ -800,9 +816,11 @@ export async function buildGhostBrainSnapshot(
     curiosity,
     home: {
       state: houseState,
-      patterns: graph.housePatterns || [],
-      learnedRules: graph.houseLearnedRules || [],
-      automationControls: graph.houseAutomationControls || [],
+      patterns: homeAssistantAccess ? graph.housePatterns || [] : [],
+      learnedRules: homeAssistantAccess ? graph.houseLearnedRules || [] : [],
+      automationControls: homeAssistantAccess
+        ? graph.houseAutomationControls || []
+        : [],
       presence: homePresence,
       consistency: homeConsistency,
       routes: houseRoutes,

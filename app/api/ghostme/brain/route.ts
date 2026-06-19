@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { buildGhostBrainSnapshot } from "@/lib/ghostme/context/reasoningService";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import {
+  getAuthenticatedUserId,
+  UserContextAuthError,
+} from "@/lib/ghostme/auth/serverAuth";
 
 function dedupeProactiveMessages(messages: any[]) {
   const seen = new Set<string>();
@@ -41,11 +45,7 @@ function isVisibleProactiveMessage(message: any) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const userId = body.userId;
-
-    if (!userId) {
-      return NextResponse.json({ error: "userId mancante" }, { status: 400 });
-    }
+    const userId = await getAuthenticatedUserId(req, body.userId);
 
     const snapshot = await buildGhostBrainSnapshot(userId);
 
@@ -86,6 +86,10 @@ export async function POST(req: Request) {
       proactiveMessages,
     });
   } catch (err) {
+    if (err instanceof UserContextAuthError) {
+      return NextResponse.json({ error: err.message }, { status: err.status });
+    }
+
     console.log("BRAIN API ERROR:", err);
     return NextResponse.json({ error: "Errore brain API" }, { status: 500 });
   }

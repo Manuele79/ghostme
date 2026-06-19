@@ -50,6 +50,19 @@ export function buildHomeLocationConsistency({
   const isUserAtHomeByLocation =
     isHomeValue(currentPlace) || isHomeValue(currentCategory);
   const occupancyStatus = houseState.occupancyStatus;
+
+  if (occupancyStatus === "not_configured") {
+    return {
+      isUserAtHomeByLocation,
+      isUserAtHomeByHomeAssistant: false,
+      occupancyStatus,
+      mismatch: false,
+      confidence: 0,
+      reason: "home_assistant_not_configured_for_user",
+      checkedAt: new Date().toISOString(),
+    };
+  }
+
   const manuele = houseState.people.find(isManuele) || null;
   const hasLocationSignal = Boolean(clean(currentPlace) || clean(currentCategory));
   const hasExplicitManueleSignal = Boolean(manuele);

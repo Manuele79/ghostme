@@ -22,6 +22,7 @@ import GhostBackground from "@/components/ghost/GhostBackground";
 import { useGhostVoice } from "@/hooks/useGhostVoice";
 import { useGhostChat } from "@/hooks/useGhostChat";
 import { useGhostBrain } from "@/hooks/useGhostBrain";
+import { getAuthenticatedJsonHeaders } from "@/lib/ghostme/auth/clientAuthHeaders";
 
 import {
   MemoryDrawer,
@@ -422,7 +423,7 @@ export default function ChatPage() {
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: await getAuthenticatedJsonHeaders(),
         body: JSON.stringify({
           message: userText,
           traits,
@@ -516,7 +517,7 @@ export default function ChatPage() {
   try {
     const res = await fetch("/api/chat", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: await getAuthenticatedJsonHeaders(),
       body: JSON.stringify({
         message: userText,
         traits,
