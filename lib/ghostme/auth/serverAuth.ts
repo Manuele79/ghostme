@@ -82,7 +82,11 @@ function cookieAccessToken(req: Request) {
   return null;
 }
 
-function hasValidWorkerOverride(req: Request) {
+export function isDevelopmentEnvironment() {
+  return process.env.NODE_ENV === "development";
+}
+
+export function hasValidWorkerOverride(req: Request) {
   const secret = process.env.WORKER_SECRET;
   if (!secret) return false;
 
@@ -93,6 +97,22 @@ function hasValidWorkerOverride(req: Request) {
     url.searchParams.get("token");
 
   return provided === secret;
+}
+
+export function requireWorkerRequest(req: Request) {
+  if (!process.env.WORKER_SECRET) {
+    throw new UserContextAuthError("Worker secret non configurato", 403);
+  }
+
+  if (!hasValidWorkerOverride(req)) {
+    throw new UserContextAuthError("Worker non autorizzato", 401);
+  }
+}
+
+export function requireDevelopmentOrWorker(req: Request) {
+  if (!isDevelopmentEnvironment() && !hasValidWorkerOverride(req)) {
+    throw new UserContextAuthError("Endpoint interno non autorizzato", 401);
+  }
 }
 
 export async function getAuthenticatedUserId(
@@ -115,7 +135,7 @@ export async function getAuthenticatedUserId(
   }
 
   const manualOverrideAllowed =
-    process.env.NODE_ENV !== "production" || hasValidWorkerOverride(req);
+    isDevelopmentEnvironment() || hasValidWorkerOverride(req);
 
   if (manualOverrideAllowed && requestedUserId) {
     return requestedUserId;

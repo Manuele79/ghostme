@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server";
 import { getLocationCurrentStateFlow } from "@/lib/ghostme/location/locationCurrentStateFlow";
+import { getAuthenticatedUserId, UserContextAuthError } from "@/lib/ghostme/auth/serverAuth";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    if (!body.userId) {
-      return NextResponse.json({ error: "userId mancante" }, { status: 400 });
-    }
-
-    const { data, error } = await getLocationCurrentStateFlow(body.userId);
+    const userId = await getAuthenticatedUserId(req, body.userId);
+    const { data, error } = await getLocationCurrentStateFlow(userId);
 
     if (error) {
       console.log("GET CURRENT STATE ERROR:", error);
@@ -21,6 +19,7 @@ export async function POST(req: Request) {
       location: data,
     });
   } catch (err) {
+    if (err instanceof UserContextAuthError) return NextResponse.json({ error: err.message }, { status: err.status });
     console.log("CURRENT STATE API ERROR:", err);
     return NextResponse.json({ error: "Errore stato luogo" }, { status: 500 });
   }

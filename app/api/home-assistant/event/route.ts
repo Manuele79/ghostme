@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getEntityInfo } from "@/lib/ghostme/homeAssistant/homeEntityMapper";
 import { classifyHomeEventSignificance } from "@/lib/ghostme/homeAssistant/homeEventSignificance";
+import { isDevelopmentEnvironment } from "@/lib/ghostme/auth/serverAuth";
 
 function clean(value: any) {
   return String(value ?? "").toLowerCase().trim();
@@ -36,7 +37,6 @@ function getEventType(entityType: string, state: string, incomingEventType?: str
   const cleanIncoming = clean(incomingEventType);
 
   if (cleanIncoming === "automation_triggered") return "automation_on";
-  if (cleanIncoming && cleanIncoming !== "state_changed") return cleanIncoming;
 
   if (entityType === "motion") return cleanState === "on" ? "motion_on" : "motion_off";
   if (entityType === "presence") return cleanState === "on" ? "presence_on" : "presence_off";
@@ -142,7 +142,7 @@ function isAuthorized(req: Request, body: any) {
   const secret =
     process.env.HOME_ASSISTANT_WEBHOOK_SECRET || process.env.WORKER_SECRET;
 
-  if (!secret) return true;
+  if (!secret) return isDevelopmentEnvironment();
 
   const url = new URL(req.url);
   const headerToken =
@@ -151,6 +151,16 @@ function isAuthorized(req: Request, body: any) {
   const token = headerToken || url.searchParams.get("token") || body.token;
 
   return token === secret;
+}
+
+function allowedHomeAssistantUserId() {
+  const configured =
+    process.env.GHOSTME_HOME_ASSISTANT_USER_ID ||
+    process.env.HOME_ASSISTANT_USER_ID;
+
+  if (configured) return configured;
+  if (isDevelopmentEnvironment()) return process.env.GHOSTME_TEST_USER_ID || null;
+  return null;
 }
 
 export async function POST(req: Request) {
@@ -169,15 +179,30 @@ export async function POST(req: Request) {
       );
     }
 
-    const userId = body.userId || body.user_id || process.env.GHOSTME_TEST_USER_ID;
+    const mappedUserId = allowedHomeAssistantUserId();
+    const requestedUserId = body.userId || body.user_id || null;
     const entityId = body.entity_id || body.entityId;
 
-    if (!userId || !entityId) {
+    if (!mappedUserId) {
+      return NextResponse.json(
+        { received: false, significant: false, reason: "user_mapping_not_configured", inserted: false },
+        { status: 503 }
+      );
+    }
+
+    if (requestedUserId && requestedUserId !== mappedUserId) {
+      return NextResponse.json(
+        { received: false, significant: false, reason: "user_mapping_not_allowed", inserted: false },
+        { status: 403 }
+      );
+    }
+
+    if (!entityId) {
       return NextResponse.json(
         {
           received: false,
           significant: false,
-          reason: "missing_user_or_entity",
+          reason: "missing_entity",
           inserted: false,
         },
         { status: 400 }
@@ -185,6 +210,13 @@ export async function POST(req: Request) {
     }
 
     const info = getEntityInfo(entityId);
+    if (info.type === "other") {
+      return NextResponse.json(
+        { received: false, significant: false, reason: "unmapped_entity", inserted: false },
+        { status: 400 }
+      );
+    }
+    const userId = mappedUserId;
     const oldState = getStateValue(body.old_state ?? body.oldState);
     const newState = getStateValue(body.new_state ?? body.newState ?? body.state);
     const entityName = friendlyName({ ...body, entity_id: entityId });

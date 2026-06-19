@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { getHAStates } from "@/lib/ghostme/homeAssistant/haClient";
+import { requireDevelopmentOrWorker, UserContextAuthError } from "@/lib/ghostme/auth/serverAuth";
 
-export async function GET() {
-  const states = await getHAStates();
+export async function GET(req: Request) {
+  try {
+    requireDevelopmentOrWorker(req);
+    const states = await getHAStates();
 
   const useful = states
     .filter((s: any) => {
@@ -37,8 +40,9 @@ export async function GET() {
     }))
     .sort((a: any, b: any) => a.entity_id.localeCompare(b.entity_id));
 
-  return NextResponse.json({
-    count: useful.length,
-    entities: useful,
-  });
+    return NextResponse.json({ count: useful.length, entities: useful });
+  } catch (err) {
+    if (err instanceof UserContextAuthError) return NextResponse.json({ error: err.message }, { status: err.status });
+    return NextResponse.json({ error: "Errore debug Home Assistant" }, { status: 500 });
+  }
 }

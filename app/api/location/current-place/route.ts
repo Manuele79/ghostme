@@ -1,19 +1,21 @@
 import { NextResponse } from "next/server";
 import { detectCurrentPlace } from "@/lib/ghostme/location/placeService";
+import { getAuthenticatedUserId, UserContextAuthError } from "@/lib/ghostme/auth/serverAuth";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    if (!body.userId || body.latitude == null || body.longitude == null) {
+    if (body.latitude == null || body.longitude == null) {
       return NextResponse.json(
         { error: "Dati posizione mancanti" },
         { status: 400 }
       );
     }
+    const userId = await getAuthenticatedUserId(req, body.userId);
 
     const place = await detectCurrentPlace({
-      userId: body.userId,
+      userId,
       latitude: Number(body.latitude),
       longitude: Number(body.longitude),
     });
@@ -23,6 +25,7 @@ export async function POST(req: Request) {
       place,
     });
   } catch (err) {
+    if (err instanceof UserContextAuthError) return NextResponse.json({ error: err.message }, { status: err.status });
     console.log("CURRENT PLACE API ERROR:", err);
     return NextResponse.json(
       { error: "Errore rilevamento luogo" },

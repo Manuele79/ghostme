@@ -202,16 +202,22 @@ export default function ChatPage() {
 
       if (!user) return;
 
+      // message_order is NOT NULL in the live DB and has no default.
+      // Keep the two-message batch ordered without relying on an undocumented trigger.
+      const messageOrderBase = Date.now() * 1000;
+
       const { error } = await supabase.from("chat_messages").insert([
         {
           user_id: user.id,
           role: "user",
           content: userText,
+          message_order: messageOrderBase,
         },
         {
           user_id: user.id,
           role: "assistant",
           content: assistantReply,
+          message_order: messageOrderBase + 1,
         },
       ]);
 
@@ -269,9 +275,7 @@ export default function ChatPage() {
             try {
               const placeRes = await fetch("/api/location/current-place", {
                 method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
+                headers: await getAuthenticatedJsonHeaders(),
                 body: JSON.stringify({
                   userId: user.id,
                   latitude: position.coords.latitude,
@@ -283,9 +287,7 @@ export default function ChatPage() {
 
               await fetch("/api/location/update-current", {
                 method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
+                headers: await getAuthenticatedJsonHeaders(),
                 body: JSON.stringify({
                   userId: user.id,
                   placeId: placeData.place?.id || null,

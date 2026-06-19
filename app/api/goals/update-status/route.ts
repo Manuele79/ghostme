@@ -1,20 +1,24 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import {
+  getAuthenticatedUserId,
+  UserContextAuthError,
+} from "@/lib/ghostme/auth/serverAuth";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
 
     const goalId = body.goalId as string;
-    const userId = body.userId as string;
     const status = body.status as "active" | "completed" | "archived";
 
-    if (!goalId || !userId || !["active", "completed", "archived"].includes(status)) {
+    if (!goalId || !["active", "completed", "archived"].includes(status)) {
       return NextResponse.json(
         { success: false, error: "Dati non validi" },
         { status: 400 }
       );
     }
+    const userId = await getAuthenticatedUserId(req, body.userId);
 
     const { error } = await supabaseAdmin
       .from("goals_desires")
@@ -35,6 +39,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, status });
   } catch (err) {
+    if (err instanceof UserContextAuthError) {
+      return NextResponse.json({ error: err.message }, { status: err.status });
+    }
     return NextResponse.json(
       { success: false, error: "Errore API" },
       { status: 500 }

@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { runProactiveFlowForUser } from "@/lib/ghostme/proactive/proactiveUserFlow";
+import { requireWorkerRequest, UserContextAuthError } from "@/lib/ghostme/auth/serverAuth";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    requireWorkerRequest(req);
     const { data: users, error: usersError } = await supabaseAdmin
       .from("user_profiles")
       .select("user_id, full_name, job, hobbies, sports, location");
@@ -37,6 +39,9 @@ export async function GET() {
       created,
     });
   } catch (err) {
+    if (err instanceof UserContextAuthError) {
+      return NextResponse.json({ success: false, error: err.message }, { status: err.status });
+    }
     console.log("PROACTIVE ERROR:", err);
     return NextResponse.json({ success: false }, { status: 500 });
   }

@@ -338,9 +338,7 @@ useEffect(() => {
       const [placesRes, stateRes] = await Promise.all([
         fetch("/api/location/places", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: await getAuthenticatedJsonHeaders(),
           body: JSON.stringify({
             userId: currentUserId,
           }),
@@ -348,9 +346,7 @@ useEffect(() => {
 
         fetch("/api/location/current-state", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: await getAuthenticatedJsonHeaders(),
           body: JSON.stringify({
             userId: currentUserId,
           }),
@@ -567,9 +563,7 @@ async function updateActionStatus(
 
     const res = await fetch("/api/calendar-events", {
       method: editingEventId ? "PATCH" : "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: await getAuthenticatedJsonHeaders(),
       body: JSON.stringify(payload),
     });
 
@@ -739,9 +733,7 @@ async function updateActionStatus(
       async (position) => {
         const res = await fetch("/api/location/save-place", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: await getAuthenticatedJsonHeaders(),
           body: JSON.stringify({
             userId: currentUserId,
             label: label.trim(),
@@ -797,9 +789,7 @@ async function updateActionStatus(
               async (position) => {
                 const res = await fetch("/api/location/current-place", {
                   method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
+                  headers: await getAuthenticatedJsonHeaders(),
                   body: JSON.stringify({
                     userId: currentUserId,
                     latitude: position.coords.latitude,
@@ -876,9 +866,7 @@ async function updateActionStatus(
 
                     await fetch("/api/location/delete-place", {
                       method: "DELETE",
-                      headers: {
-                        "Content-Type": "application/json",
-                      },
+                      headers: await getAuthenticatedJsonHeaders(),
                       body: JSON.stringify({
                         id: place.id,
                       }),
@@ -1122,9 +1110,7 @@ async function updateActionStatus(
 
                     await fetch("/api/calendar-events", {
                       method: "DELETE",
-                      headers: {
-                        "Content-Type": "application/json",
-                      },
+                      headers: await getAuthenticatedJsonHeaders(),
                       body: JSON.stringify({
                         id: event.id,
                         userId,
@@ -1416,9 +1402,7 @@ async function searchMemory() {
   try {
     const res = await fetch("/api/memory/search", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: await getAuthenticatedJsonHeaders(),
       body: JSON.stringify({
         userId: currentUserId,
         query: memorySearch.trim(),

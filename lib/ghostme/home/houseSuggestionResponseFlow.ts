@@ -62,9 +62,10 @@ function buildRuleFromSuggestion(suggestion: any, response: "yes" | "no") {
 
 export async function houseSuggestionResponseFlow(body: any) {
   const proactiveMessageId = body.proactiveMessageId as string;
+  const userId = body.userId as string;
   const response = body.response as "yes" | "no";
 
-  if (!proactiveMessageId || !["yes", "no"].includes(response)) {
+  if (!userId || !proactiveMessageId || !["yes", "no"].includes(response)) {
     return {
       status: 400,
       body: { success: false, error: "Dati non validi" },
@@ -75,6 +76,7 @@ export async function houseSuggestionResponseFlow(body: any) {
     .from("ghost_proactive_messages")
     .select("*")
     .eq("id", proactiveMessageId)
+    .eq("user_id", userId)
     .maybeSingle();
 
   if (!proactiveMessage) {
@@ -113,8 +115,14 @@ export async function houseSuggestionResponseFlow(body: any) {
 
   await supabaseAdmin
     .from("ghost_proactive_messages")
-    .update({ status: "read" })
-    .eq("id", proactiveMessageId);
+    .update({
+      status: "answered",
+      read_at: new Date().toISOString(),
+      answered_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", proactiveMessageId)
+    .eq("user_id", userId);
 
   const rule = buildRuleFromSuggestion(suggestion, response);
 

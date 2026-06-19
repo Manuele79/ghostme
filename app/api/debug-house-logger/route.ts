@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getHAStates } from "@/lib/ghostme/homeAssistant/haClient";
 import { getEntityInfo } from "@/lib/ghostme/homeAssistant/homeEntityMapper";
+import { requireDevelopmentOrWorker, UserContextAuthError } from "@/lib/ghostme/auth/serverAuth";
 
 function isUsefulEvent(entityType: string) {
   return [
@@ -26,8 +27,10 @@ function isUsefulEvent(entityType: string) {
   ].includes(entityType);
 }
 
-export async function GET() {
-  const states = await getHAStates();
+export async function GET(req: Request) {
+  try {
+    requireDevelopmentOrWorker(req);
+    const states = await getHAStates();
 
   const mapped = states
     .map((s: any) => {
@@ -44,9 +47,9 @@ export async function GET() {
     })
     .filter((x: any) => x.useful);
 
-  return NextResponse.json({
-    totalStates: states.length,
-    usefulMapped: mapped.length,
-    sample: mapped.slice(0, 80),
-  });
+    return NextResponse.json({ totalStates: states.length, usefulMapped: mapped.length, sample: mapped.slice(0, 80) });
+  } catch (err) {
+    if (err instanceof UserContextAuthError) return NextResponse.json({ error: err.message }, { status: err.status });
+    return NextResponse.json({ error: "Errore debug house logger" }, { status: 500 });
+  }
 }

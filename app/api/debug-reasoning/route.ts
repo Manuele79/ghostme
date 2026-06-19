@@ -3,11 +3,13 @@ import { buildGhostBrainSnapshot } from "@/lib/ghostme/context/reasoningService"
 import { buildDecisionSnapshot } from "@/lib/ghostme/context/decisionSnapshot";
 import {
   getAuthenticatedUserId,
+  requireDevelopmentOrWorker,
   UserContextAuthError,
 } from "@/lib/ghostme/auth/serverAuth";
 
 export async function GET(req: Request) {
   try {
+    requireDevelopmentOrWorker(req);
     const url = new URL(req.url);
     const userId = await getAuthenticatedUserId(
       req,

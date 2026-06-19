@@ -6,16 +6,15 @@ import { generateHouseAutomationSuggestions } from "@/lib/ghostme/homeAssistant/
 import { planHouseAutomationControls } from "@/lib/ghostme/homeAssistant/houseAutomationControlPlanner";
 import { syncHouseEntities } from "@/lib/ghostme/homeAssistant/houseEntityRegistry";
 import { bridgeHomeAssistantLocationFlow } from "@/lib/ghostme/location/haLocationBridgeFlow";
+import { requireWorkerRequest, UserContextAuthError } from "@/lib/ghostme/auth/serverAuth";
 
 export async function houseWorkerFlow(req: Request) {
-  const secret = process.env.WORKER_SECRET;
-  const url = new URL(req.url);
-  const token = url.searchParams.get("token");
-
-  if (secret && token !== secret) {
+  try {
+    requireWorkerRequest(req);
+  } catch (err) {
     return {
-      status: 401,
-      body: { success: false, error: "Unauthorized" },
+      status: err instanceof UserContextAuthError ? err.status : 401,
+      body: { success: false, error: err instanceof Error ? err.message : "Unauthorized" },
     };
   }
 

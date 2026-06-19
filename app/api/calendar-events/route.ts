@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import {
+  getAuthenticatedUserId,
+  UserContextAuthError,
+} from "@/lib/ghostme/auth/serverAuth";
+import {
   createCalendarEvent,
   refreshAgendaMessage,
 } from "@/lib/ghostme/calendar/calendarService";
@@ -58,9 +62,10 @@ function buildCalendarPatchPayload(body: any) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
+    const userId = await getAuthenticatedUserId(req, body.userId);
 
     const saved = await createCalendarEvent({
-      userId: body.userId,
+      userId,
       type: body.type || "note",
       title: body.title,
       description: body.description || "",
@@ -76,6 +81,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ event: saved });
   } catch (err) {
+    if (err instanceof UserContextAuthError) {
+      return NextResponse.json({ error: err.message }, { status: err.status });
+    }
     console.log("CREATE CALENDAR API ERROR:", err);
     return NextResponse.json({ error: "Errore calendario" }, { status: 500 });
   }
@@ -85,15 +93,16 @@ export async function PATCH(req: Request) {
   try {
     const body = await req.json();
 
-    if (!body.id || !body.userId) {
+    if (!body.id) {
       return NextResponse.json({ error: "Dati mancanti" }, { status: 400 });
     }
+    const userId = await getAuthenticatedUserId(req, body.userId);
 
     const { data, error } = await supabaseAdmin
       .from("calendar_events")
       .update(buildCalendarPatchPayload(body))
       .eq("id", body.id)
-      .eq("user_id", body.userId)
+      .eq("user_id", userId)
       .select()
       .single();
 
@@ -102,10 +111,13 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Evento non modificato" }, { status: 500 });
     }
 
-     await refreshAgendaMessage(body.userId);
+    await refreshAgendaMessage(userId);
 
     return NextResponse.json({ event: data });
   } catch (err) {
+    if (err instanceof UserContextAuthError) {
+      return NextResponse.json({ error: err.message }, { status: err.status });
+    }
     console.log("PATCH CALENDAR API ERROR:", err);
     return NextResponse.json({ error: "Errore modifica calendario" }, { status: 500 });
   }
@@ -115,9 +127,10 @@ export async function DELETE(req: Request) {
   try {
     const body = await req.json();
 
-    if (!body.id || !body.userId) {
+    if (!body.id) {
       return NextResponse.json({ error: "Dati mancanti" }, { status: 400 });
     }
+    const userId = await getAuthenticatedUserId(req, body.userId);
 
     const { error } = await supabaseAdmin
       .from("calendar_events")
@@ -126,17 +139,20 @@ export async function DELETE(req: Request) {
         updated_at: new Date().toISOString(),
       })
       .eq("id", body.id)
-      .eq("user_id", body.userId);
+      .eq("user_id", userId);
 
     if (error) {
       console.log("DELETE CALENDAR ERROR:", error);
       return NextResponse.json({ error: "Evento non eliminato" }, { status: 500 });
     }
 
-    await refreshAgendaMessage(body.userId);
+    await refreshAgendaMessage(userId);
 
     return NextResponse.json({ ok: true });
   } catch (err) {
+    if (err instanceof UserContextAuthError) {
+      return NextResponse.json({ error: err.message }, { status: err.status });
+    }
     console.log("DELETE CALENDAR API ERROR:", err);
     return NextResponse.json({ error: "Errore elimina calendario" }, { status: 500 });
   }

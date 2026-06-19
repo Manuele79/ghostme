@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { getHAStates } from "@/lib/ghostme/homeAssistant/haClient";
+import { requireDevelopmentOrWorker, UserContextAuthError } from "@/lib/ghostme/auth/serverAuth";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    requireDevelopmentOrWorker(req);
     const states = await getHAStates();
 
     return NextResponse.json({
@@ -15,6 +17,7 @@ export async function GET() {
       })),
     });
   } catch (err) {
+    if (err instanceof UserContextAuthError) return NextResponse.json({ error: err.message }, { status: err.status });
     console.log("TEST HA ERROR:", err);
 
     return NextResponse.json(

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { getAuthenticatedJsonHeaders } from "@/lib/ghostme/auth/clientAuthHeaders";
 import { GhostMode, VoiceState } from "./types";
 
 type ProactiveCard = {
@@ -80,9 +81,7 @@ export default function GhostChat({
 
     await fetch("/api/house-suggestion-response", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: await getAuthenticatedJsonHeaders(),
       body: JSON.stringify({
         proactiveMessageId: messageId,
         response,
