@@ -127,6 +127,34 @@ export default function ChatPage() {
     });
   }
 
+  function scheduleBrainRefresh(delayMs = 5000) {
+    const userId = currentUserId || traits?.user_id;
+    if (!userId) return;
+
+    window.setTimeout(() => {
+      void refreshBrain(userId);
+    }, delayMs);
+  }
+
+  function openMemoryDrawer() {
+    setMemoryOpen(true);
+    if (currentUserId) void refreshBrain(currentUserId);
+  }
+
+  function openServicesDrawer() {
+    setServicesOpen(true);
+    if (currentUserId) void refreshBrain(currentUserId);
+  }
+
+  function selectMemoryTab(
+    tab: "memory" | "timeline" | "goals" | "state"
+  ) {
+    setActiveMemoryTab(tab);
+    if (tab === "goals" && currentUserId) {
+      void refreshBrain(currentUserId);
+    }
+  }
+
   async function markProactiveMessage(
     messageId?: string,
     status: "read" | "dismissed" | "answered" = "dismissed"
@@ -481,6 +509,7 @@ export default function ChatPage() {
         userText,
         assistantReply: assistant.content,
       });
+      scheduleBrainRefresh();
     } catch (err) {
       console.log(err);
 
@@ -576,6 +605,7 @@ export default function ChatPage() {
       userText,
       assistantReply: assistant.content,
     });
+    scheduleBrainRefresh();
 
     if (pendingProactiveReplyId) {
       const answeredMessageId = pendingProactiveReplyId;
@@ -642,9 +672,10 @@ export default function ChatPage() {
         open={memoryOpen}
         onClose={() => setMemoryOpen(false)}
         activeTab={activeMemoryTab}
-        setActiveTab={setActiveMemoryTab}
+        setActiveTab={selectMemoryTab}
         brainData={brainData}
         currentUserId={currentUserId}
+        refreshBrain={refreshBrain}
       />
 
       <ServicesDrawer
@@ -676,8 +707,8 @@ export default function ChatPage() {
         <GhostHeader
           mode={mode}
           userName={userName}
-          openMemory={() => setMemoryOpen(true)}
-          openServices={() => setServicesOpen(true)}
+          openMemory={openMemoryDrawer}
+          openServices={openServicesDrawer}
         />
 
         {mode === "voce-voce" ? (
@@ -692,8 +723,8 @@ export default function ChatPage() {
             currentModeLabel={currentModeLabel}
             cycleMode={cycleMode}
             startVoiceInput={startGhostVoiceInput}
-            openMemory={() => setMemoryOpen(true)}
-            openServices={() => setServicesOpen(true)}
+            openMemory={openMemoryDrawer}
+            openServices={openServicesDrawer}
           />
         ) : (
           <GhostChat

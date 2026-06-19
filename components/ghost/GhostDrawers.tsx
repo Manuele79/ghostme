@@ -14,6 +14,7 @@ export function MemoryDrawer({
   setActiveTab,
   brainData,
   currentUserId,
+  refreshBrain,
 }: {
   open: boolean;
   onClose: () => void;
@@ -21,6 +22,7 @@ export function MemoryDrawer({
   setActiveTab: (tab: "memory" | "timeline" | "goals" | "state") => void;
   brainData: BrainData;
   currentUserId: string;
+  refreshBrain: (userId: string) => Promise<void>;
 }) {
   if (!open) return null;
 
@@ -75,6 +77,7 @@ export function MemoryDrawer({
             activeTab={activeTab}
             brainData={brainData}
             currentUserId={currentUserId}
+            refreshBrain={refreshBrain}
           />
         </div>
       </aside>
@@ -1372,20 +1375,29 @@ function BrainPanelContent({
   activeTab,
   brainData,
   currentUserId,
+  refreshBrain,
 }: {
   activeTab: "memory" | "timeline" | "goals" | "state";
   brainData: BrainData;
   currentUserId: string;
+  refreshBrain: (userId: string) => Promise<void>;
 }) {
   const [hiddenCards, setHiddenCards] = useState<string[]>(() => {
     if (typeof window === "undefined") return [];
 
     try {
-      return JSON.parse(localStorage.getItem("ghost_hidden_cards") || "[]");
+      const stored = JSON.parse(
+        localStorage.getItem("ghost_hidden_cards") || "[]"
+      );
+
+      return Array.isArray(stored)
+        ? stored.filter((key) => !String(key).startsWith("goals-"))
+        : [];
     } catch {
       return [];
     }
   });
+  const [updatingGoalIds, setUpdatingGoalIds] = useState<string[]>([]);
 
 const [memorySearch, setMemorySearch] = useState("");
 const [memorySearchResults, setMemorySearchResults] = useState<any | null>(null);
@@ -1428,12 +1440,14 @@ async function searchMemory() {
   ) {
     if (!currentUserId || !goalId) return;
 
+    setUpdatingGoalIds((prev) =>
+      prev.includes(goalId) ? prev : [...prev, goalId]
+    );
+
     try {
       const res = await fetch("/api/goals/update-status", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: await getAuthenticatedJsonHeaders(),
         body: JSON.stringify({
           goalId,
           userId: currentUserId,
@@ -1448,13 +1462,18 @@ async function searchMemory() {
         return;
       }
 
-      setHiddenCards((prev) => [...prev, `goals-${goalId}`]);
+      await refreshBrain(currentUserId);
     } catch (err) {
       console.log("GOAL STATUS FRONT ERROR:", err);
+    } finally {
+      setUpdatingGoalIds((prev) => prev.filter((id) => id !== goalId));
     }
   }
   useEffect(() => {
-    localStorage.setItem("ghost_hidden_cards", JSON.stringify(hiddenCards));
+    const persistentCards = hiddenCards.filter(
+      (key) => !String(key).startsWith("goals-")
+    );
+    localStorage.setItem("ghost_hidden_cards", JSON.stringify(persistentCards));
   }, [hiddenCards]);
 
   if (activeTab === "state") {
@@ -1501,8 +1520,10 @@ async function searchMemory() {
         ? brainData.timeline
         : brainData.goals;
 
-  const visibleList = list.filter(
-    (item) => !hiddenCards.includes(`${activeTab}-${item.id}`)
+  const visibleList = list.filter((item) =>
+    activeTab === "goals"
+      ? !updatingGoalIds.includes(item.id)
+      : !hiddenCards.includes(`${activeTab}-${item.id}`)
   );
 
 return (
@@ -1580,20 +1601,22 @@ return (
           key={item.id}
           className="rounded-3xl border border-zinc-800 bg-black/60 p-4"
         >
-          <div className="flex justify-end">
-            <button
-              onClick={() =>
-                setHiddenCards((prev) => [
-                  ...prev,
-                  `${activeTab}-${item.id}`,
-                ])
-              }
-              className="rounded-full border border-zinc-700 px-2 py-1 text-xs text-zinc-500 hover:border-red-400 hover:text-red-300"
-              title="Nascondi dal pannello"
-            >
-              ✕
-            </button>
-          </div>
+          {activeTab !== "goals" && (
+            <div className="flex justify-end">
+              <button
+                onClick={() =>
+                  setHiddenCards((prev) => [
+                    ...prev,
+                    `${activeTab}-${item.id}`,
+                  ])
+                }
+                className="rounded-full border border-zinc-700 px-2 py-1 text-xs text-zinc-500 hover:border-red-400 hover:text-red-300"
+                title="Nascondi dal pannello"
+              >
+                ✕
+              </button>
+            </div>
+          )}
 
           <p className="text-sm font-black text-cyan-200">
             {item.title || item.trait || item.intent_type || "Elemento"}
