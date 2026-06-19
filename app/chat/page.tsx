@@ -156,6 +156,10 @@ export default function ChatPage() {
     setPendingProactiveReplyId(messageId);
 }
 
+  async function markReminderAsDone(messageId?: string) {
+    await markProactiveMessage(messageId, "answered");
+  }
+
   async function saveConversationInBackground({
     userText,
     assistantReply,
@@ -706,6 +710,7 @@ export default function ChatPage() {
             proactiveMessages={brainData.proactiveMessages}
             onProactiveSeen={markProactiveAsRead}
             onProactiveAnswered={markProactiveAsAnswered}
+            onReminderDone={markReminderAsDone}
             userName={userName}
             openHistory={() => setHistoryOpen(true)}
           />

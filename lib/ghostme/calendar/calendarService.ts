@@ -241,22 +241,7 @@ export async function cleanupExpiredEvents(userId: string) {
     .is("end_at", null)
     .not("start_at", "is", null)
     .neq("type", "appointment")
+    .neq("type", "reminder")
     .lt("start_at", now)
-  );
-
-  // Promemoria senza start_at/end_at ma remind_at passato
-  await applyFreshnessGuard(
-    supabaseAdmin
-    .from("calendar_events")
-    .update({
-      status: "completed",
-      updated_at: now,
-    })
-    .eq("user_id", userId)
-    .eq("status", "active")
-    .is("start_at", null)
-    .is("end_at", null)
-    .not("remind_at", "is", null)
-    .lt("remind_at", now)
   );
 }

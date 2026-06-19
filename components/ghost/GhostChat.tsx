@@ -27,6 +27,7 @@ export default function GhostChat({
   proactiveMessages,
   onProactiveSeen,
   onProactiveAnswered,
+  onReminderDone,
   userName,
   openHistory,
 }: {
@@ -52,6 +53,7 @@ export default function GhostChat({
   proactiveMessages?: ProactiveCard[];
   onProactiveSeen?: (messageId?: string) => void;
   onProactiveAnswered?: (messageId?: string) => void;
+  onReminderDone?: (messageId?: string) => void;
   userName: string;
   openHistory: () => void;
 }) {
@@ -105,20 +107,22 @@ export default function GhostChat({
                     {getProactiveLabel(message.category)}
                   </div>
 
-                  <button
-                    onClick={() => onProactiveSeen?.(message.id)}
-                    className="rounded-lg px-2 py-1 text-cyan-300 hover:bg-cyan-400/10"
-                    title="Archivia"
-                  >
-                    ✓
-                  </button>
+                  {message.category !== "reminder" && (
+                    <button
+                      onClick={() => onProactiveSeen?.(message.id)}
+                      className="rounded-lg px-2 py-1 text-cyan-300 hover:bg-cyan-400/10"
+                      title="Archivia"
+                    >
+                      ✓
+                    </button>
+                  )}
                 </div>
 
                 <div className="whitespace-pre-line text-sm leading-relaxed">
                   {message.message}
                 </div>
 
-              {message.category !== "home_question" && (
+              {message.category !== "home_question" && message.category !== "reminder" && (
               <div className="mt-4">
                 <button
                   onClick={() => replyToProactive(message)}
@@ -128,6 +132,23 @@ export default function GhostChat({
                 </button>
               </div>
             )}              
+
+                {message.category === "reminder" && (
+                  <div className="mt-4 flex gap-3">
+                    <button
+                      onClick={() => onReminderDone?.(message.id)}
+                      className="rounded-2xl bg-emerald-400 px-4 py-2 text-xs font-black text-black"
+                    >
+                      Fatto
+                    </button>
+                    <button
+                      onClick={() => onProactiveSeen?.(message.id)}
+                      className="rounded-2xl border border-zinc-600 px-4 py-2 text-xs font-black text-zinc-200"
+                    >
+                      Archivia
+                    </button>
+                  </div>
+                )}
 
                 {message.category === "home_question" && (
                   <div className="mt-4 flex gap-3">

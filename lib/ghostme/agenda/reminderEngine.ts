@@ -26,7 +26,7 @@ function formatReminderTime(value?: string | null) {
 export async function refreshReminderMessage(userId: string) {
   if (!userId) return;
 
-  const now = new Date();
+  const reminderGraceStart = new Date(Date.now() - 30 * 60 * 1000);
   const nextReminderWindow = new Date(Date.now() + 30 * 60 * 1000);
 
   const { data: reminders } = await supabaseAdmin
@@ -34,7 +34,7 @@ export async function refreshReminderMessage(userId: string) {
     .select("*")
     .eq("user_id", userId)
     .eq("status", "active")
-    .gte("start_at", now.toISOString())
+    .gte("start_at", reminderGraceStart.toISOString())
     .lte("start_at", nextReminderWindow.toISOString())
     .order("start_at", { ascending: true })
     .limit(10);
