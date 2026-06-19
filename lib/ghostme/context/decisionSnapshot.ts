@@ -177,6 +177,15 @@ function buildWarnings(snapshot: GhostBrainSnapshot) {
     warnings.push("people_empty_but_relationship_memory_present");
   }
 
+  if (
+    snapshot.people.items.length > 0 &&
+    !snapshot.people.relationshipMemory?.recentMentions.length &&
+    !snapshot.people.relationshipMemory?.sharedEvents.length &&
+    !snapshot.people.relationshipMemory?.openLoops.length
+  ) {
+    warnings.push("relationship_context_sparse");
+  }
+
   if (snapshot.goals.pendingActions.length >= 6) {
     warnings.push("many_pending_actions");
   }

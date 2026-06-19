@@ -32,6 +32,10 @@ import {
   type PeopleSnapshot,
 } from "@/lib/ghostme/people/peopleSnapshot";
 import {
+  buildRelationshipMemorySnapshot,
+  type RelationshipMemorySnapshot,
+} from "@/lib/ghostme/people/relationshipMemorySnapshot";
+import {
   buildMemorySnapshot,
   type MemorySnapshot,
 } from "@/lib/ghostme/memory/memorySnapshot";
@@ -55,7 +59,9 @@ type ReasoningSnapshotInput = {
 export type GhostBrainSnapshot = {
   profile: any | null;
   memory: MemorySnapshot;
-  people: PeopleSnapshot;
+  people: PeopleSnapshot & {
+    relationshipMemory: RelationshipMemorySnapshot;
+  };
   location: {
     current: any | null;
     significantPlaces: any[];
@@ -592,6 +598,15 @@ export async function buildGhostBrainSnapshot(
   };
 
   const contextSignals = buildContextSignals(signalSituation);
+  const relationshipMemory = buildRelationshipMemorySnapshot({
+    people: peopleSnapshot,
+    memory: memorySnapshot,
+    calendarEvents: [
+      ...(graph.calendarUpcoming || []),
+      ...(situation.calendarToday || []),
+    ],
+    actions: goalsSnapshot.pendingActions,
+  });
 
   let houseState: HouseStateSnapshot | null = null;
   try {
@@ -678,7 +693,10 @@ export async function buildGhostBrainSnapshot(
       dynamicProfile: situation.dynamicProfile || [],
     },
     memory: memorySnapshot,
-    people: peopleSnapshot,
+    people: {
+      ...peopleSnapshot,
+      relationshipMemory,
+    },
     location: {
       current: graph.currentLocation || null,
       significantPlaces: graph.significantPlaces || [],
