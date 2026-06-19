@@ -59,6 +59,10 @@ import {
   buildProjectAdvisorSnapshot,
   type ProjectAdvisorSnapshot,
 } from "@/lib/ghostme/projects/projectAdvisorSnapshot";
+import {
+  buildCuriositySnapshot,
+  type CuriositySnapshot,
+} from "@/lib/ghostme/curiosity/curiositySnapshot";
 
 type DetectedTopicInput = {
   topic: string;
@@ -100,6 +104,7 @@ export type GhostBrainSnapshot = {
     consistency: GoalProjectConsistencySnapshot;
     advisor: ProjectAdvisorSnapshot;
   };
+  curiosity: CuriositySnapshot;
   home: {
     state: HouseStateSnapshot;
     patterns: any[];
@@ -729,6 +734,24 @@ export async function buildGhostBrainSnapshot(
     importantPeople: peopleSnapshot.importantPeople,
     mentalState: situation.mentalState,
   });
+  const curiosity = buildCuriositySnapshot({
+    people: peopleSnapshot,
+    relationshipMemory,
+    socialSuggestions,
+    projects: projectMemory,
+    projectAdvisor,
+    projectConsistency: goalProjectConsistency,
+    goals: goalsSnapshot,
+    memory: memorySnapshot,
+    routes: houseRoutes,
+    comfortRisk: homeComfortRisk,
+    calendarEvents: [
+      ...(graph.calendarUpcoming || []),
+      ...(situation.calendarToday || []),
+    ],
+    significantPlaces: graph.significantPlaces || [],
+    contextSignals,
+  });
 
   return {
     profile: {
@@ -764,6 +787,7 @@ export async function buildGhostBrainSnapshot(
       consistency: goalProjectConsistency,
       advisor: projectAdvisor,
     },
+    curiosity,
     home: {
       state: houseState,
       patterns: graph.housePatterns || [],
