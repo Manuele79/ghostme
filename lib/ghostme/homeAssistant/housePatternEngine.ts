@@ -56,6 +56,8 @@ function addUnique(list: string[], value: string) {
 
 function patternTypeFromTitle(title: string) {
   return title
+    .replace(/\([^)]*\)/g, "")
+    .replace(/\b\d+(?:[.,]\d+)?\b/g, "")
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -91,18 +93,20 @@ async function upsertHousePattern({
     updated_at: now,
   };
 
-  const { data: existing, error: readError } = await supabaseAdmin
+  const { data: existingRows, error: readError } = await supabaseAdmin
     .from("house_patterns")
     .select("id, first_seen_at")
     .eq("user_id", userId)
     .eq("pattern_type", patternType)
-    .maybeSingle();
+    .order("updated_at", { ascending: false })
+    .limit(1);
 
   if (readError) {
     console.log("HOUSE PATTERN READ ERROR:", readError);
     return null;
   }
 
+  const existing = existingRows?.[0] || null;
   if (existing?.id) {
     const { data, error } = await supabaseAdmin
       .from("house_patterns")
@@ -137,19 +141,32 @@ async function upsertHousePattern({
   return data;
 }
 
-export async function analyzeHousePatterns(userId: string) {
+export async function analyzeHousePatterns(
+  userId: string,
+  options: { eventLimit?: number } = {}
+) {
   if (!userId) return [];
 
   const since = new Date(
     Date.now() - 30 * 24 * 60 * 60 * 1000
   ).toISOString();
 
-  const { data: events, error } = await supabaseAdmin
+  let eventsQuery = supabaseAdmin
     .from("house_events")
     .select("*")
     .eq("user_id", userId)
-    .gte("occurred_at", since)
-    .order("occurred_at", { ascending: true });
+    .gte("occurred_at", since);
+
+  if (options.eventLimit) {
+    eventsQuery = eventsQuery
+      .order("occurred_at", { ascending: false })
+      .limit(options.eventLimit);
+  } else {
+    eventsQuery = eventsQuery.order("occurred_at", { ascending: true });
+  }
+
+  const { data, error } = await eventsQuery;
+  const events = options.eventLimit ? [...(data || [])].reverse() : data;
 
   if (error) {
     console.log("ANALYZE HOUSE PATTERNS ERROR:", error);

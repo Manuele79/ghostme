@@ -21,12 +21,15 @@ function routeKey(from: string, to: string) {
   return `${from}→${to}`;
 }
 
-export async function learnHouseRoutes(userId: string) {
+export async function learnHouseRoutes(
+  userId: string,
+  options: { eventLimit?: number } = {}
+) {
   if (!userId) return [];
 
   const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-  const { data: events, error } = await supabaseAdmin
+  let eventsQuery = supabaseAdmin
     .from("house_events")
     .select("room_key, event_type, occurred_at, people_home_count")
     .eq("user_id", userId)
@@ -40,8 +43,18 @@ export async function learnHouseRoutes(userId: string) {
     "switch_on",
     "tv_on",
     "person_location_changed",
-  ])
-    .order("occurred_at", { ascending: true });
+  ]);
+
+  if (options.eventLimit) {
+    eventsQuery = eventsQuery
+      .order("occurred_at", { ascending: false })
+      .limit(options.eventLimit);
+  } else {
+    eventsQuery = eventsQuery.order("occurred_at", { ascending: true });
+  }
+
+  const { data, error } = await eventsQuery;
+  const events = options.eventLimit ? [...(data || [])].reverse() : data;
 
   if (error || !events?.length) {
     console.log("LEARN HOUSE ROUTES ERROR:", error);

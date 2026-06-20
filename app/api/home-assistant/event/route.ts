@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getEntityInfo } from "@/lib/ghostme/homeAssistant/homeEntityMapper";
 import { classifyHomeEventSignificance } from "@/lib/ghostme/homeAssistant/homeEventSignificance";
 import { isDevelopmentEnvironment } from "@/lib/ghostme/auth/serverAuth";
+import { runHouseLightLearning } from "@/lib/ghostme/homeAssistant/houseLightLearningFlow";
 
 function clean(value: any) {
   return String(value ?? "").toLowerCase().trim();
@@ -254,7 +255,9 @@ export async function POST(req: Request) {
       });
     }
 
-    const { error } = await supabaseAdmin.from("house_events").insert({
+    const { data: insertedEvent, error } = await supabaseAdmin
+      .from("house_events")
+      .insert({
       user_id: userId,
       entity_id: entityId,
       entity_name: entityName,
@@ -276,8 +279,10 @@ export async function POST(req: Request) {
       people_home_count: null,
       target_user: info.person || null,
       source: "home_assistant_webhook",
-      occurred_at: occurredAt,
-    });
+        occurred_at: occurredAt,
+      })
+      .select("id")
+      .single();
 
     if (error) {
       console.log("HA WEBHOOK EVENT INSERT ERROR:", error);
@@ -291,6 +296,16 @@ export async function POST(req: Request) {
         { status: 500 }
       );
     }
+
+    after(async () => {
+      await runHouseLightLearning({
+        userId,
+        eventId: insertedEvent.id,
+        eventType,
+        priority: decision.priority,
+        occurredAt,
+      });
+    });
 
     return NextResponse.json({
       received: true,
