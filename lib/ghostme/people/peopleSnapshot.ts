@@ -11,7 +11,7 @@ function clean(value: any) {
   return String(value || "").trim().toLowerCase();
 }
 
-function normalizeName(value: any) {
+export function normalizePersonName(value: any) {
   return clean(value)
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
@@ -86,6 +86,21 @@ const EXCLUDED_NAME_TERMS = [
   "appuntamento",
 ];
 
+const GENERIC_RELATIONSHIP_NAMES = new Set([
+  "moglie",
+  "mia moglie",
+  "marito",
+  "mio marito",
+  "compagna",
+  "mia compagna",
+  "compagno",
+  "mio compagno",
+  "amica",
+  "mia amica",
+  "amico",
+  "mio amico",
+]);
+
 const NON_PERSON_TEXT_TERMS = [
   "progetto",
   "programma",
@@ -123,8 +138,12 @@ function hasNonPersonCategory(value: any) {
 }
 
 function isExcludedName(value: any) {
-  const name = normalizeName(value);
-  return Boolean(name) && EXCLUDED_NAME_TERMS.some((term) => name.includes(term));
+  const name = normalizePersonName(value);
+  return (
+    Boolean(name) &&
+    (GENERIC_RELATIONSHIP_NAMES.has(name) ||
+      EXCLUDED_NAME_TERMS.some((term) => name.includes(term)))
+  );
 }
 
 function hasNonPersonText(value: any) {
@@ -151,7 +170,7 @@ function hasHumanEvidence(row: any) {
   );
 }
 
-function isLikelyRealPerson(row: any) {
+export function isLikelyRealPerson(row: any) {
   const name = row.name || row.topic;
   const text = `${row.description || ""} ${row.notes || ""} ${row.content || ""}`;
 
@@ -164,11 +183,11 @@ function isLikelyRealPerson(row: any) {
   return hasHumanEvidence(row);
 }
 
-function isPersonTopic(topic: any) {
+export function isPersonTopic(topic: any) {
   return isLikelyRealPerson(topic);
 }
 
-function isPersonMemory(memory: any) {
+export function isPersonMemory(memory: any) {
   const text = `${memory.title || ""} ${memory.content || ""} ${memory.category || ""}`;
 
   if (hasNonPersonCategory(memory.category)) return false;
@@ -177,16 +196,40 @@ function isPersonMemory(memory: any) {
   return hasHumanCategory(memory.category) || hasRelationshipTerm(text);
 }
 
-function extractMemoryPersonNames(memory: any) {
+export function extractMemoryPersonNames(memory: any) {
   const names: string[] = [];
   const title = String(memory.title || "").trim();
+  const text = `${title} ${memory.content || ""}`;
   const infoMatch = title.match(/^Info su\s+(.+)$/i);
 
   if (infoMatch?.[1] && isPersonMemory(memory) && !isExcludedName(infoMatch[1])) {
     names.push(infoMatch[1].trim());
   }
 
-  return names;
+  if (isPersonMemory(memory)) {
+    const patterns = [
+      /\b([A-ZÀ-ÖØ-Ý][a-zà-öø-ÿ'’-]{2,}(?:\s+[A-ZÀ-ÖØ-Ý][a-zà-öø-ÿ'’-]{2,})?)\s+(?:[èÈ]|[eE]')\s+(?:mia|mio|la mia|il mio)\s+(?:moglie|marito|compagna|compagno|amica|amico|madre|padre|mamma|papà|sorella|fratello)\b/gu,
+      /\b(?:[Mm]ia|[Mm]io|[Ll]a mia|[Ii]l mio)\s+(?:moglie|marito|compagna|compagno|amica|amico|madre|padre|mamma|papà|sorella|fratello)\s+(?:[Ss]i chiama|[èÈ]|[eE]')?\s*([A-ZÀ-ÖØ-Ý][a-zà-öø-ÿ'’-]{2,}(?:\s+[A-ZÀ-ÖØ-Ý][a-zà-öø-ÿ'’-]{2,})?)/gu,
+      /\b[Cc]on\s+([A-ZÀ-ÖØ-Ý][a-zà-öø-ÿ'’-]{2,}(?:\s+[A-ZÀ-ÖØ-Ý][a-zà-öø-ÿ'’-]{2,})?)/gu,
+    ];
+
+    for (const pattern of patterns) {
+      for (const match of text.matchAll(pattern)) {
+        const name = String(match[1] || "").trim();
+        if (name && !isExcludedName(name)) names.push(name);
+      }
+    }
+
+    if (
+      hasHumanCategory(memory.category) &&
+      /^[A-ZÀ-ÖØ-Ý][a-zà-öø-ÿ'’-]{2,}(?:\s+[A-ZÀ-ÖØ-Ý][a-zà-öø-ÿ'’-]{2,})?$/u.test(title) &&
+      !isExcludedName(title)
+    ) {
+      names.push(title);
+    }
+  }
+
+  return mergeUnique(names);
 }
 
 function mergeUnique(values: any[]) {
@@ -233,7 +276,7 @@ function mergePeople({
   const map = new Map<string, any>();
 
   for (const person of peopleRows || []) {
-    const key = normalizeName(person.normalized_name || person.name);
+    const key = normalizePersonName(person.normalized_name || person.name);
     if (!key || !isLikelyRealPerson(person)) continue;
 
     map.set(key, {
@@ -248,7 +291,7 @@ function mergePeople({
   }
 
   for (const topic of (topicRows || []).filter(isPersonTopic)) {
-    const key = normalizeName(topic.topic);
+    const key = normalizePersonName(topic.topic);
     if (!key) continue;
 
     const existing = map.get(key);
@@ -274,7 +317,7 @@ function mergePeople({
     const memoryNames = extractMemoryPersonNames(memory);
 
     for (const name of memoryNames) {
-      const key = normalizeName(name);
+      const key = normalizePersonName(name);
       if (!key) continue;
 
       const existing = map.get(key);
