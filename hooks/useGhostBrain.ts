@@ -46,11 +46,22 @@ export function useGhostBrain() {
     });
 
     const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || `Brain API HTTP ${res.status}`);
+    }
+
+    const snapshotGoals = data.snapshot?.goals?.activeGoals;
+    const goals =
+      Array.isArray(data.goals) && data.goals.length > 0
+        ? data.goals
+        : Array.isArray(snapshotGoals)
+          ? snapshotGoals
+          : [];
 
     setBrainData({
       memories: data.memories || [],
       timeline: data.timeline || [],
-      goals: data.goals || [],
+      goals,
       mentalState: data.mentalState || null,
       actions: data.actions || [],
       calendarEvents: data.calendarEvents || [],

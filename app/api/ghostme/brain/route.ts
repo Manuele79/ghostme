@@ -14,6 +14,11 @@ export async function POST(req: Request) {
     const snapshot = await buildGhostBrainSnapshot(userId);
 
     const proactiveMessages = await loadVisibleProactiveMessages(userId);
+    const excludedGoalStatuses = new Set(["completed", "archived", "cancelled"]);
+    const visibleGoals = (snapshot.goals?.activeGoals || []).filter(
+      (goal) =>
+        !excludedGoalStatuses.has(String(goal.status || "").toLowerCase())
+    );
 
     return NextResponse.json({
       snapshot,
@@ -21,7 +26,7 @@ export async function POST(req: Request) {
       traits: null,
       memories: snapshot.memory.activeMemories || [],
       timeline: snapshot.memory.timeline || [],
-      goals: snapshot.goals.activeGoals || [],
+      goals: visibleGoals,
       mentalState: snapshot.profile?.mentalState || null,
       actions: snapshot.actions || [],
       calendarEvents: snapshot.calendar.upcoming || [],

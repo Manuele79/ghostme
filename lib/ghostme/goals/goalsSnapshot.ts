@@ -43,10 +43,9 @@ export async function buildGoalsSnapshot(
       .from("goals_desires")
       .select("*")
       .eq("user_id", userId)
-      .not("status", "in", "(completed,archived)")
       .order("importance", { ascending: false })
       .order("updated_at", { ascending: false })
-      .limit(20),
+      .limit(100),
 
     supabaseAdmin
       .from("goals_desires")
@@ -67,9 +66,17 @@ export async function buildGoalsSnapshot(
       .limit(10),
   ]);
 
+  if (activeGoalsRes.error) {
+    console.log("GOALS SNAPSHOT ERROR:", activeGoalsRes.error);
+  }
+
+  const excludedGoalStatuses = new Set(["completed", "archived", "cancelled"]);
   const activeGoals = (activeGoalsRes.data || [])
-    .filter((goal: any) => !["completed", "archived"].includes(goal.status))
-    .slice(0, 10);
+    .filter(
+      (goal: any) =>
+        !excludedGoalStatuses.has(String(goal.status || "").toLowerCase())
+    )
+    .slice(0, 20);
   const pendingActions = actionsRes.data || [];
 
   return {

@@ -1491,12 +1491,19 @@ async function searchMemory() {
     );
   }
 
+  const visibleGoals = (brainData.goals || []).filter(
+    (goal) =>
+      !["completed", "archived", "cancelled"].includes(
+        String(goal.status || "").toLowerCase()
+      )
+  );
+
   const list =
     activeTab === "memory"
       ? brainData.memories
       : activeTab === "timeline"
         ? brainData.timeline
-        : brainData.goals;
+        : visibleGoals;
 
   const visibleList = list.filter((item) =>
     activeTab === "goals"
@@ -1611,6 +1618,9 @@ return (
           <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-zinc-500">
             {item.category && <span>{item.category}</span>}
             {item.status && <span>{item.status}</span>}
+            {activeTab === "goals" && item.needs_review && (
+              <span className="text-yellow-300">da rivedere</span>
+            )}
             {item.importance && <span>importanza {item.importance}</span>}
             {item.emotional_tone && <span>{item.emotional_tone}</span>}
           </div>
