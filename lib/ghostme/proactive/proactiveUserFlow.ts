@@ -7,7 +7,12 @@ import { runProactiveMaintenanceFlow } from "@/lib/ghostme/proactive/proactiveMa
 import { buildProactiveCandidatesForUser } from "@/lib/ghostme/proactive/proactiveCandidateBuilder";
 import { buildDailyBriefingMessage } from "@/lib/ghostme/proactive/dailyBriefingBuilder";
 import { loadDailyBriefingContext } from "@/lib/ghostme/proactive/dailyBriefingRepository";
-import { writeTrueProactiveCards } from "@/lib/ghostme/proactive/trueProactiveCardWriter";
+import {
+  buildTrueProactiveLogicalKey,
+  writeTrueProactiveCards,
+} from "@/lib/ghostme/proactive/trueProactiveCardWriter";
+import { writeCuriositySnapshotCards } from "@/lib/ghostme/proactive/curiosityCardWriter";
+import { buildGhostBrainSnapshot } from "@/lib/ghostme/context/reasoningService";
 
 export async function runProactiveFlowForUser(user: any): Promise<{
   created: number;
@@ -18,8 +23,18 @@ export async function runProactiveFlowForUser(user: any): Promise<{
 
   await runProactiveMaintenanceFlow(userId);
 
-  const { proactiveCandidates, agendaMessage, trueProactiveSelected } =
-    await buildProactiveCandidatesForUser(user);
+  const snapshot = await buildGhostBrainSnapshot(userId);
+  const curiositySnapshot = snapshot.curiosity;
+  const trueProactiveSelected = snapshot.trueProactive.selected;
+
+  const curiosityResult = await writeCuriositySnapshotCards({
+    userId,
+    snapshot: curiositySnapshot,
+    preferredLogicalKeys: trueProactiveSelected
+      .filter((candidate) => candidate.type === "high_confidence_curiosity")
+      .map(buildTrueProactiveLogicalKey),
+  });
+  created += curiosityResult.processed;
 
   const trueProactiveResult = await writeTrueProactiveCards({
     userId,
@@ -27,7 +42,13 @@ export async function runProactiveFlowForUser(user: any): Promise<{
   });
   created += trueProactiveResult.processed;
 
-  const bestCandidate = pickBestProactiveCandidate(proactiveCandidates);
+  const { proactiveCandidates, agendaMessage } =
+    await buildProactiveCandidatesForUser(user, snapshot);
+
+  const legacyCandidates = curiosityResult.processed
+    ? proactiveCandidates.filter((candidate) => candidate.source !== "curiosity")
+    : proactiveCandidates;
+  const bestCandidate = pickBestProactiveCandidate(legacyCandidates);
 
   if (bestCandidate) {
     await upsertProactiveMessage({

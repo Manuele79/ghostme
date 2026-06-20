@@ -184,10 +184,10 @@ function buildRawCandidates({
     candidates.push({
       type: "high_confidence_curiosity",
       title: curiosity.title,
-      reason: curiosity.type,
+      reason: curiosity.description,
       priority: 6,
       confidence: clamp(curiosity.confidence),
-      source: "curiosity",
+      source: `curiosity:${curiosity.type}`,
     });
   }
 

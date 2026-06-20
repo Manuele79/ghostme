@@ -3,6 +3,7 @@ import {
 } from "@/lib/ghostme/proactive/proactiveMessageDedupe";
 import { upsertProactiveMessage } from "@/lib/ghostme/proactive/proactiveMessageService";
 import type { TrueProactiveCandidate } from "@/lib/ghostme/proactive/trueProactiveSnapshot";
+import { buildCuriosityCardLogicalKey } from "@/lib/ghostme/proactive/curiosityCardWriter";
 
 export type TrueProactiveCardCategory =
   | "observation"
@@ -28,6 +29,16 @@ const CATEGORY_BY_TYPE: Record<
 export function buildTrueProactiveLogicalKey(
   candidate: TrueProactiveCandidate
 ) {
+  if (
+    candidate.type === "high_confidence_curiosity" &&
+    candidate.source.startsWith("curiosity:")
+  ) {
+    return buildCuriosityCardLogicalKey({
+      type: candidate.source.slice("curiosity:".length),
+      title: candidate.title,
+    });
+  }
+
   const stableTitle = normalizeProactiveText(candidate.title)
     .replace(/\s+/g, "_")
     .slice(0, 120);

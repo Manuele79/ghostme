@@ -191,8 +191,12 @@ function buildCurrentContextFromSnapshot({
   };
 }
 
-export async function buildProactiveCandidatesForUser(user: any) {
+export async function buildProactiveCandidatesForUser(
+  user: any,
+  prebuiltSnapshot?: GhostBrainSnapshot
+) {
   const userId = user.user_id;
+  const snapshot = prebuiltSnapshot || (await buildGhostBrainSnapshot(userId));
 
   const observationInsight = await generateObservationInsight(userId);
   const patternInsight = await generatePatternInsight(userId);
@@ -200,7 +204,6 @@ export async function buildProactiveCandidatesForUser(user: any) {
 
   await applyPatternDecay(userId);
 
-  const snapshot = await buildGhostBrainSnapshot(userId);
   const behaviorRulesContext = await buildBehaviorPrompt(userId);
   const situation = buildSituationFromSnapshot(snapshot) as any;
   const agendaMessage = buildAgendaMessage(situation);
@@ -275,6 +278,5 @@ export async function buildProactiveCandidatesForUser(user: any) {
   return {
     proactiveCandidates,
     agendaMessage,
-    trueProactiveSelected: snapshot.trueProactive.selected,
   };
 }
