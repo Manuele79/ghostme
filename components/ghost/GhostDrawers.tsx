@@ -95,6 +95,7 @@ export function ServicesDrawer ({
   traits,
   summary,
   ghostMessage,
+  brainData,
   actions,
   calendarEvents,
   refreshBrain,
@@ -129,6 +130,7 @@ export function ServicesDrawer ({
   traits: any;
   summary: string[];
   ghostMessage: string;
+  brainData: BrainData;
   actions: any[];
   calendarEvents: CalendarEvent[];
   refreshBrain: (userId: string) => Promise<void>;
@@ -208,7 +210,7 @@ export function ServicesDrawer ({
                   activeTab === item.key ? "text-black/60" : "text-zinc-500"
                 }`}
               >
-                {["actions", "calendar", "web", "profile", "places", "traits"].includes(
+                {["actions", "calendar", "web", "home", "profile", "places", "traits"].includes(
                   item.key
                 )
                   ? "Online"
@@ -226,6 +228,7 @@ export function ServicesDrawer ({
             traits={traits}
             summary={summary}
             ghostMessage={ghostMessage}
+            brainData={brainData}
             actions={actions}
             refreshBrain={refreshBrain}
             currentUserId={currentUserId}
@@ -251,6 +254,7 @@ function ServicePanelContent({
   traits,
   summary,
   ghostMessage,
+  brainData,
   actions,
   calendarEvents,
   refreshBrain,
@@ -270,6 +274,7 @@ function ServicePanelContent({
   traits: any;
   summary: string[];
   ghostMessage: string;
+  brainData: BrainData;
   actions: any[];
   calendarEvents: CalendarEvent[];
   refreshBrain: (userId: string) => Promise<void>;
@@ -277,12 +282,18 @@ function ServicePanelContent({
   onReplyObservation: (message: string, messageId?: string) => void;
 }) {
   const today = new Date();
+  const resolvedActions = brainData.actions.length ? brainData.actions : actions;
+  const resolvedCalendarEvents = brainData.calendarEvents.length
+    ? brainData.calendarEvents
+    : calendarEvents;
 
   const [visibleMonth, setVisibleMonth] = useState(
     new Date(today.getFullYear(), today.getMonth(), 1)
   );
 
-  const [localEvents, setLocalEvents] = useState<CalendarEvent[]>(calendarEvents || []);
+  const [localEvents, setLocalEvents] = useState<CalendarEvent[]>(
+    resolvedCalendarEvents || []
+  );
   const [selectedDay, setSelectedDay] = useState(today.getDate());
   const [places, setPlaces] = useState<any[]>([]);
   const [loadingPlaces, setLoadingPlaces] = useState(false);
@@ -304,8 +315,8 @@ function ServicePanelContent({
 
 
   useEffect(() => {
-    setLocalEvents(calendarEvents || []);
-  }, [calendarEvents]);
+    setLocalEvents(resolvedCalendarEvents || []);
+  }, [resolvedCalendarEvents]);
 
   const year = visibleMonth.getFullYear();
   const month = visibleMonth.getMonth();
@@ -431,6 +442,12 @@ useEffect(() => {
   if (!currentUserId) return;
   if (activeTab !== "web") return;
 
+  if (brainData.proactiveMessages.length) {
+    setObservations(brainData.proactiveMessages);
+    setLoadingObservations(false);
+    return;
+  }
+
   async function loadObservations() {
     setLoadingObservations(true);
 
@@ -454,7 +471,7 @@ useEffect(() => {
   }
 
   loadObservations();
-}, [activeTab, currentUserId]);
+}, [activeTab, currentUserId, brainData.proactiveMessages]);
 
 async function updateActionStatus(
   item: any,
@@ -666,6 +683,54 @@ async function updateActionStatus(
             ))}
           </div>
         )}
+      </div>
+    );
+  }
+
+  if (activeTab === "home") {
+    const house = brainData.house;
+    const state = house?.state;
+
+    if (!house || !state) {
+      return <EmptyBrainBox text="Snapshot Home Assistant non disponibile." />;
+    }
+
+    return (
+      <div className="space-y-4">
+        <div className="rounded-3xl border border-cyan-400/20 bg-cyan-400/5 p-4">
+          <p className="text-lg font-black text-cyan-200">Stato casa</p>
+          <p className="mt-2 text-sm text-zinc-300">
+            Presenza: {state.occupancyStatus || "sconosciuta"}
+          </p>
+          <p className="mt-1 text-xs text-zinc-500">
+            Confidenza {state.confidence ?? 0}%
+          </p>
+        </div>
+
+        {state.activeRooms?.length > 0 && (
+          <div className="rounded-3xl border border-zinc-800 bg-black/60 p-4">
+            <p className="text-sm font-black text-cyan-200">Stanze attive</p>
+            <p className="mt-2 text-sm text-zinc-300">
+              {state.activeRooms.join(", ")}
+            </p>
+          </div>
+        )}
+
+        <div className="grid grid-cols-3 gap-2 text-center text-xs">
+          {[
+            ["Pattern", house.patterns.length],
+            ["Regole", house.learnedRules.length],
+            ["Controlli", house.automationControls.length],
+          ].map(([label, value]) => (
+            <div
+              key={String(label)}
+              className="rounded-2xl border border-zinc-800 bg-black/50 p-3"
+            >
+              <p className="text-xl font-black text-white">{value}</p>
+              <p className="text-zinc-500">{label}</p>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -1247,7 +1312,7 @@ async function updateActionStatus(
   }
 
       if (activeTab === "actions") {
-        const visibleActions = actions.filter(
+        const visibleActions = resolvedActions.filter(
           (item) => !hiddenActions.includes(item.id)
         );
 
@@ -1456,37 +1521,56 @@ async function searchMemory() {
 
   if (activeTab === "state") {
     const s = brainData.mentalState;
+    const decision = brainData.decisionSnapshot;
 
-    if (!s) return <EmptyBrainBox text="Nessuno stato mentale salvato." />;
+    if (!s && !decision) {
+      return <EmptyBrainBox text="Nessuno stato mentale salvato." />;
+    }
 
     return (
-      <div className="rounded-3xl border border-zinc-800 bg-black/60 p-4">
-        <p className="text-lg font-black text-cyan-200">Mental State</p>
+      <div className="space-y-3">
+        {s && (
+          <div className="rounded-3xl border border-zinc-800 bg-black/60 p-4">
+            <p className="text-lg font-black text-cyan-200">Mental State</p>
 
-        <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-          {[
-            "stress",
-            "entusiasmo",
-            "stanchezza",
-            "controllo",
-            "nostalgia",
-            "frustrazione",
-            "focus",
-            "socialita",
-          ].map((key) => (
-            <div
-              key={key}
-              className="rounded-2xl border border-zinc-800 bg-zinc-950 p-3"
-            >
-              <p className="text-xs uppercase text-zinc-500">{key}</p>
-              <p className="mt-1 text-2xl font-black text-white">
-                {s[key] ?? 0}
-              </p>
+            <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
+              {[
+                "stress",
+                "entusiasmo",
+                "stanchezza",
+                "controllo",
+                "nostalgia",
+                "frustrazione",
+                "focus",
+                "socialita",
+              ].map((key) => (
+                <div
+                  key={key}
+                  className="rounded-2xl border border-zinc-800 bg-zinc-950 p-3"
+                >
+                  <p className="text-xs uppercase text-zinc-500">{key}</p>
+                  <p className="mt-1 text-2xl font-black text-white">
+                    {s[key] ?? 0}
+                  </p>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        {s.notes && <p className="mt-4 text-sm text-zinc-300">{s.notes}</p>}
+            {s.notes && <p className="mt-4 text-sm text-zinc-300">{s.notes}</p>}
+          </div>
+        )}
+
+        {decision && (
+          <div className="rounded-3xl border border-cyan-400/20 bg-cyan-400/5 p-4">
+            <p className="text-sm font-black text-cyan-200">Decision snapshot</p>
+            <p className="mt-2 text-sm text-zinc-300">
+              Focus: {decision.suggestedFocus.replaceAll("_", " ")}
+            </p>
+            <p className="mt-1 text-xs text-zinc-500">
+              Prossima azione: {decision.nextBestAction.replaceAll("_", " ")}
+            </p>
+          </div>
+        )}
       </div>
     );
   }
@@ -1575,6 +1659,32 @@ return (
             )}
           </div>
         )}
+      </div>
+    )}
+
+    {activeTab === "memory" && (
+      <div className="rounded-3xl border border-zinc-800 bg-black/50 p-4 text-xs text-zinc-400">
+        <p className="text-sm font-black text-cyan-200">Contesto Brain</p>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <span>
+            Relazioni: {brainData.people?.relationshipMemory.relationships.length || 0}
+          </span>
+          <span>
+            Social: {brainData.people?.socialSuggestions.relationshipAttention.length || 0}
+          </span>
+          <span>
+            Curiosity: {brainData.curiosity?.curiosities.length || 0}
+          </span>
+          <span>
+            True proactive: {brainData.trueProactive?.selected.length || 0}
+          </span>
+          <span>
+            Incoerenze: {brainData.projects?.consistency.consistencyIssues.length || 0}
+          </span>
+          <span>
+            Focus progetto: {brainData.projects?.advisor.currentFocus?.project || "nessuno"}
+          </span>
+        </div>
       </div>
     )}
 

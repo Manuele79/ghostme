@@ -5,6 +5,7 @@ import {
   UserContextAuthError,
 } from "@/lib/ghostme/auth/serverAuth";
 import { loadVisibleProactiveMessages } from "@/lib/ghostme/proactive/visibleProactiveMessages";
+import { buildDecisionSnapshot } from "@/lib/ghostme/context/decisionSnapshot";
 
 export async function POST(req: Request) {
   try {
@@ -12,6 +13,7 @@ export async function POST(req: Request) {
     const userId = await getAuthenticatedUserId(req, body.userId);
 
     const snapshot = await buildGhostBrainSnapshot(userId);
+    const decisionSnapshot = buildDecisionSnapshot(snapshot);
 
     const proactiveMessages = await loadVisibleProactiveMessages(userId);
     const excludedGoalStatuses = new Set(["completed", "archived", "cancelled"]);
@@ -32,6 +34,7 @@ export async function POST(req: Request) {
       calendarEvents: snapshot.calendar.upcoming || [],
       proactiveMessage: proactiveMessages[0] || null,
       proactiveMessages,
+      decisionSnapshot,
     });
   } catch (err) {
     if (err instanceof UserContextAuthError) {

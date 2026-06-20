@@ -695,6 +695,7 @@ export default function ChatPage() {
         traits={traits}
         summary={summary}
         ghostMessage={ghostMessage}
+        brainData={brainData}
         actions={brainData.actions}
         calendarEvents={brainData.calendarEvents}
         refreshBrain={refreshBrain}

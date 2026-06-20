@@ -12,6 +12,7 @@ export type VoiceState =
   | "speaking";
 
 export type BrainData = {
+  snapshot: GhostBrainSnapshot | null;
   memories: any[];
   timeline: any[];
   goals: any[];
@@ -20,6 +21,12 @@ export type BrainData = {
   calendarEvents: CalendarEvent[];
   proactiveMessage: ProactiveMessage | null;
   proactiveMessages: ProactiveMessage[];
+  people: GhostBrainSnapshot["people"] | null;
+  projects: GhostBrainSnapshot["projects"] | null;
+  curiosity: GhostBrainSnapshot["curiosity"] | null;
+  trueProactive: GhostBrainSnapshot["trueProactive"] | null;
+  house: GhostBrainSnapshot["home"] | null;
+  decisionSnapshot: DecisionSnapshot | null;
 };
 
 export const modeLabels: Record<GhostMode, string> = {
@@ -52,3 +59,5 @@ export type ProactiveMessage = {
   priority?: number | null;
   created_at?: string;
 };
+import type { GhostBrainSnapshot } from "@/lib/ghostme/context/reasoningService";
+import type { DecisionSnapshot } from "@/lib/ghostme/context/decisionSnapshot";

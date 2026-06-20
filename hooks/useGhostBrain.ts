@@ -7,6 +7,7 @@ import {
   buildPersonalitySummary,
 } from "../lib/personality";
 import { getAuthenticatedJsonHeaders } from "../lib/ghostme/auth/clientAuthHeaders";
+import { adaptBrainApiResponse } from "../lib/ghostme/ui/brainUiAdapter";
 
 type LoadBrainArgs = {
   userId: string;
@@ -19,6 +20,7 @@ type LoadBrainArgs = {
 
 export function useGhostBrain() {
   const [brainData, setBrainData] = useState<BrainData>({
+    snapshot: null,
     memories: [],
     timeline: [],
     goals: [],
@@ -27,6 +29,12 @@ export function useGhostBrain() {
      calendarEvents: [],
      proactiveMessage: null,
      proactiveMessages: [],
+     people: null,
+     projects: null,
+     curiosity: null,
+     trueProactive: null,
+     house: null,
+     decisionSnapshot: null,
   });
 
   async function loadBrainData(args: LoadBrainArgs) {
@@ -50,24 +58,7 @@ export function useGhostBrain() {
       throw new Error(data.error || `Brain API HTTP ${res.status}`);
     }
 
-    const snapshotGoals = data.snapshot?.goals?.activeGoals;
-    const goals =
-      Array.isArray(data.goals) && data.goals.length > 0
-        ? data.goals
-        : Array.isArray(snapshotGoals)
-          ? snapshotGoals
-          : [];
-
-    setBrainData({
-      memories: data.memories || [],
-      timeline: data.timeline || [],
-      goals,
-      mentalState: data.mentalState || null,
-      actions: data.actions || [],
-      calendarEvents: data.calendarEvents || [],
-      proactiveMessage: data.proactiveMessage || null,
-      proactiveMessages: data.proactiveMessages || [],
-    });
+    setBrainData(adaptBrainApiResponse(data));
 
     if (data.profile) {
       setUserProfile(data.profile);
