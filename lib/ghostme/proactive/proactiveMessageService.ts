@@ -1,15 +1,11 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import {
+  normalizeProactiveText,
+  proactiveMessageIdentity,
+} from "@/lib/ghostme/proactive/proactiveMessageDedupe";
+import { ALL_PROACTIVE_STATUSES } from "@/lib/ghostme/proactive/proactiveCardLifecycle";
 
 const ONE_PER_DAY_CATEGORIES = new Set(["agenda", "daily_briefing"]);
-const ALL_LIFECYCLE_STATUSES = [
-  "unread",
-  "read",
-  "dismissed",
-  "answered",
-  "expired",
-];
-const HANDLED_STATUSES = ["dismissed", "answered", "expired"];
-
 function startOfTodayIso() {
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
@@ -60,11 +56,10 @@ export async function upsertProactiveMessage({
   if (stableLogicalKey) {
     const { data, error } = await supabaseAdmin
       .from("ghost_proactive_messages")
-      .select("id, message, status")
+      .select("id, logical_key, category, title, message, status")
       .eq("user_id", userId)
-      .eq("category", category)
       .eq("logical_key", stableLogicalKey)
-      .in("status", ALL_LIFECYCLE_STATUSES)
+      .in("status", ALL_PROACTIVE_STATUSES)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -77,48 +72,40 @@ export async function upsertProactiveMessage({
   }
 
   if (!existing && (!stableLogicalKey || !supportsLogicalKey)) {
-    let legacyQuery = supabaseAdmin
+    const { data: legacyRows } = await supabaseAdmin
       .from("ghost_proactive_messages")
-      .select("id, message, status")
+      .select("id, category, title, message, status")
       .eq("user_id", userId)
       .eq("category", category)
-      .in("status", ALL_LIFECYCLE_STATUSES);
-
-    if (shouldKeepOnePerDay) {
-      legacyQuery = legacyQuery.gte("created_at", todayIso);
-    } else {
-      legacyQuery = legacyQuery.eq("title", title).eq("message", message);
-    }
-
-    const { data } = await legacyQuery
+      .in("status", ALL_PROACTIVE_STATUSES)
+      .gte("created_at", shouldKeepOnePerDay ? todayIso : "1970-01-01T00:00:00.000Z")
       .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .limit(100);
 
-    existing = data || null;
+    const targetIdentity = proactiveMessageIdentity({ category, title, message });
+    existing =
+      (legacyRows || []).find(
+        (row) => proactiveMessageIdentity(row) === targetIdentity
+      ) || null;
   }
 
   if (existing?.id) {
-    const messageChanged = existing.message !== message;
-    const keepHandledHidden =
-      HANDLED_STATUSES.includes(existing.status) && !messageChanged;
+    const contentChanged =
+      normalizeProactiveText(existing.title) !== normalizeProactiveText(title) ||
+      normalizeProactiveText(existing.message) !== normalizeProactiveText(message);
+
+    if (!contentChanged) return;
 
     const updatePayload: any = {
       title,
+      message,
       priority,
       scheduled_for: new Date().toISOString(),
       updated_at: new Date().toISOString(),
+      status: "unread",
+      read_at: null,
+      answered_at: null,
     };
-
-    if (messageChanged) {
-      updatePayload.message = message;
-      updatePayload.status = "unread";
-      updatePayload.read_at = null;
-      updatePayload.answered_at = null;
-    } else if (!keepHandledHidden && ["unread", "read"].includes(existing.status)) {
-      updatePayload.status = "unread";
-      updatePayload.read_at = null;
-    }
 
     if (stableLogicalKey && supportsLogicalKey) {
       updatePayload.logical_key = stableLogicalKey;

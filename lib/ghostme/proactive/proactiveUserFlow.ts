@@ -7,6 +7,7 @@ import { runProactiveMaintenanceFlow } from "@/lib/ghostme/proactive/proactiveMa
 import { buildProactiveCandidatesForUser } from "@/lib/ghostme/proactive/proactiveCandidateBuilder";
 import { buildDailyBriefingMessage } from "@/lib/ghostme/proactive/dailyBriefingBuilder";
 import { loadDailyBriefingContext } from "@/lib/ghostme/proactive/dailyBriefingRepository";
+import { writeTrueProactiveCards } from "@/lib/ghostme/proactive/trueProactiveCardWriter";
 
 export async function runProactiveFlowForUser(user: any): Promise<{
   created: number;
@@ -17,8 +18,14 @@ export async function runProactiveFlowForUser(user: any): Promise<{
 
   await runProactiveMaintenanceFlow(userId);
 
-  const { proactiveCandidates, agendaMessage } =
+  const { proactiveCandidates, agendaMessage, trueProactiveSelected } =
     await buildProactiveCandidatesForUser(user);
+
+  const trueProactiveResult = await writeTrueProactiveCards({
+    userId,
+    selected: trueProactiveSelected,
+  });
+  created += trueProactiveResult.processed;
 
   const bestCandidate = pickBestProactiveCandidate(proactiveCandidates);
 

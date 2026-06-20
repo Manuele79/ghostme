@@ -1,16 +1,10 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { dedupeProactiveMessages } from "@/lib/ghostme/proactive/proactiveMessageDedupe";
 import { buildDailyProactiveLogicalKey } from "@/lib/ghostme/proactive/proactiveMessageService";
-
-export const VISIBLE_PROACTIVE_STATUSES = ["unread", "read"];
-export const VISIBLE_PROACTIVE_CATEGORIES = [
-  "agenda",
-  "reminder",
-  "observation",
-  "curiosity",
-  "home_question",
-  "daily_briefing",
-];
+import {
+  VISIBLE_PROACTIVE_CATEGORIES,
+  VISIBLE_PROACTIVE_STATUSES,
+} from "@/lib/ghostme/proactive/proactiveCardLifecycle";
 
 export async function loadVisibleProactiveMessages(userId: string) {
   const { data, error } = await supabaseAdmin
@@ -23,7 +17,7 @@ export async function loadVisibleProactiveMessages(userId: string) {
     .order("scheduled_for", { ascending: false, nullsFirst: false })
     .order("updated_at", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false })
-    .limit(20);
+    .limit(100);
 
   if (error) throw error;
 
@@ -36,5 +30,5 @@ export async function loadVisibleProactiveMessages(userId: string) {
     return !expectedKey || message.logical_key === expectedKey;
   });
 
-  return dedupeProactiveMessages(currentRows);
+  return dedupeProactiveMessages(currentRows).slice(0, 20);
 }

@@ -161,9 +161,7 @@ export default function ChatPage() {
   ) {
     if (!messageId || !currentUserId) return;
 
-    hideProactiveMessage(messageId);
-
-    await fetch("/api/ghostme/proactive/read", {
+    const res = await fetch("/api/ghostme/proactive/read", {
       method: "POST",
       headers: await getAuthenticatedJsonHeaders(),
       body: JSON.stringify({
@@ -172,6 +170,13 @@ export default function ChatPage() {
         status,
       }),
     });
+
+    if (!res.ok) {
+      console.log("PROACTIVE STATUS ERROR:", await res.text());
+      return;
+    }
+
+    hideProactiveMessage(messageId);
     await refreshBrain(currentUserId);
   }
 

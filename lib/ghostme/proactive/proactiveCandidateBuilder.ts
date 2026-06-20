@@ -275,5 +275,6 @@ export async function buildProactiveCandidatesForUser(user: any) {
   return {
     proactiveCandidates,
     agendaMessage,
+    trueProactiveSelected: snapshot.trueProactive.selected,
   };
 }
