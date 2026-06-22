@@ -18,7 +18,7 @@ function clampConfidence(value?: number) {
   return Math.min(Math.max(Number(value || 50), 0), 100);
 }
 
-function distanceMeters(
+export function distanceMeters(
   lat1: number,
   lon1: number,
   lat2: number,
@@ -175,5 +175,63 @@ export async function getCurrentLocationState(userId: string) {
     return null;
   }
 
+  return data;
+}
+
+export async function findSignificantPlaceNear({
+  userId,
+  latitude,
+  longitude,
+  radiusMeters = 120,
+}: {
+  userId: string;
+  latitude: number;
+  longitude: number;
+  radiusMeters?: number;
+}) {
+  const places = await getSignificantPlaces(userId);
+  return (
+    places.find((place) => {
+      const distance = distanceMeters(
+        latitude,
+        longitude,
+        Number(place.latitude),
+        Number(place.longitude)
+      );
+      return distance <= Math.max(Number(place.radius_meters || 0), radiusMeters);
+    }) || null
+  );
+}
+
+export async function updateSignificantPlace({
+  userId,
+  placeId,
+  label,
+  category,
+  externalName,
+}: {
+  userId: string;
+  placeId: string;
+  label: string;
+  category: string;
+  externalName?: string | null;
+}) {
+  const { data, error } = await supabaseAdmin
+    .from("significant_places")
+    .update({
+      label: label.trim(),
+      category,
+      external_name: externalName || label.trim(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", placeId)
+    .eq("user_id", userId)
+    .select()
+    .single();
+
+  if (error) {
+    console.log("UPDATE PLACE ERROR:", error);
+    return null;
+  }
   return data;
 }

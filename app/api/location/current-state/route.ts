@@ -7,7 +7,7 @@ export async function POST(req: Request) {
     const body = await req.json();
 
     const userId = await getAuthenticatedUserId(req, body.userId);
-    const { data, error } = await getLocationCurrentStateFlow(userId);
+    const { data, error, freshness } = await getLocationCurrentStateFlow(userId);
 
     if (error) {
       console.log("GET CURRENT STATE ERROR:", error);
@@ -16,7 +16,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
-      location: data,
+      locationStatus: freshness.status,
+      observedAt: freshness.observedAt,
+      location: freshness.currentLocation,
+      lastKnownLocation: freshness.lastKnownLocation,
     });
   } catch (err) {
     if (err instanceof UserContextAuthError) return NextResponse.json({ error: err.message }, { status: err.status });

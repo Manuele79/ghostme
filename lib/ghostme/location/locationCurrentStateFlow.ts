@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { classifyLocationState } from "@/lib/ghostme/location/locationStateFreshness";
 
 export async function getLocationCurrentStateFlow(userId: string) {
   const { data, error } = await supabaseAdmin
@@ -7,5 +8,5 @@ export async function getLocationCurrentStateFlow(userId: string) {
     .eq("user_id", userId)
     .maybeSingle();
 
-  return { data, error };
+  return { data, error, freshness: classifyLocationState(data) };
 }

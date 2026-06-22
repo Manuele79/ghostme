@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getCurrentLocationState } from "@/lib/ghostme/location/placeService";
+import { classifyLocationState } from "@/lib/ghostme/location/locationStateFreshness";
 import { getPeopleGraphContext } from "@/lib/ghostme/people/peopleGraphService";
 import {
   buildRecentPastEvidence,
@@ -14,6 +15,8 @@ export type GhostSituation = {
   dayContext: string;
   userLocation: string | null;
   currentPlace: string | null;
+  lastKnownPlace: string | null;
+  locationStatus: "current" | "stale" | "unknown";
 
   currentPlaceCategory: string | null;
   currentPlaceAddress: string | null;
@@ -295,12 +298,17 @@ export async function buildGhostSituation(userId: string): Promise<GhostSituatio
 
   const profile = profileRes.data || null;
   const currentLocationState = await getCurrentLocationState(userId);
+  const locationFreshness = classifyLocationState(currentLocationState);
+  const currentLocation = locationFreshness.currentLocation;
+  const lastKnownLocation = locationFreshness.lastKnownLocation;
   const peopleGraphContext = await getPeopleGraphContext(userId);
-  const currentPlace = currentLocationState?.current_place_label || null;
-  const currentPlaceCategory = currentLocationState?.place_category || null;
-  const currentPlaceAddress = currentLocationState?.address || null;
-  const locationConfidence = currentLocationState?.confidence ?? null;
-  const lastLocationChange = currentLocationState?.last_changed_at || null;
+  const currentPlace = currentLocation?.current_place_label || null;
+  const lastKnownPlace = lastKnownLocation?.current_place_label || null;
+  const currentPlaceCategory = currentLocation?.place_category || null;
+  const currentPlaceAddress = currentLocation?.address || null;
+  const locationConfidence = currentLocation?.confidence ?? null;
+  const lastLocationChange =
+    (currentLocation || lastKnownLocation)?.last_changed_at || null;
 
   const completedCalendarEvents = completedCalendarRes.data || [];
   const completedActions = completedActionsRes.data || [];
@@ -362,6 +370,9 @@ ${currentPlace || "sconosciuto"}
   Indirizzo: ${currentPlaceAddress || "non disponibile"}
   Confidenza: ${locationConfidence ?? "non disponibile"}
   Ultimo cambio luogo: ${lastLocationChange || "non disponibile"}
+
+ULTIMO LUOGO NOTO NON CORRENTE:
+${lastKnownPlace || "nessuno"}
 
 CALENDARIO OGGI:
 ${formatList(
@@ -506,6 +517,8 @@ device: ${externalSignals.deviceContext || "non collegato"}
     dayContext,
     userLocation: profile?.location || null,
     currentPlace,
+    lastKnownPlace,
+    locationStatus: locationFreshness.status,
     currentPlaceCategory,
     currentPlaceAddress,
     locationConfidence,

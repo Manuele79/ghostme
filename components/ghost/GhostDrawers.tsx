@@ -110,6 +110,8 @@ export function ServicesDrawer ({
   currentUserId,
   logout,
   onReplyObservation,
+  pendingLocationCard,
+  onLocationCandidateHandled,
 }: {
   open: boolean;
   onClose: () => void;
@@ -144,7 +146,9 @@ export function ServicesDrawer ({
   refreshBrain: (userId: string) => Promise<void>;
   currentUserId: string;
   logout: () => void;
-  onReplyObservation: (message: string, messageId?: string) => void;
+  onReplyObservation: (message: string, messageId?: string, logicalKey?: string | null) => void;
+  pendingLocationCard?: { id: string; message: string; logical_key?: string | null } | null;
+  onLocationCandidateHandled?: (messageId: string) => void;
 }) {
   if (!open) return null;
 
@@ -241,6 +245,8 @@ export function ServicesDrawer ({
             refreshBrain={refreshBrain}
             currentUserId={currentUserId}
             onReplyObservation={onReplyObservation}
+            pendingLocationCard={pendingLocationCard}
+            onLocationCandidateHandled={onLocationCandidateHandled}
             
           />
         </div>
@@ -268,6 +274,8 @@ function ServicePanelContent({
   refreshBrain,
   currentUserId,
   onReplyObservation,
+  pendingLocationCard,
+  onLocationCandidateHandled,
 }: {
   activeTab:
     | "actions"
@@ -287,7 +295,9 @@ function ServicePanelContent({
   calendarEvents: CalendarEvent[];
   refreshBrain: (userId: string) => Promise<void>;
   currentUserId: string;
-  onReplyObservation: (message: string, messageId?: string) => void;
+  onReplyObservation: (message: string, messageId?: string, logicalKey?: string | null) => void;
+  pendingLocationCard?: { id: string; message: string; logical_key?: string | null } | null;
+  onLocationCandidateHandled?: (messageId: string) => void;
 }) {
   const openActionStatuses = new Set(["detected", "active", "open", "pending"]);
   const today = new Date();
@@ -308,6 +318,12 @@ function ServicePanelContent({
   const [loadingPlaces, setLoadingPlaces] = useState(false);
   const [detectedPlaceId, setDetectedPlaceId] = useState<string | null>(null);
   const [currentPlace, setCurrentPlace] = useState<string | null>(null);
+  const [lastKnownPlace, setLastKnownPlace] = useState<string | null>(null);
+  const [locationCandidate, setLocationCandidate] = useState<any>(null);
+  const [candidateName, setCandidateName] = useState("");
+  const [candidateCategory, setCandidateCategory] = useState("other");
+  const [savingCandidate, setSavingCandidate] = useState(false);
+  const [candidateError, setCandidateError] = useState("");
   const [newType, setNewType] = useState<CalendarEvent["type"]>("note");
   const [newTitle, setNewTitle] = useState("");
   const [newDescription, setNewDescription] = useState("");
@@ -378,12 +394,18 @@ useEffect(() => {
 
       setPlaces(placesData.places || []);
 
-      if (stateData.location?.current_place_id) {
+      if (stateData.locationStatus === "current" && stateData.location?.current_place_id) {
         setDetectedPlaceId(stateData.location.current_place_id);
         setCurrentPlace(stateData.location.current_place_label || null);
+        setLastKnownPlace(null);
       } else {
         setDetectedPlaceId(null);
         setCurrentPlace(null);
+        setLastKnownPlace(
+          stateData.locationStatus === "stale"
+            ? stateData.lastKnownLocation?.current_place_label || null
+            : null
+        );
       }
     } catch (err) {
       console.log("LOAD PLACES ERROR:", err);
@@ -394,6 +416,36 @@ useEffect(() => {
 
   loadPlaces();
 }, [activeTab, currentUserId]);
+
+useEffect(() => {
+  if (!currentUserId || activeTab !== "places" || !pendingLocationCard?.id) {
+    if (!pendingLocationCard) setLocationCandidate(null);
+    return;
+  }
+
+  let cancelled = false;
+  async function loadCandidate() {
+    setCandidateError("");
+    const res = await fetch("/api/location/candidate", {
+      method: "POST",
+      headers: await getAuthenticatedJsonHeaders(),
+      body: JSON.stringify({
+        userId: currentUserId,
+        proactiveMessageId: pendingLocationCard!.id,
+      }),
+    });
+    const data = await res.json();
+    if (cancelled) return;
+    if (!res.ok) {
+      setCandidateError(data.error || "Candidato luogo non disponibile.");
+      return;
+    }
+    setLocationCandidate(data.candidate);
+    setCandidateCategory(data.candidate.suggestedCategory || "other");
+  }
+  void loadCandidate();
+  return () => { cancelled = true; };
+}, [activeTab, currentUserId, pendingLocationCard]);
 
 async function markObservationHandled(
   item: any,
@@ -513,6 +565,42 @@ async function updateActionStatus(
   } catch (err) {
     setHiddenActions((prev) => prev.filter((id) => id !== item.id));
     console.log("UPDATE ACTION STATUS FRONT ERROR:", err);
+  }
+}
+
+async function saveLocationCandidate() {
+  if (!currentUserId || !pendingLocationCard?.id || !candidateName.trim()) return;
+  setSavingCandidate(true);
+  setCandidateError("");
+  try {
+    const res = await fetch("/api/location/candidate", {
+      method: "PATCH",
+      headers: await getAuthenticatedJsonHeaders(),
+      body: JSON.stringify({
+        userId: currentUserId,
+        proactiveMessageId: pendingLocationCard.id,
+        label: candidateName.trim(),
+        category: candidateCategory,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setCandidateError(data.error || "Salvataggio luogo non riuscito.");
+      return;
+    }
+    setPlaces((prev) => {
+      const withoutSaved = prev.filter((place) => place.id !== data.place.id);
+      return [data.place, ...withoutSaved];
+    });
+    setLocationCandidate(null);
+    setCandidateName("");
+    onLocationCandidateHandled?.(pendingLocationCard.id);
+    await refreshBrain(currentUserId);
+  } catch (error) {
+    console.log("SAVE LOCATION CANDIDATE ERROR:", error);
+    setCandidateError("Salvataggio luogo non riuscito.");
+  } finally {
+    setSavingCandidate(false);
   }
 }
 
@@ -674,7 +762,11 @@ async function updateActionStatus(
                   ) : item.category !== "agenda" ? (
                     <button
                       onClick={() => {
-                        onReplyObservation(item.message || "", item.id);
+                        onReplyObservation(
+                          item.message || "",
+                          item.id,
+                          item.logical_key
+                        );
                       }}
                       className="rounded-xl border border-cyan-400/30 px-3 py-2 text-xs font-bold text-cyan-300"
                     >
@@ -845,6 +937,58 @@ async function updateActionStatus(
           capire dove sei.
         </p>
 
+        {pendingLocationCard && (
+          <div className="mt-4 rounded-2xl border border-cyan-300/40 bg-cyan-300/10 p-4">
+            <p className="text-sm font-black text-cyan-200">Completa il luogo rilevato</p>
+            <p className="mt-2 text-sm leading-relaxed text-zinc-300">
+              {locationCandidate?.message || pendingLocationCard.message}
+            </p>
+
+            <label className="mt-4 block text-xs font-bold uppercase tracking-wider text-zinc-400">
+              Nome luogo
+            </label>
+            <input
+              value={candidateName}
+              onChange={(event) => setCandidateName(event.target.value)}
+              placeholder="Es. Palestra sotto casa"
+              className="mt-2 w-full rounded-xl border border-zinc-700 bg-black/60 px-3 py-3 text-sm text-white outline-none focus:border-cyan-300"
+            />
+
+            <label className="mt-4 block text-xs font-bold uppercase tracking-wider text-zinc-400">
+              Categoria
+            </label>
+            <select
+              value={candidateCategory}
+              onChange={(event) => setCandidateCategory(event.target.value)}
+              className="mt-2 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-3 text-sm text-white outline-none focus:border-cyan-300"
+            >
+              <option value="home">Casa</option>
+              <option value="work">Lavoro</option>
+              <option value="supermarket">Supermercato</option>
+              <option value="fuel">Benzinaio</option>
+              <option value="bar">Bar</option>
+              <option value="restaurant">Ristorante</option>
+              <option value="gym">Palestra</option>
+              <option value="shop">Negozio</option>
+              <option value="park">Parco</option>
+              <option value="friend_relative">Amico/parente</option>
+              <option value="other">Altro</option>
+            </select>
+
+            {candidateError && (
+              <p className="mt-3 text-xs text-red-300">{candidateError}</p>
+            )}
+
+            <button
+              onClick={saveLocationCandidate}
+              disabled={savingCandidate || candidateName.trim().length < 2}
+              className="mt-4 w-full rounded-xl bg-cyan-300 px-4 py-3 text-sm font-black text-black disabled:opacity-40"
+            >
+              {savingCandidate ? "Salvataggio..." : "Salva luogo"}
+            </button>
+          </div>
+        )}
+
         <button
           onClick={saveCurrentPlace}
           className="mt-4 w-full rounded-2xl bg-cyan-300 px-4 py-3 text-sm font-black text-black"
@@ -873,6 +1017,7 @@ async function updateActionStatus(
                 if (data.place) {
                   setDetectedPlaceId(data.place.id);
                   setCurrentPlace(data.place.label);
+                  setLastKnownPlace(null);
 
                   alert(`📍 Sei in: ${data.place.label}`);
                 } else {
@@ -899,6 +1044,21 @@ async function updateActionStatus(
             </p>
           </div>
         )}       
+
+        {!currentPlace && lastKnownPlace && (
+          <div className="mt-3 rounded-2xl border border-zinc-600 bg-zinc-800/30 p-3">
+            <p className="text-sm font-bold text-zinc-300">
+              Ultimo luogo noto: {lastKnownPlace}
+            </p>
+            <p className="mt-1 text-xs text-zinc-500">
+              Il dato non è abbastanza recente per indicare una presenza attuale.
+            </p>
+          </div>
+        )}
+
+        {!currentPlace && !lastKnownPlace && (
+          <p className="mt-3 text-sm text-zinc-500">Posizione corrente sconosciuta.</p>
+        )}
 
 
         <div className="mt-4 space-y-2">

@@ -2,14 +2,12 @@
 
 import { useState } from "react";
 import { getAuthenticatedJsonHeaders } from "@/lib/ghostme/auth/clientAuthHeaders";
-import { GhostMode, VoiceState } from "./types";
+import { GhostMode, VoiceState, ProactiveMessage } from "./types";
 
-type ProactiveCard = {
-  id: string;
-  title?: string | null;
-  message: string;
-  category?: string | null;
-};
+type ProactiveCard = Pick<
+  ProactiveMessage,
+  "id" | "title" | "message" | "category" | "logical_key"
+>;
 
 export default function GhostChat({
   mode,
@@ -27,7 +25,7 @@ export default function GhostChat({
   proactiveMessage,
   proactiveMessages,
   onProactiveSeen,
-  onProactiveAnswered,
+  onProactiveReply,
   onReminderDone,
   userName,
   openHistory,
@@ -53,7 +51,7 @@ export default function GhostChat({
   proactiveMessage?: ProactiveCard | null;
   proactiveMessages?: ProactiveCard[];
   onProactiveSeen?: (messageId?: string) => void;
-  onProactiveAnswered?: (messageId?: string) => void;
+  onProactiveReply?: (message: ProactiveCard) => void;
   onReminderDone?: (messageId?: string) => void;
   userName: string;
   openHistory: () => void;
@@ -66,8 +64,7 @@ export default function GhostChat({
         : [];
 
  function replyToProactive(message: ProactiveCard) {
-  setInput(`Sto rispondendo a "${message.message || message.title || "GhostMe"}": `);
-  onProactiveAnswered?.(message.id);
+  onProactiveReply?.(message);
 }      
 
 

@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { classifyLocationState } from "@/lib/ghostme/location/locationStateFreshness";
 
 function cleanHint(value: any) {
   return String(value || "").trim().replace(/\s+/g, " ");
@@ -34,24 +35,14 @@ function uniqueHints(values: string[]) {
   return result;
 }
 
-const LOCATION_FRESHNESS_WINDOW_MS = 2 * 60 * 60 * 1000;
-
-function isFreshLocationState(location: any) {
-  const timestamp = location?.updated_at || location?.last_changed_at;
-  if (!timestamp) return false;
-
-  const time = new Date(timestamp).getTime();
-  if (Number.isNaN(time)) return false;
-
-  return Date.now() - time <= LOCATION_FRESHNESS_WINDOW_MS;
-}
-
 export async function loadUserContextGraph(userId: string) {
   if (!userId) {
     return {
       graph: {
         profile: null,
         currentLocation: null,
+        lastKnownLocation: null,
+        locationStatus: "unknown",
         significantPlaces: [],
         calendarUpcoming: [],
         goals: [],
@@ -237,9 +228,12 @@ export async function loadUserContextGraph(userId: string) {
       .limit(3),
   ]);
 
+  const locationFreshness = classifyLocationState(currentLocationRes.data);
   const graph = {
     profile: profileRes.data || null,
-    currentLocation: currentLocationRes.data || null,
+    currentLocation: locationFreshness.currentLocation,
+    lastKnownLocation: locationFreshness.lastKnownLocation,
+    locationStatus: locationFreshness.status,
     significantPlaces: placesRes.data || [],
     calendarUpcoming: calendarRes.data || [],
     goals: goalsRes.data || [],
@@ -259,7 +253,7 @@ export async function loadUserContextGraph(userId: string) {
 
   const hints: string[] = [];
 
-  if (isFreshLocationState(graph.currentLocation)) {
+  if (graph.locationStatus === "current") {
     addHints(hints, [graph.currentLocation?.current_place_label]);
   }
   addHints(hints, graph.significantPlaces.map((place: any) => place.label));

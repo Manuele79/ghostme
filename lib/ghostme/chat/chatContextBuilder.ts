@@ -6,6 +6,7 @@ import {
 } from "@/lib/ghostme/context/reasoningService";
 import { trimBlock } from "@/lib/ghostme/chat/chatPromptBuilder";
 import type { DetectedTopicLike } from "@/lib/ghostme/chat/chatTypes";
+import { isFreshLocationState } from "@/lib/ghostme/location/locationStateFreshness";
 
 export type ChatContext = {
   profileContext: string;
@@ -100,18 +101,6 @@ function formatRomeDateTime(value?: string | null) {
     hour: "2-digit",
     minute: "2-digit",
   });
-}
-
-const LOCATION_FRESHNESS_WINDOW_MS = 2 * 60 * 60 * 1000;
-
-function isFreshLocationState(location: any) {
-  const timestamp = location?.updated_at || location?.last_changed_at;
-  if (!timestamp) return false;
-
-  const time = new Date(timestamp).getTime();
-  if (Number.isNaN(time)) return false;
-
-  return Date.now() - time <= LOCATION_FRESHNESS_WINDOW_MS;
 }
 
 function buildGoalsContext(goals: any[]) {
@@ -232,6 +221,7 @@ export async function buildChatContext({
 
   const calendarEvents = snapshot.calendar.upcoming || [];
   const currentLocation = snapshot.location.current;
+  const lastKnownLocation = snapshot.location.lastKnown;
 
   const contextualData = await buildContextualMemory({
     userId,
@@ -299,10 +289,10 @@ export async function buildChatContext({
       })
       .join("\n") || "";
 
-  if (currentLocation?.current_place_label) {
-    context.currentPlaceContext = isFreshLocationState(currentLocation)
-      ? `Luogo attuale rilevato: ${currentLocation.current_place_label}`
-      : `Ultimo luogo rilevato: ${currentLocation.current_place_label}, ma il dato potrebbe non essere aggiornato.`;
+  if (currentLocation?.current_place_label && isFreshLocationState(currentLocation)) {
+    context.currentPlaceContext = `Luogo attuale rilevato: ${currentLocation.current_place_label}`;
+  } else if (lastKnownLocation?.current_place_label) {
+    context.currentPlaceContext = `Ultimo luogo noto: ${lastKnownLocation.current_place_label}. Non trattarlo come posizione corrente.`;
   } else {
     context.currentPlaceContext = "Luogo attuale rilevato: sconosciuto";
   }
@@ -313,7 +303,7 @@ export async function buildChatContext({
     1200
   );
   console.log("CURRENT PLACE CONTEXT:", context.currentPlaceContext);
-  console.log("LOCATION RAW:", currentLocation);
+  console.log("LOCATION RAW:", currentLocation || lastKnownLocation);
   console.log("LOCATION LABEL:", currentLocation?.current_place_label);
 
   context.loadedLifeTopics = snapshot.memory.topics || [];

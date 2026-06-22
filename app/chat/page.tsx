@@ -11,6 +11,7 @@ import {
 import {
   GhostMode,
   modeLabels,
+  ProactiveMessage,
 } from "@/components/ghost/types";
 
 import GhostHeader from "@/components/ghost/GhostHeader";
@@ -50,6 +51,9 @@ export default function ChatPage() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [pendingProactiveReplyId, setPendingProactiveReplyId] = useState<
     string | null
+  >(null);
+  const [pendingLocationCard, setPendingLocationCard] = useState<
+    Pick<ProactiveMessage, "id" | "message" | "logical_key"> | null
   >(null);
 
   const [activeMemoryTab, setActiveMemoryTab] = useState<
@@ -638,7 +642,18 @@ export default function ChatPage() {
   }
 }
 
-  function replyToProactiveMessage(message: string, messageId?: string) {
+  function replyToProactiveMessage(
+    message: string,
+    messageId?: string,
+    logicalKey?: string | null
+  ) {
+    if (messageId && String(logicalKey || "").startsWith("location_candidate_")) {
+      setPendingLocationCard({ id: messageId, message, logical_key: logicalKey });
+      setActiveServiceTab("places");
+      setServicesOpen(true);
+      return;
+    }
+
     if (messageId) {
       setPendingProactiveReplyId(messageId);
     }
@@ -648,6 +663,14 @@ export default function ChatPage() {
     );
 
     setServicesOpen(false);
+  }
+
+  function replyToProactiveCard(message: {
+    id: string;
+    message: string;
+    logical_key?: string | null;
+  }) {
+    replyToProactiveMessage(message.message, message.id, message.logical_key);
   }
 
   async function logout() {
@@ -705,6 +728,11 @@ export default function ChatPage() {
         currentUserId={currentUserId}
         logout={logout}
         onReplyObservation={replyToProactiveMessage}
+        pendingLocationCard={pendingLocationCard}
+        onLocationCandidateHandled={(messageId) => {
+          hideProactiveMessage(messageId);
+          setPendingLocationCard(null);
+        }}
       />
 
       <HistoryDrawer
@@ -754,7 +782,7 @@ export default function ChatPage() {
             proactiveMessage={brainData.proactiveMessage}
             proactiveMessages={brainData.proactiveMessages}
             onProactiveSeen={markProactiveAsRead}
-            onProactiveAnswered={markProactiveAsAnswered}
+            onProactiveReply={replyToProactiveCard}
             onReminderDone={markReminderAsDone}
             userName={userName}
             openHistory={() => setHistoryOpen(true)}

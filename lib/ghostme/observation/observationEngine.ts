@@ -16,6 +16,9 @@ export type UnknownPlaceCandidate = {
   confidence: number;
   occurrences: number;
   averageAccuracy: number | null;
+  firstSeenAt: string;
+  lastSeenAt: string;
+  suggestedCategory: string | null;
 };
 
 const UNKNOWN_PLACE_RADIUS_METERS = 120;
@@ -228,6 +231,16 @@ async function upsertUnknownPlaceCandidate({
     averageAccuracy === null ? 1 : averageAccuracy <= 50 ? 2 : averageAccuracy <= 100 ? 1 : 0;
   const confidence = Math.min(10, points.length * 2 + accuracyScore);
   if (confidence < UNKNOWN_PLACE_MIN_CONFIDENCE) return null;
+  const suggestedCategory =
+    distinctEvents
+      .map((event) =>
+        String(
+          event?.context?.suggested_category ||
+            event?.context?.external_category ||
+            ""
+        ).trim()
+      )
+      .find(Boolean) || null;
 
   const { data: existingPatterns } = await supabaseAdmin
     .from("behavior_patterns")
@@ -256,6 +269,7 @@ async function upsertUnknownPlaceCandidate({
       latitude,
       longitude,
       radius_meters: UNKNOWN_PLACE_RADIUS_METERS,
+      suggested_category: suggestedCategory,
     },
     learned_from: {
       events: points.length,
@@ -292,6 +306,9 @@ async function upsertUnknownPlaceCandidate({
     confidence,
     occurrences: points.length,
     averageAccuracy,
+    firstSeenAt: payload.first_seen_at,
+    lastSeenAt: payload.last_seen_at,
+    suggestedCategory,
   };
 }
 

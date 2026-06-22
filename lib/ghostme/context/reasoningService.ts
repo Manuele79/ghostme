@@ -96,6 +96,8 @@ export type GhostBrainSnapshotCore = {
   };
   location: {
     current: any | null;
+    lastKnown: any | null;
+    status: "current" | "stale" | "unknown";
     significantPlaces: any[];
     situation: {
       currentPlace: string | null;
@@ -144,8 +146,6 @@ export type GhostBrainSnapshot = GhostBrainSnapshotCore & {
   trueProactive: TrueProactiveSnapshot;
 };
 
-const LOCATION_FRESHNESS_WINDOW_MS = 2 * 60 * 60 * 1000;
-
 function clean(value: any) {
   return String(value || "").toLowerCase().trim();
 }
@@ -165,15 +165,6 @@ function uniqueValues(values: string[], limit: number) {
   }
 
   return result;
-}
-
-function isRecent(value?: string | null, windowMs = LOCATION_FRESHNESS_WINDOW_MS) {
-  if (!value) return false;
-
-  const time = new Date(value).getTime();
-  if (Number.isNaN(time)) return false;
-
-  return Date.now() - time <= windowMs;
 }
 
 function minutesUntil(value?: string | null) {
@@ -244,20 +235,22 @@ function buildFallbackSnapshot(reason = "unavailable") {
 }
 
 function buildWhereIsUser(situation: GhostSituation) {
-  const place = situation.currentPlace || null;
-  const isFresh = isRecent(situation.lastLocationChange);
+  const currentPlace = situation.currentPlace || null;
+  const lastKnownPlace = situation.lastKnownPlace || null;
+  const place = currentPlace || lastKnownPlace;
+  const isFresh = Boolean(currentPlace) && situation.locationStatus === "current";
 
   return {
-    status: place ? (isFresh ? "current" : "last_known") : "unknown",
+    status: currentPlace ? "current" : lastKnownPlace ? "last_known" : "unknown",
     place,
-    category: situation.currentPlaceCategory || null,
-    confidence: situation.locationConfidence ?? null,
+    category: currentPlace ? situation.currentPlaceCategory || null : null,
+    confidence: currentPlace ? situation.locationConfidence ?? null : null,
     lastChangedAt: situation.lastLocationChange || null,
     isFresh,
-    reason: place
-      ? isFresh
-        ? "fresh_location_state"
-        : "stale_location_state"
+    reason: currentPlace
+      ? "fresh_location_state"
+      : lastKnownPlace
+        ? "stale_location_state"
       : "missing_location_state",
   };
 }
@@ -816,6 +809,11 @@ export async function buildGhostBrainSnapshot(
     },
     location: {
       current: graph.currentLocation || null,
+      lastKnown: graph.lastKnownLocation || null,
+      status:
+        graph.locationStatus === "current" || graph.locationStatus === "stale"
+          ? graph.locationStatus
+          : "unknown",
       significantPlaces: graph.significantPlaces || [],
       situation: {
         currentPlace: situation.currentPlace || null,

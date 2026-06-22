@@ -57,6 +57,7 @@ export type ProactiveMessage = {
   category?: string | null;
   status: string;
   priority?: number | null;
+  logical_key?: string | null;
   created_at?: string;
 };
 import type { GhostBrainSnapshot } from "@/lib/ghostme/context/reasoningService";
