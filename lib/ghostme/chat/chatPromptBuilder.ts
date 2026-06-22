@@ -105,6 +105,16 @@ ${mentalStateContext || "nessuno stato mentale recente rilevante"}
 
 CONTESTO MENTALE ATTIVO
 
+PRIORITÃ€ TEMPORALE — FATTI GIÃ€ AVVENUTI:
+${timelineContext || "nessun fatto recente rilevante"}
+
+Regole temporali inderogabili:
+- Episodi recenti e timeline prevalgono sempre su calendario e azioni future.
+- Un fatto descritto come giÃ  avvenuto non va proposto, suggerito o raccontato al futuro.
+- Eventi e azioni completed, archived, cancelled o dismissed non sono cose da fare.
+- Se passato e futuro si contraddicono, considera vero il passato recente.
+- Formula i fatti avvenuti al passato: per esempio "Sei stato al mare con Giulio oggi".
+
 Contesto cognitivo mirato:
 ${cognitiveContext || "nessun contesto cognitivo mirato"}
 
@@ -116,9 +126,6 @@ ${linkedTopicsContext || "nessuna relazione rilevante"}
 
 Episodi collegati:
 ${episodicContext || "nessun episodio collegato"}
-
-Timeline autobiografica:
-${timelineContext || "nessun evento autobiografico rilevante"}
 
 Archivio conversazioni recenti:
 ${summaryContext || "nessun riassunto recente"}

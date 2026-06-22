@@ -69,6 +69,11 @@ import {
   type TrueProactiveSnapshot,
 } from "@/lib/ghostme/proactive/trueProactiveSnapshot";
 import { canAccessHomeAssistant } from "@/lib/ghostme/homeAssistant/homeAssistantAccess";
+import {
+  buildRecentPastEvidence,
+  filterFutureCalendar,
+  filterOpenActions,
+} from "@/lib/ghostme/context/temporalPriority";
 
 type DetectedTopicInput = {
   topic: string;
@@ -103,9 +108,11 @@ export type GhostBrainSnapshotCore = {
   calendar: {
     upcoming: any[];
     today: any[];
+    completed: any[];
   };
   goals: GoalsSnapshot;
   actions: any[];
+  completedActions: any[];
   projects: ProjectMemorySnapshot & {
     consistency: GoalProjectConsistencySnapshot;
     advisor: ProjectAdvisorSnapshot;
@@ -779,6 +786,22 @@ export async function buildGhostBrainSnapshot(
     contextSignals,
   });
 
+  const pastEvidence = buildRecentPastEvidence({
+    episodes: memorySnapshot.episodicMemories,
+    timeline: memorySnapshot.timeline,
+    summaries: memorySnapshot.summaries,
+    completedCalendar: situation.completedCalendarEvents,
+    completedActions: situation.completedActions,
+  });
+  const futureCalendar = filterFutureCalendar(
+    situation.upcomingEvents,
+    pastEvidence
+  );
+  const openActions = filterOpenActions(
+    goalsSnapshot.pendingActions,
+    pastEvidence
+  );
+
   const coreSnapshot: GhostBrainSnapshotCore = {
     profile: {
       ...(graph.profile || {}),
@@ -803,11 +826,13 @@ export async function buildGhostBrainSnapshot(
       },
     },
     calendar: {
-      upcoming: graph.calendarUpcoming || [],
-      today: situation.calendarToday || [],
+      upcoming: futureCalendar,
+      today: filterFutureCalendar(situation.calendarToday, pastEvidence),
+      completed: situation.completedCalendarEvents,
     },
     goals: goalsSnapshot,
-    actions: goalsSnapshot.pendingActions,
+    actions: openActions,
+    completedActions: situation.completedActions,
     projects: {
       ...projectMemory,
       consistency: goalProjectConsistency,

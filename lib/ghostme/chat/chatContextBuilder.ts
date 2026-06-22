@@ -1,6 +1,9 @@
 import { buildBehaviorPrompt } from "@/lib/ghostme/behavior/behaviorRulesEngine";
 import { buildContextualMemory } from "@/lib/ghostme/retrieval";
-import { buildGhostBrainSnapshot } from "@/lib/ghostme/context/reasoningService";
+import {
+  buildGhostBrainSnapshot,
+  type GhostBrainSnapshot,
+} from "@/lib/ghostme/context/reasoningService";
 import { trimBlock } from "@/lib/ghostme/chat/chatPromptBuilder";
 import type { DetectedTopicLike } from "@/lib/ghostme/chat/chatTypes";
 
@@ -124,13 +127,35 @@ function buildGoalsContext(goals: any[]) {
     .join("\n");
 }
 
-function buildTimelineContext(events: any[]) {
-  if (!events?.length) return "";
+function buildTimelineContext(snapshot: GhostBrainSnapshot) {
+  const history = [
+    ...(snapshot.memory.episodicMemories || []).map((item) => ({
+      ...item,
+      temporal_source: "episodio recente",
+    })),
+    ...(snapshot.memory.timeline || []).map((item) => ({
+      ...item,
+      temporal_source: "timeline",
+    })),
+    ...(snapshot.memory.summaries || []).map((item) => ({
+      ...item,
+      temporal_source: "conversazione recente",
+    })),
+    ...(snapshot.calendar.completed || []).map((item) => ({
+      ...item,
+      temporal_source: "calendario completato",
+    })),
+    ...(snapshot.completedActions || []).map((item) => ({
+      ...item,
+      temporal_source: "azione completata",
+    })),
+  ];
+  if (!history.length) return "";
 
-  return events
+  return history
     .map(
       (event) =>
-        `- ${event.title || event.summary || "Evento"} | ${
+        `- [${event.temporal_source}] ${event.title || event.summary || "Evento"} | ${
           event.event_date || event.created_at || ""
         }\n${event.summary || event.description || ""}`
     )
@@ -250,8 +275,8 @@ export async function buildChatContext({
     800
   );
   context.timelineContext = trimBlock(
-    buildTimelineContext(snapshot.memory.timeline),
-    800
+    buildTimelineContext(snapshot),
+    1800
   );
   context.dynamicSelfProfileContext = trimBlock(
     buildDynamicSelfProfileContext(snapshot.profile?.dynamicProfile || []),

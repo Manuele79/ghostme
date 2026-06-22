@@ -113,6 +113,14 @@ export async function buildCurrentContext(
     .map((e) => `${e.type}: ${e.title} ${e.start_at || e.remind_at || ""}`)
     .slice(0, 5);
 
+  const completedCalendar = situation.completedCalendarEvents
+    .map((event) => `${event.type}: ${event.title}`)
+    .slice(0, 5);
+
+  const completedActions = situation.completedActions
+    .map((action) => `${action.intent_type}: ${action.title}`)
+    .slice(0, 5);
+
   const dominantTopics = situation.dominantTopics
     .map((t) => t.topic)
     .slice(0, 8);
@@ -182,6 +190,8 @@ export async function buildCurrentContext(
       Eventi oggi: ${calendarToday.join(", ") || "nessuno"}.
       Stato mentale: ${mentalState}.
       Memorie recenti utili: ${recentEpisodes.join(", ") || "nessuna"}.
+      Eventi calendario completati: ${completedCalendar.join(", ") || "nessuno"}.
+      Azioni completate: ${completedActions.join(", ") || "nessuna"}.
       Collegamenti importanti: ${importantLinks.join(", ") || "nessuno"}.
       Pattern comportamentali: ${behaviorPatterns.join(", ") || "nessuno"}.
       Regole comportamentali: ${behaviorRules.join(", ") || "nessuna"}.
@@ -217,6 +227,8 @@ export async function buildCurrentContext(
       Episodi recenti: ${recentEpisodes.join(", ") || "nessuno"}
       Timeline recente: ${recentTimelineEvents.join(", ") || "nessuna"}
       Riassunti recenti: ${recentSummaries.join(", ") || "nessuno"}
+      Eventi calendario completati: ${completedCalendar.join(", ") || "nessuno"}
+      Azioni completate: ${completedActions.join(", ") || "nessuna"}
       Profilo dinamico: ${dynamicProfile.join(", ") || "nessuno"}
       Contraddizioni attive: ${activeContradictions.join(", ") || "nessuna"}
       Collegamenti importanti: ${importantLinks.join(", ") || "nessuno"}

@@ -1,6 +1,11 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getCurrentLocationState } from "@/lib/ghostme/location/placeService";
 import { getPeopleGraphContext } from "@/lib/ghostme/people/peopleGraphService";
+import {
+  buildRecentPastEvidence,
+  filterFutureCalendar,
+  filterOpenActions,
+} from "@/lib/ghostme/context/temporalPriority";
 
 
 export type GhostSituation = {
@@ -17,8 +22,10 @@ export type GhostSituation = {
 
   calendarToday: any[];
   upcomingEvents: any[];
+  completedCalendarEvents: any[];
   activeGoals: any[];
   pendingActions: any[];
+  completedActions: any[];
   dominantTopics: any[];
   mentalState: any | null;
   peopleGraphContext: string;
@@ -111,9 +118,11 @@ export async function buildGhostSituation(userId: string): Promise<GhostSituatio
   const [
     profileRes,
     calendarTodayRes,
+    completedCalendarRes,
     upcomingCalendarRes,
     goalsRes,
     actionsRes,
+    completedActionsRes,
     topicsRes,
     mentalRes,
     episodesRes,
@@ -149,6 +158,14 @@ export async function buildGhostSituation(userId: string): Promise<GhostSituatio
       .from("calendar_events")
       .select("*")
       .eq("user_id", userId)
+      .eq("status", "completed")
+      .order("updated_at", { ascending: false })
+      .limit(10),
+
+    supabaseAdmin
+      .from("calendar_events")
+      .select("*")
+      .eq("user_id", userId)
       .eq("status", "active")
       .or(`start_at.gte.${nowIso},remind_at.gte.${nowIso}`)
       .order("start_at", { ascending: true })
@@ -166,8 +183,17 @@ export async function buildGhostSituation(userId: string): Promise<GhostSituatio
       .from("action_intents")
       .select("*")
       .eq("user_id", userId)
-      .in("status", ["detected", "pending"])
+      .in("status", ["detected", "active", "open", "pending"])
       .order("priority", { ascending: false })
+      .limit(10),
+
+    supabaseAdmin
+      .from("action_intents")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("status", "completed")
+      .order("completed_at", { ascending: false, nullsFirst: false })
+      .order("updated_at", { ascending: false })
       .limit(10),
 
     supabaseAdmin
@@ -268,16 +294,31 @@ export async function buildGhostSituation(userId: string): Promise<GhostSituatio
   const locationConfidence = currentLocationState?.confidence ?? null;
   const lastLocationChange = currentLocationState?.last_changed_at || null;
 
-  const calendarToday = calendarTodayRes.data || [];
-  const upcomingEvents = upcomingCalendarRes.data || [];
+  const completedCalendarEvents = completedCalendarRes.data || [];
+  const completedActions = completedActionsRes.data || [];
   const activeGoals = goalsRes.data || [];
-  const pendingActions = actionsRes.data || [];
   const dominantTopics = topicsRes.data || [];
   const mentalState = mentalRes.data || null;
 
   const recentEpisodes = episodesRes.data || [];
   const recentTimelineEvents = timelineRes.data || [];
   const recentSummaries = summariesRes.data || [];
+  const pastEvidence = buildRecentPastEvidence({
+    episodes: recentEpisodes,
+    timeline: recentTimelineEvents,
+    summaries: recentSummaries,
+    completedCalendar: completedCalendarEvents,
+    completedActions,
+  });
+  const calendarToday = filterFutureCalendar(
+    calendarTodayRes.data || [],
+    pastEvidence
+  );
+  const upcomingEvents = filterFutureCalendar(
+    upcomingCalendarRes.data || [],
+    pastEvidence
+  );
+  const pendingActions = filterOpenActions(actionsRes.data || [], pastEvidence);
   const dynamicProfile = dynamicProfileRes.data || [];
   const activeContradictions = contradictionsRes.data || [];
   const importantLinks = linksRes.data || [];
@@ -319,6 +360,14 @@ ${formatList(
   calendarToday,
   (e) => `- ${e.title} | ${e.start_at || e.remind_at || ""}`,
   "nessun evento oggi"
+)}
+
+FATTI RECENTI (PRIORITÃ€ SUL FUTURO):
+${formatList(
+  [...recentEpisodes, ...recentTimelineEvents, ...completedCalendarEvents, ...completedActions],
+  (item) => `- ${item.title || item.summary || item.description || "evento completato"}`,
+  "nessun fatto recente",
+  10
 )}
 
 PROSSIMI EVENTI:
@@ -456,8 +505,10 @@ device: ${externalSignals.deviceContext || "non collegato"}
 
     calendarToday,
     upcomingEvents,
+    completedCalendarEvents,
     activeGoals,
     pendingActions,
+    completedActions,
     dominantTopics,
     mentalState,
 
