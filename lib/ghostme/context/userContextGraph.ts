@@ -156,6 +156,10 @@ export async function loadUserContextGraph(userId: string) {
       .select("id, category, title, message, status, priority, created_at")
       .eq("user_id", userId)
       .in("status", ["unread", "read"])
+      .gte(
+        "updated_at",
+        new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+      )
       .order("created_at", { ascending: false })
       .limit(5),
 

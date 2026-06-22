@@ -175,7 +175,7 @@ export async function buildGhostSituation(userId: string): Promise<GhostSituatio
       .from("goals_desires")
       .select("*")
       .eq("user_id", userId)
-      .neq("status", "archived")
+      .in("status", ["active", "learning"])
       .order("importance", { ascending: false })
       .limit(10),
 
@@ -271,6 +271,10 @@ export async function buildGhostSituation(userId: string): Promise<GhostSituatio
       .select("*")
       .eq("user_id", userId)
       .in("status", ["learning", "active"])
+      .gte(
+        "last_seen_at",
+        new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+      )
       .order("confidence", { ascending: false })
       .order("last_seen_at", { ascending: false })
       .limit(8),
@@ -279,6 +283,10 @@ export async function buildGhostSituation(userId: string): Promise<GhostSituatio
       .from("observation_events")
       .select("*")
       .eq("user_id", userId)
+      .gte(
+        "occurred_at",
+        new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+      )
       .order("occurred_at", { ascending: false })
       .limit(12),
 

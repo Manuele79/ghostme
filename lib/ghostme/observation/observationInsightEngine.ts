@@ -15,6 +15,7 @@ export async function generateObservationInsight(userId: string) {
     .select("id")
     .eq("user_id", userId)
     .eq("category", "observation")
+    .in("status", ["unread", "read"])
     .gte("created_at", new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString())
     .limit(1);
 
@@ -59,6 +60,10 @@ Regole:
 - Se il contesto dice che il luogo attuale è casa/lavoro/altro luogo noto, usalo come dato già disponibile.
 - Ignora parole sporche o topic casuali tipo "dimmi", "qual", "considera", "prenditi", "hahaha".
 - Non creare osservazioni partendo da parole isolate o messaggi tecnici generici.
+- Parla solo della situazione presente o di eventi delle ultime 24 ore.
+- Considera soltanto goal attivi, eventi futuri attivi e action aperte.
+- Se episodi o timeline indicano che qualcosa è già successo, non proporlo.
+- Ignora completed, archived, dismissed, cancelled ed expired.
         `,
       },
       {
@@ -91,6 +96,7 @@ async function getRecentProactiveText(userId: string) {
     .select("category, title, message, created_at")
     .eq("user_id", userId)
     .in("status", ["unread", "read"])
+    .gte("updated_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
     .order("created_at", { ascending: false })
     .limit(8);
 

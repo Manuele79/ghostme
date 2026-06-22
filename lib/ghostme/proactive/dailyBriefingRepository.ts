@@ -1,4 +1,9 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import {
+  buildRecentPastEvidence,
+  filterFutureCalendar,
+  filterOpenActions,
+} from "@/lib/ghostme/context/temporalPriority";
 
 export async function loadDailyBriefingContext(userId: string) {
   const [
@@ -8,10 +13,14 @@ export async function loadDailyBriefingContext(userId: string) {
     mentalRes,
     timelineRes,
     topicsRes,
+    episodesRes,
+    summariesRes,
+    completedCalendarRes,
+    completedActionsRes,
   ] = await Promise.all([
     supabaseAdmin
       .from("calendar_events")
-      .select("title, type, description, start_at, remind_at")
+      .select("id, title, type, description, start_at, remind_at, status, updated_at")
       .eq("user_id", userId)
       .eq("status", "active")
       .or(
@@ -30,9 +39,9 @@ export async function loadDailyBriefingContext(userId: string) {
 
     supabaseAdmin
       .from("action_intents")
-      .select("intent_type, title, description, priority, updated_at")
+      .select("id, intent_type, title, description, priority, status, updated_at")
       .eq("user_id", userId)
-      .in("status", ["detected", "pending"])
+      .in("status", ["detected", "active", "open", "pending"])
       .order("priority", { ascending: false })
       .limit(5),
 
@@ -59,14 +68,52 @@ export async function loadDailyBriefingContext(userId: string) {
       .eq("user_id", userId)
       .order("weight", { ascending: false })
       .limit(8),
+
+    supabaseAdmin
+      .from("episodic_memories")
+      .select("summary, related_topics, created_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(8),
+
+    supabaseAdmin
+      .from("conversation_summaries")
+      .select("title, summary, topics, updated_at")
+      .eq("user_id", userId)
+      .order("updated_at", { ascending: false })
+      .limit(5),
+
+    supabaseAdmin
+      .from("calendar_events")
+      .select("id, title, type, description, start_at, remind_at, status, updated_at")
+      .eq("user_id", userId)
+      .eq("status", "completed")
+      .order("updated_at", { ascending: false })
+      .limit(10),
+
+    supabaseAdmin
+      .from("action_intents")
+      .select("id, intent_type, title, description, status, completed_at, updated_at")
+      .eq("user_id", userId)
+      .eq("status", "completed")
+      .order("completed_at", { ascending: false, nullsFirst: false })
+      .limit(10),
   ]);
 
-  return {
-    calendar: calendarRes.data || [],
-    goals: goalsRes.data || [],
-    actions: actionsRes.data || [],
-    mental: mentalRes.data || null,
+  const pastEvidence = buildRecentPastEvidence({
+    episodes: episodesRes.data || [],
     timeline: timelineRes.data || [],
+    summaries: summariesRes.data || [],
+    completedCalendar: completedCalendarRes.data || [],
+    completedActions: completedActionsRes.data || [],
+  });
+
+  return {
+    calendar: filterFutureCalendar(calendarRes.data || [], pastEvidence),
+    goals: goalsRes.data || [],
+    actions: filterOpenActions(actionsRes.data || [], pastEvidence),
+    mental: mentalRes.data || null,
+    timeline: pastEvidence,
     topics: topicsRes.data || [],
   };
 }

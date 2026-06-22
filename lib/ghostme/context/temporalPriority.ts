@@ -4,6 +4,7 @@ const CLOSED_STATUSES = new Set([
   "archived",
   "cancelled",
   "dismissed",
+  "expired",
 ]);
 const RECENT_PAST_WINDOW_MS = 14 * 24 * 60 * 60 * 1000;
 

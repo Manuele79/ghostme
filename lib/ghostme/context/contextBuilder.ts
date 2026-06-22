@@ -70,6 +70,7 @@ export async function buildCurrentContext(
   .select("category, title, message, created_at")
   .eq("user_id", userId)
   .in("status", ["unread", "read"])
+  .gte("updated_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
   .order("created_at", { ascending: false })
   .limit(10);
 

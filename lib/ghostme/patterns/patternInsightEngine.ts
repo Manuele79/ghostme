@@ -14,6 +14,7 @@ export async function generatePatternInsight(userId: string) {
     .select("id")
     .eq("user_id", userId)
     .eq("category", "observation")
+    .in("status", ["unread", "read"])
     .gte("created_at", new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString())
     .limit(1);
 
@@ -24,6 +25,10 @@ export async function generatePatternInsight(userId: string) {
     .select("*")
     .eq("user_id", userId)
     .eq("status", "active")
+    .gte(
+      "last_seen_at",
+      new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+    )
     .order("confidence", { ascending: false })
     .order("last_seen_at", { ascending: false })
     .limit(8);
