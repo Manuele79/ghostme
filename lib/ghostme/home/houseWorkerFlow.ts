@@ -7,6 +7,8 @@ import { planHouseAutomationControls } from "@/lib/ghostme/homeAssistant/houseAu
 import { syncHouseEntities } from "@/lib/ghostme/homeAssistant/houseEntityRegistry";
 import { bridgeHomeAssistantLocationFlow } from "@/lib/ghostme/location/haLocationBridgeFlow";
 import { requireWorkerRequest, UserContextAuthError } from "@/lib/ghostme/auth/serverAuth";
+import { getHomeAssistantUserIds } from "@/lib/ghostme/homeAssistant/homeAssistantAccess";
+import { getHAStates } from "@/lib/ghostme/homeAssistant/haClient";
 
 export async function houseWorkerFlow(req: Request) {
   try {
@@ -18,26 +20,27 @@ export async function houseWorkerFlow(req: Request) {
     };
   }
 
-  const testUserId = process.env.GHOSTME_TEST_USER_ID;
-
-  if (!testUserId) {
+  const userIds = getHomeAssistantUserIds();
+  if (!userIds.length) {
     return {
       status: 500,
-      body: { success: false, error: "Manca GHOSTME_TEST_USER_ID" },
+      body: { success: false, error: "Manca la configurazione utenti Home Assistant" },
     };
   }
 
-  const users = [{ user_id: testUserId }];
+  const users = userIds.map((user_id) => ({ user_id }));
+  const states = await getHAStates({ force: true });
 
   let totalInserted = 0;
   const results: any[] = [];
 
   for (const user of users || []) {
-    const logResult = await logHomeAssistantSnapshot(user.user_id);
+    const logResult = await logHomeAssistantSnapshot(user.user_id, states);
     const locationBridge = await bridgeHomeAssistantLocationFlow({
       userId: user.user_id,
+      states,
     });
-    const entitySync = await syncHouseEntities(user.user_id);
+    const entitySync = await syncHouseEntities(user.user_id, states);
     const patterns = await analyzeHousePatterns(user.user_id);
     const routes = await learnHouseRoutes(user.user_id);
     const suggestions = await generateHouseSuggestions(user.user_id);

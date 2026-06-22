@@ -4,6 +4,10 @@ import { getEntityInfo } from "@/lib/ghostme/homeAssistant/homeEntityMapper";
 import { classifyHomeEventSignificance } from "@/lib/ghostme/homeAssistant/homeEventSignificance";
 import { isDevelopmentEnvironment } from "@/lib/ghostme/auth/serverAuth";
 import { runHouseLightLearning } from "@/lib/ghostme/homeAssistant/houseLightLearningFlow";
+import {
+  canAccessHomeAssistant,
+  getDefaultHomeAssistantUserId,
+} from "@/lib/ghostme/homeAssistant/homeAssistantAccess";
 
 function clean(value: any) {
   return String(value ?? "").toLowerCase().trim();
@@ -75,6 +79,7 @@ function getEventType(entityType: string, state: string, incomingEventType?: str
   if (entityType === "fan") return cleanState === "on" ? "fan_on" : "fan_off";
   if (entityType === "appliance") return "appliance_changed";
   if (entityType === "automation") return cleanState === "on" ? "automation_on" : "automation_off";
+  if (entityType === "contact") return ["on", "open"].includes(cleanState) ? "contact_open" : "contact_closed";
 
   return "state_changed";
 }
@@ -100,6 +105,48 @@ async function getLastHouseEvent({
   }
 
   return data || null;
+}
+
+async function getLastCooldownEvents({
+  userId,
+  entityId,
+  eventType,
+  roomKey,
+}: {
+  userId: string;
+  entityId: string;
+  eventType: string;
+  roomKey?: string | null;
+}) {
+  const eventTypeQuery = supabaseAdmin
+    .from("house_events")
+    .select("entity_id, room_key, occurred_at")
+    .eq("user_id", userId)
+    .eq("event_type", eventType)
+    .order("occurred_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const roomQuery = roomKey
+    ? supabaseAdmin
+        .from("house_events")
+        .select("occurred_at")
+        .eq("user_id", userId)
+        .eq("room_key", roomKey)
+        .eq("event_type", eventType)
+        .order("occurred_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+    : Promise.resolve({ data: null, error: null });
+  const [eventTypeResult, roomResult] = await Promise.all([eventTypeQuery, roomQuery]);
+  const lastTypeMatchesCurrentContext =
+    eventTypeResult.data?.entity_id === entityId ||
+    Boolean(roomKey && eventTypeResult.data?.room_key === roomKey);
+  return {
+    lastEventTypeOccurredAt: lastTypeMatchesCurrentContext
+      ? eventTypeResult.data?.occurred_at || null
+      : null,
+    lastRoomEventOccurredAt: roomResult.data?.occurred_at || null,
+  };
 }
 
 async function updateHouseEntity({
@@ -154,16 +201,6 @@ function isAuthorized(req: Request, body: any) {
   return token === secret;
 }
 
-function allowedHomeAssistantUserId() {
-  const configured =
-    process.env.GHOSTME_HOME_ASSISTANT_USER_ID ||
-    process.env.HOME_ASSISTANT_USER_ID;
-
-  if (configured) return configured;
-  if (isDevelopmentEnvironment()) return process.env.GHOSTME_TEST_USER_ID || null;
-  return null;
-}
-
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -180,8 +217,8 @@ export async function POST(req: Request) {
       );
     }
 
-    const mappedUserId = allowedHomeAssistantUserId();
     const requestedUserId = body.userId || body.user_id || null;
+    const mappedUserId = requestedUserId || getDefaultHomeAssistantUserId();
     const entityId = body.entity_id || body.entityId;
 
     if (!mappedUserId) {
@@ -191,7 +228,7 @@ export async function POST(req: Request) {
       );
     }
 
-    if (requestedUserId && requestedUserId !== mappedUserId) {
+    if (!mappedUserId || !canAccessHomeAssistant(mappedUserId)) {
       return NextResponse.json(
         { received: false, significant: false, reason: "user_mapping_not_allowed", inserted: false },
         { status: 403 }
@@ -213,13 +250,15 @@ export async function POST(req: Request) {
     const info = getEntityInfo(entityId);
     if (info.type === "other") {
       return NextResponse.json(
-        { received: false, significant: false, reason: "unmapped_entity", inserted: false },
-        { status: 400 }
+        { received: true, significant: false, reason: "unmapped_entity", inserted: false }
       );
     }
     const userId = mappedUserId;
     const oldState = getStateValue(body.old_state ?? body.oldState);
-    const newState = getStateValue(body.new_state ?? body.newState ?? body.state);
+    const incomingEventType = clean(body.event_type || body.eventType);
+    const rawNewState = getStateValue(body.new_state ?? body.newState ?? body.state);
+    const newState =
+      rawNewState || (incomingEventType === "automation_triggered" ? "triggered" : "");
     const entityName = friendlyName({ ...body, entity_id: entityId });
     const eventType = getEventType(info.type, newState, body.event_type || body.eventType);
     const attributes = getAttributes(body);
@@ -230,13 +269,15 @@ export async function POST(req: Request) {
       body.new_state?.last_changed ||
       new Date().toISOString();
 
-    await updateHouseEntity({
-      userId,
-      entityId,
-      entityName,
-    });
-
-    const last = await getLastHouseEvent({ userId, entityId });
+    const [last, cooldownContext] = await Promise.all([
+      getLastHouseEvent({ userId, entityId }),
+      getLastCooldownEvents({
+        userId,
+        entityId,
+        eventType,
+        roomKey: info.room || null,
+      }),
+    ]);
     const decision = classifyHomeEventSignificance({
       entityType: info.type,
       entityId,
@@ -244,6 +285,7 @@ export async function POST(req: Request) {
       newState,
       eventType,
       lastOccurredAt: last?.occurred_at || null,
+      ...cooldownContext,
     });
 
     if (!decision.significant) {
@@ -254,6 +296,12 @@ export async function POST(req: Request) {
         inserted: false,
       });
     }
+
+    await updateHouseEntity({
+      userId,
+      entityId,
+      entityName,
+    });
 
     const { data: insertedEvent, error } = await supabaseAdmin
       .from("house_events")

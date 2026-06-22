@@ -10,10 +10,10 @@ function isUsefulEntity(entityType: string) {
   return entityType !== "other";
 }
 
-export async function syncHouseEntities(userId: string) {
+export async function syncHouseEntities(userId: string, providedStates?: any[]) {
   if (!userId) return { totalStates: 0, mappedRows: 0, upserted: 0 };
 
-  const states = await getHAStates();
+  const states = providedStates || (await getHAStates({ force: true }));
 
   const rows = states
     .map((state: any) => {

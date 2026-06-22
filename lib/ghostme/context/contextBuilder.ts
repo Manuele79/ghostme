@@ -45,7 +45,7 @@ export async function buildCurrentContext(
 ): Promise<GhostCurrentContext> {
   const situation = await buildGhostSituation(userId);
   const contextSignals = buildContextSignals(situation);
-  const homeContext = await buildHomeReasoning();
+  const homeContext = await buildHomeReasoning(userId);
   const homeSignals = homeContext
   .split("\n")
   .map((line) => line.trim().replace("- ", ""))

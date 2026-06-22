@@ -38,6 +38,15 @@ export type HouseStateSnapshot = {
   lastUpdated: string | null;
 };
 
+const DEFAULT_DB_FRESHNESS_MS = 6 * 60 * 60 * 1000;
+
+function dbFreshnessWindowMs() {
+  const configuredMinutes = Number(process.env.HOUSE_SNAPSHOT_MAX_AGE_MINUTES);
+  return Number.isFinite(configuredMinutes) && configuredMinutes > 0
+    ? configuredMinutes * 60 * 1000
+    : DEFAULT_DB_FRESHNESS_MS;
+}
+
 function friendlyName(state: HAState) {
   return state.attributes?.friendly_name || state.entity_id;
 }
@@ -154,7 +163,8 @@ ${[
 }
 
 export async function buildHouseStateSnapshot(
-  userId: string
+  userId: string,
+  { forceLive = false }: { forceLive?: boolean } = {}
 ): Promise<HouseStateSnapshot> {
   if (!canAccessHomeAssistant(userId)) {
     return {
@@ -168,8 +178,7 @@ export async function buildHouseStateSnapshot(
     };
   }
 
-  const [states, entitiesRes, eventsRes] = await Promise.all([
-    getHAStates() as Promise<HAState[]>,
+  const [entitiesRes, eventsRes] = await Promise.all([
     supabaseAdmin
       .from("house_entities")
       .select("entity_id, entity_name, room_key, entity_type, updated_at")
@@ -177,11 +186,45 @@ export async function buildHouseStateSnapshot(
       .limit(120),
     supabaseAdmin
       .from("house_events")
-      .select("entity_id, entity_name, entity_type, room_key, event_type, new_state, occurred_at")
+      .select("entity_id, entity_name, entity_type, room_key, event_type, new_state, value, occurred_at")
       .eq("user_id", userId)
       .order("occurred_at", { ascending: false })
-      .limit(50),
+      .limit(250),
   ]);
+
+  const latestEventByEntity = new Map<string, any>();
+  for (const event of eventsRes.data || []) {
+    if (!latestEventByEntity.has(event.entity_id)) {
+      latestEventByEntity.set(event.entity_id, event);
+    }
+  }
+  const databaseStates: HAState[] = Array.from(latestEventByEntity.values()).map(
+    (event) => ({
+      entity_id: event.entity_id,
+      state: event.new_state,
+      attributes: {
+        ...(event.value?.attributes || {}),
+        friendly_name:
+          event.value?.attributes?.friendly_name || event.entity_name || event.entity_id,
+      },
+      last_changed: event.occurred_at,
+      last_updated: event.occurred_at,
+    })
+  );
+  const latestDatabaseTimestamp = latestTimestamp(
+    (eventsRes.data || []).map((event: any) => event.occurred_at)
+  );
+  const latestDatabaseTime = latestDatabaseTimestamp
+    ? new Date(latestDatabaseTimestamp).getTime()
+    : 0;
+  const databaseIsFresh =
+    latestDatabaseTime > 0 &&
+    Date.now() - latestDatabaseTime <= dbFreshnessWindowMs();
+  const liveStates =
+    forceLive || !databaseIsFresh
+      ? ((await getHAStates({ force: forceLive })) as HAState[])
+      : [];
+  const states = liveStates.length ? liveStates : databaseStates;
 
   const cleanStates = (states || []).filter(
     (state) => !["unknown", "unavailable", "none", ""].includes(clean(state.state))
@@ -217,7 +260,7 @@ export async function buildHouseStateSnapshot(
       const info = getEntityInfo(state.entity_id);
       return (
         (info.type === "tv" || state.entity_id.startsWith("media_player.")) &&
-        ["on", "playing", "paused"].includes(clean(state.state))
+        ["on", "playing", "paused", "idle"].includes(clean(state.state))
       );
     })
     .map((state) => {

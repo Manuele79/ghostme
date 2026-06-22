@@ -1,5 +1,9 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getHAStates } from "@/lib/ghostme/homeAssistant/haClient";
+import {
+  canAccessHomeAssistant,
+  getHomeAssistantPersonForUser,
+} from "@/lib/ghostme/homeAssistant/homeAssistantAccess";
 
 type HAState = {
   entity_id: string;
@@ -37,15 +41,24 @@ export async function bridgeHomeAssistantLocationFlow({
   userId: string;
   states?: HAState[];
 }): Promise<HaLocationBridgeResult> {
-  if (!userId) {
+  if (!userId || !canAccessHomeAssistant(userId)) {
     return {
       updated: false,
-      reason: "missing_user_id",
+      reason: "user_not_linked_to_home_assistant",
       source: "home_assistant",
     };
   }
 
-  const haStates = states || ((await getHAStates()) as HAState[]);
+  const person = getHomeAssistantPersonForUser(userId);
+  if (!person) {
+    return {
+      updated: false,
+      reason: "person_mapping_not_configured",
+      source: "home_assistant",
+    };
+  }
+
+  const haStates = states || ((await getHAStates({ force: true })) as HAState[]);
 
   if (!haStates.length) {
     return {
@@ -55,11 +68,16 @@ export async function bridgeHomeAssistantLocationFlow({
     };
   }
 
-  const manuPerson = findState(haStates, "person.manuele");
-  const manuWifi = findState(haStates, "sensor.rea_nx9_wi_fi_connection");
+  const personState = findState(haStates, `person.${person}`);
+  const wifiState = findState(
+    haStates,
+    person === "manuele"
+      ? "sensor.rea_nx9_wi_fi_connection"
+      : "sensor.valecph2305_wi_fi_connection"
+  );
 
-  const personSaysHome = isManuHomeState(manuPerson?.state);
-  const wifiSaysHome = isRecognizedHomeWifi(manuWifi?.state);
+  const personSaysHome = isManuHomeState(personState?.state);
+  const wifiSaysHome = isRecognizedHomeWifi(wifiState?.state);
 
   if (!personSaysHome && !wifiSaysHome) {
     return {
@@ -71,8 +89,8 @@ export async function bridgeHomeAssistantLocationFlow({
 
   const now = new Date().toISOString();
   const reason = personSaysHome
-    ? "person.manuele_home"
-    : "rea_nx9_wifi_home";
+    ? `person.${person}_home`
+    : `${person}_wifi_home`;
 
   const { error } = await supabaseAdmin
     .from("user_location_state")

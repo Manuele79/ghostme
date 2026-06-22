@@ -1,4 +1,4 @@
-export async function getHAStates() {
+export async function getHAStates({ force = false }: { force?: boolean } = {}) {
   const url = process.env.HOME_ASSISTANT_URL;
   const token = process.env.HOME_ASSISTANT_TOKEN;
 
@@ -15,7 +15,12 @@ export async function getHAStates() {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        cache: "no-store",
+        ...(force
+          ? { cache: "no-store" as const }
+          : {
+              cache: "force-cache" as const,
+              next: { revalidate: 5 * 60 },
+            }),
       }
     );
 

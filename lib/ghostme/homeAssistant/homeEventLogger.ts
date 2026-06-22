@@ -19,16 +19,7 @@ function clean(value: any) {
   return String(value ?? "").toLowerCase().trim();
 }
 
-function isMainIndoorTemperature(entityId: string) {
-  const id = entityId.toLowerCase();
-
-  return (
-    id === "sensor.camera_temperatura_ambiente" ||
-    id === "climate.camera"
-  );
-}
-
-function isUsefulEvent(entityType: string, entityId?: string) {
+function isUsefulEvent(entityType: string) {
   if (
     [
       "person",
@@ -49,13 +40,10 @@ function isUsefulEvent(entityType: string, entityId?: string) {
       "fan",
       "appliance",
       "automation",
+      "temperature",
     ].includes(entityType)
   ) {
     return true;
-  }
-
-  if (entityType === "temperature" && entityId) {
-    return isMainIndoorTemperature(entityId);
   }
 
   return false;
@@ -127,7 +115,10 @@ async function getLastHouseEvent({
   return data || null;
 }
 
-export async function logHomeAssistantSnapshot(userId: string) {
+export async function logHomeAssistantSnapshot(
+  userId: string,
+  providedStates?: HAState[]
+) {
   if (!userId) {
     return {
       inserted: 0,
@@ -138,7 +129,7 @@ export async function logHomeAssistantSnapshot(userId: string) {
     };
   }
 
-  const states = (await getHAStates()) as HAState[];
+  const states = providedStates || ((await getHAStates({ force: true })) as HAState[]);
 
   if (!states.length) {
     return {
@@ -172,7 +163,7 @@ export async function logHomeAssistantSnapshot(userId: string) {
   for (const state of states) {
     const info = getEntityInfo(state.entity_id);
 
-    if (!isUsefulEvent(info.type, state.entity_id)) continue;
+    if (!isUsefulEvent(info.type)) continue;
 
     useful++;
 

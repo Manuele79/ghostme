@@ -580,7 +580,7 @@ export async function buildReasoningSnapshot({
 
   if (canAccessHomeAssistant(userId)) {
     try {
-      homeContext = await buildHomeReasoning();
+      homeContext = await buildHomeReasoning(userId);
     } catch (err) {
       console.log("REASONING HOME ERROR:", err);
       homeContext = "";

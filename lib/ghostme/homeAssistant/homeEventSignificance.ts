@@ -5,6 +5,8 @@ export type HomeEventSignificanceInput = {
   newState: string;
   eventType: string;
   lastOccurredAt?: string | null;
+  lastEventTypeOccurredAt?: string | null;
+  lastRoomEventOccurredAt?: string | null;
 };
 
 export type HomeEventSignificance = {
@@ -14,7 +16,8 @@ export type HomeEventSignificance = {
   priority: number;
 };
 
-const SAME_STATE_WINDOW_MS = 5 * 60 * 1000;
+const COOLDOWN_MS = 5 * 60 * 1000;
+const LUX_DAY_NIGHT_THRESHOLD = 50;
 
 function clean(value: any) {
   return String(value ?? "").toLowerCase().trim();
@@ -25,22 +28,13 @@ function numericState(value: any) {
   return Number.isFinite(n) ? n : null;
 }
 
-function minutesSince(value?: string | null) {
+function millisecondsSince(value?: string | null) {
   if (!value) return null;
 
   const time = new Date(value).getTime();
   if (Number.isNaN(time)) return null;
 
-  return Math.round((Date.now() - time) / 60000);
-}
-
-function isMainIndoorTemperature(entityId: string) {
-  const id = entityId.toLowerCase();
-
-  return (
-    id === "sensor.camera_temperatura_ambiente" ||
-    id === "climate.camera"
-  );
+  return Date.now() - time;
 }
 
 function result(
@@ -58,14 +52,9 @@ function result(
 }
 
 function classifyTemperature({
-  entityId,
   oldState,
   newState,
 }: HomeEventSignificanceInput) {
-  if (!isMainIndoorTemperature(entityId)) {
-    return result(false, "temperature_not_primary", "environment", 1);
-  }
-
   const oldNum = numericState(oldState);
   const newNum = numericState(newState);
 
@@ -73,11 +62,11 @@ function classifyTemperature({
     return result(false, "temperature_non_numeric", "environment", 1);
   }
 
-  if (newNum >= 28) {
+  if (newNum >= 28 && (oldNum === null || oldNum < 28)) {
     return result(true, "temperature_hot_threshold", "environment", 8);
   }
 
-  if (newNum <= 16) {
+  if (newNum <= 16 && (oldNum === null || oldNum > 16)) {
     return result(true, "temperature_cold_threshold", "environment", 8);
   }
 
@@ -86,10 +75,6 @@ function classifyTemperature({
   }
 
   const delta = Math.abs(newNum - oldNum);
-
-  if (delta >= 2) {
-    return result(true, "temperature_delta_over_2", "environment", 7);
-  }
 
   if (delta < 1) {
     return result(false, "temperature_delta_under_1", "environment", 1);
@@ -109,15 +94,55 @@ function classifyHumidity({
     return result(false, "humidity_non_numeric", "environment", 1);
   }
 
-  if (newNum >= 70) {
+  if (newNum >= 70 && (oldNum === null || oldNum < 70)) {
     return result(true, "humidity_high_threshold", "environment", 7);
   }
 
-  if (oldNum !== null && Math.abs(newNum - oldNum) >= 10) {
-    return result(true, "humidity_delta_over_10", "environment", 6);
+  if (newNum <= 30 && (oldNum === null || oldNum > 30)) {
+    return result(true, "humidity_low_threshold", "environment", 7);
+  }
+
+  if (oldNum !== null && Math.abs(newNum - oldNum) >= 5) {
+    return result(true, "humidity_delta_over_5", "environment", 6);
   }
 
   return result(false, "humidity_delta_small", "environment", 1);
+}
+
+function classifyLux(input: HomeEventSignificanceInput) {
+  const oldNum = numericState(input.oldState);
+  const newNum = numericState(input.newState);
+  if (oldNum === null || newNum === null) {
+    return result(false, "lux_non_numeric", "environment", 1);
+  }
+  const crossed =
+    (oldNum < LUX_DAY_NIGHT_THRESHOLD && newNum >= LUX_DAY_NIGHT_THRESHOLD) ||
+    (oldNum >= LUX_DAY_NIGHT_THRESHOLD && newNum < LUX_DAY_NIGHT_THRESHOLD);
+  return crossed
+    ? result(true, "lux_day_night_threshold_crossed", "environment", 4)
+    : result(false, "lux_without_threshold_crossing", "environment", 1);
+}
+
+function homePresenceState(value: unknown) {
+  const state = clean(value);
+  return state === "home" || state === "casa" || state.includes("windtre");
+}
+
+function classifyPersonOrPhone(input: HomeEventSignificanceInput) {
+  if (
+    clean(input.entityType) === "phone" &&
+    !/wi[_-]?fi|wifi.*connection/i.test(input.entityId)
+  ) {
+    return result(false, "phone_non_presence_sensor", "presence", 0);
+  }
+  const wasHome = homePresenceState(input.oldState);
+  const isHome = homePresenceState(input.newState);
+  if (wasHome === isHome) {
+    return result(false, "presence_without_home_transition", "presence", 1);
+  }
+  return isHome
+    ? result(true, "person_arrived_home", "presence", 9)
+    : result(true, "person_left_home", "presence", 9);
 }
 
 function classifyMotionOrPresence({
@@ -187,11 +212,15 @@ export function classifyHomeEventSignificance(
     return result(false, "invalid_state", "invalid", 0);
   }
 
-  if (oldClean === newClean) {
-    const ageMinutes = minutesSince(input.lastOccurredAt);
+  const repeatedAutomationTrigger =
+    entityType === "automation" &&
+    input.eventType === "automation_on" &&
+    newClean === "triggered";
+  if (oldClean === newClean && !repeatedAutomationTrigger) {
     return result(
       false,
-      ageMinutes !== null && ageMinutes <= SAME_STATE_WINDOW_MS / 60000
+      millisecondsSince(input.lastOccurredAt) !== null &&
+        millisecondsSince(input.lastOccurredAt)! <= COOLDOWN_MS
         ? "same_state_recent"
         : "same_state",
       "duplicate",
@@ -199,34 +228,62 @@ export function classifyHomeEventSignificance(
     );
   }
 
-  if (entityType === "temperature") return classifyTemperature(input);
-  if (entityType === "humidity") return classifyHumidity(input);
-
-  if (["pressure", "co2", "noise"].includes(entityType)) {
-    return result(false, `${entityType}_raw_environment_ignored`, "environment", 1);
+  let decision: HomeEventSignificance;
+  if (entityType === "temperature") decision = classifyTemperature(input);
+  else if (entityType === "humidity") decision = classifyHumidity(input);
+  else if (["pressure", "co2", "noise"].includes(entityType)) {
+    decision = result(false, `${entityType}_raw_environment_ignored`, "environment", 1);
+  } else if (entityType === "lux") decision = classifyLux(input);
+  else if (["motion", "presence"].includes(entityType)) {
+    decision = classifyMotionOrPresence({ ...input, entityType });
+  } else if (entityType === "tv") decision = classifyMedia(input);
+  else if (["light", "switch"].includes(entityType)) {
+    decision = classifyLightOrSwitch({ ...input, entityType });
+  } else if (["person", "phone"].includes(entityType)) {
+    decision = classifyPersonOrPhone(input);
+  } else if (entityType === "contact") {
+    decision = result(
+      true,
+      newClean === "on" || newClean === "open" ? "contact_opened" : "contact_closed",
+      "security",
+      8
+    );
+  } else if (["climate", "fan", "appliance", "automation"].includes(entityType)) {
+    decision = result(true, `${entityType}_state_changed`, "system", 4);
+  } else {
+    decision = result(false, "unsupported_entity_type", "other", 0);
   }
 
-  if (entityType === "lux") {
-    return result(false, "lux_micro_change_ignored", "environment", 1);
+  const cooldownEligible = [
+    "temperature",
+    "humidity",
+    "lux",
+    "motion",
+    "presence",
+    ...(repeatedAutomationTrigger ? ["automation"] : []),
+  ].includes(entityType);
+  const criticalEnvironmentThreshold =
+    ["temperature", "humidity"].includes(entityType) && decision.priority >= 7;
+  const meaningfulPresenceClear =
+    ["motion", "presence"].includes(entityType) && newClean === "off";
+  if (
+    decision.significant &&
+    cooldownEligible &&
+    !criticalEnvironmentThreshold &&
+    !meaningfulPresenceClear
+  ) {
+    const cooldowns = [
+      [input.lastOccurredAt, "same_device_cooldown"],
+      [input.lastEventTypeOccurredAt, "same_event_type_cooldown"],
+      [input.lastRoomEventOccurredAt, "same_room_cooldown"],
+    ] as const;
+    for (const [timestamp, reason] of cooldowns) {
+      const age = millisecondsSince(timestamp);
+      if (age !== null && age >= 0 && age < COOLDOWN_MS) {
+        return result(false, reason, "cooldown", 0);
+      }
+    }
   }
 
-  if (["motion", "presence"].includes(entityType)) {
-    return classifyMotionOrPresence({ ...input, entityType });
-  }
-
-  if (entityType === "tv") return classifyMedia(input);
-
-  if (["light", "switch"].includes(entityType)) {
-    return classifyLightOrSwitch({ ...input, entityType });
-  }
-
-  if (["person", "phone"].includes(entityType)) {
-    return result(true, `${entityType}_state_changed`, "presence", 8);
-  }
-
-  if (["weather", "sun", "climate", "fan", "appliance", "automation"].includes(entityType)) {
-    return result(true, `${entityType}_state_changed`, "system", 4);
-  }
-
-  return result(false, "unsupported_entity_type", "other", 0);
+  return decision;
 }

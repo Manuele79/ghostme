@@ -29,6 +29,7 @@ export type EntityInfo = {
     | "fan"
     | "appliance"
     | "automation"
+    | "contact"
     | "other";
   person?: "manu" | "vale";
 };
@@ -184,5 +185,15 @@ const ENTITY_MAP: Record<string, EntityInfo> = {
 };
 
 export function getEntityInfo(entityId: string): EntityInfo {
-  return ENTITY_MAP[entityId] || { type: "other" };
+  const mapped = ENTITY_MAP[entityId];
+  if (mapped) return mapped;
+
+  const id = String(entityId || "").toLowerCase();
+  if (
+    id.startsWith("binary_sensor.") &&
+    ["porta", "finestra", "door", "window", "contact"].some((term) => id.includes(term))
+  ) {
+    return { type: "contact" };
+  }
+  return { type: "other" };
 }
