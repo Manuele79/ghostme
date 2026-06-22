@@ -2,7 +2,10 @@ import {
   buildDailyProactiveLogicalKey,
   upsertProactiveMessage,
 } from "@/lib/ghostme/proactive/proactiveMessageService";
-import { pickBestProactiveCandidate } from "@/lib/ghostme/proactive/proactiveCandidateRanker";
+import {
+  buildProactiveCandidateLogicalKey,
+  pickBestProactiveCandidate,
+} from "@/lib/ghostme/proactive/proactiveCandidateRanker";
 import { runProactiveMaintenanceFlow } from "@/lib/ghostme/proactive/proactiveMaintenanceFlow";
 import { buildProactiveCandidatesForUser } from "@/lib/ghostme/proactive/proactiveCandidateBuilder";
 import { buildDailyBriefingMessage } from "@/lib/ghostme/proactive/dailyBriefingBuilder";
@@ -57,6 +60,7 @@ export async function runProactiveFlowForUser(user: any): Promise<{
       message: bestCandidate.message,
       category: bestCandidate.category,
       priority: bestCandidate.priority,
+      logicalKey: buildProactiveCandidateLogicalKey(bestCandidate),
     });
 
     created++;

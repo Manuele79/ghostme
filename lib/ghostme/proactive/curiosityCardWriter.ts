@@ -52,13 +52,17 @@ export function selectImportantCuriosities(
   return [...preferredCuriosities, ...remainingCuriosities];
 }
 
-async function writeCuriosityCard(userId: string, curiosity: CuriosityItem) {
+async function writeCuriosityCard(
+  userId: string,
+  curiosity: CuriosityItem,
+  priority = curiosity.priority
+) {
   await upsertProactiveMessage({
     userId,
     title: curiosity.title,
     message: curiosity.description,
     category: "curiosity",
-    priority: curiosity.priority,
+    priority,
     logicalKey: buildCuriosityCardLogicalKey(curiosity),
   });
 }
@@ -131,9 +135,18 @@ export async function writeCuriositySnapshotCards({
     0,
     remainingBudget
   );
+  const extraQuestionKeys = new Set(
+    extraQuestions.map(buildCuriosityCardLogicalKey)
+  );
 
   for (const curiosity of curiosities) {
-    await writeCuriosityCard(userId, curiosity);
+    await writeCuriosityCard(
+      userId,
+      curiosity,
+      extraQuestionKeys.has(buildCuriosityCardLogicalKey(curiosity))
+        ? Math.min(curiosity.priority, 6)
+        : curiosity.priority
+    );
   }
 
   return { processed: curiosities.length };

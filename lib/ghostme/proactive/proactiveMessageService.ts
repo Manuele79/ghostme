@@ -3,7 +3,11 @@ import {
   normalizeProactiveText,
   proactiveMessageIdentity,
 } from "@/lib/ghostme/proactive/proactiveMessageDedupe";
-import { ALL_PROACTIVE_STATUSES } from "@/lib/ghostme/proactive/proactiveCardLifecycle";
+import {
+  ALL_PROACTIVE_STATUSES,
+  HIDDEN_PROACTIVE_STATUSES,
+  VISIBLE_PROACTIVE_STATUSES,
+} from "@/lib/ghostme/proactive/proactiveCardLifecycle";
 
 const ONE_PER_DAY_CATEGORIES = new Set(["agenda", "daily_briefing"]);
 function startOfTodayIso() {
@@ -90,6 +94,8 @@ export async function upsertProactiveMessage({
   }
 
   if (existing?.id) {
+    if (HIDDEN_PROACTIVE_STATUSES.includes(existing.status)) return;
+
     const contentChanged =
       normalizeProactiveText(existing.title) !== normalizeProactiveText(title) ||
       normalizeProactiveText(existing.message) !== normalizeProactiveText(message);
@@ -125,6 +131,26 @@ export async function upsertProactiveMessage({
     }
 
     return;
+  }
+
+  const priorityLimit =
+    priority >= 9
+      ? { minimum: 9, maximum: 10, limit: 1 }
+      : priority >= 7
+        ? { minimum: 7, maximum: 8, limit: 2 }
+        : priority >= 4
+          ? { minimum: 4, maximum: 6, limit: 3 }
+          : null;
+  if (priorityLimit) {
+    const { count, error: priorityError } = await supabaseAdmin
+      .from("ghost_proactive_messages")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .in("status", VISIBLE_PROACTIVE_STATUSES)
+      .gte("priority", priorityLimit.minimum)
+      .lte("priority", priorityLimit.maximum);
+    if (priorityError) throw priorityError;
+    if ((count || 0) >= priorityLimit.limit) return;
   }
 
   if (category === "curiosity") {

@@ -4,6 +4,8 @@ import {
 import { upsertProactiveMessage } from "@/lib/ghostme/proactive/proactiveMessageService";
 import type { TrueProactiveCandidate } from "@/lib/ghostme/proactive/trueProactiveSnapshot";
 import { buildCuriosityCardLogicalKey } from "@/lib/ghostme/proactive/curiosityCardWriter";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { VISIBLE_PROACTIVE_STATUSES } from "@/lib/ghostme/proactive/proactiveCardLifecycle";
 
 export type TrueProactiveCardCategory =
   | "observation"
@@ -12,19 +14,7 @@ export type TrueProactiveCardCategory =
   | "social"
   | "suggestion";
 
-const MAX_TRUE_PROACTIVE_CARDS = 3;
-
-const CATEGORY_BY_TYPE: Record<
-  TrueProactiveCandidate["type"],
-  TrueProactiveCardCategory
-> = {
-  home_safety: "observation",
-  imminent_calendar: "suggestion",
-  important_open_loop: "suggestion",
-  project_focus: "project",
-  high_confidence_curiosity: "curiosity",
-  relationship_attention: "social",
-};
+const MAX_TRUE_PROACTIVE_CARDS = 6;
 
 export function buildTrueProactiveLogicalKey(
   candidate: TrueProactiveCandidate
@@ -43,13 +33,20 @@ export function buildTrueProactiveLogicalKey(
     .replace(/\s+/g, "_")
     .slice(0, 120);
 
-  return `true_proactive_${candidate.type}_${stableTitle || "untitled"}`;
+  return `true_proactive_${candidate.kind}_${candidate.type}_${stableTitle || "untitled"}`;
 }
 
 export function mapTrueProactiveCategory(
   candidate: TrueProactiveCandidate
 ): TrueProactiveCardCategory {
-  return CATEGORY_BY_TYPE[candidate.type];
+  if (candidate.kind === "curiosity") return "curiosity";
+  if (candidate.kind === "memory_link") return "project";
+  if (candidate.kind === "insight" || candidate.kind === "pattern") {
+    return "observation";
+  }
+  if (candidate.type === "home_safety") return "observation";
+  if (candidate.type === "relationship_attention") return "social";
+  return "suggestion";
 }
 
 export async function writeTrueProactiveCards({
@@ -59,7 +56,29 @@ export async function writeTrueProactiveCards({
   userId: string;
   selected: TrueProactiveCandidate[];
 }) {
-  const candidates = (selected || []).slice(0, MAX_TRUE_PROACTIVE_CARDS);
+  const { data: activeCards, error } = await supabaseAdmin
+    .from("ghost_proactive_messages")
+    .select("priority")
+    .eq("user_id", userId)
+    .in("status", VISIBLE_PROACTIVE_STATUSES);
+  if (error) throw error;
+
+  const bandFor = (priority: number) =>
+    priority >= 9 ? "critical" : priority >= 7 ? "high" : priority >= 4 ? "normal" : "low";
+  const limits = { critical: 1, high: 2, normal: 3, low: Infinity };
+  const counts = { critical: 0, high: 0, normal: 0, low: 0 };
+  for (const card of activeCards || []) {
+    counts[bandFor(Number(card.priority || 0))] += 1;
+  }
+
+  const candidates: TrueProactiveCandidate[] = [];
+  for (const proactiveCandidate of selected || []) {
+    const band = proactiveCandidate.priorityBand;
+    if (counts[band] >= limits[band]) continue;
+    counts[band] += 1;
+    candidates.push(proactiveCandidate);
+    if (candidates.length >= MAX_TRUE_PROACTIVE_CARDS) break;
+  }
 
   for (const candidate of candidates) {
     await upsertProactiveMessage({

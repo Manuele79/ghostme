@@ -5,6 +5,14 @@ import { BrainData, ChatMessage, CalendarEvent } from "./types";
 import { useEffect, useMemo, useState } from "react";
 import { getAuthenticatedJsonHeaders } from "@/lib/ghostme/auth/clientAuthHeaders";
 
+function proactivePriorityLabel(value: unknown) {
+  const priority = Number(value || 0);
+  if (priority >= 9) return "critical";
+  if (priority >= 7) return "high";
+  if (priority >= 4) return "normal";
+  return "low";
+}
+
 
 
 export function MemoryDrawer({
@@ -653,7 +661,7 @@ async function updateActionStatus(
                 </p>
 
                 <p className="mt-3 text-xs text-zinc-500">
-                  {item.category || "observation"} · priorità {item.priority || 1}
+                  {item.category || "observation"} · priorità {proactivePriorityLabel(item.priority)}
                 </p>
                 <div className="mt-3 flex gap-2">
                   {item.category === "reminder" ? (

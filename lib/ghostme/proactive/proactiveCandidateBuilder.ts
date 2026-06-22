@@ -11,7 +11,6 @@ import { decideProactiveMessage } from "@/lib/ghostme/proactive/proactiveDecisio
 import { generateObservationInsight } from "@/lib/ghostme/observation/observationInsightEngine";
 import { generatePatternInsight } from "@/lib/ghostme/patterns/patternInsightEngine";
 import { applyPatternDecay } from "@/lib/ghostme/patterns/patternDecay";
-import { generateCuriosityMessage } from "@/lib/ghostme/curiosity/curiosityEngine";
 import { generateButlerMessage } from "@/lib/ghostme/butler/butlerEngine";
 
 function formatMentalState(mentalState: any) {
@@ -200,7 +199,8 @@ export async function buildProactiveCandidatesForUser(
 
   const observationInsight = await generateObservationInsight(userId);
   const patternInsight = await generatePatternInsight(userId);
-  const curiosityMessage = await generateCuriosityMessage(userId);
+  // Curiosity cards come exclusively from the structured snapshot writer.
+  const curiosityMessage: string | null = null;
 
   await applyPatternDecay(userId);
 
