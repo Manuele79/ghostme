@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getLocationCurrentStateFlow } from "@/lib/ghostme/location/locationCurrentStateFlow";
 import { getAuthenticatedUserId, UserContextAuthError } from "@/lib/ghostme/auth/serverAuth";
+import { toPublicLocationState } from "@/lib/ghostme/location/locationStateFreshness";
 
 export async function POST(req: Request) {
   try {
@@ -18,8 +19,9 @@ export async function POST(req: Request) {
       success: true,
       locationStatus: freshness.status,
       observedAt: freshness.observedAt,
-      location: freshness.currentLocation,
-      lastKnownLocation: freshness.lastKnownLocation,
+      expiresAt: freshness.expiresAt,
+      location: toPublicLocationState(freshness.currentLocation),
+      lastKnownLocation: toPublicLocationState(freshness.lastKnownLocation),
     });
   } catch (err) {
     if (err instanceof UserContextAuthError) return NextResponse.json({ error: err.message }, { status: err.status });

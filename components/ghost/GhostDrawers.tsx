@@ -1002,13 +1002,16 @@ async function saveLocationCandidate() {
 
             navigator.geolocation.getCurrentPosition(
               async (position) => {
-                const res = await fetch("/api/location/current-place", {
+                const res = await fetch("/api/location/update-current", {
                   method: "POST",
                   headers: await getAuthenticatedJsonHeaders(),
                   body: JSON.stringify({
                     userId: currentUserId,
                     latitude: position.coords.latitude,
                     longitude: position.coords.longitude,
+                    accuracy: position.coords.accuracy,
+                    confidence: position.coords.accuracy <= 50 ? 80 : 60,
+                    source: "browser_gps",
                   }),
                 });
 

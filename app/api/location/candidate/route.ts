@@ -3,6 +3,7 @@ import {
   completeLocationCandidate,
   getLocationCandidateDetails,
 } from "@/lib/ghostme/location/locationLearningFlow";
+import { toPublicSignificantPlace } from "@/lib/ghostme/location/placeService";
 import {
   getAuthenticatedUserId,
   UserContextAuthError,
@@ -38,7 +39,7 @@ export async function PATCH(req: Request) {
       label: String(body.label || ""),
       category: String(body.category || ""),
     });
-    return NextResponse.json({ success: true, place });
+    return NextResponse.json({ success: true, place: toPublicSignificantPlace(place) });
   } catch (error) {
     if (error instanceof UserContextAuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });

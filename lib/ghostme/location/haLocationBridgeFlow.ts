@@ -4,6 +4,7 @@ import {
   canAccessHomeAssistant,
   getHomeAssistantPersonForUser,
 } from "@/lib/ghostme/homeAssistant/homeAssistantAccess";
+import { classifyLocationState } from "@/lib/ghostme/location/locationStateFreshness";
 
 type HAState = {
   entity_id: string;
@@ -91,6 +92,23 @@ export async function bridgeHomeAssistantLocationFlow({
   const reason = personSaysHome
     ? `person.${person}_home`
     : `${person}_wifi_home`;
+
+  const { data: currentState } = await supabaseAdmin
+    .from("user_location_state")
+    .select("source, current_place_label, place_category, updated_at, last_changed_at")
+    .eq("user_id", userId)
+    .maybeSingle();
+  const currentSource = clean(currentState?.source);
+  if (
+    ["phone", "phone_gps", "browser", "browser_gps"].includes(currentSource) &&
+    classifyLocationState(currentState).status === "current"
+  ) {
+    return {
+      updated: false,
+      reason: "recent_gps_has_priority",
+      source: "home_assistant",
+    };
+  }
 
   const { error } = await supabaseAdmin
     .from("user_location_state")

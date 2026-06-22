@@ -14,6 +14,12 @@ export type SaveSignificantPlaceInput = {
   source?: string;
 };
 
+export function toPublicSignificantPlace(place: any) {
+  if (!place) return null;
+  const { latitude: _latitude, longitude: _longitude, ...safe } = place;
+  return safe;
+}
+
 function clampConfidence(value?: number) {
   return Math.min(Math.max(Number(value || 50), 0), 100);
 }
@@ -98,7 +104,7 @@ export async function getSignificantPlaces(userId: string) {
   return data || [];
 }
 
-async function markPlaceSeen(place: any) {
+export async function markSignificantPlaceSeen(place: any) {
   if (!place?.id) return;
 
   const { error } = await supabaseAdmin
@@ -119,10 +125,12 @@ export async function detectCurrentPlace({
   userId,
   latitude,
   longitude,
+  markSeen = true,
 }: {
   userId: string;
   latitude: number;
   longitude: number;
+  markSeen?: boolean;
 }) {
   const places = await getSignificantPlaces(userId);
 
@@ -144,7 +152,7 @@ export async function detectCurrentPlace({
   }
 
   if (bestMatch) {
-    await markPlaceSeen(bestMatch);
+    if (markSeen) await markSignificantPlaceSeen(bestMatch);
 
     return {
       ...bestMatch,

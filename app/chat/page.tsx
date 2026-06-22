@@ -31,6 +31,24 @@ import {
   HistoryDrawer,
 } from "@/components/ghost/GhostDrawers";
 
+const GPS_HEARTBEAT_MS = 15 * 60 * 1000;
+const GPS_SIGNIFICANT_MOVEMENT_METERS = 100;
+
+function gpsDistanceMeters(
+  first: { latitude: number; longitude: number },
+  second: { latitude: number; longitude: number }
+) {
+  const radius = 6371000;
+  const dLat = ((second.latitude - first.latitude) * Math.PI) / 180;
+  const dLon = ((second.longitude - first.longitude) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((first.latitude * Math.PI) / 180) *
+      Math.cos((second.latitude * Math.PI) / 180) *
+      Math.sin(dLon / 2) ** 2;
+  return radius * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+}
+
 export default function ChatPage() {
   const router = useRouter();
 
@@ -264,6 +282,12 @@ export default function ChatPage() {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+    let gpsWatchId: number | null = null;
+    let lastGpsSentAt = 0;
+    let lastGpsPosition: { latitude: number; longitude: number } | null = null;
+    let gpsUpdateInFlight = false;
+
     async function boot() {
       const {
         data: { user },
@@ -278,38 +302,46 @@ export default function ChatPage() {
 
       setUserEmail(user.email || "");
 
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
+      if (!cancelled && navigator.geolocation) {
+        gpsWatchId = navigator.geolocation.watchPosition(
           async (position) => {
+            const coordinates = {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+            };
+            const movedMeters = lastGpsPosition
+              ? gpsDistanceMeters(lastGpsPosition, coordinates)
+              : Infinity;
+            if (
+              gpsUpdateInFlight ||
+              Date.now() - lastGpsSentAt < GPS_HEARTBEAT_MS &&
+              movedMeters < GPS_SIGNIFICANT_MOVEMENT_METERS
+            ) {
+              return;
+            }
+            gpsUpdateInFlight = true;
             try {
-              const placeRes = await fetch("/api/location/current-place", {
+              const response = await fetch("/api/location/update-current", {
                 method: "POST",
                 headers: await getAuthenticatedJsonHeaders(),
                 body: JSON.stringify({
                   userId: user.id,
-                  latitude: position.coords.latitude,
-                  longitude: position.coords.longitude,
-                }),
-              });
-
-              const placeData = await placeRes.json();
-
-              await fetch("/api/location/update-current", {
-                method: "POST",
-                headers: await getAuthenticatedJsonHeaders(),
-                body: JSON.stringify({
-                  userId: user.id,
-                  placeId: placeData.place?.id || null,
-                  placeLabel: placeData.place?.label || null,
-                  latitude: position.coords.latitude,
-                  longitude: position.coords.longitude,
+                  latitude: coordinates.latitude,
+                  longitude: coordinates.longitude,
                   accuracy: position.coords.accuracy,
                   confidence: position.coords.accuracy <= 50 ? 80 : 60,
-                  source: "browser",
+                  source: "browser_gps",
                 }),
               });
+              if (!response.ok) {
+                throw new Error(`GPS update HTTP ${response.status}`);
+              }
+              lastGpsSentAt = Date.now();
+              lastGpsPosition = coordinates;
             } catch (err) {
               console.log("AUTO LOCATION ERROR:", err);
+            } finally {
+              gpsUpdateInFlight = false;
             }
           },
           (err) => {
@@ -318,6 +350,7 @@ export default function ChatPage() {
           {
             enableHighAccuracy: true,
             timeout: 10000,
+            maximumAge: 60_000,
           }
         );
       }   
@@ -402,6 +435,12 @@ export default function ChatPage() {
     }
 
     boot();
+    return () => {
+      cancelled = true;
+      if (gpsWatchId !== null && navigator.geolocation) {
+        navigator.geolocation.clearWatch(gpsWatchId);
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 

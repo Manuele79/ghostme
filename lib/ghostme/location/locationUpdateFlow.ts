@@ -5,34 +5,82 @@ import {
 } from "@/lib/ghostme/observation/observationEngine";
 import { runProactiveTrigger } from "@/lib/ghostme/proactive/proactiveTrigger";
 import { writeLocationCandidateCard } from "@/lib/ghostme/location/locationLearningFlow";
+import {
+  detectCurrentPlace,
+  distanceMeters,
+  markSignificantPlaceSeen,
+} from "@/lib/ghostme/location/placeService";
+
+function normalizeGpsSource(source: unknown) {
+  const value = String(source || "").toLowerCase();
+  return value.includes("phone") || value.includes("mobile")
+    ? "phone_gps"
+    : "browser_gps";
+}
+
+function validCoordinate(value: unknown, minimum: number, maximum: number) {
+  const number = Number(value);
+  return Number.isFinite(number) && number >= minimum && number <= maximum
+    ? number
+    : null;
+}
 
 export async function updateCurrentLocationFlow(body: any) {
+  const latitude = validCoordinate(body.latitude, -90, 90);
+  const longitude = validCoordinate(body.longitude, -180, 180);
+  if (latitude === null || longitude === null) {
+    throw new Error("Coordinate GPS non valide");
+  }
+
   const { data: previousState } = await supabaseAdmin
     .from("user_location_state")
     .select("*")
     .eq("user_id", body.userId)
     .maybeSingle();
 
+  const matchedPlace = await detectCurrentPlace({
+    userId: body.userId,
+    latitude,
+    longitude,
+    markSeen: false,
+  });
+  const source = normalizeGpsSource(body.source);
   const previousPlace = previousState?.current_place_label || null;
-  const nextPlace = body.placeLabel || null;
+  const nextPlace = matchedPlace?.label || null;
+  const movedWhileUnknown =
+    !previousPlace &&
+    !nextPlace &&
+    Number.isFinite(Number(previousState?.latitude)) &&
+    Number.isFinite(Number(previousState?.longitude)) &&
+    distanceMeters(
+      Number(previousState.latitude),
+      Number(previousState.longitude),
+      latitude,
+      longitude
+    ) > 120;
+  const placeChanged =
+    previousState?.current_place_id !== (matchedPlace?.id || null) ||
+    previousPlace !== nextPlace ||
+    movedWhileUnknown;
+  const now = new Date().toISOString();
 
   const { data, error } = await supabaseAdmin
     .from("user_location_state")
     .upsert(
       {
         user_id: body.userId,
-        current_place_id: body.placeId || null,
-        current_place_label: body.placeLabel || null,
-        place_category: body.placeCategory || body.category || null,
-        address: body.address || null,
-        latitude: body.latitude ?? null,
-        longitude: body.longitude ?? null,
+        current_place_id: matchedPlace?.id || null,
+        current_place_label: nextPlace,
+        place_category: matchedPlace?.category || "unknown_location",
+        address: matchedPlace?.address || null,
+        latitude,
+        longitude,
         accuracy: body.accuracy ?? null,
         confidence: body.confidence ?? 50,
-        source: body.source || "browser",
+        source,
         last_changed_at:
-          previousPlace !== nextPlace ? new Date().toISOString() : previousState?.last_changed_at || new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+          placeChanged ? now : previousState?.last_changed_at || now,
+        updated_at: now,
       },
       { onConflict: "user_id" }
     )
@@ -44,7 +92,11 @@ export async function updateCurrentLocationFlow(body: any) {
     throw new Error("Luogo attuale non salvato");
   }
 
-  if (previousPlace !== nextPlace) {
+  if (matchedPlace && placeChanged) {
+    await markSignificantPlaceSeen(matchedPlace);
+  }
+
+  if (placeChanged) {
     if (previousPlace) {
       await recordObservation({
         userId: body.userId,
@@ -54,7 +106,7 @@ export async function updateCurrentLocationFlow(body: any) {
             : previousPlace.toLowerCase() === "lavoro"
               ? "work_left"
               : "location_exit",
-        source: body.source || "browser",
+        source: source === "phone_gps" ? "phone" : "browser",
         placeLabel: previousPlace,
         placeId: previousState?.current_place_id || null,
         value: {
@@ -62,8 +114,8 @@ export async function updateCurrentLocationFlow(body: any) {
           to: nextPlace,
         },
         context: {
-          latitude: body.latitude ?? null,
-          longitude: body.longitude ?? null,
+          latitude,
+          longitude,
           accuracy: body.accuracy ?? null,
         },
       });
@@ -78,16 +130,16 @@ export async function updateCurrentLocationFlow(body: any) {
             : nextPlace.toLowerCase() === "lavoro"
               ? "work_arrived"
               : "location_enter",
-        source: body.source || "browser",
+        source: source === "phone_gps" ? "phone" : "browser",
         placeLabel: nextPlace,
-        placeId: body.placeId || null,
+        placeId: matchedPlace?.id || null,
         value: {
           from: previousPlace,
           to: nextPlace,
         },
         context: {
-          latitude: body.latitude ?? null,
-          longitude: body.longitude ?? null,
+          latitude,
+          longitude,
           accuracy: body.accuracy ?? null,
         },
       });
@@ -97,7 +149,7 @@ export async function updateCurrentLocationFlow(body: any) {
       await recordObservation({
         userId: body.userId,
         eventType: "place_unknown_detected",
-        source: body.source || "browser",
+        source: source === "phone_gps" ? "phone" : "browser",
         placeLabel: null,
         placeId: null,
         value: {
@@ -105,16 +157,15 @@ export async function updateCurrentLocationFlow(body: any) {
           to: null,
         },
         context: {
-          latitude: body.latitude ?? null,
-          longitude: body.longitude ?? null,
+          latitude,
+          longitude,
           accuracy: body.accuracy ?? null,
         },
       });
     }
 
-    await analyzeLocationPatterns(body.userId);
-
     if (nextPlace) {
+      await analyzeLocationPatterns(body.userId);
       await runProactiveTrigger({
         userId: body.userId,
         trigger: "location_changed",
@@ -128,17 +179,17 @@ export async function updateCurrentLocationFlow(body: any) {
     body.latitude != null &&
     body.longitude != null
   ) {
-    if (previousPlace === nextPlace) {
+    if (!placeChanged) {
       await recordObservation({
         userId: body.userId,
         eventType: "place_unknown_detected",
-        source: body.source || "browser",
+        source: source === "phone_gps" ? "phone" : "browser",
         placeLabel: null,
         placeId: null,
         value: { from: previousPlace, to: null },
         context: {
-          latitude: body.latitude,
-          longitude: body.longitude,
+          latitude,
+          longitude,
           accuracy: body.accuracy ?? null,
         },
       });
@@ -152,8 +203,9 @@ export async function updateCurrentLocationFlow(body: any) {
 
   return {
     location: data,
-    changed: previousPlace !== nextPlace,
+    changed: placeChanged,
     previousPlace,
     nextPlace,
+    matchedPlace,
   };
 }

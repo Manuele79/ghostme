@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { updateCurrentLocationFlow } from "@/lib/ghostme/location/locationUpdateFlow";
 import { getAuthenticatedUserId, UserContextAuthError } from "@/lib/ghostme/auth/serverAuth";
+import { toPublicLocationState } from "@/lib/ghostme/location/locationStateFreshness";
+import { toPublicSignificantPlace } from "@/lib/ghostme/location/placeService";
 
 export async function POST(req: Request) {
   try {
@@ -11,13 +13,17 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
-      location: result.location,
+      location: toPublicLocationState(result.location),
+      place: toPublicSignificantPlace(result.matchedPlace),
     });
   } catch (err) {
     if (err instanceof UserContextAuthError) return NextResponse.json({ error: err.message }, { status: err.status });
     console.log("UPDATE CURRENT LOCATION API ERROR:", err);
     if (err instanceof Error && err.message === "Luogo attuale non salvato") {
       return NextResponse.json({ error: "Luogo attuale non salvato" }, { status: 500 });
+    }
+    if (err instanceof Error && err.message === "Coordinate GPS non valide") {
+      return NextResponse.json({ error: err.message }, { status: 400 });
     }
 
     return NextResponse.json({ error: "Errore posizione attuale" }, { status: 500 });

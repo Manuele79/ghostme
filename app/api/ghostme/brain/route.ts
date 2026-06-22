@@ -6,6 +6,7 @@ import {
 } from "@/lib/ghostme/auth/serverAuth";
 import { loadVisibleProactiveMessages } from "@/lib/ghostme/proactive/visibleProactiveMessages";
 import { buildDecisionSnapshot } from "@/lib/ghostme/context/decisionSnapshot";
+import { toPublicLocationState } from "@/lib/ghostme/location/locationStateFreshness";
 
 export async function POST(req: Request) {
   try {
@@ -16,6 +17,14 @@ export async function POST(req: Request) {
     const decisionSnapshot = buildDecisionSnapshot(snapshot);
 
     const proactiveMessages = await loadVisibleProactiveMessages(userId);
+    const publicSnapshot = {
+      ...snapshot,
+      location: {
+        ...snapshot.location,
+        current: toPublicLocationState(snapshot.location.current),
+        lastKnown: toPublicLocationState(snapshot.location.lastKnown),
+      },
+    };
     const excludedGoalStatuses = new Set(["completed", "archived", "cancelled"]);
     const visibleGoals = (snapshot.goals?.activeGoals || []).filter(
       (goal) =>
@@ -23,7 +32,7 @@ export async function POST(req: Request) {
     );
 
     return NextResponse.json({
-      snapshot,
+      snapshot: publicSnapshot,
       profile: snapshot.profile || null,
       traits: null,
       memories: snapshot.memory.activeMemories || [],

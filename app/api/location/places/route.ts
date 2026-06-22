@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSignificantPlaces } from "@/lib/ghostme/location/placeService";
+import { getSignificantPlaces, toPublicSignificantPlace } from "@/lib/ghostme/location/placeService";
 import { getAuthenticatedUserId, UserContextAuthError } from "@/lib/ghostme/auth/serverAuth";
 
 export async function POST(req: Request) {
@@ -11,7 +11,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
-      places,
+      places: places.map(toPublicSignificantPlace),
     });
   } catch (err) {
     if (err instanceof UserContextAuthError) return NextResponse.json({ error: err.message }, { status: err.status });

@@ -1,4 +1,4 @@
-import { saveSignificantPlace } from "@/lib/ghostme/location/placeService";
+import { saveSignificantPlace, toPublicSignificantPlace } from "@/lib/ghostme/location/placeService";
 
 export async function saveLocationPlaceFlow(body: any) {
   if (
@@ -38,7 +38,7 @@ export async function saveLocationPlaceFlow(body: any) {
     status: 200,
     body: {
       success: true,
-      place: saved,
+      place: toPublicSignificantPlace(saved),
     },
   };
 }
