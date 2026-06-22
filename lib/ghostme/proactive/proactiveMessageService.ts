@@ -127,6 +127,17 @@ export async function upsertProactiveMessage({
     return;
   }
 
+  if (category === "curiosity") {
+    const { count, error: countError } = await supabaseAdmin
+      .from("ghost_proactive_messages")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .eq("category", "curiosity")
+      .gte("created_at", todayIso);
+    if (countError) throw countError;
+    if ((count || 0) >= 4) return;
+  }
+
   const insertPayload: any = {
     user_id: userId,
     title,

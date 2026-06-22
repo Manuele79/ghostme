@@ -66,7 +66,7 @@ export default function GhostChat({
         : [];
 
  function replyToProactive(message: ProactiveCard) {
-  setInput(`Sto rispondendo a "${message.title || "GhostMe"}": `);
+  setInput(`Sto rispondendo a "${message.message || message.title || "GhostMe"}": `);
   onProactiveAnswered?.(message.id);
 }      
 

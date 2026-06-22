@@ -24,7 +24,28 @@ export type CuriosityType =
   | "repeated_event_without_context"
   | "repeated_topic_without_explanation"
   | "missing_place_association"
-  | "important_goal_without_actions";
+  | "uncategorized_place"
+  | "important_goal_without_actions"
+  | "project_priority_unclear"
+  | "past_event_completion_unclear"
+  | "routine_missing_context"
+  | "preference_missing_detail";
+
+export const HIGH_VALUE_CURIOSITY_TYPES = new Set<CuriosityType>([
+  "unknown_person",
+  "important_person_missing_details",
+  "repeated_person_without_context",
+  "uncategorized_place",
+  "missing_place_association",
+  "stalled_project_reason_unknown",
+  "project_priority_unclear",
+  "project_without_goal",
+  "active_project_without_actions",
+  "important_goal_without_actions",
+  "past_event_completion_unclear",
+  "routine_missing_context",
+  "preference_missing_detail",
+]);
 
 export type CuriosityItem = {
   type: CuriosityType;
@@ -41,6 +62,8 @@ export type CuriositySnapshot = {
   weakPatterns: CuriosityItem[];
   unexplainedBehaviors: CuriosityItem[];
   confidence: number;
+  memoryCompleteness: number;
+  highValueGaps: number;
   lastUpdated: string | null;
 };
 
@@ -137,7 +160,7 @@ function personCuriosities({
         item(
           "unknown_person",
           name,
-          `${name} compare nei topic personali ma non ha ancora un profilo relazionale riconosciuto.`,
+          `${name} è un amico stretto, un conoscente, un collega o altro?`,
           "people",
           7,
           Math.min(85, 45 + Number(topic.mention_count || 0) * 8)
@@ -149,12 +172,17 @@ function personCuriosities({
   for (const relationship of socialSuggestions.sparseRelationships || []) {
     const name = titleFor(relationship);
     if (!name) continue;
+    const missingRelationship = !relationship.relationship_type;
+    const missingDescription = !relationship.description;
+    if (!missingRelationship && !missingDescription) continue;
 
     result.push(
       item(
         "sparse_relationship",
         name,
-        `${name} e presente nel grafo persone, ma il contesto relazionale recente e scarso.`,
+        missingRelationship
+          ? `${name} è un amico stretto, un conoscente, un collega o altro?`
+          : `Qual è il contesto più utile da ricordare sul tuo rapporto con ${name}?`,
         "people",
         6,
         Math.max(45, Number(relationship.importance || 0) * 8)
@@ -166,7 +194,7 @@ function personCuriosities({
         item(
           "repeated_person_without_context",
           name,
-          `${name} compare spesso, ma mancano eventi, memorie recenti o cicli aperti che ne spieghino il contesto attuale.`,
+          `Quando nomini ${name}, qual è la relazione o il contesto che dovrei ricordare?`,
           "people",
           8,
           Math.min(90, 55 + Number(relationship.mention_count || 0) * 5)
@@ -183,7 +211,9 @@ function personCuriosities({
       item(
         "important_person_missing_details",
         name,
-        `${name} e una persona importante, ma relazione o descrizione risultano incomplete.`,
+        !person.relationship_type
+          ? `${name} è un amico stretto, un conoscente, un collega o altro?`
+          : `Cosa è importante che ricordi del tuo rapporto con ${name}?`,
         "people",
         8,
         Math.max(55, Math.min(90, Number(person.importance || 0) * 9))
@@ -230,7 +260,7 @@ function projectCuriosities({
         item(
           "stalled_project_reason_unknown",
           project.name,
-          `${project.name} risulta fermo, ma i dati disponibili non spiegano chiaramente il blocco.`,
+          `${project.name} è ancora attivo, è in pausa o lo consideri concluso?`,
           "projects",
           8,
           Math.max(45, project.confidence)
@@ -246,7 +276,7 @@ function projectCuriosities({
       item(
         "project_without_goal",
         issue.project || issue.label,
-        `${issue.project || issue.label} non risulta collegato a un goal esplicito.`,
+        `A quale obiettivo vuoi collegare ${issue.project || issue.label}?`,
         "projects",
         7,
         Math.max(50, consistency.confidence)
@@ -261,10 +291,23 @@ function projectCuriosities({
       item(
         "active_project_without_actions",
         project.name,
-        `${project.name} risulta attivo, ma non e chiaro quale sia il prossimo passo operativo.`,
+        `Qual è la prossima azione concreta per ${project.name}?`,
         "projects",
         8,
         Math.max(55, project.confidence)
+      )
+    );
+  }
+
+  if (projects.importantProject && projects.activeProjects.length >= 2) {
+    result.push(
+      item(
+        "project_priority_unclear",
+        projects.importantProject.name,
+        `${projects.importantProject.name} è ancora il progetto principale su cui vuoi concentrarti?`,
+        "projects",
+        8,
+        Math.max(60, projects.importantProject.confidence)
       )
     );
   }
@@ -391,20 +434,80 @@ function memoryCuriosities({
     normalize(place.label || place.current_place_label)
   );
 
+  for (const place of significantPlaces || []) {
+    const label = titleFor(place);
+    const category = clean(place.category || place.place_category);
+    if (!label || (category && category !== "unknown")) continue;
+
+    result.push(
+      item(
+        "uncategorized_place",
+        label,
+        `Il posto ${label} è un supermercato, lavoro, palestra o altro?`,
+        "memory",
+        9,
+        Math.max(65, Number(place.confidence || 0))
+      )
+    );
+  }
+
   for (const topic of memory.topics || []) {
     const title = titleFor(topic);
     const mentions = Number(topic.mention_count || 0);
     const weight = Number(topic.weight || 0);
 
-    if (title && !topic.description && (mentions >= 3 || weight >= 7)) {
+    const category = clean(topic.category || topic.entity_type);
+    const isPreference = [
+      "preference",
+      "preferenza",
+      "hobby",
+      "food",
+      "sport",
+      "passion",
+    ].includes(category);
+    const isRoutine = ["routine", "habit", "abitudine"].includes(category);
+
+    if (
+      title &&
+      !topic.description &&
+      (mentions >= 3 || weight >= 7) &&
+      !isPreference &&
+      !isRoutine
+    ) {
       result.push(
         item(
           "repeated_topic_without_explanation",
           title,
-          `${title} e un topic ricorrente, ma manca una spiegazione strutturata.`,
+          `Quando parli di ${title}, qual è il dettaglio più utile che dovrei ricordare?`,
           "memory",
           6,
           Math.min(90, 45 + mentions * 6 + weight * 2)
+        )
+      );
+    }
+
+    if (title && !topic.description && isPreference && (mentions >= 2 || weight >= 6)) {
+      result.push(
+        item(
+          "preference_missing_detail",
+          title,
+          `Qual è la tua preferenza concreta riguardo ${title}?`,
+          "memory",
+          8,
+          Math.min(90, 50 + mentions * 7 + weight * 2)
+        )
+      );
+    }
+
+    if (title && !topic.description && isRoutine && (mentions >= 2 || weight >= 6)) {
+      result.push(
+        item(
+          "routine_missing_context",
+          title,
+          `${title} è una routine stabile o capita solo in alcune situazioni?`,
+          "memory",
+          8,
+          Math.min(90, 50 + mentions * 7 + weight * 2)
         )
       );
     }
@@ -421,13 +524,40 @@ function memoryCuriosities({
         item(
           "missing_place_association",
           title,
-          `${title} compare nella memoria come luogo, ma non e associato ai luoghi significativi noti.`,
+          `${title} che tipo di posto è per te: lavoro, negozio, palestra o altro?`,
           "memory",
           6,
           Math.min(85, 45 + mentions * 5)
         )
       );
     }
+  }
+
+  return result;
+}
+
+function pastEventCuriosities(memory: MemorySnapshot) {
+  const result: CuriosityItem[] = [];
+  const staleFutureThreshold = Date.now() - 24 * 60 * 60 * 1000;
+
+  for (const event of memory.timeline || []) {
+    const period = normalize(event.period_label);
+    const recordedAt = new Date(event.event_date || event.created_at || 0).getTime();
+    if (!period.includes("futur") || !Number.isFinite(recordedAt)) continue;
+    if (recordedAt > staleFutureThreshold) continue;
+
+    const title = titleFor(event);
+    if (!title) continue;
+    result.push(
+      item(
+        "past_event_completion_unclear",
+        title,
+        `${title} è poi successo oppure è ancora in programma?`,
+        "memory",
+        9,
+        Math.max(65, Number(event.importance || 0) * 9)
+      )
+    );
   }
 
   return result;
@@ -454,7 +584,7 @@ function goalCuriosities({
     item(
       "important_goal_without_actions",
       title,
-      `${title} e un goal importante, ma non risulta collegato ad azioni aperte.`,
+      `Qual è la prossima azione concreta da collegare al goal ${title}?`,
       "goals",
       9,
       Math.max(60, Number(goals.importantGoal.importance || 0) * 9)
@@ -467,6 +597,62 @@ function signalCuriosities(contextSignals: ContextSignal[]) {
   // duplicate would lose the candidate id required to save the answer.
   void contextSignals;
   return [];
+}
+
+function memoryCompleteness({
+  people,
+  relationshipMemory,
+  projects,
+  goals,
+  memory,
+  significantPlaces,
+}: {
+  people: PeopleSnapshot;
+  relationshipMemory: RelationshipMemorySnapshot;
+  projects: ProjectMemorySnapshot;
+  goals: GoalsSnapshot;
+  memory: MemorySnapshot;
+  significantPlaces: any[];
+}) {
+  const peopleItems = people.items || [];
+  const peopleScore = peopleItems.length
+    ? (peopleItems.filter((person) => person.relationship_type && person.description)
+        .length /
+        peopleItems.length) * 100
+    : 25;
+  const places = significantPlaces || [];
+  const placesScore = places.length
+    ? (places.filter(
+        (place) =>
+          place.label &&
+          clean(place.category || place.place_category) !== "unknown"
+      ).length /
+        places.length) * 100
+    : 25;
+  const projectItems = projects.projects || [];
+  const projectsScore = projectItems.length
+    ? (projectItems.filter(
+        (project) => project.relatedGoals.length || project.pendingActions.length
+      ).length /
+        projectItems.length) * 100
+    : 30;
+  const topics = memory.topics || [];
+  const memoryScore = topics.length
+    ? (topics.filter((topic) => topic.description).length / topics.length) * 100
+    : 25;
+  const goalScore = goals.activeGoals.length
+    ? Math.min(100, (goals.pendingActions.length / goals.activeGoals.length) * 100)
+    : 50;
+
+  return Math.round(
+    (peopleScore +
+      placesScore +
+      projectsScore +
+      memoryScore +
+      goalScore +
+      relationshipMemory.confidence) /
+      6
+  );
 }
 
 export function buildCuriositySnapshot({
@@ -508,6 +694,7 @@ export function buildCuriositySnapshot({
     ...houseCuriosities({ routes, comfortRisk }),
     ...calendarCuriosities({ calendarEvents, projects, relationshipMemory }),
     ...memoryCuriosities({ memory, significantPlaces }),
+    ...pastEventCuriosities(memory),
     ...goalCuriosities({ goals, consistency: projectConsistency }),
     ...signalCuriosities(contextSignals),
   ]).slice(0, 20);
@@ -519,7 +706,12 @@ export function buildCuriositySnapshot({
     "project_without_goal",
     "active_project_without_actions",
     "missing_place_association",
+    "uncategorized_place",
     "important_goal_without_actions",
+    "project_priority_unclear",
+    "past_event_completion_unclear",
+    "routine_missing_context",
+    "preference_missing_detail",
   ];
   const weakPatternTypes: CuriosityType[] = [
     "repeated_person_without_context",
@@ -540,6 +732,14 @@ export function buildCuriositySnapshot({
           curiosities.length
       )
     : 0;
+  const completeness = memoryCompleteness({
+    people,
+    relationshipMemory,
+    projects,
+    goals,
+    memory,
+    significantPlaces,
+  });
 
   return {
     curiosities,
@@ -553,6 +753,10 @@ export function buildCuriositySnapshot({
       behaviorTypes.includes(curiosity.type)
     ),
     confidence,
+    memoryCompleteness: completeness,
+    highValueGaps: curiosities.filter((curiosity) =>
+      HIGH_VALUE_CURIOSITY_TYPES.has(curiosity.type)
+    ).length,
     lastUpdated: latestTimestamp([
       people.lastUpdated,
       relationshipMemory.lastUpdated,

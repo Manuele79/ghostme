@@ -7,6 +7,7 @@ import {
 } from "@/lib/ghostme/proactive/proactiveCardLifecycle";
 
 const OBSERVATION_TTL_MS = 24 * 60 * 60 * 1000;
+const CURIOSITY_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const LEGACY_REMINDER_TTL_MS = 2 * 60 * 60 * 1000;
 
 async function expireStaleVisibleCards(userId: string) {
@@ -15,7 +16,13 @@ async function expireStaleVisibleCards(userId: string) {
     .select("id, category, logical_key, created_at, updated_at")
     .eq("user_id", userId)
     .in("status", VISIBLE_PROACTIVE_STATUSES)
-    .in("category", ["agenda", "daily_briefing", "observation", "reminder"]);
+    .in("category", [
+      "agenda",
+      "daily_briefing",
+      "observation",
+      "reminder",
+      "curiosity",
+    ]);
   if (error) throw error;
 
   const now = Date.now();
@@ -58,6 +65,10 @@ async function expireStaleVisibleCards(userId: string) {
       const updatedAt = new Date(card.updated_at || card.created_at || 0).getTime();
       if (card.category === "observation") {
         return !Number.isFinite(updatedAt) || now - updatedAt > OBSERVATION_TTL_MS;
+      }
+
+      if (card.category === "curiosity") {
+        return !Number.isFinite(updatedAt) || now - updatedAt > CURIOSITY_TTL_MS;
       }
 
       if (card.category === "reminder") {
