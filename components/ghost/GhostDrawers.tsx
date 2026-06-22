@@ -281,6 +281,7 @@ function ServicePanelContent({
   currentUserId: string;
   onReplyObservation: (message: string, messageId?: string) => void;
 }) {
+  const openActionStatuses = new Set(["detected", "active", "open", "pending"]);
   const today = new Date();
   const resolvedActions = brainData.actions.length ? brainData.actions : actions;
   const resolvedCalendarEvents = brainData.calendarEvents.length
@@ -1313,7 +1314,9 @@ async function updateActionStatus(
 
       if (activeTab === "actions") {
         const visibleActions = resolvedActions.filter(
-          (item) => !hiddenActions.includes(item.id)
+          (item) =>
+            openActionStatuses.has(String(item.status || "").toLowerCase()) &&
+            !hiddenActions.includes(item.id)
         );
 
         if (!visibleActions.length) {

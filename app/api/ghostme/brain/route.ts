@@ -30,7 +30,7 @@ export async function POST(req: Request) {
       timeline: snapshot.memory.timeline || [],
       goals: visibleGoals,
       mentalState: snapshot.profile?.mentalState || null,
-      actions: snapshot.actions || [],
+      actions: snapshot.actions || snapshot.goals?.pendingActions || [],
       calendarEvents: snapshot.calendar.upcoming || [],
       proactiveMessage: proactiveMessages[0] || null,
       proactiveMessages,

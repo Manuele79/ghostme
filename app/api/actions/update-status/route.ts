@@ -7,6 +7,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { completeActionIntentById } from "@/lib/ghostme/goals/goalsActionsLifecycle";
 
 const ALLOWED_STATUSES = ["completed", "archived", "pending"] as const;
+const OPEN_ACTION_STATUSES = ["detected", "active", "open", "pending"];
 
 export async function PATCH(req: Request) {
   try {
@@ -83,7 +84,7 @@ export async function PATCH(req: Request) {
       });
     }
 
-    if (!["detected", "pending"].includes(currentAction.status)) {
+    if (!OPEN_ACTION_STATUSES.includes(currentAction.status)) {
       return NextResponse.json(
         { success: false, error: "Transizione azione non consentita" },
         { status: 409 }
@@ -95,7 +96,7 @@ export async function PATCH(req: Request) {
       .update({ status, updated_at: updatedAt })
       .eq("id", id)
       .eq("user_id", userId)
-      .in("status", ["detected", "pending"])
+      .in("status", OPEN_ACTION_STATUSES)
       .select("id, status, goal_id, completed_at, updated_at")
       .maybeSingle();
 

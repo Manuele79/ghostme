@@ -20,13 +20,23 @@ type BrainApiResponse = {
   decisionSnapshot?: DecisionSnapshot | null;
 };
 
-function preferArray<T>(primary: unknown, fallback: unknown): T[] {
-  const primaryArray = Array.isArray(primary) ? (primary as T[]) : [];
-  if (primaryArray.length) return primaryArray;
-  return Array.isArray(fallback) ? (fallback as T[]) : primaryArray;
+function preferArray<T>(...candidates: unknown[]): T[] {
+  let firstArray: T[] | null = null;
+
+  for (const candidate of candidates) {
+    if (!Array.isArray(candidate)) continue;
+    const candidateArray = candidate as T[];
+    firstArray ??= candidateArray;
+    if (candidateArray.length) return candidateArray;
+  }
+
+  return firstArray || [];
 }
 
-export function adaptBrainApiResponse(data: BrainApiResponse): BrainData {
+export function adaptBrainApiResponse(
+  data: BrainApiResponse,
+  previousActions: unknown = []
+): BrainData {
   const snapshot = data.snapshot || null;
   const snapshotWithDecision = snapshot as
     | (GhostBrainSnapshot & { decisionSnapshot?: DecisionSnapshot | null })
@@ -35,6 +45,14 @@ export function adaptBrainApiResponse(data: BrainApiResponse): BrainData {
     data.proactiveMessages,
     snapshot?.proactive?.recent
   );
+  const actionSources = [
+    data.actions,
+    snapshot?.actions,
+    snapshot?.goals?.pendingActions,
+  ];
+  const actions = actionSources.some(Array.isArray)
+    ? preferArray(...actionSources)
+    : preferArray(previousActions, []);
 
   return {
     snapshot,
@@ -42,7 +60,7 @@ export function adaptBrainApiResponse(data: BrainApiResponse): BrainData {
     timeline: preferArray(data.timeline, snapshot?.memory?.timeline),
     goals: preferArray(data.goals, snapshot?.goals?.activeGoals),
     mentalState: data.mentalState ?? snapshot?.profile?.mentalState ?? null,
-    actions: preferArray(data.actions, snapshot?.actions),
+    actions,
     calendarEvents: preferArray(
       data.calendarEvents,
       snapshot?.calendar?.upcoming

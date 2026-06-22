@@ -1,5 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
+const OPEN_ACTION_STATUSES = ["detected", "active", "open", "pending"];
+
 export type GoalsSnapshot = {
   activeGoals: any[];
   completedGoals: any[];
@@ -60,7 +62,7 @@ export async function buildGoalsSnapshot(
       .from("action_intents")
       .select("*")
       .eq("user_id", userId)
-      .in("status", ["detected", "pending"])
+      .in("status", OPEN_ACTION_STATUSES)
       .order("priority", { ascending: false })
       .order("updated_at", { ascending: false })
       .limit(10),
@@ -70,6 +72,10 @@ export async function buildGoalsSnapshot(
     console.log("GOALS SNAPSHOT ERROR:", activeGoalsRes.error);
   }
 
+  if (actionsRes.error) {
+    console.log("GOALS ACTIONS SNAPSHOT ERROR:", actionsRes.error);
+  }
+
   const excludedGoalStatuses = new Set(["completed", "archived", "cancelled"]);
   const activeGoals = (activeGoalsRes.data || [])
     .filter(
@@ -77,7 +83,9 @@ export async function buildGoalsSnapshot(
         !excludedGoalStatuses.has(String(goal.status || "").toLowerCase())
     )
     .slice(0, 20);
-  const pendingActions = actionsRes.data || [];
+  const pendingActions = (actionsRes.data || []).filter((action: any) =>
+    OPEN_ACTION_STATUSES.includes(String(action.status || "").toLowerCase())
+  );
 
   return {
     activeGoals,

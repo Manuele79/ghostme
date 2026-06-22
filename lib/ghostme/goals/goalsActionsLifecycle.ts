@@ -1,6 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
-const OPEN_ACTION_STATUSES = ["detected", "pending"];
+const OPEN_ACTION_STATUSES = ["detected", "active", "open", "pending"];
 const LINKABLE_GOAL_STATUSES = ["active", "learning"];
 const STOP_WORDS = new Set([
   "alla", "allo", "anche", "avere", "come", "con", "dalla", "delle",

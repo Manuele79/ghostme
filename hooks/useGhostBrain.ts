@@ -58,7 +58,9 @@ export function useGhostBrain() {
       throw new Error(data.error || `Brain API HTTP ${res.status}`);
     }
 
-    setBrainData(adaptBrainApiResponse(data));
+    setBrainData((previous) =>
+      adaptBrainApiResponse(data, previous.actions)
+    );
 
     if (data.profile) {
       setUserProfile(data.profile);
