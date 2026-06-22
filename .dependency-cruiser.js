@@ -344,6 +344,92 @@ module.exports = {
         // the external modules, but not their innards.
         collapsePattern: 'node_modules/(?:@[^/]+/[^/]+|[^/]+)',
 
+        theme: {
+          graph: {
+            bgcolor: '#fbfbfd',
+            fontcolor: '#374151',
+          },
+          node: {
+            color: '#9ca3af',
+            fillcolor: '#ffffff',
+            fontcolor: '#111827',
+          },
+          edge: {
+            color: '#6b728066',
+          },
+          modules: [
+            {
+              criteria: { orphan: true },
+              attributes: {
+                fillcolor: '#fee2e2',
+                color: '#ef4444',
+                fontcolor: '#991b1b',
+                penwidth: '2.5',
+              },
+            },
+            {
+              criteria: {
+                source: '^node_modules/(?!(?:@supabase/[^/]+|openai|next|react)(?:/|$))',
+              },
+              attributes: {
+                fillcolor: '#e5e7eb',
+                color: '#6b7280',
+                fontcolor: '#374151',
+              },
+            },
+            {
+              criteria: {
+                source: '^(?:node_modules/(?:@supabase/[^/]+|openai|next|react)(?:/|$)|(?:@/)?lib/supabase(?:Admin)?\\.[cm]?[jt]s$)',
+              },
+              attributes: {
+                fillcolor: '#d1d5db',
+                color: '#4b5563',
+                fontcolor: '#111827',
+                penwidth: '2.0',
+              },
+            },
+            {
+              criteria: { source: '(?:^|/)[^/]*Snapshot\\.[cm]?[jt]sx?$' },
+              attributes: {
+                fillcolor: '#dbeafe',
+                color: '#60a5fa',
+              },
+            },
+            {
+              criteria: { source: '(?:^|/)[^/]*Engine\\.[cm]?[jt]sx?$' },
+              attributes: {
+                fillcolor: '#dcfce7',
+                color: '#4ade80',
+              },
+            },
+            {
+              criteria: {
+                source: '(?:^|/)(?:services?/|[^/]*Service\\.[cm]?[jt]sx?$)',
+              },
+              attributes: {
+                fillcolor: '#fef3c7',
+                color: '#f59e0b',
+              },
+            },
+            {
+              criteria: { source: '(?:^|/)[^/]*Flow\\.[cm]?[jt]sx?$' },
+              attributes: {
+                fillcolor: '#ede9fe',
+                color: '#8b5cf6',
+              },
+            },
+            {
+              criteria: {
+                source: '^(?:components|hooks)/|(?:^|/)(?:ui/|[^/]*Adapter\\.[cm]?[jt]sx?$)',
+              },
+              attributes: {
+                fillcolor: '#ffedd5',
+                color: '#fb923c',
+              },
+            },
+          ],
+        },
+
         // Options to tweak the appearance of your graph. See
         // https://github.com/sverweij/dependency-cruiser/blob/main/doc/options-reference.md#reporteroptions
         // If you don't specify a theme dependency-cruiser falls back to a built-in one.
