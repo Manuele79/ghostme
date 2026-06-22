@@ -8,48 +8,48 @@
  viewBox="0.00 0.00 463.00 291.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 287)">
 <title>dependency&#45;cruiser output</title>
-<polygon fill="white" stroke="none" points="-4,4 -4,-287 459,-287 459,4 -4,4"/>
+<polygon fill="#fbfbfd" stroke="none" points="-4,4 -4,-287 459,-287 459,4 -4,4"/>
 <g id="clust1" class="cluster">
 <title>cluster_hooks</title>
 <path fill="#ffffff" stroke="black" stroke-width="2" d="M20,-8C20,-8 98.5,-8 98.5,-8 104.5,-8 110.5,-14 110.5,-20 110.5,-20 110.5,-111 110.5,-111 110.5,-117 104.5,-123 98.5,-123 98.5,-123 20,-123 20,-123 14,-123 8,-117 8,-111 8,-111 8,-20 8,-20 8,-14 14,-8 20,-8"/>
-<text xml:space="preserve" text-anchor="middle" x="59.25" y="-110.45" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="9.00">hooks</text>
+<text xml:space="preserve" text-anchor="middle" x="59.25" y="-110.45" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="9.00" fill="#374151">hooks</text>
 </g>
 <g id="clust2" class="cluster">
 <title>cluster_lib</title>
 <path fill="#ffffff" stroke="black" stroke-width="2" d="M130.5,-65C130.5,-65 328.75,-65 328.75,-65 334.75,-65 340.75,-71 340.75,-77 340.75,-77 340.75,-263 340.75,-263 340.75,-269 334.75,-275 328.75,-275 328.75,-275 130.5,-275 130.5,-275 124.5,-275 118.5,-269 118.5,-263 118.5,-263 118.5,-77 118.5,-77 118.5,-71 124.5,-65 130.5,-65"/>
-<text xml:space="preserve" text-anchor="middle" x="229.62" y="-262.45" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="9.00">lib</text>
+<text xml:space="preserve" text-anchor="middle" x="229.62" y="-262.45" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="9.00" fill="#374151">lib</text>
 </g>
 <g id="clust3" class="cluster">
 <title>cluster_lib/ghostme</title>
 <path fill="#ffffff" stroke="black" stroke-width="2" d="M138.5,-73C138.5,-73 247.25,-73 247.25,-73 253.25,-73 259.25,-79 259.25,-85 259.25,-85 259.25,-210 259.25,-210 259.25,-216 253.25,-222 247.25,-222 247.25,-222 138.5,-222 138.5,-222 132.5,-222 126.5,-216 126.5,-210 126.5,-210 126.5,-85 126.5,-85 126.5,-79 132.5,-73 138.5,-73"/>
-<text xml:space="preserve" text-anchor="middle" x="192.88" y="-209.45" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="9.00">ghostme</text>
+<text xml:space="preserve" text-anchor="middle" x="192.88" y="-209.45" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="9.00" fill="#374151">ghostme</text>
 </g>
 <g id="clust4" class="cluster">
 <title>cluster_lib/ghostme/auth</title>
 <path fill="#ffffff" stroke="black" stroke-width="2" d="M146.5,-81C146.5,-81 239.25,-81 239.25,-81 245.25,-81 251.25,-87 251.25,-93 251.25,-93 251.25,-122 251.25,-122 251.25,-128 245.25,-134 239.25,-134 239.25,-134 146.5,-134 146.5,-134 140.5,-134 134.5,-128 134.5,-122 134.5,-122 134.5,-93 134.5,-93 134.5,-87 140.5,-81 146.5,-81"/>
-<text xml:space="preserve" text-anchor="middle" x="192.88" y="-121.45" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="9.00">auth</text>
+<text xml:space="preserve" text-anchor="middle" x="192.88" y="-121.45" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="9.00" fill="#374151">auth</text>
 </g>
 <g id="clust5" class="cluster">
 <title>cluster_lib/ghostme/ui</title>
 <path fill="#ffffff" stroke="black" stroke-width="2" d="M153.62,-142C153.62,-142 232.12,-142 232.12,-142 238.12,-142 244.12,-148 244.12,-154 244.12,-154 244.12,-183 244.12,-183 244.12,-189 238.12,-195 232.12,-195 232.12,-195 153.62,-195 153.62,-195 147.62,-195 141.62,-189 141.62,-183 141.62,-183 141.62,-154 141.62,-154 141.62,-148 147.62,-142 153.62,-142"/>
-<text xml:space="preserve" text-anchor="middle" x="192.88" y="-182.45" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="9.00">ui</text>
+<text xml:space="preserve" text-anchor="middle" x="192.88" y="-182.45" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="9.00" fill="#374151">ui</text>
 </g>
 <g id="clust6" class="cluster">
 <title>cluster_node_modules</title>
 <path fill="#ffffff" stroke="black" stroke-width="2" d="M360.75,-18C360.75,-18 435,-18 435,-18 441,-18 447,-24 447,-30 447,-30 447,-120 447,-120 447,-126 441,-132 435,-132 435,-132 360.75,-132 360.75,-132 354.75,-132 348.75,-126 348.75,-120 348.75,-120 348.75,-30 348.75,-30 348.75,-24 354.75,-18 360.75,-18"/>
-<text xml:space="preserve" text-anchor="middle" x="397.88" y="-119.45" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="9.00">node_modules</text>
+<text xml:space="preserve" text-anchor="middle" x="397.88" y="-119.45" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="9.00" fill="#374151">node_modules</text>
 </g>
 <g id="clust7" class="cluster">
 <title>cluster_node_modules/@supabase</title>
 <path fill="#ffffff" stroke="black" stroke-width="2" d="M368.75,-52C368.75,-52 427,-52 427,-52 433,-52 439,-58 439,-64 439,-64 439,-93 439,-93 439,-99 433,-105 427,-105 427,-105 368.75,-105 368.75,-105 362.75,-105 356.75,-99 356.75,-93 356.75,-93 356.75,-64 356.75,-64 356.75,-58 362.75,-52 368.75,-52"/>
-<text xml:space="preserve" text-anchor="middle" x="397.88" y="-92.45" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="9.00">@supabase</text>
+<text xml:space="preserve" text-anchor="middle" x="397.88" y="-92.45" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="9.00" fill="#374151">@supabase</text>
 </g>
 <!-- hooks/useGhostBrain.ts -->
 <g id="node1" class="node">
 <title>hooks/useGhostBrain.ts</title>
 <g id="a_node1"><a xlink:href="hooks/useGhostBrain.ts" xlink:title="useGhostBrain.ts">
-<path fill="#ddfeff" stroke="black" d="M95.96,-96.25C95.96,-96.25 22.54,-96.25 22.54,-96.25 19.46,-96.25 16.38,-93.17 16.38,-90.08 16.38,-90.08 16.38,-83.92 16.38,-83.92 16.38,-80.83 19.46,-77.75 22.54,-77.75 22.54,-77.75 95.96,-77.75 95.96,-77.75 99.04,-77.75 102.12,-80.83 102.12,-83.92 102.12,-83.92 102.12,-90.08 102.12,-90.08 102.12,-93.17 99.04,-96.25 95.96,-96.25"/>
-<text xml:space="preserve" text-anchor="start" x="24.38" y="-84" font-family="Helvetica,sans-Serif" font-size="9.00">useGhostBrain.ts</text>
+<path fill="#ffedd5" stroke="#fb923c" d="M95.96,-96.25C95.96,-96.25 22.54,-96.25 22.54,-96.25 19.46,-96.25 16.38,-93.17 16.38,-90.08 16.38,-90.08 16.38,-83.92 16.38,-83.92 16.38,-80.83 19.46,-77.75 22.54,-77.75 22.54,-77.75 95.96,-77.75 95.96,-77.75 99.04,-77.75 102.12,-80.83 102.12,-83.92 102.12,-83.92 102.12,-90.08 102.12,-90.08 102.12,-93.17 99.04,-96.25 95.96,-96.25"/>
+<text xml:space="preserve" text-anchor="start" x="24.38" y="-84" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#111827">useGhostBrain.ts</text>
 </a>
 </g>
 </g>
@@ -57,127 +57,127 @@
 <g id="node2" class="node">
 <title>lib/ghostme/auth/clientAuthHeaders.ts</title>
 <g id="a_node2"><a xlink:href="lib/ghostme/auth/clientAuthHeaders.ts" xlink:title="clientAuthHeaders.ts">
-<path fill="#ddfeff" stroke="black" d="M237.08,-107.25C237.08,-107.25 148.67,-107.25 148.67,-107.25 145.58,-107.25 142.5,-104.17 142.5,-101.08 142.5,-101.08 142.5,-94.92 142.5,-94.92 142.5,-91.83 145.58,-88.75 148.67,-88.75 148.67,-88.75 237.08,-88.75 237.08,-88.75 240.17,-88.75 243.25,-91.83 243.25,-94.92 243.25,-94.92 243.25,-101.08 243.25,-101.08 243.25,-104.17 240.17,-107.25 237.08,-107.25"/>
-<text xml:space="preserve" text-anchor="start" x="150.5" y="-95" font-family="Helvetica,sans-Serif" font-size="9.00">clientAuthHeaders.ts</text>
+<path fill="#ddfeff" stroke="#9ca3af" d="M237.08,-107.25C237.08,-107.25 148.67,-107.25 148.67,-107.25 145.58,-107.25 142.5,-104.17 142.5,-101.08 142.5,-101.08 142.5,-94.92 142.5,-94.92 142.5,-91.83 145.58,-88.75 148.67,-88.75 148.67,-88.75 237.08,-88.75 237.08,-88.75 240.17,-88.75 243.25,-91.83 243.25,-94.92 243.25,-94.92 243.25,-101.08 243.25,-101.08 243.25,-104.17 240.17,-107.25 237.08,-107.25"/>
+<text xml:space="preserve" text-anchor="start" x="150.5" y="-95" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#111827">clientAuthHeaders.ts</text>
 </a>
 </g>
 </g>
 <!-- hooks/useGhostBrain.ts&#45;&gt;lib/ghostme/auth/clientAuthHeaders.ts -->
 <g id="edge1" class="edge">
 <title>hooks/useGhostBrain.ts&#45;&gt;lib/ghostme/auth/clientAuthHeaders.ts</title>
-<path fill="none" stroke="#000000" stroke-width="2" stroke-opacity="0.200000" d="M102.62,-90.54C112.39,-91.36 122.94,-92.24 133.26,-93.1"/>
-<polygon fill="#000000" fill-opacity="0.200000" stroke="#000000" stroke-width="2" stroke-opacity="0.200000" points="133.07,-95.19 139.23,-93.6 133.42,-91.01 133.07,-95.19"/>
+<path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M102.62,-90.54C112.39,-91.36 122.94,-92.24 133.26,-93.1"/>
+<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="133.07,-95.19 139.23,-93.6 133.42,-91.01 133.07,-95.19"/>
 </g>
 <!-- lib/ghostme/ui/brainUiAdapter.ts -->
 <g id="node3" class="node">
 <title>lib/ghostme/ui/brainUiAdapter.ts</title>
 <g id="a_node3"><a xlink:href="lib/ghostme/ui/brainUiAdapter.ts" xlink:title="brainUiAdapter.ts">
-<path fill="#ddfeff" stroke="black" d="M229.96,-168.25C229.96,-168.25 155.79,-168.25 155.79,-168.25 152.71,-168.25 149.62,-165.17 149.62,-162.08 149.62,-162.08 149.62,-155.92 149.62,-155.92 149.62,-152.83 152.71,-149.75 155.79,-149.75 155.79,-149.75 229.96,-149.75 229.96,-149.75 233.04,-149.75 236.12,-152.83 236.12,-155.92 236.12,-155.92 236.12,-162.08 236.12,-162.08 236.12,-165.17 233.04,-168.25 229.96,-168.25"/>
-<text xml:space="preserve" text-anchor="start" x="157.62" y="-156" font-family="Helvetica,sans-Serif" font-size="9.00">brainUiAdapter.ts</text>
+<path fill="#ffedd5" stroke="#fb923c" d="M229.96,-168.25C229.96,-168.25 155.79,-168.25 155.79,-168.25 152.71,-168.25 149.62,-165.17 149.62,-162.08 149.62,-162.08 149.62,-155.92 149.62,-155.92 149.62,-152.83 152.71,-149.75 155.79,-149.75 155.79,-149.75 229.96,-149.75 229.96,-149.75 233.04,-149.75 236.12,-152.83 236.12,-155.92 236.12,-155.92 236.12,-162.08 236.12,-162.08 236.12,-165.17 233.04,-168.25 229.96,-168.25"/>
+<text xml:space="preserve" text-anchor="start" x="157.62" y="-156" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#111827">brainUiAdapter.ts</text>
 </a>
 </g>
 </g>
 <!-- hooks/useGhostBrain.ts&#45;&gt;lib/ghostme/ui/brainUiAdapter.ts -->
 <g id="edge2" class="edge">
 <title>hooks/useGhostBrain.ts&#45;&gt;lib/ghostme/ui/brainUiAdapter.ts</title>
-<path fill="none" stroke="#000000" stroke-width="2" stroke-opacity="0.200000" d="M68.82,-96.46C79.46,-107.65 98.62,-126.13 118.5,-137 125.44,-140.79 133.12,-144.01 140.81,-146.72"/>
-<polygon fill="#000000" fill-opacity="0.200000" stroke="#000000" stroke-width="2" stroke-opacity="0.200000" points="139.91,-148.63 146.26,-148.51 141.22,-144.64 139.91,-148.63"/>
+<path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M68.82,-96.46C79.46,-107.65 98.62,-126.13 118.5,-137 125.44,-140.79 133.12,-144.01 140.81,-146.72"/>
+<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="139.91,-148.63 146.26,-148.51 141.22,-144.64 139.91,-148.63"/>
 </g>
 <!-- lib/personality.ts -->
 <g id="node4" class="node">
 <title>lib/personality.ts</title>
 <g id="a_node4"><a xlink:href="lib/personality.ts" xlink:title="personality.ts">
-<path fill="#ddfeff" stroke="black" d="M221.33,-248.25C221.33,-248.25 164.42,-248.25 164.42,-248.25 161.33,-248.25 158.25,-245.17 158.25,-242.08 158.25,-242.08 158.25,-235.92 158.25,-235.92 158.25,-232.83 161.33,-229.75 164.42,-229.75 164.42,-229.75 221.33,-229.75 221.33,-229.75 224.42,-229.75 227.5,-232.83 227.5,-235.92 227.5,-235.92 227.5,-242.08 227.5,-242.08 227.5,-245.17 224.42,-248.25 221.33,-248.25"/>
-<text xml:space="preserve" text-anchor="start" x="166.25" y="-236" font-family="Helvetica,sans-Serif" font-size="9.00">personality.ts</text>
+<path fill="#ddfeff" stroke="#9ca3af" d="M221.33,-248.25C221.33,-248.25 164.42,-248.25 164.42,-248.25 161.33,-248.25 158.25,-245.17 158.25,-242.08 158.25,-242.08 158.25,-235.92 158.25,-235.92 158.25,-232.83 161.33,-229.75 164.42,-229.75 164.42,-229.75 221.33,-229.75 221.33,-229.75 224.42,-229.75 227.5,-232.83 227.5,-235.92 227.5,-235.92 227.5,-242.08 227.5,-242.08 227.5,-245.17 224.42,-248.25 221.33,-248.25"/>
+<text xml:space="preserve" text-anchor="start" x="166.25" y="-236" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#111827">personality.ts</text>
 </a>
 </g>
 </g>
 <!-- hooks/useGhostBrain.ts&#45;&gt;lib/personality.ts -->
 <g id="edge3" class="edge">
 <title>hooks/useGhostBrain.ts&#45;&gt;lib/personality.ts</title>
-<path fill="none" stroke="#000000" stroke-width="2" stroke-opacity="0.200000" d="M63.13,-96.44C69.84,-117.11 88.28,-166.98 118.5,-198 129.82,-209.62 145.15,-218.88 158.87,-225.64"/>
-<polygon fill="#000000" fill-opacity="0.200000" stroke="#000000" stroke-width="2" stroke-opacity="0.200000" points="157.65,-227.39 163.98,-228.04 159.44,-223.59 157.65,-227.39"/>
+<path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M63.13,-96.44C69.84,-117.11 88.28,-166.98 118.5,-198 129.82,-209.62 145.15,-218.88 158.87,-225.64"/>
+<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="157.65,-227.39 163.98,-228.04 159.44,-223.59 157.65,-227.39"/>
 </g>
 <!-- node_modules/react -->
 <g id="node5" class="node">
 <title>node_modules/react</title>
 <g id="a_node5"><a xlink:href="https://www.npmjs.com/package/react" xlink:title="react">
-<polygon fill="#c40b0a" fill-opacity="0.101961" stroke="black" points="424.88,-44.25 372.93,-44.25 370.88,-42.19 370.88,-25.75 422.82,-25.75 424.88,-27.81 424.88,-44.25"/>
-<polyline fill="none" stroke="black" points="422.82,-42.19 370.88,-42.19"/>
-<polyline fill="none" stroke="black" points="422.82,-42.19 422.82,-25.75"/>
-<polyline fill="none" stroke="black" points="422.82,-42.19 424.88,-44.25"/>
-<text xml:space="preserve" text-anchor="start" x="387.75" y="-32" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#c40b0a">react</text>
+<polygon fill="#d1d5db" stroke="#4b5563" stroke-width="2" points="424.88,-44.25 372.93,-44.25 370.88,-42.19 370.88,-25.75 422.82,-25.75 424.88,-27.81 424.88,-44.25"/>
+<polyline fill="none" stroke="#4b5563" stroke-width="2" points="422.82,-42.19 370.88,-42.19"/>
+<polyline fill="none" stroke="#4b5563" stroke-width="2" points="422.82,-42.19 422.82,-25.75"/>
+<polyline fill="none" stroke="#4b5563" stroke-width="2" points="422.82,-42.19 424.88,-44.25"/>
+<text xml:space="preserve" text-anchor="start" x="387.75" y="-32" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#111827">react</text>
 </a>
 </g>
 </g>
 <!-- hooks/useGhostBrain.ts&#45;&gt;node_modules/react -->
 <g id="edge4" class="edge">
 <title>hooks/useGhostBrain.ts&#45;&gt;node_modules/react</title>
-<path fill="none" stroke="#000000" stroke-opacity="0.200000" d="M102.54,-80.47C170.25,-70.01 301.61,-49.72 363.32,-40.18"/>
-<polygon fill="#000000" fill-opacity="0.200000" stroke="#000000" stroke-opacity="0.200000" points="363.38,-42.3 368.99,-39.31 362.74,-38.15 363.38,-42.3"/>
+<path fill="none" stroke="#6b7280" stroke-opacity="0.400000" d="M102.54,-80.47C170.08,-70.03 300.95,-49.82 362.85,-40.26"/>
+<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-opacity="0.400000" points="362.95,-42.37 368.55,-39.37 362.3,-38.22 362.95,-42.37"/>
 </g>
 <!-- lib/supabase.ts -->
 <g id="node8" class="node">
 <title>lib/supabase.ts</title>
 <g id="a_node8"><a xlink:href="lib/supabase.ts" xlink:title="supabase.ts">
-<path fill="#ddfeff" stroke="black" d="M326.58,-99.25C326.58,-99.25 273.42,-99.25 273.42,-99.25 270.33,-99.25 267.25,-96.17 267.25,-93.08 267.25,-93.08 267.25,-86.92 267.25,-86.92 267.25,-83.83 270.33,-80.75 273.42,-80.75 273.42,-80.75 326.58,-80.75 326.58,-80.75 329.67,-80.75 332.75,-83.83 332.75,-86.92 332.75,-86.92 332.75,-93.08 332.75,-93.08 332.75,-96.17 329.67,-99.25 326.58,-99.25"/>
-<text xml:space="preserve" text-anchor="start" x="275.25" y="-87" font-family="Helvetica,sans-Serif" font-size="9.00">supabase.ts</text>
+<path fill="#d1d5db" stroke="#4b5563" stroke-width="2" d="M326.58,-99.25C326.58,-99.25 273.42,-99.25 273.42,-99.25 270.33,-99.25 267.25,-96.17 267.25,-93.08 267.25,-93.08 267.25,-86.92 267.25,-86.92 267.25,-83.83 270.33,-80.75 273.42,-80.75 273.42,-80.75 326.58,-80.75 326.58,-80.75 329.67,-80.75 332.75,-83.83 332.75,-86.92 332.75,-86.92 332.75,-93.08 332.75,-93.08 332.75,-96.17 329.67,-99.25 326.58,-99.25"/>
+<text xml:space="preserve" text-anchor="start" x="275.25" y="-87" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#111827">supabase.ts</text>
 </a>
 </g>
 </g>
 <!-- lib/ghostme/auth/clientAuthHeaders.ts&#45;&gt;lib/supabase.ts -->
 <g id="edge7" class="edge">
 <title>lib/ghostme/auth/clientAuthHeaders.ts&#45;&gt;lib/supabase.ts</title>
-<path fill="none" stroke="#000000" stroke-width="2" stroke-opacity="0.200000" d="M243.67,-94.21C248.45,-93.85 253.27,-93.48 257.96,-93.12"/>
-<polygon fill="#000000" fill-opacity="0.200000" stroke="#000000" stroke-width="2" stroke-opacity="0.200000" points="257.93,-95.23 263.76,-92.68 257.61,-91.04 257.93,-95.23"/>
+<path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M243.67,-94.21C248.39,-93.85 253.14,-93.49 257.77,-93.14"/>
+<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="257.64,-95.25 263.46,-92.7 257.32,-91.07 257.64,-95.25"/>
 </g>
 <!-- hooks/useGhostChat.ts -->
 <g id="node6" class="node">
 <title>hooks/useGhostChat.ts</title>
 <g id="a_node6"><a xlink:href="hooks/useGhostChat.ts" xlink:title="useGhostChat.ts">
-<path fill="#ddfeff" stroke="black" d="M94.83,-65.25C94.83,-65.25 23.67,-65.25 23.67,-65.25 20.58,-65.25 17.5,-62.17 17.5,-59.08 17.5,-59.08 17.5,-52.92 17.5,-52.92 17.5,-49.83 20.58,-46.75 23.67,-46.75 23.67,-46.75 94.83,-46.75 94.83,-46.75 97.92,-46.75 101,-49.83 101,-52.92 101,-52.92 101,-59.08 101,-59.08 101,-62.17 97.92,-65.25 94.83,-65.25"/>
-<text xml:space="preserve" text-anchor="start" x="25.5" y="-53" font-family="Helvetica,sans-Serif" font-size="9.00">useGhostChat.ts</text>
+<path fill="#ffedd5" stroke="#fb923c" d="M94.83,-65.25C94.83,-65.25 23.67,-65.25 23.67,-65.25 20.58,-65.25 17.5,-62.17 17.5,-59.08 17.5,-59.08 17.5,-52.92 17.5,-52.92 17.5,-49.83 20.58,-46.75 23.67,-46.75 23.67,-46.75 94.83,-46.75 94.83,-46.75 97.92,-46.75 101,-49.83 101,-52.92 101,-52.92 101,-59.08 101,-59.08 101,-62.17 97.92,-65.25 94.83,-65.25"/>
+<text xml:space="preserve" text-anchor="start" x="25.5" y="-53" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#111827">useGhostChat.ts</text>
 </a>
 </g>
 </g>
 <!-- hooks/useGhostChat.ts&#45;&gt;node_modules/react -->
 <g id="edge5" class="edge">
 <title>hooks/useGhostChat.ts&#45;&gt;node_modules/react</title>
-<path fill="none" stroke="#000000" stroke-opacity="0.200000" d="M89.88,-46.32C98.96,-43.78 109.05,-41.36 118.5,-40 206.05,-27.39 310.68,-30.25 363.24,-32.91"/>
-<polygon fill="#000000" fill-opacity="0.200000" stroke="#000000" stroke-opacity="0.200000" points="362.99,-35 369.09,-33.22 363.21,-30.81 362.99,-35"/>
+<path fill="none" stroke="#6b7280" stroke-opacity="0.400000" d="M89.88,-46.32C98.96,-43.78 109.05,-41.36 118.5,-40 205.83,-27.43 310.14,-30.24 362.82,-32.89"/>
+<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-opacity="0.400000" points="362.6,-34.98 368.7,-33.2 362.82,-30.79 362.6,-34.98"/>
 </g>
 <!-- hooks/useGhostVoice.ts -->
 <g id="node7" class="node">
 <title>hooks/useGhostVoice.ts</title>
 <g id="a_node7"><a xlink:href="hooks/useGhostVoice.ts" xlink:title="useGhostVoice.ts">
-<path fill="#ddfeff" stroke="black" d="M96.33,-34.25C96.33,-34.25 22.17,-34.25 22.17,-34.25 19.08,-34.25 16,-31.17 16,-28.08 16,-28.08 16,-21.92 16,-21.92 16,-18.83 19.08,-15.75 22.17,-15.75 22.17,-15.75 96.33,-15.75 96.33,-15.75 99.42,-15.75 102.5,-18.83 102.5,-21.92 102.5,-21.92 102.5,-28.08 102.5,-28.08 102.5,-31.17 99.42,-34.25 96.33,-34.25"/>
-<text xml:space="preserve" text-anchor="start" x="24" y="-22" font-family="Helvetica,sans-Serif" font-size="9.00">useGhostVoice.ts</text>
+<path fill="#ffedd5" stroke="#fb923c" d="M96.33,-34.25C96.33,-34.25 22.17,-34.25 22.17,-34.25 19.08,-34.25 16,-31.17 16,-28.08 16,-28.08 16,-21.92 16,-21.92 16,-18.83 19.08,-15.75 22.17,-15.75 22.17,-15.75 96.33,-15.75 96.33,-15.75 99.42,-15.75 102.5,-18.83 102.5,-21.92 102.5,-21.92 102.5,-28.08 102.5,-28.08 102.5,-31.17 99.42,-34.25 96.33,-34.25"/>
+<text xml:space="preserve" text-anchor="start" x="24" y="-22" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#111827">useGhostVoice.ts</text>
 </a>
 </g>
 </g>
 <!-- hooks/useGhostVoice.ts&#45;&gt;node_modules/react -->
 <g id="edge6" class="edge">
 <title>hooks/useGhostVoice.ts&#45;&gt;node_modules/react</title>
-<path fill="none" stroke="#000000" stroke-opacity="0.200000" d="M102.75,-16.03C108.03,-15.19 113.38,-14.48 118.5,-14 216.85,-4.8 243.55,3.59 340.75,-14 350.36,-15.74 360.47,-19.03 369.43,-22.5"/>
-<polygon fill="#000000" fill-opacity="0.200000" stroke="#000000" stroke-opacity="0.200000" points="368.57,-24.42 374.92,-24.72 370.15,-20.52 368.57,-24.42"/>
+<path fill="none" stroke="#6b7280" stroke-opacity="0.400000" d="M102.75,-16.03C108.03,-15.19 113.38,-14.48 118.5,-14 216.85,-4.8 243.55,3.59 340.75,-14 350.04,-15.68 359.8,-18.81 368.52,-22.15"/>
+<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-opacity="0.400000" points="367.51,-24 373.86,-24.28 369.07,-20.1 367.51,-24"/>
 </g>
 <!-- node_modules/@supabase/supabase&#45;js -->
 <g id="node9" class="node">
 <title>node_modules/@supabase/supabase&#45;js</title>
 <g id="a_node9"><a xlink:href="https://www.npmjs.com/package/@supabase/supabase-js" xlink:title="supabase&#45;js">
-<polygon fill="#c40b0a" fill-opacity="0.101961" stroke="black" points="431,-78.25 366.81,-78.25 364.75,-76.19 364.75,-59.75 428.94,-59.75 431,-61.81 431,-78.25"/>
-<polyline fill="none" stroke="black" points="428.94,-76.19 364.75,-76.19"/>
-<polyline fill="none" stroke="black" points="428.94,-76.19 428.94,-59.75"/>
-<polyline fill="none" stroke="black" points="428.94,-76.19 431,-78.25"/>
-<text xml:space="preserve" text-anchor="start" x="372.75" y="-66" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#c40b0a">supabase&#45;js</text>
+<polygon fill="#d1d5db" stroke="#4b5563" stroke-width="2" points="431,-78.25 366.81,-78.25 364.75,-76.19 364.75,-59.75 428.94,-59.75 431,-61.81 431,-78.25"/>
+<polyline fill="none" stroke="#4b5563" stroke-width="2" points="428.94,-76.19 364.75,-76.19"/>
+<polyline fill="none" stroke="#4b5563" stroke-width="2" points="428.94,-76.19 428.94,-59.75"/>
+<polyline fill="none" stroke="#4b5563" stroke-width="2" points="428.94,-76.19 431,-78.25"/>
+<text xml:space="preserve" text-anchor="start" x="372.75" y="-66" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#111827">supabase&#45;js</text>
 </a>
 </g>
 </g>
 <!-- lib/supabase.ts&#45;&gt;node_modules/@supabase/supabase&#45;js -->
 <g id="edge8" class="edge">
 <title>lib/supabase.ts&#45;&gt;node_modules/@supabase/supabase&#45;js</title>
-<path fill="none" stroke="#000000" stroke-opacity="0.200000" d="M333.19,-82.95C340.86,-81.27 349.12,-79.46 357.08,-77.72"/>
-<polygon fill="#000000" fill-opacity="0.200000" stroke="#000000" stroke-opacity="0.200000" points="357.39,-79.8 362.8,-76.46 356.49,-75.7 357.39,-79.8"/>
+<path fill="none" stroke="#6b7280" stroke-opacity="0.400000" d="M333.73,-82.83C341.2,-81.19 349.23,-79.44 356.97,-77.74"/>
+<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-opacity="0.400000" points="357.08,-79.87 362.49,-76.53 356.18,-75.76 357.08,-79.87"/>
 </g>
 </g>
 </svg>

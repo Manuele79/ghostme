@@ -8,48 +8,48 @@
  viewBox="0.00 0.00 686.00 214.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 210)">
 <title>dependency&#45;cruiser output</title>
-<polygon fill="white" stroke="none" points="-4,4 -4,-210 681.75,-210 681.75,4 -4,4"/>
+<polygon fill="#fbfbfd" stroke="none" points="-4,4 -4,-210 681.75,-210 681.75,4 -4,4"/>
 <g id="clust1" class="cluster">
 <title>cluster_lib</title>
 <path fill="#ffffff" stroke="black" stroke-width="2" d="M20,-8C20,-8 551.5,-8 551.5,-8 557.5,-8 563.5,-14 563.5,-20 563.5,-20 563.5,-186 563.5,-186 563.5,-192 557.5,-198 551.5,-198 551.5,-198 20,-198 20,-198 14,-198 8,-192 8,-186 8,-186 8,-20 8,-20 8,-14 14,-8 20,-8"/>
-<text xml:space="preserve" text-anchor="middle" x="285.75" y="-185.45" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="9.00">lib</text>
+<text xml:space="preserve" text-anchor="middle" x="285.75" y="-185.45" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="9.00" fill="#374151">lib</text>
 </g>
 <g id="clust2" class="cluster">
 <title>cluster_lib/ghostme</title>
 <path fill="#ffffff" stroke="black" stroke-width="2" d="M28,-16C28,-16 543.5,-16 543.5,-16 549.5,-16 555.5,-22 555.5,-28 555.5,-28 555.5,-133 555.5,-133 555.5,-139 549.5,-145 543.5,-145 543.5,-145 28,-145 28,-145 22,-145 16,-139 16,-133 16,-133 16,-28 16,-28 16,-22 22,-16 28,-16"/>
-<text xml:space="preserve" text-anchor="middle" x="285.75" y="-132.45" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="9.00">ghostme</text>
+<text xml:space="preserve" text-anchor="middle" x="285.75" y="-132.45" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="9.00" fill="#374151">ghostme</text>
 </g>
 <g id="clust3" class="cluster">
 <title>cluster_lib/ghostme/agenda</title>
 <path fill="#ffffff" stroke="black" stroke-width="2" d="M151.75,-34C151.75,-34 234.75,-34 234.75,-34 240.75,-34 246.75,-40 246.75,-46 246.75,-46 246.75,-106 246.75,-106 246.75,-112 240.75,-118 234.75,-118 234.75,-118 151.75,-118 151.75,-118 145.75,-118 139.75,-112 139.75,-106 139.75,-106 139.75,-46 139.75,-46 139.75,-40 145.75,-34 151.75,-34"/>
-<text xml:space="preserve" text-anchor="middle" x="193.25" y="-105.45" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="9.00">agenda</text>
+<text xml:space="preserve" text-anchor="middle" x="193.25" y="-105.45" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="9.00" fill="#374151">agenda</text>
 </g>
 <g id="clust4" class="cluster">
 <title>cluster_lib/ghostme/calendar</title>
 <path fill="#ffffff" stroke="black" stroke-width="2" d="M36,-24C36,-24 119.75,-24 119.75,-24 125.75,-24 131.75,-30 131.75,-36 131.75,-36 131.75,-96 131.75,-96 131.75,-102 125.75,-108 119.75,-108 119.75,-108 36,-108 36,-108 30,-108 24,-102 24,-96 24,-96 24,-36 24,-36 24,-30 30,-24 36,-24"/>
-<text xml:space="preserve" text-anchor="middle" x="77.88" y="-95.45" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="9.00">calendar</text>
+<text xml:space="preserve" text-anchor="middle" x="77.88" y="-95.45" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="9.00" fill="#374151">calendar</text>
 </g>
 <g id="clust5" class="cluster">
 <title>cluster_lib/ghostme/proactive</title>
 <path fill="#ffffff" stroke="black" stroke-width="2" d="M266.75,-34C266.75,-34 535.5,-34 535.5,-34 541.5,-34 547.5,-40 547.5,-46 547.5,-46 547.5,-106 547.5,-106 547.5,-112 541.5,-118 535.5,-118 535.5,-118 266.75,-118 266.75,-118 260.75,-118 254.75,-112 254.75,-106 254.75,-106 254.75,-46 254.75,-46 254.75,-40 260.75,-34 266.75,-34"/>
-<text xml:space="preserve" text-anchor="middle" x="401.12" y="-105.45" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="9.00">proactive</text>
+<text xml:space="preserve" text-anchor="middle" x="401.12" y="-105.45" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="9.00" fill="#374151">proactive</text>
 </g>
 <g id="clust6" class="cluster">
 <title>cluster_node_modules</title>
 <path fill="#ffffff" stroke="black" stroke-width="2" d="M583.5,-41C583.5,-41 657.75,-41 657.75,-41 663.75,-41 669.75,-47 669.75,-53 669.75,-53 669.75,-143 669.75,-143 669.75,-149 663.75,-155 657.75,-155 657.75,-155 583.5,-155 583.5,-155 577.5,-155 571.5,-149 571.5,-143 571.5,-143 571.5,-53 571.5,-53 571.5,-47 577.5,-41 583.5,-41"/>
-<text xml:space="preserve" text-anchor="middle" x="620.62" y="-142.45" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="9.00">node_modules</text>
+<text xml:space="preserve" text-anchor="middle" x="620.62" y="-142.45" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="9.00" fill="#374151">node_modules</text>
 </g>
 <g id="clust7" class="cluster">
 <title>cluster_node_modules/@supabase</title>
 <path fill="#ffffff" stroke="black" stroke-width="2" d="M591.5,-75C591.5,-75 649.75,-75 649.75,-75 655.75,-75 661.75,-81 661.75,-87 661.75,-87 661.75,-116 661.75,-116 661.75,-122 655.75,-128 649.75,-128 649.75,-128 591.5,-128 591.5,-128 585.5,-128 579.5,-122 579.5,-116 579.5,-116 579.5,-87 579.5,-87 579.5,-81 585.5,-75 591.5,-75"/>
-<text xml:space="preserve" text-anchor="middle" x="620.62" y="-115.45" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="9.00">@supabase</text>
+<text xml:space="preserve" text-anchor="middle" x="620.62" y="-115.45" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="9.00" fill="#374151">@supabase</text>
 </g>
 <!-- lib/ghostme/agenda/agendaEngine.ts -->
 <g id="node1" class="node">
 <title>lib/ghostme/agenda/agendaEngine.ts</title>
 <g id="a_node1"><a xlink:href="lib/ghostme/agenda/agendaEngine.ts" xlink:title="agendaEngine.ts">
-<path fill="#ddfeff" stroke="black" d="M229.96,-60.25C229.96,-60.25 156.54,-60.25 156.54,-60.25 153.46,-60.25 150.38,-57.17 150.38,-54.08 150.38,-54.08 150.38,-47.92 150.38,-47.92 150.38,-44.83 153.46,-41.75 156.54,-41.75 156.54,-41.75 229.96,-41.75 229.96,-41.75 233.04,-41.75 236.12,-44.83 236.12,-47.92 236.12,-47.92 236.12,-54.08 236.12,-54.08 236.12,-57.17 233.04,-60.25 229.96,-60.25"/>
-<text xml:space="preserve" text-anchor="start" x="158.38" y="-48" font-family="Helvetica,sans-Serif" font-size="9.00">agendaEngine.ts</text>
+<path fill="#dcfce7" stroke="#4ade80" d="M229.96,-60.25C229.96,-60.25 156.54,-60.25 156.54,-60.25 153.46,-60.25 150.38,-57.17 150.38,-54.08 150.38,-54.08 150.38,-47.92 150.38,-47.92 150.38,-44.83 153.46,-41.75 156.54,-41.75 156.54,-41.75 229.96,-41.75 229.96,-41.75 233.04,-41.75 236.12,-44.83 236.12,-47.92 236.12,-47.92 236.12,-54.08 236.12,-54.08 236.12,-57.17 233.04,-60.25 229.96,-60.25"/>
+<text xml:space="preserve" text-anchor="start" x="158.38" y="-48" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#111827">agendaEngine.ts</text>
 </a>
 </g>
 </g>
@@ -57,8 +57,8 @@
 <g id="node2" class="node">
 <title>lib/ghostme/agenda/reminderEngine.ts</title>
 <g id="a_node2"><a xlink:href="lib/ghostme/agenda/reminderEngine.ts" xlink:title="reminderEngine.ts">
-<path fill="#ddfeff" stroke="black" d="M232.58,-91.25C232.58,-91.25 153.92,-91.25 153.92,-91.25 150.83,-91.25 147.75,-88.17 147.75,-85.08 147.75,-85.08 147.75,-78.92 147.75,-78.92 147.75,-75.83 150.83,-72.75 153.92,-72.75 153.92,-72.75 232.58,-72.75 232.58,-72.75 235.67,-72.75 238.75,-75.83 238.75,-78.92 238.75,-78.92 238.75,-85.08 238.75,-85.08 238.75,-88.17 235.67,-91.25 232.58,-91.25"/>
-<text xml:space="preserve" text-anchor="start" x="155.75" y="-79" font-family="Helvetica,sans-Serif" font-size="9.00">reminderEngine.ts</text>
+<path fill="#dcfce7" stroke="#4ade80" d="M232.58,-91.25C232.58,-91.25 153.92,-91.25 153.92,-91.25 150.83,-91.25 147.75,-88.17 147.75,-85.08 147.75,-85.08 147.75,-78.92 147.75,-78.92 147.75,-75.83 150.83,-72.75 153.92,-72.75 153.92,-72.75 232.58,-72.75 232.58,-72.75 235.67,-72.75 238.75,-75.83 238.75,-78.92 238.75,-78.92 238.75,-85.08 238.75,-85.08 238.75,-88.17 235.67,-91.25 232.58,-91.25"/>
+<text xml:space="preserve" text-anchor="start" x="155.75" y="-79" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#111827">reminderEngine.ts</text>
 </a>
 </g>
 </g>
@@ -66,92 +66,92 @@
 <g id="node3" class="node">
 <title>lib/ghostme/proactive/proactiveMessageService.ts</title>
 <g id="a_node3"><a xlink:href="lib/ghostme/proactive/proactiveMessageService.ts" xlink:title="proactiveMessageService.ts">
-<path fill="#ddfeff" stroke="black" d="M387.33,-91.25C387.33,-91.25 268.92,-91.25 268.92,-91.25 265.83,-91.25 262.75,-88.17 262.75,-85.08 262.75,-85.08 262.75,-78.92 262.75,-78.92 262.75,-75.83 265.83,-72.75 268.92,-72.75 268.92,-72.75 387.33,-72.75 387.33,-72.75 390.42,-72.75 393.5,-75.83 393.5,-78.92 393.5,-78.92 393.5,-85.08 393.5,-85.08 393.5,-88.17 390.42,-91.25 387.33,-91.25"/>
-<text xml:space="preserve" text-anchor="start" x="270.75" y="-79" font-family="Helvetica,sans-Serif" font-size="9.00">proactiveMessageService.ts</text>
+<path fill="#fef3c7" stroke="#f59e0b" d="M387.33,-91.25C387.33,-91.25 268.92,-91.25 268.92,-91.25 265.83,-91.25 262.75,-88.17 262.75,-85.08 262.75,-85.08 262.75,-78.92 262.75,-78.92 262.75,-75.83 265.83,-72.75 268.92,-72.75 268.92,-72.75 387.33,-72.75 387.33,-72.75 390.42,-72.75 393.5,-75.83 393.5,-78.92 393.5,-78.92 393.5,-85.08 393.5,-85.08 393.5,-88.17 390.42,-91.25 387.33,-91.25"/>
+<text xml:space="preserve" text-anchor="start" x="270.75" y="-79" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#111827">proactiveMessageService.ts</text>
 </a>
 </g>
 </g>
 <!-- lib/ghostme/agenda/reminderEngine.ts&#45;&gt;lib/ghostme/proactive/proactiveMessageService.ts -->
 <g id="edge1" class="edge">
 <title>lib/ghostme/agenda/reminderEngine.ts&#45;&gt;lib/ghostme/proactive/proactiveMessageService.ts</title>
-<path fill="none" stroke="#000000" stroke-width="2" stroke-opacity="0.200000" d="M239.24,-82C243.94,-82 248.81,-82 253.73,-82"/>
-<polygon fill="#000000" fill-opacity="0.200000" stroke="#000000" stroke-width="2" stroke-opacity="0.200000" points="253.58,-84.1 259.58,-82 253.58,-79.9 253.58,-84.1"/>
+<path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M239.24,-82C243.94,-82 248.81,-82 253.73,-82"/>
+<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="253.58,-84.1 259.58,-82 253.58,-79.9 253.58,-84.1"/>
 </g>
 <!-- lib/supabaseAdmin.ts -->
 <g id="node4" class="node">
 <title>lib/supabaseAdmin.ts</title>
 <g id="a_node4"><a xlink:href="lib/supabaseAdmin.ts" xlink:title="supabaseAdmin.ts">
-<path fill="#ddfeff" stroke="black" d="M512.71,-171.25C512.71,-171.25 433.29,-171.25 433.29,-171.25 430.21,-171.25 427.12,-168.17 427.12,-165.08 427.12,-165.08 427.12,-158.92 427.12,-158.92 427.12,-155.83 430.21,-152.75 433.29,-152.75 433.29,-152.75 512.71,-152.75 512.71,-152.75 515.79,-152.75 518.88,-155.83 518.88,-158.92 518.88,-158.92 518.88,-165.08 518.88,-165.08 518.88,-168.17 515.79,-171.25 512.71,-171.25"/>
-<text xml:space="preserve" text-anchor="start" x="435.12" y="-159" font-family="Helvetica,sans-Serif" font-size="9.00">supabaseAdmin.ts</text>
+<path fill="#d1d5db" stroke="#4b5563" stroke-width="2" d="M512.71,-171.25C512.71,-171.25 433.29,-171.25 433.29,-171.25 430.21,-171.25 427.12,-168.17 427.12,-165.08 427.12,-165.08 427.12,-158.92 427.12,-158.92 427.12,-155.83 430.21,-152.75 433.29,-152.75 433.29,-152.75 512.71,-152.75 512.71,-152.75 515.79,-152.75 518.88,-155.83 518.88,-158.92 518.88,-158.92 518.88,-165.08 518.88,-165.08 518.88,-168.17 515.79,-171.25 512.71,-171.25"/>
+<text xml:space="preserve" text-anchor="start" x="435.12" y="-159" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#111827">supabaseAdmin.ts</text>
 </a>
 </g>
 </g>
 <!-- lib/ghostme/agenda/reminderEngine.ts&#45;&gt;lib/supabaseAdmin.ts -->
 <g id="edge2" class="edge">
 <title>lib/ghostme/agenda/reminderEngine.ts&#45;&gt;lib/supabaseAdmin.ts</title>
-<path fill="none" stroke="#000000" stroke-width="2" stroke-opacity="0.200000" d="M238.98,-89.42C241.8,-90.97 244.43,-92.81 246.75,-95 255.53,-103.31 245.74,-112.94 254.75,-121 266.85,-131.82 357.84,-146.24 418.16,-154.78"/>
-<polygon fill="#000000" fill-opacity="0.200000" stroke="#000000" stroke-width="2" stroke-opacity="0.200000" points="417.6,-156.83 423.83,-155.58 418.18,-152.67 417.6,-156.83"/>
+<path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M238.98,-89.42C241.8,-90.97 244.43,-92.81 246.75,-95 255.53,-103.31 245.74,-112.94 254.75,-121 266.82,-131.79 357.33,-146.16 417.65,-154.71"/>
+<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="417.09,-156.75 423.32,-155.51 417.67,-152.59 417.09,-156.75"/>
 </g>
 <!-- lib/ghostme/proactive/proactiveMessageService.ts&#45;&gt;lib/supabaseAdmin.ts -->
 <g id="edge10" class="edge">
 <title>lib/ghostme/proactive/proactiveMessageService.ts&#45;&gt;lib/supabaseAdmin.ts</title>
-<path fill="none" stroke="#000000" stroke-width="2" stroke-opacity="0.200000" d="M388.36,-91.58C390.15,-92.62 391.87,-93.75 393.5,-95 403.76,-102.85 397.81,-111.44 406.5,-121 416.57,-132.08 430.3,-141.29 442.59,-148.15"/>
-<polygon fill="#000000" fill-opacity="0.200000" stroke="#000000" stroke-width="2" stroke-opacity="0.200000" points="441.45,-149.92 447.73,-150.9 443.43,-146.22 441.45,-149.92"/>
+<path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M388.36,-91.58C390.15,-92.62 391.87,-93.75 393.5,-95 403.76,-102.85 397.81,-111.44 406.5,-121 416.34,-131.83 429.69,-140.88 441.77,-147.69"/>
+<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="440.54,-149.41 446.81,-150.41 442.53,-145.71 440.54,-149.41"/>
 </g>
 <!-- lib/ghostme/proactive/proactiveCardLifecycle.ts -->
 <g id="node8" class="node">
 <title>lib/ghostme/proactive/proactiveCardLifecycle.ts</title>
 <g id="a_node8"><a xlink:href="lib/ghostme/proactive/proactiveCardLifecycle.ts" xlink:title="proactiveCardLifecycle.ts">
-<path fill="#ddfeff" stroke="black" d="M526.21,-60.25C526.21,-60.25 419.79,-60.25 419.79,-60.25 416.71,-60.25 413.62,-57.17 413.62,-54.08 413.62,-54.08 413.62,-47.92 413.62,-47.92 413.62,-44.83 416.71,-41.75 419.79,-41.75 419.79,-41.75 526.21,-41.75 526.21,-41.75 529.29,-41.75 532.38,-44.83 532.38,-47.92 532.38,-47.92 532.38,-54.08 532.38,-54.08 532.38,-57.17 529.29,-60.25 526.21,-60.25"/>
-<text xml:space="preserve" text-anchor="start" x="421.62" y="-48" font-family="Helvetica,sans-Serif" font-size="9.00">proactiveCardLifecycle.ts</text>
+<path fill="#ddfeff" stroke="#9ca3af" d="M526.21,-60.25C526.21,-60.25 419.79,-60.25 419.79,-60.25 416.71,-60.25 413.62,-57.17 413.62,-54.08 413.62,-54.08 413.62,-47.92 413.62,-47.92 413.62,-44.83 416.71,-41.75 419.79,-41.75 419.79,-41.75 526.21,-41.75 526.21,-41.75 529.29,-41.75 532.38,-44.83 532.38,-47.92 532.38,-47.92 532.38,-54.08 532.38,-54.08 532.38,-57.17 529.29,-60.25 526.21,-60.25"/>
+<text xml:space="preserve" text-anchor="start" x="421.62" y="-48" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#111827">proactiveCardLifecycle.ts</text>
 </a>
 </g>
 </g>
 <!-- lib/ghostme/proactive/proactiveMessageService.ts&#45;&gt;lib/ghostme/proactive/proactiveCardLifecycle.ts -->
 <g id="edge8" class="edge">
 <title>lib/ghostme/proactive/proactiveMessageService.ts&#45;&gt;lib/ghostme/proactive/proactiveCardLifecycle.ts</title>
-<path fill="none" stroke="#000000" stroke-width="2" stroke-opacity="0.200000" d="M373.94,-72.28C388.17,-69.19 404.04,-65.74 418.8,-62.54"/>
-<polygon fill="#000000" fill-opacity="0.200000" stroke="#000000" stroke-width="2" stroke-opacity="0.200000" points="418.97,-64.66 424.39,-61.33 418.08,-60.55 418.97,-64.66"/>
+<path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M373.94,-72.28C388.17,-69.19 404.04,-65.74 418.8,-62.54"/>
+<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="418.97,-64.66 424.39,-61.33 418.08,-60.55 418.97,-64.66"/>
 </g>
 <!-- lib/ghostme/proactive/proactiveMessageDedupe.ts -->
 <g id="node9" class="node">
 <title>lib/ghostme/proactive/proactiveMessageDedupe.ts</title>
 <g id="a_node9"><a xlink:href="lib/ghostme/proactive/proactiveMessageDedupe.ts" xlink:title="proactiveMessageDedupe.ts">
-<path fill="#ddfeff" stroke="black" d="M533.33,-91.25C533.33,-91.25 412.67,-91.25 412.67,-91.25 409.58,-91.25 406.5,-88.17 406.5,-85.08 406.5,-85.08 406.5,-78.92 406.5,-78.92 406.5,-75.83 409.58,-72.75 412.67,-72.75 412.67,-72.75 533.33,-72.75 533.33,-72.75 536.42,-72.75 539.5,-75.83 539.5,-78.92 539.5,-78.92 539.5,-85.08 539.5,-85.08 539.5,-88.17 536.42,-91.25 533.33,-91.25"/>
-<text xml:space="preserve" text-anchor="start" x="414.5" y="-79" font-family="Helvetica,sans-Serif" font-size="9.00">proactiveMessageDedupe.ts</text>
+<path fill="#ddfeff" stroke="#9ca3af" d="M533.33,-91.25C533.33,-91.25 412.67,-91.25 412.67,-91.25 409.58,-91.25 406.5,-88.17 406.5,-85.08 406.5,-85.08 406.5,-78.92 406.5,-78.92 406.5,-75.83 409.58,-72.75 412.67,-72.75 412.67,-72.75 533.33,-72.75 533.33,-72.75 536.42,-72.75 539.5,-75.83 539.5,-78.92 539.5,-78.92 539.5,-85.08 539.5,-85.08 539.5,-88.17 536.42,-91.25 533.33,-91.25"/>
+<text xml:space="preserve" text-anchor="start" x="414.5" y="-79" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#111827">proactiveMessageDedupe.ts</text>
 </a>
 </g>
 </g>
 <!-- lib/ghostme/proactive/proactiveMessageService.ts&#45;&gt;lib/ghostme/proactive/proactiveMessageDedupe.ts -->
 <g id="edge9" class="edge">
 <title>lib/ghostme/proactive/proactiveMessageService.ts&#45;&gt;lib/ghostme/proactive/proactiveMessageDedupe.ts</title>
-<path fill="none" stroke="#000000" stroke-width="2" stroke-opacity="0.200000" d="M393.87,-82C395.04,-82 396.2,-82 397.37,-82"/>
-<polygon fill="#000000" fill-opacity="0.200000" stroke="#000000" stroke-width="2" stroke-opacity="0.200000" points="397.29,-84.1 403.29,-82 397.29,-79.9 397.29,-84.1"/>
+<path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M393.87,-82C395.04,-82 396.2,-82 397.37,-82"/>
+<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="397.29,-84.1 403.29,-82 397.29,-79.9 397.29,-84.1"/>
 </g>
 <!-- node_modules/@supabase/supabase&#45;js -->
 <g id="node10" class="node">
 <title>node_modules/@supabase/supabase&#45;js</title>
 <g id="a_node10"><a xlink:href="https://www.npmjs.com/package/@supabase/supabase-js" xlink:title="supabase&#45;js">
-<polygon fill="#c40b0a" fill-opacity="0.101961" stroke="black" points="653.75,-101.25 589.56,-101.25 587.5,-99.19 587.5,-82.75 651.69,-82.75 653.75,-84.81 653.75,-101.25"/>
-<polyline fill="none" stroke="black" points="651.69,-99.19 587.5,-99.19"/>
-<polyline fill="none" stroke="black" points="651.69,-99.19 651.69,-82.75"/>
-<polyline fill="none" stroke="black" points="651.69,-99.19 653.75,-101.25"/>
-<text xml:space="preserve" text-anchor="start" x="595.5" y="-89" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#c40b0a">supabase&#45;js</text>
+<polygon fill="#d1d5db" stroke="#4b5563" stroke-width="2" points="653.75,-101.25 589.56,-101.25 587.5,-99.19 587.5,-82.75 651.69,-82.75 653.75,-84.81 653.75,-101.25"/>
+<polyline fill="none" stroke="#4b5563" stroke-width="2" points="651.69,-99.19 587.5,-99.19"/>
+<polyline fill="none" stroke="#4b5563" stroke-width="2" points="651.69,-99.19 651.69,-82.75"/>
+<polyline fill="none" stroke="#4b5563" stroke-width="2" points="651.69,-99.19 653.75,-101.25"/>
+<text xml:space="preserve" text-anchor="start" x="595.5" y="-89" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#111827">supabase&#45;js</text>
 </a>
 </g>
 </g>
 <!-- lib/supabaseAdmin.ts&#45;&gt;node_modules/@supabase/supabase&#45;js -->
 <g id="edge11" class="edge">
 <title>lib/supabaseAdmin.ts&#45;&gt;node_modules/@supabase/supabase&#45;js</title>
-<path fill="none" stroke="#000000" stroke-opacity="0.200000" d="M495.84,-152.34C514.04,-144.21 540.61,-132.15 563.5,-121 573.92,-115.93 585.29,-110.1 595.06,-105.01"/>
-<polygon fill="#000000" fill-opacity="0.200000" stroke="#000000" stroke-opacity="0.200000" points="595.85,-106.97 600.19,-102.32 593.91,-103.25 595.85,-106.97"/>
+<path fill="none" stroke="#6b7280" stroke-opacity="0.400000" d="M496.95,-151.85C515.11,-143.73 541.07,-131.93 563.5,-121 573.5,-116.13 584.38,-110.57 593.88,-105.63"/>
+<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-opacity="0.400000" points="594.83,-107.5 599.17,-102.86 592.88,-103.78 594.83,-107.5"/>
 </g>
 <!-- lib/ghostme/calendar/calendarIntent.ts -->
 <g id="node5" class="node">
 <title>lib/ghostme/calendar/calendarIntent.ts</title>
 <g id="a_node5"><a xlink:href="lib/ghostme/calendar/calendarIntent.ts" xlink:title="calendarIntent.ts">
-<path fill="#ddfeff" stroke="black" d="M113.46,-50.25C113.46,-50.25 42.29,-50.25 42.29,-50.25 39.21,-50.25 36.12,-47.17 36.12,-44.08 36.12,-44.08 36.12,-37.92 36.12,-37.92 36.12,-34.83 39.21,-31.75 42.29,-31.75 42.29,-31.75 113.46,-31.75 113.46,-31.75 116.54,-31.75 119.62,-34.83 119.62,-37.92 119.62,-37.92 119.62,-44.08 119.62,-44.08 119.62,-47.17 116.54,-50.25 113.46,-50.25"/>
-<text xml:space="preserve" text-anchor="start" x="44.12" y="-38" font-family="Helvetica,sans-Serif" font-size="9.00">calendarIntent.ts</text>
+<path fill="#ddfeff" stroke="#9ca3af" d="M113.46,-50.25C113.46,-50.25 42.29,-50.25 42.29,-50.25 39.21,-50.25 36.12,-47.17 36.12,-44.08 36.12,-44.08 36.12,-37.92 36.12,-37.92 36.12,-34.83 39.21,-31.75 42.29,-31.75 42.29,-31.75 113.46,-31.75 113.46,-31.75 116.54,-31.75 119.62,-34.83 119.62,-37.92 119.62,-37.92 119.62,-44.08 119.62,-44.08 119.62,-47.17 116.54,-50.25 113.46,-50.25"/>
+<text xml:space="preserve" text-anchor="start" x="44.12" y="-38" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#111827">calendarIntent.ts</text>
 </a>
 </g>
 </g>
@@ -159,52 +159,52 @@
 <g id="node6" class="node">
 <title>node_modules/openai</title>
 <g id="a_node6"><a xlink:href="https://www.npmjs.com/package/openai" xlink:title="openai">
-<polygon fill="#c40b0a" fill-opacity="0.101961" stroke="black" points="647.62,-67.25 595.68,-67.25 593.62,-65.19 593.62,-48.75 645.57,-48.75 647.62,-50.81 647.62,-67.25"/>
-<polyline fill="none" stroke="black" points="645.57,-65.19 593.62,-65.19"/>
-<polyline fill="none" stroke="black" points="645.57,-65.19 645.57,-48.75"/>
-<polyline fill="none" stroke="black" points="645.57,-65.19 647.62,-67.25"/>
-<text xml:space="preserve" text-anchor="start" x="606.38" y="-55" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#c40b0a">openai</text>
+<polygon fill="#d1d5db" stroke="#4b5563" stroke-width="2" points="647.62,-67.25 595.68,-67.25 593.62,-65.19 593.62,-48.75 645.57,-48.75 647.62,-50.81 647.62,-67.25"/>
+<polyline fill="none" stroke="#4b5563" stroke-width="2" points="645.57,-65.19 593.62,-65.19"/>
+<polyline fill="none" stroke="#4b5563" stroke-width="2" points="645.57,-65.19 645.57,-48.75"/>
+<polyline fill="none" stroke="#4b5563" stroke-width="2" points="645.57,-65.19 647.62,-67.25"/>
+<text xml:space="preserve" text-anchor="start" x="606.38" y="-55" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#111827">openai</text>
 </a>
 </g>
 </g>
 <!-- lib/ghostme/calendar/calendarIntent.ts&#45;&gt;node_modules/openai -->
 <g id="edge3" class="edge">
 <title>lib/ghostme/calendar/calendarIntent.ts&#45;&gt;node_modules/openai</title>
-<path fill="none" stroke="#000000" stroke-opacity="0.200000" d="M97.21,-31.27C108.99,-25.57 124.84,-18.94 139.75,-16 186.41,-6.79 199.21,-14.87 246.75,-16 387.65,-19.33 426.87,3.57 563.5,-31 575.25,-33.97 587.48,-39.52 597.51,-44.82"/>
-<polygon fill="#000000" fill-opacity="0.200000" stroke="#000000" stroke-opacity="0.200000" points="596.47,-46.64 602.74,-47.69 598.48,-42.96 596.47,-46.64"/>
+<path fill="none" stroke="#6b7280" stroke-opacity="0.400000" d="M97.21,-31.27C108.99,-25.57 124.84,-18.94 139.75,-16 186.41,-6.79 199.21,-14.87 246.75,-16 387.65,-19.33 426.87,3.57 563.5,-31 574.91,-33.89 586.77,-39.2 596.63,-44.36"/>
+<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-opacity="0.400000" points="595.5,-46.13 601.77,-47.15 597.5,-42.44 595.5,-46.13"/>
 </g>
 <!-- lib/ghostme/calendar/calendarService.ts -->
 <g id="node7" class="node">
 <title>lib/ghostme/calendar/calendarService.ts</title>
 <g id="a_node7"><a xlink:href="lib/ghostme/calendar/calendarService.ts" xlink:title="calendarService.ts">
-<path fill="#ddfeff" stroke="black" d="M117.58,-81.25C117.58,-81.25 38.17,-81.25 38.17,-81.25 35.08,-81.25 32,-78.17 32,-75.08 32,-75.08 32,-68.92 32,-68.92 32,-65.83 35.08,-62.75 38.17,-62.75 38.17,-62.75 117.58,-62.75 117.58,-62.75 120.67,-62.75 123.75,-65.83 123.75,-68.92 123.75,-68.92 123.75,-75.08 123.75,-75.08 123.75,-78.17 120.67,-81.25 117.58,-81.25"/>
-<text xml:space="preserve" text-anchor="start" x="40" y="-69" font-family="Helvetica,sans-Serif" font-size="9.00">calendarService.ts</text>
+<path fill="#fef3c7" stroke="#f59e0b" d="M117.58,-81.25C117.58,-81.25 38.17,-81.25 38.17,-81.25 35.08,-81.25 32,-78.17 32,-75.08 32,-75.08 32,-68.92 32,-68.92 32,-65.83 35.08,-62.75 38.17,-62.75 38.17,-62.75 117.58,-62.75 117.58,-62.75 120.67,-62.75 123.75,-65.83 123.75,-68.92 123.75,-68.92 123.75,-75.08 123.75,-75.08 123.75,-78.17 120.67,-81.25 117.58,-81.25"/>
+<text xml:space="preserve" text-anchor="start" x="40" y="-69" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#111827">calendarService.ts</text>
 </a>
 </g>
 </g>
 <!-- lib/ghostme/calendar/calendarService.ts&#45;&gt;lib/ghostme/agenda/agendaEngine.ts -->
 <g id="edge4" class="edge">
 <title>lib/ghostme/calendar/calendarService.ts&#45;&gt;lib/ghostme/agenda/agendaEngine.ts</title>
-<path fill="none" stroke="#000000" stroke-width="2" stroke-opacity="0.200000" d="M124.01,-63.64C129.82,-62.56 135.8,-61.46 141.68,-60.37"/>
-<polygon fill="#000000" fill-opacity="0.200000" stroke="#000000" stroke-width="2" stroke-opacity="0.200000" points="141.72,-62.49 147.24,-59.34 140.96,-58.36 141.72,-62.49"/>
+<path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M124.01,-63.64C129.82,-62.56 135.8,-61.46 141.68,-60.37"/>
+<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="141.72,-62.49 147.24,-59.34 140.96,-58.36 141.72,-62.49"/>
 </g>
 <!-- lib/ghostme/calendar/calendarService.ts&#45;&gt;lib/ghostme/agenda/reminderEngine.ts -->
 <g id="edge5" class="edge">
 <title>lib/ghostme/calendar/calendarService.ts&#45;&gt;lib/ghostme/agenda/reminderEngine.ts</title>
-<path fill="none" stroke="#000000" stroke-width="2" stroke-opacity="0.200000" d="M124.01,-75.98C128.8,-76.4 133.7,-76.84 138.57,-77.26"/>
-<polygon fill="#000000" fill-opacity="0.200000" stroke="#000000" stroke-width="2" stroke-opacity="0.200000" points="138.09,-79.33 144.26,-77.77 138.46,-75.15 138.09,-79.33"/>
+<path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M124.01,-75.98C128.8,-76.4 133.7,-76.84 138.57,-77.26"/>
+<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="138.09,-79.33 144.26,-77.77 138.46,-75.15 138.09,-79.33"/>
 </g>
 <!-- lib/ghostme/calendar/calendarService.ts&#45;&gt;lib/ghostme/proactive/proactiveMessageService.ts -->
 <g id="edge6" class="edge">
 <title>lib/ghostme/calendar/calendarService.ts&#45;&gt;lib/ghostme/proactive/proactiveMessageService.ts</title>
-<path fill="none" stroke="#000000" stroke-width="2" stroke-opacity="0.200000" d="M123.2,-62.37C126.32,-60.59 129.22,-58.49 131.75,-56 140.06,-47.82 130.33,-37.88 139.75,-31 178.16,-2.96 201.08,-17.73 246.75,-31 270.62,-37.93 294.18,-54.32 309.56,-66.66"/>
-<polygon fill="#000000" fill-opacity="0.200000" stroke="#000000" stroke-width="2" stroke-opacity="0.200000" points="308.12,-68.2 314.09,-70.41 310.8,-64.96 308.12,-68.2"/>
+<path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M123.2,-62.37C126.32,-60.59 129.22,-58.49 131.75,-56 140.06,-47.82 130.33,-37.88 139.75,-31 178.16,-2.96 201.08,-17.73 246.75,-31 270.62,-37.93 294.18,-54.32 309.56,-66.66"/>
+<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="308.12,-68.2 314.09,-70.41 310.8,-64.96 308.12,-68.2"/>
 </g>
 <!-- lib/ghostme/calendar/calendarService.ts&#45;&gt;lib/supabaseAdmin.ts -->
 <g id="edge7" class="edge">
 <title>lib/ghostme/calendar/calendarService.ts&#45;&gt;lib/supabaseAdmin.ts</title>
-<path fill="none" stroke="#000000" stroke-width="2" stroke-opacity="0.200000" d="M87.74,-81.68C98.76,-93.06 118.7,-111.58 139.75,-121 231.14,-161.89 349.98,-166.32 417.95,-164.84"/>
-<polygon fill="#000000" fill-opacity="0.200000" stroke="#000000" stroke-width="2" stroke-opacity="0.200000" points="417.82,-166.94 423.76,-164.68 417.71,-162.74 417.82,-166.94"/>
+<path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M87.74,-81.68C98.76,-93.06 118.7,-111.58 139.75,-121 230.88,-161.78 349.32,-166.29 417.38,-164.85"/>
+<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="417.26,-166.95 423.21,-164.7 417.16,-162.75 417.26,-166.95"/>
 </g>
 </g>
 </svg>
