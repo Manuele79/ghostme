@@ -9,6 +9,44 @@ export type ObservationEventType =
   | "work_left"
   | "place_unknown_detected";
 
+export type UnknownPlaceCandidate = {
+  id: string;
+  latitude: number;
+  longitude: number;
+  confidence: number;
+  occurrences: number;
+  averageAccuracy: number | null;
+};
+
+const UNKNOWN_PLACE_RADIUS_METERS = 120;
+const UNKNOWN_PLACE_MIN_VISITS = 3;
+const UNKNOWN_PLACE_MIN_CONFIDENCE = 7;
+const DISTINCT_VISIT_WINDOW_MS = 2 * 60 * 60 * 1000;
+
+function distanceMeters(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+) {
+  const earthRadius = 6371000;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) ** 2;
+  return earthRadius * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+}
+
+function coordinatesFor(event: any) {
+  const latitude = Number(event?.context?.latitude);
+  const longitude = Number(event?.context?.longitude);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+  return { latitude, longitude };
+}
+
 export async function recordObservation({
   userId,
   eventType,
@@ -133,8 +171,132 @@ async function upsertBehaviorPattern({
   ]);
 }
 
+async function upsertUnknownPlaceCandidate({
+  userId,
+  events,
+}: {
+  userId: string;
+  events: any[];
+}): Promise<UnknownPlaceCandidate | null> {
+  const distinctEvents: any[] = [];
+  for (const event of events) {
+    const occurredAt = new Date(event?.occurred_at || 0).getTime();
+    const previousAt = new Date(
+      distinctEvents[distinctEvents.length - 1]?.occurred_at || 0
+    ).getTime();
+    if (
+      distinctEvents.length &&
+      Number.isFinite(occurredAt) &&
+      Number.isFinite(previousAt) &&
+      occurredAt - previousAt < DISTINCT_VISIT_WINDOW_MS
+    ) {
+      continue;
+    }
+    distinctEvents.push(event);
+  }
+
+  const points = distinctEvents.map(coordinatesFor).filter(Boolean) as Array<{
+    latitude: number;
+    longitude: number;
+  }>;
+  if (points.length < UNKNOWN_PLACE_MIN_VISITS) return null;
+
+  const latitude = points.reduce((sum, point) => sum + point.latitude, 0) / points.length;
+  const longitude = points.reduce((sum, point) => sum + point.longitude, 0) / points.length;
+  const { data: knownPlaces } = await supabaseAdmin
+    .from("significant_places")
+    .select("latitude, longitude, radius_meters")
+    .eq("user_id", userId)
+    .neq("status", "archived");
+  const alreadyKnown = (knownPlaces || []).some((place) =>
+    distanceMeters(
+      latitude,
+      longitude,
+      Number(place.latitude),
+      Number(place.longitude)
+    ) <= Number(place.radius_meters || UNKNOWN_PLACE_RADIUS_METERS)
+  );
+  if (alreadyKnown) return null;
+
+  const accuracies = distinctEvents
+    .map((event) => Number(event?.context?.accuracy))
+    .filter((accuracy) => Number.isFinite(accuracy) && accuracy > 0);
+  const averageAccuracy = accuracies.length
+    ? accuracies.reduce((sum, accuracy) => sum + accuracy, 0) / accuracies.length
+    : null;
+  const accuracyScore =
+    averageAccuracy === null ? 1 : averageAccuracy <= 50 ? 2 : averageAccuracy <= 100 ? 1 : 0;
+  const confidence = Math.min(10, points.length * 2 + accuracyScore);
+  if (confidence < UNKNOWN_PLACE_MIN_CONFIDENCE) return null;
+
+  const { data: existingPatterns } = await supabaseAdmin
+    .from("behavior_patterns")
+    .select("id, trigger_conditions")
+    .eq("user_id", userId)
+    .eq("pattern_type", "unknown_place_candidate")
+    .in("status", ["learning", "active"]);
+  const existing = (existingPatterns || []).find((pattern) => {
+    const candidateLatitude = Number(pattern.trigger_conditions?.latitude);
+    const candidateLongitude = Number(pattern.trigger_conditions?.longitude);
+    return (
+      Number.isFinite(candidateLatitude) &&
+      Number.isFinite(candidateLongitude) &&
+      distanceMeters(latitude, longitude, candidateLatitude, candidateLongitude) <=
+        UNKNOWN_PLACE_RADIUS_METERS
+    );
+  });
+
+  const payload = {
+    pattern_type: "unknown_place_candidate",
+    title: "Luogo sconosciuto visitato più volte",
+    description: "Luogo ricorrente ancora senza nome.",
+    place_label: null,
+    place_id: null,
+    trigger_conditions: {
+      latitude,
+      longitude,
+      radius_meters: UNKNOWN_PLACE_RADIUS_METERS,
+    },
+    learned_from: {
+      events: points.length,
+      window_days: 30,
+      average_accuracy: averageAccuracy,
+    },
+    confidence,
+    occurrences: points.length,
+    status: "active",
+    first_seen_at: distinctEvents[0]?.occurred_at || new Date().toISOString(),
+    last_seen_at:
+      distinctEvents[distinctEvents.length - 1]?.occurred_at ||
+      new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
+  const query = existing?.id
+    ? supabaseAdmin
+        .from("behavior_patterns")
+        .update(payload)
+        .eq("id", existing.id)
+        .eq("user_id", userId)
+    : supabaseAdmin.from("behavior_patterns").insert({ user_id: userId, ...payload });
+  const { data, error } = await query.select("id").single();
+  if (error || !data?.id) {
+    console.log("UNKNOWN PLACE CANDIDATE ERROR:", error);
+    return null;
+  }
+
+  return {
+    id: data.id,
+    latitude,
+    longitude,
+    confidence,
+    occurrences: points.length,
+    averageAccuracy,
+  };
+}
+
 export async function analyzeLocationPatterns(userId: string) {
-  if (!userId) return;
+  if (!userId) return [] as UnknownPlaceCandidate[];
 
   const sinceIso = new Date(
     Date.now() - 1000 * 60 * 60 * 24 * 30
@@ -149,10 +311,10 @@ export async function analyzeLocationPatterns(userId: string) {
 
   if (error) {
     console.log("ANALYZE LOCATION PATTERNS ERROR:", error);
-    return;
+    return [] as UnknownPlaceCandidate[];
   }
 
-  if (!events?.length) return;
+  if (!events?.length) return [] as UnknownPlaceCandidate[];
 
   const enterEvents = events.filter((event) =>
     ["location_enter", "home_arrived", "work_arrived"].includes(event.event_type)
@@ -281,7 +443,10 @@ export async function analyzeLocationPatterns(userId: string) {
     }
   }
 
-  if (unknownEvents.length >= 3) {
+  if (
+    unknownEvents.length >= 3 &&
+    unknownEvents.every((event) => !coordinatesFor(event))
+  ) {
     const confidence = Math.min(unknownEvents.length * 2, 10);
 
     await upsertBehaviorPattern({
@@ -307,6 +472,43 @@ export async function analyzeLocationPatterns(userId: string) {
         unknownEvents[unknownEvents.length - 1]?.occurred_at ||
         new Date().toISOString(),
     });
+  }
+
+  const unknownClusters: any[][] = [];
+  for (const event of unknownEvents) {
+    const coordinates = coordinatesFor(event);
+    if (!coordinates) continue;
+    const cluster = unknownClusters.find((items) => {
+      const anchor = coordinatesFor(items[0]);
+      return (
+        anchor &&
+        distanceMeters(
+          coordinates.latitude,
+          coordinates.longitude,
+          anchor.latitude,
+          anchor.longitude
+        ) <= UNKNOWN_PLACE_RADIUS_METERS
+      );
+    });
+    if (cluster) cluster.push(event);
+    else unknownClusters.push([event]);
+  }
+
+  const unknownPlaceCandidates = (
+    await Promise.all(
+      unknownClusters.map((cluster) =>
+        upsertUnknownPlaceCandidate({ userId, events: cluster })
+      )
+    )
+  ).filter(Boolean) as UnknownPlaceCandidate[];
+
+  if (unknownPlaceCandidates.length) {
+    await supabaseAdmin
+      .from("behavior_patterns")
+      .update({ status: "archived", updated_at: new Date().toISOString() })
+      .eq("user_id", userId)
+      .eq("pattern_type", "unknown_place_repeated")
+      .in("status", ["learning", "active"]);
   }
 
   const transitions = new Map<string, any[]>();
@@ -351,4 +553,6 @@ export async function analyzeLocationPatterns(userId: string) {
         new Date().toISOString(),
     });
   }
+
+  return unknownPlaceCandidates;
 }

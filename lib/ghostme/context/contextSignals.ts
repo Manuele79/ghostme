@@ -328,11 +328,14 @@ export function buildContextSignals(
   }
 
   // OSSERVAZIONI
-  const unknownPlaceEvents = observations.filter(
-    (o: any) => o.event_type === "place_unknown_detected"
+  const repeatedUnknownPlace = patterns.find(
+    (pattern: any) =>
+      pattern.pattern_type === "unknown_place_candidate" &&
+      Number(pattern.occurrences || 0) >= 3 &&
+      Number(pattern.confidence || 0) >= 7
   );
 
-  if (unknownPlaceEvents.length >= 3) {
+  if (repeatedUnknownPlace) {
     signals.push({
       key: "repeated_unknown_place",
       category: "observation",

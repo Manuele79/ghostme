@@ -4,6 +4,7 @@ import {
   analyzeLocationPatterns,
 } from "@/lib/ghostme/observation/observationEngine";
 import { runProactiveTrigger } from "@/lib/ghostme/proactive/proactiveTrigger";
+import { writeLocationCandidateCard } from "@/lib/ghostme/location/locationLearningFlow";
 
 export async function updateCurrentLocationFlow(body: any) {
   const { data: previousState } = await supabaseAdmin
@@ -63,6 +64,7 @@ export async function updateCurrentLocationFlow(body: any) {
         context: {
           latitude: body.latitude ?? null,
           longitude: body.longitude ?? null,
+          accuracy: body.accuracy ?? null,
         },
       });
     }
@@ -86,6 +88,7 @@ export async function updateCurrentLocationFlow(body: any) {
         context: {
           latitude: body.latitude ?? null,
           longitude: body.longitude ?? null,
+          accuracy: body.accuracy ?? null,
         },
       });
     }
@@ -104,17 +107,47 @@ export async function updateCurrentLocationFlow(body: any) {
         context: {
           latitude: body.latitude ?? null,
           longitude: body.longitude ?? null,
+          accuracy: body.accuracy ?? null,
         },
       });
     }
 
     await analyzeLocationPatterns(body.userId);
 
-    await runProactiveTrigger({
-      userId: body.userId,
-      trigger: "location_changed",
-    });
+    if (nextPlace) {
+      await runProactiveTrigger({
+        userId: body.userId,
+        trigger: "location_changed",
+      });
+    }
 
+  }
+
+  if (
+    !nextPlace &&
+    body.latitude != null &&
+    body.longitude != null
+  ) {
+    if (previousPlace === nextPlace) {
+      await recordObservation({
+        userId: body.userId,
+        eventType: "place_unknown_detected",
+        source: body.source || "browser",
+        placeLabel: null,
+        placeId: null,
+        value: { from: previousPlace, to: null },
+        context: {
+          latitude: body.latitude,
+          longitude: body.longitude,
+          accuracy: body.accuracy ?? null,
+        },
+      });
+    }
+
+    const candidates = await analyzeLocationPatterns(body.userId);
+    for (const candidate of candidates) {
+      await writeLocationCandidateCard({ userId: body.userId, candidate });
+    }
   }
 
   return {

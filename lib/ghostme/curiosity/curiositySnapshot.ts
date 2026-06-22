@@ -463,20 +463,10 @@ function goalCuriosities({
 }
 
 function signalCuriosities(contextSignals: ContextSignal[]) {
-  if (!contextSignals.some((signal) => signal.key === "repeated_unknown_place")) {
-    return [];
-  }
-
-  return [
-    item(
-      "missing_place_association",
-      "Luogo ricorrente sconosciuto",
-      "Un luogo non riconosciuto compare ripetutamente e non e ancora associato alla memoria dei luoghi.",
-      "memory",
-      8,
-      75
-    ),
-  ];
+  // Location learning writes a candidate-linked card directly. A generic
+  // duplicate would lose the candidate id required to save the answer.
+  void contextSignals;
+  return [];
 }
 
 export function buildCuriositySnapshot({

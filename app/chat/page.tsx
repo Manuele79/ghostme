@@ -299,6 +299,8 @@ export default function ChatPage() {
                   placeLabel: placeData.place?.label || null,
                   latitude: position.coords.latitude,
                   longitude: position.coords.longitude,
+                  accuracy: position.coords.accuracy,
+                  confidence: position.coords.accuracy <= 50 ? 80 : 60,
                   source: "browser",
                 }),
               });
@@ -564,6 +566,7 @@ export default function ChatPage() {
         traits,
         messages,
         userId: traits.user_id,
+        proactiveMessageId: pendingProactiveReplyId,
       }),
     });
 

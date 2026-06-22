@@ -5,6 +5,7 @@ import {
   getAuthenticatedUserId,
   UserContextAuthError,
 } from "@/lib/ghostme/auth/serverAuth";
+import { resolveLocationCandidateReply } from "@/lib/ghostme/location/locationLearningFlow";
 
 export const runtime = "nodejs";
 
@@ -19,6 +20,17 @@ export async function POST(req: Request) {
       req,
       body.userId as string | undefined
     );
+
+    const locationLearningReply = await resolveLocationCandidateReply({
+      userId,
+      proactiveMessageId: body.proactiveMessageId,
+      message,
+    });
+    if (locationLearningReply) {
+      return new Response(locationLearningReply, {
+        headers: { "Content-Type": "text/plain; charset=utf-8" },
+      });
+    }
 
     const result = await runGhostChatFlow({
       message,
