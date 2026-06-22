@@ -1,16 +1,8 @@
 {
   "crons": [
     {
-      "path": "/api/worker/reminder",
-      "schedule": "*/5 * * * *"
-    },
-    {
       "path": "/api/worker/proactive",
-      "schedule": "0 6,12,18 * * *"
-    },
-    {
-      "path": "/api/worker/house",
-      "schedule": "0 * * * *"
+      "schedule": "0 6 * * *"
     }
   ]
 }
