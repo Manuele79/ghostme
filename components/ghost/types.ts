@@ -27,7 +27,22 @@ export type BrainData = {
   curiosity: GhostBrainSnapshot["curiosity"] | null;
   trueProactive: GhostBrainSnapshot["trueProactive"] | null;
   house: GhostBrainSnapshot["home"] | null;
+  homeUi: HomeUiModel | null;
   decisionSnapshot: DecisionSnapshot | null;
+};
+
+export type HomeUiModel = {
+  statusLabel: string;
+  confidenceLabel: string;
+  reliable: boolean;
+  activeRooms: string[];
+  people: Array<{
+    key: "manu" | "vale";
+    label: "Manu" | "Vale";
+    isHome: boolean;
+    known: boolean;
+    detail: string;
+  }>;
 };
 
 export const modeLabels: Record<GhostMode, string> = {

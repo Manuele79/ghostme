@@ -13,6 +13,26 @@ function proactivePriorityLabel(value: unknown) {
   return "low";
 }
 
+function readableHomeStatus(value: unknown) {
+  const status = String(value || "").toLowerCase();
+  if (["enabled", "active", "approved", "useful"].includes(status)) return "utile";
+  if (["disabled", "rejected", "not_useful"].includes(status)) return "non utile";
+  if (["ignored", "dismissed", "archived"].includes(status)) return "ignorato";
+  if (["wrong", "invalid"].includes(status)) return "sbagliato";
+  return "da valutare";
+}
+
+function readableHomeTitle(item: Record<string, unknown>) {
+  return String(
+    item?.title ||
+      item?.automation_name ||
+      item?.automation_key ||
+      item?.rule_key ||
+      item?.pattern_type ||
+      "Elemento casa"
+  ).replaceAll("_", " ");
+}
+
 
 
 export function MemoryDrawer({
@@ -333,10 +353,96 @@ function ServicePanelContent({
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [observations, setObservations] = useState<any[]>([]);
   const [loadingObservations, setLoadingObservations] = useState(false);
+  const [homeSection, setHomeSection] = useState<
+    "habits" | "rules" | "actions" | null
+  >(null);
+  const [expandedHomeItem, setExpandedHomeItem] = useState<string | null>(null);
+  const [updatingHomeItem, setUpdatingHomeItem] = useState<string | null>(null);
+  const [ignoredHomeItems, setIgnoredHomeItems] = useState<string[]>([]);
+  const [homeFeedback, setHomeFeedback] = useState("");
 
 
   const [hiddenObservations, setHiddenObservations] = useState<string[]>([]);
   const [hiddenActions, setHiddenActions] = useState<string[]>([]);
+
+  function proactiveForHomeControl(control: Record<string, unknown>) {
+    if (control?.proactiveMessageId) {
+      return (brainData.proactiveMessages || []).find(
+        (message) => message.id === control.proactiveMessageId
+      );
+    }
+    const key = String(control?.automation_key || "");
+    return (brainData.proactiveMessages || []).find((message) => {
+      const logicalKey = String(message.logical_key || "");
+      return (
+        logicalKey === `home_control_${key}` ||
+        logicalKey.startsWith(`home_control_${key}_`)
+      );
+    });
+  }
+
+  async function respondToHomeControl(
+    control: Record<string, unknown>,
+    response: "yes" | "no"
+  ) {
+    const proactive = proactiveForHomeControl(control);
+    const itemId = String(control.id || control.automation_key || "");
+    if (!proactive?.id) {
+      setHomeFeedback("Questa azione è disponibile solo in lettura: manca la proposta collegata.");
+      return;
+    }
+    setUpdatingHomeItem(itemId);
+    setHomeFeedback("");
+    const res = await fetch("/api/house-suggestion-response", {
+      method: "POST",
+      headers: await getAuthenticatedJsonHeaders(),
+      body: JSON.stringify({
+        userId: currentUserId,
+        proactiveMessageId: proactive.id,
+        response,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setHomeFeedback(data.error || "Azione casa non aggiornata.");
+    } else {
+      setHomeFeedback(response === "yes" ? "Segnata come utile." : "Segnata come non utile.");
+      await refreshBrain(currentUserId);
+    }
+    setUpdatingHomeItem(null);
+  }
+
+  async function ignoreHomeControl(control: Record<string, unknown>) {
+    const proactive = proactiveForHomeControl(control);
+    const itemId = String(control.id || control.automation_key || "");
+    if (!proactive?.id) {
+      setIgnoredHomeItems((items) =>
+        items.includes(itemId) ? items : [...items, itemId]
+      );
+      setHomeFeedback("Nascosta solo in questa vista; nessuna automazione è stata modificata.");
+      return;
+    }
+    setUpdatingHomeItem(itemId);
+    const res = await fetch("/api/ghostme/proactive/read", {
+      method: "POST",
+      headers: await getAuthenticatedJsonHeaders(),
+      body: JSON.stringify({
+        userId: currentUserId,
+        id: proactive.id,
+        status: "dismissed",
+      }),
+    });
+    if (res.ok) {
+      setIgnoredHomeItems((items) =>
+        items.includes(itemId) ? items : [...items, itemId]
+      );
+      setHomeFeedback("Proposta ignorata; nessun comando è stato inviato a Home Assistant.");
+    } else {
+      const data = await res.json();
+      setHomeFeedback(data.error || "Impossibile ignorare la proposta.");
+    }
+    setUpdatingHomeItem(null);
+  }
 
 
   useEffect(() => {
@@ -808,71 +914,158 @@ async function saveLocationCandidate() {
   if (activeTab === "home") {
     const house = brainData.house;
     const state = house?.state;
+    const homeUi = brainData.homeUi;
 
-    if (!house || !state) {
+    if (!house || !state || !homeUi) {
       return <EmptyBrainBox text="Snapshot Home Assistant non disponibile." />;
     }
+
+    const routes = house.routes?.knownRoutes || [];
+    const habits = [
+      ...(house.patterns || []).map((pattern) => ({
+        id: pattern.id || pattern.pattern_type,
+        title: readableHomeTitle(pattern),
+        description: pattern.description || pattern.place_label || null,
+      })),
+      ...routes.map((route) => ({
+        id: `route-${route.from}-${route.to}`,
+        title: `${route.from} → ${route.to}`,
+        description: `Percorso ${route.source === "learned" ? "appreso" : "conosciuto"} · confidenza ${route.confidence}%`,
+      })),
+    ];
+    const rules = house.learnedRules || [];
+    const homeSuggestions = (brainData.proactiveMessages || [])
+      .filter(
+        (message) =>
+          message.category === "home_question" &&
+          !String(message.logical_key || "").startsWith("home_control_")
+      )
+      .map((message) => ({
+        id: `suggestion-${message.id}`,
+        automation_name: message.title || "Suggerimento casa",
+        status: "pending",
+        last_reason: message.message,
+        proactiveMessageId: message.id,
+      }));
+    const controls = [...(house.automationControls || []), ...homeSuggestions];
+    const homeSections: Array<{
+      key: NonNullable<typeof homeSection>;
+      label: string;
+      count: number;
+    }> = [
+      { key: "habits", label: "Abitudini", count: habits.length },
+      { key: "rules", label: "Regole", count: rules.length },
+      { key: "actions", label: "Azioni casa", count: controls.length },
+    ];
 
     return (
       <div className="space-y-4">
         <div className="rounded-3xl border border-cyan-400/20 bg-cyan-400/5 p-4">
           <p className="text-lg font-black text-cyan-200">Stato casa</p>
-          <p className="mt-2 text-sm text-zinc-300">
-            Presenza: {state.occupancyStatus || "sconosciuta"}
+          <p className="mt-2 text-base font-bold text-zinc-100">
+            {homeUi.statusLabel}
           </p>
-          <p className="mt-1 text-xs text-zinc-500">
-            Confidenza {state.confidence ?? 0}%
+          <p className={`mt-1 text-xs ${homeUi.reliable ? "text-emerald-300" : "text-amber-300"}`}>
+            {homeUi.confidenceLabel}
           </p>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {homeUi.people.map((person) => (
+              <div key={person.key} className="rounded-2xl border border-zinc-800 bg-black/40 p-3">
+                <p className="text-sm font-bold text-zinc-100">{person.label}</p>
+                <p className={`mt-1 text-xs ${person.isHome ? "text-emerald-300" : "text-zinc-500"}`}>
+                  {person.detail}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {state.activeRooms?.length > 0 && (
+        {homeUi.activeRooms.length > 0 && (
           <div className="rounded-3xl border border-zinc-800 bg-black/60 p-4">
             <p className="text-sm font-black text-cyan-200">Stanze attive</p>
-            <p className="mt-2 text-sm text-zinc-300">
-              {state.activeRooms.join(", ")}
-            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {homeUi.activeRooms.map((room) => (
+                <span key={room} className="rounded-full border border-cyan-400/20 bg-cyan-400/5 px-3 py-1 text-xs text-cyan-100">
+                  {room}
+                </span>
+              ))}
+            </div>
           </div>
         )}
 
         <div className="grid grid-cols-3 gap-2 text-center text-xs">
-          {[
-            ["Pattern", house.patterns.length],
-            ["Regole", house.learnedRules.length],
-            ["Controlli", house.automationControls.length],
-          ].map(([label, value]) => (
-            <div
-              key={String(label)}
-              className="rounded-2xl border border-zinc-800 bg-black/50 p-3"
+          {homeSections.map(({ key, label, count }) => (
+            <button
+              key={String(key)}
+              onClick={() => setHomeSection(homeSection === key ? null : key)}
+              className={`rounded-2xl border p-3 transition ${homeSection === key ? "border-cyan-300 bg-cyan-300 text-black" : "border-zinc-800 bg-black/50 text-zinc-300"}`}
             >
-              <p className="text-xl font-black text-white">{value}</p>
-              <p className="text-zinc-500">{label}</p>
-            </div>
+              <p className="text-xl font-black">{count}</p>
+              <p>{label}</p>
+            </button>
           ))}
         </div>
 
-        {house.automationControls.length > 0 && (
+        {homeSection === "habits" && (
           <div className="rounded-3xl border border-zinc-800 bg-black/60 p-4">
-            <p className="text-sm font-black text-cyan-200">Controlli casa</p>
+            <p className="text-sm font-black text-cyan-200">Abitudini e percorsi</p>
             <div className="mt-3 space-y-2">
-              {house.automationControls.map((control) => (
-                <div
-                  key={control.id || control.automation_key}
-                  className="rounded-2xl border border-zinc-800 bg-black/50 p-3"
-                >
-                  <p className="text-sm font-bold text-zinc-100">
-                    {control.automation_name || control.automation_key}
-                  </p>
-                  <p className="mt-1 text-xs text-zinc-400">
-                    {String(control.status || "da valutare").replaceAll("_", " ")}
-                    {control.room_key ? ` · ${control.room_key}` : ""}
-                  </p>
-                  {control.last_reason && (
-                    <p className="mt-2 text-xs leading-relaxed text-zinc-500">
-                      {String(control.last_reason).split(" | confidenza")[0]}
-                    </p>
-                  )}
+              {!habits.length ? <EmptyBrainBox text="Nessuna abitudine casa disponibile." /> : habits.map((habit) => (
+                <div key={habit.id} className="rounded-2xl border border-zinc-800 bg-black/50 p-3">
+                  <p className="text-sm font-bold capitalize text-zinc-100">{habit.title}</p>
+                  {habit.description && <p className="mt-1 text-xs text-zinc-500">{habit.description}</p>}
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {homeSection === "rules" && (
+          <div className="rounded-3xl border border-zinc-800 bg-black/60 p-4">
+            <p className="text-sm font-black text-cyan-200">Regole apprese</p>
+            <div className="mt-3 space-y-2">
+              {!rules.length ? <EmptyBrainBox text="Nessuna regola appresa." /> : rules.map((rule) => (
+                <div key={rule.id || rule.rule_key} className="rounded-2xl border border-zinc-800 bg-black/50 p-3">
+                  <p className="text-sm font-bold text-zinc-100">{readableHomeTitle(rule)}</p>
+                  <p className="mt-1 text-xs text-zinc-500">{rule.description || "Regola osservata da GhostMe."}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {homeSection === "actions" && (
+          <div className="rounded-3xl border border-zinc-800 bg-black/60 p-4">
+            <p className="text-sm font-black text-cyan-200">Azioni casa</p>
+            {homeFeedback && <p className="mt-2 text-xs text-cyan-200">{homeFeedback}</p>}
+            <div className="mt-3 space-y-3">
+              {!controls.length ? <EmptyBrainBox text="Nessuna azione casa da valutare." /> : controls.map((control) => {
+                const itemId = String(control.id || control.automation_key);
+                const ignored = ignoredHomeItems.includes(itemId);
+                const actionable = Boolean(proactiveForHomeControl(control)?.id);
+                const expanded = expandedHomeItem === itemId;
+                return (
+                  <div key={itemId} className="rounded-2xl border border-zinc-800 bg-black/50 p-3">
+                    <p className="text-sm font-bold text-zinc-100">{readableHomeTitle(control)}</p>
+                    <p className="mt-1 text-xs text-zinc-400">
+                      {ignored ? "ignorato" : readableHomeStatus(control.status)}
+                      {control.room_key ? ` · ${String(control.room_key).replaceAll("_", " ")}` : ""}
+                    </p>
+                    {expanded && (
+                      <p className="mt-2 text-xs leading-relaxed text-zinc-500">
+                        {String(control.last_reason || "Nessun dettaglio aggiuntivo.").split(" | confidenza")[0]}
+                      </p>
+                    )}
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <button disabled={!actionable || updatingHomeItem === itemId} onClick={() => respondToHomeControl(control, "yes")} className="rounded-xl bg-emerald-400 px-3 py-2 text-xs font-bold text-black disabled:opacity-40">Utile</button>
+                      <button disabled={!actionable || updatingHomeItem === itemId} onClick={() => respondToHomeControl(control, "no")} className="rounded-xl border border-red-400/40 px-3 py-2 text-xs font-bold text-red-300 disabled:opacity-40">Non utile</button>
+                      <button disabled={updatingHomeItem === itemId} onClick={() => ignoreHomeControl(control)} className="rounded-xl border border-zinc-700 px-3 py-2 text-xs font-bold text-zinc-300 disabled:opacity-40">Ignora</button>
+                      <button onClick={() => setExpandedHomeItem(expanded ? null : itemId)} className="rounded-xl border border-cyan-400/30 px-3 py-2 text-xs font-bold text-cyan-200">Dettagli</button>
+                    </div>
+                    {!actionable && <p className="mt-2 text-[11px] text-zinc-600">Valutazione read-only: nessuna proposta backend collegata.</p>}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

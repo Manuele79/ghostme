@@ -34,6 +34,7 @@ export function useGhostBrain() {
      curiosity: null,
      trueProactive: null,
      house: null,
+     homeUi: null,
      decisionSnapshot: null,
   });
 

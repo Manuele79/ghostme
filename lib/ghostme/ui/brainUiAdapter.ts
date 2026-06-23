@@ -1,4 +1,4 @@
-import type { BrainData } from "@/components/ghost/types";
+import type { BrainData, HomeUiModel } from "@/components/ghost/types";
 import type { GhostBrainSnapshot } from "@/lib/ghostme/context/reasoningService";
 import type { DecisionSnapshot } from "@/lib/ghostme/context/decisionSnapshot";
 
@@ -33,6 +33,71 @@ function preferArray<T>(...candidates: unknown[]): T[] {
   return firstArray || [];
 }
 
+function roomLabel(value: unknown) {
+  const room = String(value || "").trim().toLowerCase();
+  const labels: Record<string, string> = {
+    salotto: "Salotto",
+    sala: "Sala",
+    scale: "Scale",
+    cucina: "Cucina",
+    camera: "Camera",
+    armadio: "Armadio",
+    bagno: "Bagno",
+    fuori_casa: "Fuori casa",
+  };
+  return labels[room] || room.replaceAll("_", " ").replace(/^./, (c) => c.toUpperCase());
+}
+
+function buildHomeUiModel(
+  house: GhostBrainSnapshot["home"] | null
+): HomeUiModel | null {
+  const state = house?.state;
+  if (!state) return null;
+  const people = (["manu", "vale"] as const).map((key) => {
+    const person = state.people.find((item) => item.person === key);
+    const label: "Manu" | "Vale" = key === "manu" ? "Manu" : "Vale";
+    const known = Boolean(person?.presenceKnown);
+    return {
+      key,
+      label,
+      isHome: Boolean(known && person?.isHome),
+      known,
+      detail: !known
+        ? "Dato non disponibile"
+        : person?.isHome
+          ? "A casa"
+          : "Fuori casa",
+    };
+  });
+  const manu = people[0];
+  const vale = people[1];
+  const statusLabel =
+    manu.known && vale.known && manu.isHome && vale.isHome
+      ? "Manu e Vale in casa"
+      : manu.known && vale.known && manu.isHome
+        ? "Solo Manu in casa"
+        : manu.known && vale.known && vale.isHome
+          ? "Solo Vale in casa"
+          : manu.known && vale.known
+            ? "Casa vuota"
+            : "Stato casa non sicuro";
+  const lastUpdatedTime = new Date(state.lastUpdated || 0).getTime();
+  const fresh =
+    Number.isFinite(lastUpdatedTime) &&
+    Date.now() - lastUpdatedTime <= 6 * 60 * 60 * 1000;
+  const reliable = state.confidence >= 70 && fresh;
+
+  return {
+    statusLabel,
+    confidenceLabel: reliable
+      ? `Confidenza ${state.confidence}%`
+      : "Dato non sicuro",
+    reliable,
+    activeRooms: Array.from(new Set((state.activeRooms || []).map(roomLabel))),
+    people,
+  };
+}
+
 export function adaptBrainApiResponse(
   data: BrainApiResponse,
   previousActions: unknown = []
@@ -53,6 +118,7 @@ export function adaptBrainApiResponse(
   const actions = actionSources.some(Array.isArray)
     ? preferArray(...actionSources)
     : preferArray(previousActions, []);
+  const house = data.house ?? snapshot?.home ?? null;
 
   return {
     snapshot,
@@ -71,7 +137,8 @@ export function adaptBrainApiResponse(
     projects: data.projects ?? snapshot?.projects ?? null,
     curiosity: data.curiosity ?? snapshot?.curiosity ?? null,
     trueProactive: data.trueProactive ?? snapshot?.trueProactive ?? null,
-    house: data.house ?? snapshot?.home ?? null,
+    house,
+    homeUi: buildHomeUiModel(house),
     decisionSnapshot:
       data.decisionSnapshot ?? snapshotWithDecision?.decisionSnapshot ?? null,
   };

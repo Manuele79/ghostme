@@ -22,9 +22,14 @@ export type HouseStateSnapshot = {
   people: Array<{
     entityId: string;
     name: string;
-    person?: string | null;
+    person: "manu" | "vale" | null;
+    userId: string | null;
     state: string;
     isHome: boolean;
+    presenceKnown: boolean;
+    source: string | null;
+    confidence: number;
+    lastUpdated: string | null;
   }>;
   activeRooms: string[];
   media: Array<{
@@ -40,6 +45,37 @@ export type HouseStateSnapshot = {
 };
 
 const DEFAULT_DB_FRESHNESS_MS = 6 * 60 * 60 * 1000;
+const MANU_USER_ID =
+  process.env.GHOSTME_MANUELE_USER_ID ||
+  process.env.GHOSTME_HOME_ASSISTANT_USER_ID ||
+  process.env.HOME_ASSISTANT_USER_ID ||
+  "d8d8e77a-4af3-42e1-9810-16f534be4093";
+const VALE_USER_ID =
+  process.env.GHOSTME_VALENTINA_USER_ID ||
+  "533d9261-0724-41f7-b949-46687e56aa02";
+
+type HouseholdMember = {
+  person: "manu" | "vale";
+  name: "Manu" | "Vale";
+  userId: string;
+};
+
+type LocationPresenceRow = {
+  user_id: string;
+  current_place_label: string | null;
+  place_category: string | null;
+  source: string | null;
+  confidence: number | null;
+  updated_at: string | null;
+  last_changed_at: string | null;
+};
+
+function householdMembers(): HouseholdMember[] {
+  return [
+    { person: "manu", name: "Manu", userId: MANU_USER_ID },
+    { person: "vale", name: "Vale", userId: VALE_USER_ID },
+  ];
+}
 
 function dbFreshnessWindowMs() {
   const configuredMinutes = Number(process.env.HOUSE_SNAPSHOT_MAX_AGE_MINUTES);
@@ -62,6 +98,24 @@ function isActiveState(value: any) {
 
 function isHomeState(value: any) {
   return ["home", "casa"].includes(clean(value));
+}
+
+function isHomeLocation(row?: LocationPresenceRow | null) {
+  return Boolean(
+    row &&
+      (clean(row.place_category) === "home" ||
+        isHomeState(row.current_place_label))
+  );
+}
+
+function adjustedConfidence(value: unknown, updatedAt?: string | null) {
+  const confidence = Math.min(100, Math.max(0, Number(value || 0)));
+  const age = updatedAt ? Date.now() - new Date(updatedAt).getTime() : Infinity;
+  if (!Number.isFinite(age) || age > 24 * 60 * 60 * 1000) {
+    return Math.min(confidence, 40);
+  }
+  if (age > 6 * 60 * 60 * 1000) return Math.min(confidence, 60);
+  return confidence;
 }
 
 function unique(values: Array<string | null | undefined>) {
@@ -167,20 +221,10 @@ export async function buildHouseStateSnapshot(
   userId: string,
   { forceLive = false }: { forceLive?: boolean } = {}
 ): Promise<HouseStateSnapshot> {
-  if (!canAccessHomeAssistant(userId)) {
-    return {
-      occupancyStatus: "not_configured",
-      people: [],
-      activeRooms: [],
-      media: [],
-      signals: [],
-      confidence: 0,
-      occupancySince: null,
-      lastUpdated: null,
-    };
-  }
+  const homeAssistantConfigured = canAccessHomeAssistant(userId);
+  const members = householdMembers();
 
-  const [entitiesRes, eventsRes] = await Promise.all([
+  const [entitiesRes, eventsRes, locationsRes] = await Promise.all([
     supabaseAdmin
       .from("house_entities")
       .select("entity_id, entity_name, room_key, entity_type, updated_at")
@@ -192,6 +236,13 @@ export async function buildHouseStateSnapshot(
       .eq("user_id", userId)
       .order("occurred_at", { ascending: false })
       .limit(250),
+    supabaseAdmin
+      .from("user_location_state")
+      .select("user_id, current_place_label, place_category, source, confidence, updated_at, last_changed_at")
+      .in(
+        "user_id",
+        members.map((member) => member.userId)
+      ),
   ]);
 
   const latestEventByEntity = new Map<string, any>();
@@ -223,7 +274,7 @@ export async function buildHouseStateSnapshot(
     latestDatabaseTime > 0 &&
     Date.now() - latestDatabaseTime <= dbFreshnessWindowMs();
   const liveStates =
-    forceLive || !databaseIsFresh
+    homeAssistantConfigured && (forceLive || !databaseIsFresh)
       ? ((await getHAStates({ force: forceLive })) as HAState[])
       : [];
   const states = liveStates.length ? liveStates : databaseStates;
@@ -232,7 +283,7 @@ export async function buildHouseStateSnapshot(
     (state) => !["unknown", "unavailable", "none", ""].includes(clean(state.state))
   );
 
-  const people = cleanStates
+  const haPeople = cleanStates
     .filter((state) => getEntityInfo(state.entity_id).type === "person")
     .map((state) => {
       const info = getEntityInfo(state.entity_id);
@@ -243,10 +294,70 @@ export async function buildHouseStateSnapshot(
         person: info.person || null,
         state: state.state,
         isHome: isHomeState(state.state),
+        presenceKnown: true,
+        source: "home_assistant",
+        confidence: 90,
+        lastUpdated: state.last_updated || state.last_changed || null,
       };
     });
 
-  const peopleHome = people.filter((person) => person.isHome);
+  const locations = new Map(
+    ((locationsRes.data || []) as LocationPresenceRow[]).map((row) => [
+      row.user_id,
+      row,
+    ])
+  );
+  const people = members.map((member) => {
+    const ha = haPeople.find((person) => person.person === member.person);
+    const location = locations.get(member.userId) || null;
+    const locationUpdatedAt =
+      location?.updated_at || location?.last_changed_at || null;
+    const locationConfidence = adjustedConfidence(
+      location?.confidence,
+      locationUpdatedAt
+    );
+    const haConfidence = adjustedConfidence(90, ha?.lastUpdated || null);
+    const useLocation =
+      Boolean(location) &&
+      (!ha ||
+        new Date(locationUpdatedAt || 0).getTime() >=
+          new Date(ha.lastUpdated || 0).getTime());
+
+    if (useLocation && location) {
+      return {
+        entityId: ha?.entityId || `ghostme_user.${member.person}`,
+        name: member.name,
+        person: member.person,
+        userId: member.userId,
+        state: location.current_place_label || "sconosciuto",
+        isHome: isHomeLocation(location),
+        presenceKnown: Boolean(
+          location.current_place_label || location.place_category
+        ),
+        source: location.source || "user_location_state",
+        confidence: locationConfidence,
+        lastUpdated: locationUpdatedAt,
+      };
+    }
+
+    return {
+      entityId: ha?.entityId || `ghostme_user.${member.person}`,
+      name: member.name,
+      person: member.person,
+      userId: member.userId,
+      state: ha?.state || "sconosciuto",
+      isHome: Boolean(ha?.isHome),
+      presenceKnown: Boolean(ha),
+      source: ha?.source || null,
+      confidence: haConfidence,
+      lastUpdated: ha?.lastUpdated || null,
+    };
+  });
+
+  const peopleHome = people.filter(
+    (person) => person.presenceKnown && person.isHome
+  );
+  const knownPeople = people.filter((person) => person.presenceKnown);
 
   const activeRooms = unique(
     cleanStates
@@ -281,18 +392,16 @@ export async function buildHouseStateSnapshot(
       ? "multiple_people_home"
       : peopleHome.length === 1
         ? "one_person_home"
-        : people.length > 0
+        : knownPeople.length === members.length
           ? "empty"
           : activeRooms.length > 0
             ? "activity_detected"
-            : "unknown";
+            : !homeAssistantConfigured && knownPeople.length === 0
+              ? "not_configured"
+              : "unknown";
   const occupancySince =
     occupancyStatus === "empty"
-      ? latestTimestamp(
-          cleanStates
-            .filter((state) => getEntityInfo(state.entity_id).type === "person")
-            .map((state) => state.last_changed || state.last_updated)
-        )
+      ? latestTimestamp(people.map((person) => person.lastUpdated))
       : null;
 
   const signals = buildSignals({
@@ -305,7 +414,25 @@ export async function buildHouseStateSnapshot(
     ...cleanStates.map((state) => state.last_updated || state.last_changed),
     ...(entitiesRes.data || []).map((row: any) => row.updated_at),
     ...(eventsRes.data || []).map((row: any) => row.occurred_at),
+    ...(locationsRes.data || []).map(
+      (row: LocationPresenceRow) => row.updated_at || row.last_changed_at
+    ),
   ]);
+  const householdConfidence = knownPeople.length
+    ? Math.min(
+        knownPeople.length < members.length ? 60 : 100,
+        Math.round(
+          knownPeople.reduce(
+            (total, person) => total + person.confidence,
+            0
+          ) / knownPeople.length
+        )
+      )
+    : confidenceFor({
+        peopleCount: 0,
+        hasPersonEntities: false,
+        activeRooms,
+      });
 
   return {
     occupancyStatus,
@@ -313,11 +440,7 @@ export async function buildHouseStateSnapshot(
     activeRooms,
     media,
     signals,
-    confidence: confidenceFor({
-      peopleCount: peopleHome.length,
-      hasPersonEntities: people.length > 0,
-      activeRooms,
-    }),
+    confidence: householdConfidence,
     occupancySince,
     lastUpdated,
   };
