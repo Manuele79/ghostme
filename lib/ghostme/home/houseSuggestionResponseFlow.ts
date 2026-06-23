@@ -86,6 +86,60 @@ export async function houseSuggestionResponseFlow(body: any) {
     };
   }
 
+  const logicalKey = String(proactiveMessage.logical_key || "");
+  if (logicalKey.startsWith("home_control_")) {
+    const { data: controls } = await supabaseAdmin
+      .from("house_automation_controls")
+      .select("id, automation_key, control_type, last_reason, status")
+      .eq("user_id", userId)
+      .in("status", [
+        "pending",
+        "pending_confirmation",
+        "suggested",
+        "proposed",
+        "needs_review",
+      ]);
+    const control = (controls || []).find(
+      (item) =>
+        logicalKey === `home_control_${item.automation_key}` ||
+        logicalKey === `home_control_${item.automation_key}_${item.control_type}`
+    );
+    if (control) {
+      const now = new Date().toISOString();
+      const { error: controlError } = await supabaseAdmin
+        .from("house_automation_controls")
+        .update({
+          status: response === "yes" ? "enabled" : "disabled",
+          last_action: response === "yes" ? "approved" : "rejected",
+          last_reason: `${control.last_reason || "Controllo proposto"} | risposta utente: ${response}`,
+          expires_at: null,
+          updated_at: now,
+        })
+        .eq("id", control.id)
+        .eq("user_id", userId);
+      if (controlError) {
+        return {
+          status: 500,
+          body: { success: false, error: "Controllo casa non aggiornato" },
+        };
+      }
+      await supabaseAdmin
+        .from("ghost_proactive_messages")
+        .update({
+          status: "answered",
+          read_at: now,
+          answered_at: now,
+          updated_at: now,
+        })
+        .eq("id", proactiveMessageId)
+        .eq("user_id", userId);
+      return {
+        status: 200,
+        body: { success: true, response, controlUpdated: true },
+      };
+    }
+  }
+
   const { data: suggestion } = await supabaseAdmin
     .from("house_suggestions")
     .select("*")

@@ -849,6 +849,33 @@ async function saveLocationCandidate() {
             </div>
           ))}
         </div>
+
+        {house.automationControls.length > 0 && (
+          <div className="rounded-3xl border border-zinc-800 bg-black/60 p-4">
+            <p className="text-sm font-black text-cyan-200">Controlli casa</p>
+            <div className="mt-3 space-y-2">
+              {house.automationControls.map((control) => (
+                <div
+                  key={control.id || control.automation_key}
+                  className="rounded-2xl border border-zinc-800 bg-black/50 p-3"
+                >
+                  <p className="text-sm font-bold text-zinc-100">
+                    {control.automation_name || control.automation_key}
+                  </p>
+                  <p className="mt-1 text-xs text-zinc-400">
+                    {String(control.status || "da valutare").replaceAll("_", " ")}
+                    {control.room_key ? ` · ${control.room_key}` : ""}
+                  </p>
+                  {control.last_reason && (
+                    <p className="mt-2 text-xs leading-relaxed text-zinc-500">
+                      {String(control.last_reason).split(" | confidenza")[0]}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     );
   }

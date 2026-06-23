@@ -198,7 +198,9 @@ function buildHouseAutomationControlsContext(controls: any[]) {
       (control) =>
         `- ${control.automation_name || control.automation_key || "Automazione"} | ${
           control.room_key || ""
-        } | ${control.control_type || ""} | stato ${control.status || ""}`
+        } | ${control.control_type || ""} | stato ${control.status || ""} | ${
+          control.last_reason || ""
+        }`
     )
     .join("\n");
 }

@@ -172,11 +172,20 @@ export async function loadUserContextGraph(userId: string) {
 
     supabaseAdmin
       .from("house_automation_controls")
-      .select("id, automation_key, automation_name, room_key, control_type, status, updated_at")
+      .select("id, automation_key, automation_name, room_key, control_type, status, last_action, last_reason, expires_at, updated_at")
       .eq("user_id", userId)
-      .in("status", ["pending", "pending_confirmation", "active"])
+      .in("status", [
+        "pending",
+        "pending_confirmation",
+        "suggested",
+        "proposed",
+        "needs_review",
+        "active",
+        "enabled",
+      ])
+      .or(`expires_at.is.null,expires_at.gt.${now}`)
       .order("updated_at", { ascending: false })
-      .limit(5),
+      .limit(8),
 
     supabaseAdmin
       .from("house_patterns")
