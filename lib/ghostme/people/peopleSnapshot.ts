@@ -89,6 +89,9 @@ const EXCLUDED_NAME_TERMS = [
   "agenda",
   "promemoria",
   "appuntamento",
+  "domenica prossima",
+  "chat gpt",
+  "montagna",
 ];
 
 const GENERIC_RELATIONSHIP_NAMES = new Set([
@@ -104,6 +107,8 @@ const GENERIC_RELATIONSHIP_NAMES = new Set([
   "mia amica",
   "amico",
   "mio amico",
+  "amici",
+  "chi",
 ]);
 
 const NON_PERSON_TEXT_TERMS = [

@@ -8,6 +8,7 @@ import { trimBlock } from "@/lib/ghostme/chat/chatPromptBuilder";
 import type { DetectedTopicLike } from "@/lib/ghostme/chat/chatTypes";
 import { isFreshLocationState } from "@/lib/ghostme/location/locationStateFreshness";
 import { temporalMemoryLabel } from "@/lib/ghostme/context/temporalPriority";
+import { isDeepRecallRequest } from "@/lib/ghostme/chat/chatRecallPolicy";
 
 export type ChatContext = {
   profileContext: string;
@@ -30,6 +31,10 @@ export type ChatContext = {
   houseLearnedRulesContext: string;
   houseAutomationContext: string;
   behaviorRulesContext: string;
+  peopleContext: string;
+  relationshipContext: string;
+  placesContext: string;
+  deepRecallRequested: boolean;
 };
 
 export function createEmptyChatContext(): ChatContext {
@@ -54,6 +59,10 @@ export function createEmptyChatContext(): ChatContext {
     houseLearnedRulesContext: "",
     houseAutomationContext: "",
     behaviorRulesContext: "",
+    peopleContext: "",
+    relationshipContext: "",
+    placesContext: "",
+    deepRecallRequested: false,
   };
 }
 
@@ -206,18 +215,88 @@ function buildHouseAutomationControlsContext(controls: any[]) {
     .join("\n");
 }
 
+function buildPeopleContext(snapshot: GhostBrainSnapshot, deepRecall: boolean) {
+  const people = snapshot.people.items || [];
+  if (!people.length) return "";
+  const selected = deepRecall
+    ? people.slice(0, 20)
+    : (snapshot.people.importantPeople?.length
+        ? snapshot.people.importantPeople
+        : people
+      ).slice(0, 12);
+  const namesById = new Map(
+    people.filter((person) => person.id).map((person) => [person.id, person.name])
+  );
+
+  const directory = selected.map(
+    (person) =>
+      `- ${person.name} | relazione ${person.relationship_type || "non specificata"} | importanza ${person.importance || 0} | menzioni ${person.mention_count || 0}${person.description ? ` | ${String(person.description).slice(0, 120)}` : ""}`
+  );
+  const connections = selected.flatMap((person) =>
+    (snapshot.people.links || [])
+        .filter(
+          (link) =>
+            link.person_id === person.id ||
+            (link.target_type === "person" && link.target_id === person.id)
+        )
+        .slice(0, deepRecall ? 2 : 1)
+        .map((link) => {
+          const label =
+            link.target_type === "person" && link.target_id === person.id
+              ? namesById.get(link.person_id) || link.person_id
+              : link.target_label || link.target_key;
+          return `- ${person.name} ↔ ${link.target_type}: ${String(label).slice(0, 100)}`;
+        })
+  );
+  return [...directory, ...(connections.length ? ["COLLEGAMENTI:", ...connections] : [])].join("\n");
+}
+
+function buildRelationshipContext(snapshot: GhostBrainSnapshot) {
+  const relationship = snapshot.people.relationshipMemory;
+  const mentions = (relationship.recentMentions || [])
+    .slice(0, 8)
+    .map((item) => `${(item.people || []).join(", ")}: ${item.title || item.source || "ricordo"}`);
+  const events = (relationship.sharedEvents || [])
+    .slice(0, 8)
+    .map((item) => `${(item.people || []).join(", ")}: ${item.title || "evento"}`);
+  const places = (relationship.relatedPlaces || [])
+    .slice(0, 8)
+    .map((item) => `${(item.people || []).join(", ")}: ${item.place}`);
+  const social = (snapshot.people.socialSuggestions?.relationshipAttention || [])
+    .slice(0, 6)
+    .map((item) => `${item.person}: ${item.reason}`);
+  return [...mentions, ...events, ...places, ...social]
+    .filter(Boolean)
+    .map((item) => `- ${item}`)
+    .join("\n");
+}
+
+function buildPlacesContext(snapshot: GhostBrainSnapshot) {
+  return (snapshot.location.significantPlaces || [])
+    .slice(0, 12)
+    .map(
+      (place) =>
+        `- ${place.label || place.external_name || "Luogo"} | ${place.category || place.external_category || "categoria non specificata"} | visite ${place.visit_count || 0}${place.address ? ` | ${place.address}` : ""}`
+    )
+    .join("\n");
+}
+
 export async function buildChatContext({
   userId,
   detectedTopics,
+  message = "",
 }: {
   userId?: string;
   detectedTopics: DetectedTopicLike[];
+  message?: string;
 }): Promise<ChatContext> {
   const context = createEmptyChatContext();
 
   if (!userId) return context;
 
   const snapshot = await buildGhostBrainSnapshot(userId);
+  const deepRecall = isDeepRecallRequest(message, detectedTopics);
+  context.deepRecallRequested = deepRecall;
   const userProfile = snapshot.profile;
   context.profileContext = buildProfileContext(userProfile);
   context.userLocation = userProfile?.location || "";
@@ -229,6 +308,7 @@ export async function buildChatContext({
   const contextualData = await buildContextualMemory({
     userId,
     detectedTopics,
+    deepRecall,
     searchHints: [
       isFreshLocationState(currentLocation)
         ? currentLocation?.current_place_label
@@ -241,17 +321,32 @@ export async function buildChatContext({
     ],
   });
 
-  context.memoryContext = trimBlock(contextualData.memoryContext, 1100);
-  context.episodicContext = trimBlock(contextualData.episodicContext, 800);
-  context.lifeTopicsContext = trimBlock(contextualData.lifeTopicsContext, 1000);
-  context.summaryContext = trimBlock(contextualData.summaryContext, 800);
-  context.linkedTopicsContext = trimBlock(contextualData.linkedTopicsContext, 800);
+  context.memoryContext = trimBlock(
+    contextualData.memoryContext,
+    deepRecall ? 2200 : 1100
+  );
+  context.episodicContext = trimBlock(
+    contextualData.episodicContext,
+    deepRecall ? 1600 : 800
+  );
+  context.lifeTopicsContext = trimBlock(
+    contextualData.lifeTopicsContext,
+    deepRecall ? 1800 : 1000
+  );
+  context.summaryContext = trimBlock(
+    contextualData.summaryContext,
+    deepRecall ? 1400 : 800
+  );
+  context.linkedTopicsContext = trimBlock(
+    contextualData.linkedTopicsContext,
+    deepRecall ? 1400 : 800
+  );
 
   context.linkedTopicsContext = trimBlock(
     `${context.linkedTopicsContext}
 
       ${contextualData.relatedTopicContext || ""}`,
-    1200
+    deepRecall ? 1800 : 1200
   );
 
   context.cognitiveContext = trimBlock(
@@ -268,8 +363,8 @@ export async function buildChatContext({
     800
   );
   context.timelineContext = trimBlock(
-    buildTimelineContext(snapshot),
-    1800
+    `${buildTimelineContext(snapshot)}\n${contextualData.timelineContext || ""}`,
+    deepRecall ? 3600 : 1800
   );
   context.dynamicSelfProfileContext = trimBlock(
     buildDynamicSelfProfileContext(snapshot.profile?.dynamicProfile || []),
@@ -282,6 +377,18 @@ export async function buildChatContext({
   context.houseAutomationContext = trimBlock(
     buildHouseAutomationControlsContext(snapshot.home.automationControls),
     1200
+  );
+  context.peopleContext = trimBlock(
+    buildPeopleContext(snapshot, deepRecall),
+    deepRecall ? 3200 : 1800
+  );
+  context.relationshipContext = trimBlock(
+    buildRelationshipContext(snapshot),
+    deepRecall ? 1800 : 1000
+  );
+  context.placesContext = trimBlock(
+    buildPlacesContext(snapshot),
+    deepRecall ? 1400 : 800
   );
 
   context.calendarContext =

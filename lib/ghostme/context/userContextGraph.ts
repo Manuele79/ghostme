@@ -109,7 +109,7 @@ export async function loadUserContextGraph(userId: string) {
       .eq("user_id", userId)
       .neq("status", "archived")
       .order("last_seen_at", { ascending: false, nullsFirst: false })
-      .limit(5),
+      .limit(20),
 
     supabaseAdmin
       .from("calendar_events")

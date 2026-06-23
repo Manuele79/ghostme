@@ -8,7 +8,6 @@ const CLOSED_STATUSES = new Set([
 ]);
 const RECENT_PAST_WINDOW_MS = 14 * 24 * 60 * 60 * 1000;
 const RAW_CHAT_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
-const RECENT_CHAT_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 const MAX_CHAT_CONTEXT_MESSAGES = 16;
 
 function clean(value: unknown) {
@@ -104,14 +103,9 @@ export function prepareChatHistory(messages: any[], now = Date.now()) {
       ) {
         return null;
       }
-      const label = timestamp === null
-        ? "CHAT ATTUALE"
-        : now - timestamp <= RECENT_CHAT_WINDOW_MS
-          ? "CHAT RECENTE"
-          : "CHAT STORICA — NON STATO ATTUALE";
       const role = message?.role === "assistant" ? "assistant" : "user";
       const content = String(message?.content || "").trim();
-      return content ? { role, content: `[${label}] ${content}` } : null;
+      return content ? { role, content } : null;
     })
     .filter(Boolean) as Array<{ role: "user" | "assistant"; content: string }>;
 }

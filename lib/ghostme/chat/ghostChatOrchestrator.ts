@@ -8,6 +8,7 @@ import { handleChatCalendarFlow } from "@/lib/ghostme/chat/chatCalendarFlow";
 import { analyzeChatMessage } from "@/lib/ghostme/chat/chatMessageAnalyzer";
 import type { GhostChatFlowResult } from "@/lib/ghostme/chat/chatTypes";
 import { prepareChatHistory } from "@/lib/ghostme/context/temporalPriority";
+import { createGhostReplySanitizer } from "@/lib/ghostme/chat/chatResponseSanitizer";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -32,7 +33,7 @@ export async function runGhostChatFlow({
     await resolveNamedRelationship({ userId, message });
   }
 
-  const chatContext = await buildChatContext({ userId, detectedTopics });
+  const chatContext = await buildChatContext({ userId, detectedTopics, message });
   const {
     profileContext,
     memoryContext,
@@ -54,6 +55,10 @@ export async function runGhostChatFlow({
     houseLearnedRulesContext,
     houseAutomationContext,
     behaviorRulesContext,
+    peopleContext,
+    relationshipContext,
+    placesContext,
+    deepRecallRequested,
   } = chatContext;
   const serviceContext = await resolveChatExternalService({
     message,
@@ -93,13 +98,17 @@ export async function runGhostChatFlow({
     homeContext,
     houseLearnedRulesContext,
     houseAutomationContext,
+    peopleContext,
+    relationshipContext,
+    placesContext,
+    deepRecallRequested,
   });
 
   // Streaming della risposta
   const stream = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     temperature: 0.9,
-    max_tokens: 300,
+    max_tokens: deepRecallRequested ? 550 : 320,
     stream: true,
     messages: [
       { role: "system", content: systemPrompt },
@@ -109,7 +118,7 @@ export async function runGhostChatFlow({
   });
 
   const encoder = new TextEncoder();
-  let builtReply = "";
+  const sanitizeReply = createGhostReplySanitizer();
 
   const readable = new ReadableStream({
     async start(controller) {
@@ -117,13 +126,19 @@ export async function runGhostChatFlow({
         for await (const part of stream) {
           const delta = part?.choices?.[0]?.delta?.content ?? "";
           if (delta) {
-            builtReply += delta;
-            controller.enqueue(encoder.encode(delta));
+            const safeDelta = sanitizeReply(delta);
+            if (safeDelta) {
+              controller.enqueue(encoder.encode(safeDelta));
+            }
           }
         }
-      } catch (e) {
-        controller.enqueue(encoder.encode("\n[Errore risposta]"));
+      } catch {
+        controller.enqueue(encoder.encode("\nNon riesco a rispondere adesso."));
       } finally {
+        const tail = sanitizeReply("", true);
+        if (tail) {
+          controller.enqueue(encoder.encode(tail));
+        }
         controller.close();
       }
     },
