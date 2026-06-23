@@ -20,7 +20,7 @@ const diagrams = {
   chat: ["lib/ghostme/chat"],
   context: ["lib/ghostme/context"],
   curiosity: ["lib/ghostme/curiosity"],
-  ghostme: ["app", "components", "hooks", "lib"],
+  ghostme: ["app", "components"],
   goals: ["lib/ghostme/goals"],
   hooks: ["hooks"],
   house: ["lib/ghostme/homeAssistant"],
