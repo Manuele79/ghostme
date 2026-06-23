@@ -126,7 +126,7 @@
 </g>
 </g>
 <!-- lib/supabaseAdmin.ts&#45;&gt;node_modules/@supabase/supabase&#45;js -->
-<g id="edge34" class="edge">
+<g id="edge35" class="edge">
 <title>lib/supabaseAdmin.ts&#45;&gt;node_modules/@supabase/supabase&#45;js</title>
 <path fill="none" stroke="#6b7280" stroke-opacity="0.400000" d="M485.18,-460C504.32,-460 526.39,-460 544.91,-460"/>
 <polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-opacity="0.400000" points="544.57,-462.1 550.57,-460 544.57,-457.9 544.57,-462.1"/>
@@ -135,31 +135,31 @@
 <g id="node6" class="node">
 <title>lib/ghostme/homeAssistant/cognitiveHouseBuilder.ts</title>
 <g id="a_node6"><a xlink:href="lib/ghostme/homeAssistant/cognitiveHouseBuilder.ts" xlink:title="cognitiveHouseBuilder.ts">
-<path fill="#ddfeff" stroke="#9ca3af" d="M340.83,-112.25C340.83,-112.25 235.92,-112.25 235.92,-112.25 232.83,-112.25 229.75,-109.17 229.75,-106.08 229.75,-106.08 229.75,-99.92 229.75,-99.92 229.75,-96.83 232.83,-93.75 235.92,-93.75 235.92,-93.75 340.83,-93.75 340.83,-93.75 343.92,-93.75 347,-96.83 347,-99.92 347,-99.92 347,-106.08 347,-106.08 347,-109.17 343.92,-112.25 340.83,-112.25"/>
-<text xml:space="preserve" text-anchor="start" x="237.75" y="-100" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#111827">cognitiveHouseBuilder.ts</text>
+<path fill="#ddfeff" stroke="#9ca3af" d="M340.83,-81.25C340.83,-81.25 235.92,-81.25 235.92,-81.25 232.83,-81.25 229.75,-78.17 229.75,-75.08 229.75,-75.08 229.75,-68.92 229.75,-68.92 229.75,-65.83 232.83,-62.75 235.92,-62.75 235.92,-62.75 340.83,-62.75 340.83,-62.75 343.92,-62.75 347,-65.83 347,-68.92 347,-68.92 347,-75.08 347,-75.08 347,-78.17 343.92,-81.25 340.83,-81.25"/>
+<text xml:space="preserve" text-anchor="start" x="237.75" y="-69" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#111827">cognitiveHouseBuilder.ts</text>
 </a>
 </g>
 </g>
 <!-- lib/ghostme/homeAssistant/cognitiveHouseBuilder.ts&#45;&gt;lib/ghostme/homeAssistant/haClient.ts -->
 <g id="edge5" class="edge">
 <title>lib/ghostme/homeAssistant/cognitiveHouseBuilder.ts&#45;&gt;lib/ghostme/homeAssistant/haClient.ts</title>
-<path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M347.49,-103C364.97,-103 383.7,-103 399.52,-103"/>
-<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="399.44,-105.1 405.44,-103 399.44,-100.9 399.44,-105.1"/>
+<path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M335.84,-81.72C356.44,-86.04 380.36,-91.04 399.83,-95.12"/>
+<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="399.16,-97.12 405.47,-96.3 400.02,-93.01 399.16,-97.12"/>
 </g>
 <!-- lib/ghostme/homeAssistant/homeContextBuilder.ts -->
 <g id="node7" class="node">
 <title>lib/ghostme/homeAssistant/homeContextBuilder.ts</title>
 <g id="a_node7"><a xlink:href="lib/ghostme/homeAssistant/homeContextBuilder.ts" xlink:title="homeContextBuilder.ts">
-<path fill="#ddfeff" stroke="#9ca3af" d="M336.33,-81.25C336.33,-81.25 240.42,-81.25 240.42,-81.25 237.33,-81.25 234.25,-78.17 234.25,-75.08 234.25,-75.08 234.25,-68.92 234.25,-68.92 234.25,-65.83 237.33,-62.75 240.42,-62.75 240.42,-62.75 336.33,-62.75 336.33,-62.75 339.42,-62.75 342.5,-65.83 342.5,-68.92 342.5,-68.92 342.5,-75.08 342.5,-75.08 342.5,-78.17 339.42,-81.25 336.33,-81.25"/>
-<text xml:space="preserve" text-anchor="start" x="242.25" y="-69" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#111827">homeContextBuilder.ts</text>
+<path fill="#ddfeff" stroke="#9ca3af" d="M336.33,-112.25C336.33,-112.25 240.42,-112.25 240.42,-112.25 237.33,-112.25 234.25,-109.17 234.25,-106.08 234.25,-106.08 234.25,-99.92 234.25,-99.92 234.25,-96.83 237.33,-93.75 240.42,-93.75 240.42,-93.75 336.33,-93.75 336.33,-93.75 339.42,-93.75 342.5,-96.83 342.5,-99.92 342.5,-99.92 342.5,-106.08 342.5,-106.08 342.5,-109.17 339.42,-112.25 336.33,-112.25"/>
+<text xml:space="preserve" text-anchor="start" x="242.25" y="-100" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#111827">homeContextBuilder.ts</text>
 </a>
 </g>
 </g>
 <!-- lib/ghostme/homeAssistant/homeContextBuilder.ts&#45;&gt;lib/ghostme/homeAssistant/haClient.ts -->
 <g id="edge6" class="edge">
 <title>lib/ghostme/homeAssistant/homeContextBuilder.ts&#45;&gt;lib/ghostme/homeAssistant/haClient.ts</title>
-<path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M335.84,-81.72C356.44,-86.04 380.36,-91.04 399.83,-95.12"/>
-<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="399.16,-97.12 405.47,-96.3 400.02,-93.01 399.16,-97.12"/>
+<path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M342.85,-103C361.76,-103 382.62,-103 399.93,-103"/>
+<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="399.61,-105.1 405.61,-103 399.61,-100.9 399.61,-105.1"/>
 </g>
 <!-- lib/ghostme/homeAssistant/homeEventLogger.ts -->
 <g id="node8" class="node">
@@ -228,31 +228,37 @@
 <g id="node11" class="node">
 <title>lib/ghostme/homeAssistant/houseAutomationContext.ts</title>
 <g id="a_node11"><a xlink:href="lib/ghostme/homeAssistant/houseAutomationContext.ts" xlink:title="houseAutomationContext.ts">
-<path fill="#ddfeff" stroke="#9ca3af" d="M176.46,-236.25C176.46,-236.25 60.29,-236.25 60.29,-236.25 57.21,-236.25 54.12,-233.17 54.12,-230.08 54.12,-230.08 54.12,-223.92 54.12,-223.92 54.12,-220.83 57.21,-217.75 60.29,-217.75 60.29,-217.75 176.46,-217.75 176.46,-217.75 179.54,-217.75 182.62,-220.83 182.62,-223.92 182.62,-223.92 182.62,-230.08 182.62,-230.08 182.62,-233.17 179.54,-236.25 176.46,-236.25"/>
-<text xml:space="preserve" text-anchor="start" x="62.12" y="-224" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#111827">houseAutomationContext.ts</text>
+<path fill="#ddfeff" stroke="#9ca3af" d="M176.46,-205.25C176.46,-205.25 60.29,-205.25 60.29,-205.25 57.21,-205.25 54.12,-202.17 54.12,-199.08 54.12,-199.08 54.12,-192.92 54.12,-192.92 54.12,-189.83 57.21,-186.75 60.29,-186.75 60.29,-186.75 176.46,-186.75 176.46,-186.75 179.54,-186.75 182.62,-189.83 182.62,-192.92 182.62,-192.92 182.62,-199.08 182.62,-199.08 182.62,-202.17 179.54,-205.25 176.46,-205.25"/>
+<text xml:space="preserve" text-anchor="start" x="62.12" y="-193" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#111827">houseAutomationContext.ts</text>
 </a>
 </g>
 </g>
 <!-- lib/ghostme/homeAssistant/houseAutomationContext.ts&#45;&gt;lib/supabaseAdmin.ts -->
 <g id="edge13" class="edge">
 <title>lib/ghostme/homeAssistant/houseAutomationContext.ts&#45;&gt;lib/supabaseAdmin.ts</title>
-<path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M119.38,-236.5C120,-275.56 128.15,-424.57 215,-485 274.2,-526.19 364.47,-494.54 409.67,-474"/>
-<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="410.54,-475.91 415.08,-471.47 408.76,-472.11 410.54,-475.91"/>
+<path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M182.9,-197.88C191.26,-200.79 198.93,-205.27 204.75,-212 223.58,-233.79 194.24,-451.04 215,-471 238.21,-493.31 325.3,-481.95 383.39,-471.28"/>
+<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="383.61,-473.38 389.12,-470.21 382.84,-469.25 383.61,-473.38"/>
 </g>
 <!-- lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts -->
 <g id="node12" class="node">
 <title>lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts</title>
 <g id="a_node12"><a xlink:href="lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts" xlink:title="houseAutomationControlPlanner.ts">
-<path fill="#ddfeff" stroke="#9ca3af" d="M191.46,-174.25C191.46,-174.25 45.29,-174.25 45.29,-174.25 42.21,-174.25 39.12,-171.17 39.12,-168.08 39.12,-168.08 39.12,-161.92 39.12,-161.92 39.12,-158.83 42.21,-155.75 45.29,-155.75 45.29,-155.75 191.46,-155.75 191.46,-155.75 194.54,-155.75 197.62,-158.83 197.62,-161.92 197.62,-161.92 197.62,-168.08 197.62,-168.08 197.62,-171.17 194.54,-174.25 191.46,-174.25"/>
-<text xml:space="preserve" text-anchor="start" x="47.12" y="-162" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#111827">houseAutomationControlPlanner.ts</text>
+<path fill="#ddfeff" stroke="#9ca3af" d="M191.46,-143.25C191.46,-143.25 45.29,-143.25 45.29,-143.25 42.21,-143.25 39.12,-140.17 39.12,-137.08 39.12,-137.08 39.12,-130.92 39.12,-130.92 39.12,-127.83 42.21,-124.75 45.29,-124.75 45.29,-124.75 191.46,-124.75 191.46,-124.75 194.54,-124.75 197.62,-127.83 197.62,-130.92 197.62,-130.92 197.62,-137.08 197.62,-137.08 197.62,-140.17 194.54,-143.25 191.46,-143.25"/>
+<text xml:space="preserve" text-anchor="start" x="47.12" y="-131" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#111827">houseAutomationControlPlanner.ts</text>
 </a>
 </g>
 </g>
+<!-- lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts&#45;&gt;lib/ghostme/home/houseStateSnapshot.ts -->
+<g id="edge14" class="edge">
+<title>lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts&#45;&gt;lib/ghostme/home/houseStateSnapshot.ts</title>
+<path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M197.38,-143.51C200.04,-145.39 202.52,-147.54 204.75,-150 222.14,-169.17 198.69,-245.91 215,-266 217.88,-269.54 221.3,-272.53 225.08,-275.04"/>
+<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="223.82,-276.74 230.08,-277.84 225.87,-273.08 223.82,-276.74"/>
+</g>
 <!-- lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts&#45;&gt;lib/supabaseAdmin.ts -->
-<g id="edge15" class="edge">
+<g id="edge16" class="edge">
 <title>lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts&#45;&gt;lib/supabaseAdmin.ts</title>
-<path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M197.89,-174.63C200.38,-176.49 202.68,-178.6 204.75,-181 224.78,-204.25 193.05,-435.56 215,-457 226.74,-468.46 320.89,-466.03 382.9,-463.1"/>
-<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="382.89,-465.2 388.78,-462.81 382.69,-461.01 382.89,-465.2"/>
+<path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M197.9,-143.62C200.38,-145.48 202.69,-147.6 204.75,-150 225.99,-174.7 192.45,-419.5 215,-443 220.76,-449 318.85,-454.6 382.85,-457.63"/>
+<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="382.53,-459.72 388.62,-457.9 382.73,-455.53 382.53,-459.72"/>
 </g>
 <!-- lib/ghostme/proactive/proactiveMessageService.ts -->
 <g id="node13" class="node">
@@ -264,13 +270,13 @@
 </g>
 </g>
 <!-- lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts&#45;&gt;lib/ghostme/proactive/proactiveMessageService.ts -->
-<g id="edge14" class="edge">
+<g id="edge15" class="edge">
 <title>lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts&#45;&gt;lib/ghostme/proactive/proactiveMessageService.ts</title>
-<path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M197.8,-174.72C200.31,-176.55 202.64,-178.64 204.75,-181 226.39,-205.28 194.73,-301.57 215,-327 217.35,-329.95 220.08,-332.51 223.08,-334.74"/>
-<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="221.73,-336.37 227.93,-337.75 223.94,-332.8 221.73,-336.37"/>
+<path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M197.83,-143.68C200.33,-145.53 202.66,-147.62 204.75,-150 230.78,-179.58 190.63,-296.04 215,-327 217.33,-329.96 220.05,-332.53 223.03,-334.77"/>
+<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="221.67,-336.4 227.87,-337.79 223.9,-332.83 221.67,-336.4"/>
 </g>
 <!-- lib/ghostme/proactive/proactiveMessageService.ts&#45;&gt;lib/supabaseAdmin.ts -->
-<g id="edge33" class="edge">
+<g id="edge34" class="edge">
 <title>lib/ghostme/proactive/proactiveMessageService.ts&#45;&gt;lib/supabaseAdmin.ts</title>
 <path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M354.18,-358.05C355.88,-359.24 357.49,-360.55 359,-362 377.73,-380.01 356.95,-397.82 372,-419 380.02,-430.28 392.22,-439.13 403.92,-445.68"/>
 <polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="402.91,-447.52 409.2,-448.44 404.86,-443.8 402.91,-447.52"/>
@@ -285,7 +291,7 @@
 </g>
 </g>
 <!-- lib/ghostme/proactive/proactiveMessageService.ts&#45;&gt;lib/ghostme/proactive/proactiveCardLifecycle.ts -->
-<g id="edge31" class="edge">
+<g id="edge32" class="edge">
 <title>lib/ghostme/proactive/proactiveMessageService.ts&#45;&gt;lib/ghostme/proactive/proactiveCardLifecycle.ts</title>
 <path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M353.91,-349C359.21,-349 364.57,-349 369.88,-349"/>
 <polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="369.74,-351.1 375.74,-349 369.74,-346.9 369.74,-351.1"/>
@@ -300,7 +306,7 @@
 </g>
 </g>
 <!-- lib/ghostme/proactive/proactiveMessageService.ts&#45;&gt;lib/ghostme/proactive/proactiveMessageDedupe.ts -->
-<g id="edge32" class="edge">
+<g id="edge33" class="edge">
 <title>lib/ghostme/proactive/proactiveMessageService.ts&#45;&gt;lib/ghostme/proactive/proactiveMessageDedupe.ts</title>
 <path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M342.64,-358.71C348.17,-359.79 353.7,-360.9 359,-362 368.43,-363.96 378.48,-366.17 388.12,-368.35"/>
 <polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="387.56,-370.38 393.87,-369.67 388.49,-366.28 387.56,-370.38"/>
@@ -309,22 +315,22 @@
 <g id="node14" class="node">
 <title>lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts</title>
 <g id="a_node14"><a xlink:href="lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts" xlink:title="houseAutomationSuggestionEngine.ts">
-<path fill="#dcfce7" stroke="#4ade80" d="M198.58,-143.25C198.58,-143.25 38.17,-143.25 38.17,-143.25 35.08,-143.25 32,-140.17 32,-137.08 32,-137.08 32,-130.92 32,-130.92 32,-127.83 35.08,-124.75 38.17,-124.75 38.17,-124.75 198.58,-124.75 198.58,-124.75 201.67,-124.75 204.75,-127.83 204.75,-130.92 204.75,-130.92 204.75,-137.08 204.75,-137.08 204.75,-140.17 201.67,-143.25 198.58,-143.25"/>
-<text xml:space="preserve" text-anchor="start" x="40" y="-131" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#111827">houseAutomationSuggestionEngine.ts</text>
+<path fill="#dcfce7" stroke="#4ade80" d="M198.58,-174.25C198.58,-174.25 38.17,-174.25 38.17,-174.25 35.08,-174.25 32,-171.17 32,-168.08 32,-168.08 32,-161.92 32,-161.92 32,-158.83 35.08,-155.75 38.17,-155.75 38.17,-155.75 198.58,-155.75 198.58,-155.75 201.67,-155.75 204.75,-158.83 204.75,-161.92 204.75,-161.92 204.75,-168.08 204.75,-168.08 204.75,-171.17 201.67,-174.25 198.58,-174.25"/>
+<text xml:space="preserve" text-anchor="start" x="40" y="-162" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#111827">houseAutomationSuggestionEngine.ts</text>
 </a>
 </g>
 </g>
 <!-- lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts&#45;&gt;lib/supabaseAdmin.ts -->
-<g id="edge17" class="edge">
+<g id="edge18" class="edge">
 <title>lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts&#45;&gt;lib/supabaseAdmin.ts</title>
-<path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M197.9,-143.62C200.38,-145.48 202.69,-147.6 204.75,-150 225.99,-174.7 192.45,-419.5 215,-443 220.76,-449 318.85,-454.6 382.85,-457.63"/>
-<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="382.53,-459.72 388.62,-457.9 382.73,-455.53 382.53,-459.72"/>
+<path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M197.89,-174.63C200.38,-176.49 202.68,-178.6 204.75,-181 224.78,-204.25 193.05,-435.56 215,-457 226.74,-468.46 320.89,-466.03 382.9,-463.1"/>
+<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="382.89,-465.2 388.78,-462.81 382.69,-461.01 382.89,-465.2"/>
 </g>
 <!-- lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts&#45;&gt;lib/ghostme/proactive/proactiveMessageService.ts -->
-<g id="edge16" class="edge">
+<g id="edge17" class="edge">
 <title>lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts&#45;&gt;lib/ghostme/proactive/proactiveMessageService.ts</title>
-<path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M197.83,-143.68C200.33,-145.53 202.66,-147.62 204.75,-150 230.78,-179.58 190.63,-296.04 215,-327 217.33,-329.96 220.05,-332.53 223.03,-334.77"/>
-<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="221.67,-336.4 227.87,-337.79 223.9,-332.83 221.67,-336.4"/>
+<path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M197.8,-174.72C200.31,-176.55 202.64,-178.64 204.75,-181 226.39,-205.28 194.73,-301.57 215,-327 217.35,-329.95 220.08,-332.51 223.08,-334.74"/>
+<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="221.73,-336.37 227.93,-337.75 223.94,-332.8 221.73,-336.37"/>
 </g>
 <!-- lib/ghostme/homeAssistant/houseEntityRegistry.ts -->
 <g id="node15" class="node">
@@ -336,19 +342,19 @@
 </g>
 </g>
 <!-- lib/ghostme/homeAssistant/houseEntityRegistry.ts&#45;&gt;lib/ghostme/homeAssistant/haClient.ts -->
-<g id="edge18" class="edge">
+<g id="edge19" class="edge">
 <title>lib/ghostme/homeAssistant/houseEntityRegistry.ts&#45;&gt;lib/ghostme/homeAssistant/haClient.ts</title>
 <path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M341.75,-158.7C348,-156.35 353.95,-153.2 359,-149 370.17,-139.71 360.89,-128.37 372,-119 379.82,-112.4 389.93,-108.45 399.87,-106.09"/>
 <polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="400.03,-108.2 405.51,-104.99 399.22,-104.08 400.03,-108.2"/>
 </g>
 <!-- lib/ghostme/homeAssistant/houseEntityRegistry.ts&#45;&gt;lib/ghostme/homeAssistant/homeEntityMapper.ts -->
-<g id="edge19" class="edge">
+<g id="edge20" class="edge">
 <title>lib/ghostme/homeAssistant/houseEntityRegistry.ts&#45;&gt;lib/ghostme/homeAssistant/homeEntityMapper.ts</title>
 <path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M341.6,-165C353.66,-165 366.58,-165 378.89,-165"/>
 <polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="378.71,-167.1 384.71,-165 378.71,-162.9 378.71,-167.1"/>
 </g>
 <!-- lib/ghostme/homeAssistant/houseEntityRegistry.ts&#45;&gt;lib/supabaseAdmin.ts -->
-<g id="edge20" class="edge">
+<g id="edge21" class="edge">
 <title>lib/ghostme/homeAssistant/houseEntityRegistry.ts&#45;&gt;lib/supabaseAdmin.ts</title>
 <path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M341.58,-169.03C348.26,-171.67 354.37,-175.5 359,-181 393.11,-221.52 345.08,-373.38 372,-419 378.81,-430.55 390.29,-439.33 401.75,-445.74"/>
 <polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="400.64,-447.53 406.93,-448.42 402.57,-443.8 400.64,-447.53"/>
@@ -357,16 +363,16 @@
 <g id="node16" class="node">
 <title>lib/ghostme/homeAssistant/houseLearnedRulesContext.ts</title>
 <g id="a_node16"><a xlink:href="lib/ghostme/homeAssistant/houseLearnedRulesContext.ts" xlink:title="houseLearnedRulesContext.ts">
-<path fill="#ddfeff" stroke="#9ca3af" d="M182.46,-205.25C182.46,-205.25 54.29,-205.25 54.29,-205.25 51.21,-205.25 48.12,-202.17 48.12,-199.08 48.12,-199.08 48.12,-192.92 48.12,-192.92 48.12,-189.83 51.21,-186.75 54.29,-186.75 54.29,-186.75 182.46,-186.75 182.46,-186.75 185.54,-186.75 188.62,-189.83 188.62,-192.92 188.62,-192.92 188.62,-199.08 188.62,-199.08 188.62,-202.17 185.54,-205.25 182.46,-205.25"/>
-<text xml:space="preserve" text-anchor="start" x="56.12" y="-193" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#111827">houseLearnedRulesContext.ts</text>
+<path fill="#ddfeff" stroke="#9ca3af" d="M182.46,-236.25C182.46,-236.25 54.29,-236.25 54.29,-236.25 51.21,-236.25 48.12,-233.17 48.12,-230.08 48.12,-230.08 48.12,-223.92 48.12,-223.92 48.12,-220.83 51.21,-217.75 54.29,-217.75 54.29,-217.75 182.46,-217.75 182.46,-217.75 185.54,-217.75 188.62,-220.83 188.62,-223.92 188.62,-223.92 188.62,-230.08 188.62,-230.08 188.62,-233.17 185.54,-236.25 182.46,-236.25"/>
+<text xml:space="preserve" text-anchor="start" x="56.12" y="-224" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#111827">houseLearnedRulesContext.ts</text>
 </a>
 </g>
 </g>
 <!-- lib/ghostme/homeAssistant/houseLearnedRulesContext.ts&#45;&gt;lib/supabaseAdmin.ts -->
-<g id="edge21" class="edge">
+<g id="edge22" class="edge">
 <title>lib/ghostme/homeAssistant/houseLearnedRulesContext.ts&#45;&gt;lib/supabaseAdmin.ts</title>
-<path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M188.72,-200.23C194.8,-203.04 200.31,-206.87 204.75,-212 223.58,-233.79 194.24,-451.04 215,-471 238.21,-493.31 325.3,-481.95 383.39,-471.28"/>
-<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="383.61,-473.38 389.12,-470.21 382.84,-469.25 383.61,-473.38"/>
+<path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M119.38,-236.5C120,-275.56 128.15,-424.57 215,-485 274.2,-526.19 364.47,-494.54 409.67,-474"/>
+<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="410.54,-475.91 415.08,-471.47 408.76,-472.11 410.54,-475.91"/>
 </g>
 <!-- lib/ghostme/homeAssistant/houseLightLearningFlow.ts -->
 <g id="node17" class="node">
@@ -378,7 +384,7 @@
 </g>
 </g>
 <!-- lib/ghostme/homeAssistant/houseLightLearningFlow.ts&#45;&gt;lib/supabaseAdmin.ts -->
-<g id="edge24" class="edge">
+<g id="edge25" class="edge">
 <title>lib/ghostme/homeAssistant/houseLightLearningFlow.ts&#45;&gt;lib/supabaseAdmin.ts</title>
 <path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M181.66,-104.42C190.51,-107.31 198.66,-111.91 204.75,-119 227.2,-145.15 191.51,-403.78 215,-429 236.93,-452.54 327.2,-439.11 359,-444 366.87,-445.21 375.16,-446.68 383.27,-448.23"/>
 <polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="382.71,-450.26 389,-449.36 383.52,-446.14 382.71,-450.26"/>
@@ -393,7 +399,7 @@
 </g>
 </g>
 <!-- lib/ghostme/homeAssistant/houseLightLearningFlow.ts&#45;&gt;lib/ghostme/homeAssistant/housePatternEngine.ts -->
-<g id="edge22" class="edge">
+<g id="edge23" class="edge">
 <title>lib/ghostme/homeAssistant/houseLightLearningFlow.ts&#45;&gt;lib/ghostme/homeAssistant/housePatternEngine.ts</title>
 <path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M181.73,-105.42C190.36,-108.23 198.41,-112.54 204.75,-119 224.01,-138.62 196.06,-160.07 215,-180 218.13,-183.3 221.78,-185.99 225.74,-188.18"/>
 <polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="224.6,-189.97 230.93,-190.55 226.34,-186.15 224.6,-189.97"/>
@@ -408,19 +414,19 @@
 </g>
 </g>
 <!-- lib/ghostme/homeAssistant/houseLightLearningFlow.ts&#45;&gt;lib/ghostme/homeAssistant/houseRouteLearningEngine.ts -->
-<g id="edge23" class="edge">
+<g id="edge24" class="edge">
 <title>lib/ghostme/homeAssistant/houseLightLearningFlow.ts&#45;&gt;lib/ghostme/homeAssistant/houseRouteLearningEngine.ts</title>
 <path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M181.62,-104.97C190.37,-107.82 198.49,-112.26 204.75,-119 232.74,-149.15 187.5,-180.4 215,-211 215.13,-211.15 215.27,-211.3 215.41,-211.44"/>
 <polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="213.97,-212.98 219.89,-215.3 216.71,-209.8 213.97,-212.98"/>
 </g>
 <!-- lib/ghostme/homeAssistant/housePatternEngine.ts&#45;&gt;lib/supabaseAdmin.ts -->
-<g id="edge25" class="edge">
+<g id="edge26" class="edge">
 <title>lib/ghostme/homeAssistant/housePatternEngine.ts&#45;&gt;lib/supabaseAdmin.ts</title>
 <path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M343.26,-200.77C349.27,-203.37 354.75,-206.99 359,-212 388.83,-247.14 348.42,-379.4 372,-419 378.86,-430.52 390.35,-439.29 401.8,-445.71"/>
 <polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="400.69,-447.5 406.98,-448.39 402.62,-443.77 400.69,-447.5"/>
 </g>
 <!-- lib/ghostme/homeAssistant/houseRouteLearningEngine.ts&#45;&gt;lib/supabaseAdmin.ts -->
-<g id="edge26" class="edge">
+<g id="edge27" class="edge">
 <title>lib/ghostme/homeAssistant/houseRouteLearningEngine.ts&#45;&gt;lib/supabaseAdmin.ts</title>
 <path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M318.42,-236.72C333.1,-243.2 349.73,-253.28 359,-268 394.91,-324.99 336.87,-361.53 372,-419 379.05,-430.53 390.7,-439.34 402.23,-445.78"/>
 <polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="401.15,-447.58 407.45,-448.47 403.08,-443.85 401.15,-447.58"/>
@@ -435,25 +441,25 @@
 </g>
 </g>
 <!-- lib/ghostme/homeAssistant/houseSuggestionEngine.ts&#45;&gt;lib/supabaseAdmin.ts -->
-<g id="edge30" class="edge">
+<g id="edge31" class="edge">
 <title>lib/ghostme/homeAssistant/houseSuggestionEngine.ts&#45;&gt;lib/supabaseAdmin.ts</title>
 <path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M181.67,-73.41C190.52,-76.3 198.67,-80.9 204.75,-88 228.69,-115.95 189.58,-392.4 215,-419 226.09,-430.6 343.34,-426.49 359,-430 375.66,-433.74 393.49,-440.33 407.95,-446.38"/>
 <polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="406.91,-448.22 413.25,-448.66 408.57,-444.36 406.91,-448.22"/>
 </g>
 <!-- lib/ghostme/homeAssistant/houseSuggestionEngine.ts&#45;&gt;lib/ghostme/homeAssistant/cognitiveHouseBuilder.ts -->
-<g id="edge27" class="edge">
+<g id="edge28" class="edge">
 <title>lib/ghostme/homeAssistant/houseSuggestionEngine.ts&#45;&gt;lib/ghostme/homeAssistant/cognitiveHouseBuilder.ts</title>
-<path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M172.07,-81.72C189.19,-84.88 208.33,-88.41 226.02,-91.68"/>
-<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="225.32,-93.68 231.6,-92.71 226.08,-89.55 225.32,-93.68"/>
+<path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M181.93,-72C194.59,-72 207.94,-72 220.74,-72"/>
+<polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="220.46,-74.1 226.46,-72 220.46,-69.9 220.46,-74.1"/>
 </g>
 <!-- lib/ghostme/homeAssistant/houseSuggestionEngine.ts&#45;&gt;lib/ghostme/proactive/proactiveMessageService.ts -->
-<g id="edge29" class="edge">
+<g id="edge30" class="edge">
 <title>lib/ghostme/homeAssistant/houseSuggestionEngine.ts&#45;&gt;lib/ghostme/proactive/proactiveMessageService.ts</title>
 <path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M181.6,-73.47C190.46,-76.35 198.63,-80.94 204.75,-88 222.16,-108.08 198.72,-305.99 215,-327 217.26,-329.92 219.9,-332.46 222.81,-334.68"/>
 <polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="221.28,-336.19 227.46,-337.65 223.53,-332.65 221.28,-336.19"/>
 </g>
 <!-- lib/ghostme/homeAssistant/houseSuggestionEngine.ts&#45;&gt;lib/ghostme/homeAssistant/housePatternEngine.ts -->
-<g id="edge28" class="edge">
+<g id="edge29" class="edge">
 <title>lib/ghostme/homeAssistant/houseSuggestionEngine.ts&#45;&gt;lib/ghostme/homeAssistant/housePatternEngine.ts</title>
 <path fill="none" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" d="M181.62,-73.97C190.37,-76.82 198.49,-81.26 204.75,-88 232.74,-118.15 187.5,-149.4 215,-180 218.04,-183.38 221.62,-186.14 225.53,-188.37"/>
 <polygon fill="#6b7280" fill-opacity="0.400000" stroke="#6b7280" stroke-width="2" stroke-opacity="0.400000" points="224.35,-190.13 230.67,-190.77 226.13,-186.33 224.35,-190.13"/>
