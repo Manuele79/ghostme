@@ -30,6 +30,7 @@ const ALLOWED_TYPES = new Set<GhostCalendarEventType>([
   "note",
   "voice_note",
 ]);
+const ONE_HOUR_MS = 60 * 60 * 1000;
 
 export class CalendarContractError extends Error {
   status: 400 | 404 | 409;
@@ -65,6 +66,14 @@ function validIsoOrNull(value: string | null | undefined, field: string) {
   return parsed.toISOString();
 }
 
+function defaultAppointmentReminder(startAt: string) {
+  const startTime = new Date(startAt).getTime();
+  const reminderTime =
+    startTime - Date.now() > ONE_HOUR_MS ? startTime - ONE_HOUR_MS : startTime;
+
+  return new Date(reminderTime).toISOString();
+}
+
 function normalizeCalendarEvent(input: CalendarEventInput) {
   if (!ALLOWED_TYPES.has(input.type)) {
     throw new CalendarContractError("Tipo calendario non valido");
@@ -74,7 +83,7 @@ function normalizeCalendarEvent(input: CalendarEventInput) {
   if (!title) throw new CalendarContractError("Titolo mancante");
 
   let startAt = validIsoOrNull(input.startAt, "start_at");
-  const remindAt = validIsoOrNull(input.remindAt, "remind_at");
+  let remindAt = validIsoOrNull(input.remindAt, "remind_at");
   let endAt = validIsoOrNull(input.endAt, "end_at");
 
   if (input.type === "appointment") {
@@ -86,6 +95,7 @@ function normalizeCalendarEvent(input: CalendarEventInput) {
     if (!endAt) {
       endAt = new Date(new Date(startAt).getTime() + 60 * 60 * 1000).toISOString();
     }
+    if (!remindAt) remindAt = defaultAppointmentReminder(startAt);
   }
 
   if (input.type === "reminder") {
@@ -180,7 +190,7 @@ export async function refreshAgendaMessage(userId: string) {
     .or(
       `and(start_at.gte.${start},start_at.lt.${end}),and(start_at.is.null,remind_at.gte.${start},remind_at.lt.${end})`
     )
-    .limit(20);
+    .order("start_at", { ascending: true });
 
   if (error) throw error;
 
@@ -193,6 +203,7 @@ export async function refreshAgendaMessage(userId: string) {
       category: "agenda",
       priority: 5,
       logicalKey,
+      reactivateHiddenOnChange: true,
     });
   }
 
@@ -321,16 +332,19 @@ export async function cancelCalendarEvent(userId: string, eventId: string) {
 
 export async function getUpcomingCalendarEvents(userId: string) {
   if (!userId) return [];
+  const now = new Date().toISOString();
   const { data, error } = await supabaseAdmin
     .from("calendar_events")
     .select("*")
     .eq("user_id", userId)
     .eq("status", "active")
-    .gte("start_at", new Date().toISOString())
+    .or(
+      `start_at.gte.${now},and(start_at.is.null,remind_at.gte.${now})`
+    )
     .order("start_at", { ascending: true })
-    .limit(10);
+    .order("remind_at", { ascending: true });
 
-  if (error) return [];
+  if (error) throw error;
   return data || [];
 }
 

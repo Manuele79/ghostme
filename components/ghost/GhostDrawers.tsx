@@ -346,7 +346,7 @@ function ServicePanelContent({
   const year = visibleMonth.getFullYear();
   const month = visibleMonth.getMonth();
 
-  const monthName = today.toLocaleDateString("it-IT", {
+  const monthName = visibleMonth.toLocaleDateString("it-IT", {
     month: "long",
     year: "numeric",
   });
@@ -610,6 +610,19 @@ async function saveLocationCandidate() {
     return event.start_at || event.remind_at || null;
   }
 
+  function getRomeDateParts(value: string) {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Europe/Rome",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).formatToParts(new Date(value));
+
+    return Object.fromEntries(
+      parts.map((part) => [part.type, Number(part.value)])
+    );
+  }
+
   function eventsForDay(day: number) {
     return localEvents.filter((event) => {
       if (event.status && event.status !== "active") return false;
@@ -617,22 +630,26 @@ async function saveLocationCandidate() {
       const dateValue = getEventDate(event);
       if (!dateValue) return false;
 
-      const d = new Date(dateValue);
+      const eventDate = getRomeDateParts(dateValue);
 
       return (
-        d.getFullYear() === year &&
-        d.getMonth() === month &&
-        d.getDate() === day
+        eventDate.year === year &&
+        eventDate.month === month + 1 &&
+        eventDate.day === day
       );
     });
   }
 
+  const visibleEventCount = localEvents.filter(
+    (event) => !event.status || event.status === "active"
+  ).length;
   const selectedEvents = eventsForDay(selectedDay);
 
   async function saveCalendarItem() {
     if (!newTitle.trim()) return;
 
     const userId =
+      currentUserId ||
       userProfile?.user_id ||
       traits?.user_id ||
       localEvents[0]?.user_id;
@@ -1198,7 +1215,7 @@ async function saveLocationCandidate() {
           </button>
         </div>
           <p className="mt-2 text-sm text-zinc-400">
-            Eventi salvati: {localEvents.length}
+            Eventi salvati: {visibleEventCount}
           </p>
         </div>
 
@@ -1287,6 +1304,7 @@ async function saveLocationCandidate() {
                   {new Date(event.start_at).toLocaleTimeString("it-IT", {
                     hour: "2-digit",
                     minute: "2-digit",
+                    timeZone: "Europe/Rome",
                   })}
                 </p>
               )}
@@ -1297,6 +1315,7 @@ async function saveLocationCandidate() {
                   {new Date(event.remind_at).toLocaleTimeString("it-IT", {
                     hour: "2-digit",
                     minute: "2-digit",
+                    timeZone: "Europe/Rome",
                   })}
                 </p>
               )}
@@ -1321,6 +1340,7 @@ async function saveLocationCandidate() {
                             hour: "2-digit",
                             minute: "2-digit",
                             hour12: false,
+                            timeZone: "Europe/Rome",
                           })
                       );
                     }
@@ -1335,6 +1355,7 @@ async function saveLocationCandidate() {
                     if (!confirm("Eliminare questo evento?")) return;
 
                     const userId =
+                      currentUserId ||
                       userProfile?.user_id ||
                       traits?.user_id ||
                       localEvents[0]?.user_id;

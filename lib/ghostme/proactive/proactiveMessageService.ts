@@ -39,6 +39,7 @@ export async function upsertProactiveMessage({
   category,
   priority,
   logicalKey,
+  reactivateHiddenOnChange = false,
 }: {
   userId: string;
   title: string;
@@ -46,6 +47,7 @@ export async function upsertProactiveMessage({
   category: string;
   priority: number;
   logicalKey?: string | null;
+  reactivateHiddenOnChange?: boolean;
 }) {
   if (!userId || !message?.trim()) return;
 
@@ -94,11 +96,16 @@ export async function upsertProactiveMessage({
   }
 
   if (existing?.id) {
-    if (HIDDEN_PROACTIVE_STATUSES.includes(existing.status)) return;
-
     const contentChanged =
       normalizeProactiveText(existing.title) !== normalizeProactiveText(title) ||
       normalizeProactiveText(existing.message) !== normalizeProactiveText(message);
+
+    if (
+      HIDDEN_PROACTIVE_STATUSES.includes(existing.status) &&
+      (!reactivateHiddenOnChange || !contentChanged)
+    ) {
+      return;
+    }
 
     if (!contentChanged) return;
 
@@ -134,7 +141,9 @@ export async function upsertProactiveMessage({
   }
 
   const priorityLimit =
-    priority >= 9
+    category === "agenda"
+      ? null
+      : priority >= 9
       ? { minimum: 9, maximum: 10, limit: 1 }
       : priority >= 7
         ? { minimum: 7, maximum: 8, limit: 2 }

@@ -7,13 +7,17 @@ import {
 import { loadVisibleProactiveMessages } from "@/lib/ghostme/proactive/visibleProactiveMessages";
 import { buildDecisionSnapshot } from "@/lib/ghostme/context/decisionSnapshot";
 import { toPublicLocationState } from "@/lib/ghostme/location/locationStateFreshness";
+import { getUpcomingCalendarEvents } from "@/lib/ghostme/calendar/calendarService";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     const userId = await getAuthenticatedUserId(req, body.userId);
 
-    const snapshot = await buildGhostBrainSnapshot(userId);
+    const [snapshot, calendarEvents] = await Promise.all([
+      buildGhostBrainSnapshot(userId),
+      getUpcomingCalendarEvents(userId),
+    ]);
     const decisionSnapshot = buildDecisionSnapshot(snapshot);
 
     const proactiveMessages = await loadVisibleProactiveMessages(userId);
@@ -40,7 +44,7 @@ export async function POST(req: Request) {
       goals: visibleGoals,
       mentalState: snapshot.profile?.mentalState || null,
       actions: snapshot.actions || snapshot.goals?.pendingActions || [],
-      calendarEvents: snapshot.calendar.upcoming || [],
+      calendarEvents,
       proactiveMessage: proactiveMessages[0] || null,
       proactiveMessages,
       decisionSnapshot,
