@@ -16,14 +16,20 @@ export type HomeEventSignificance = {
   priority: number;
 };
 
-const COOLDOWN_MS = 5 * 60 * 1000;
-const LUX_DAY_NIGHT_THRESHOLD = 50;
+export const HOME_EVENT_THRESHOLDS = {
+  duplicateWindowMs: 2 * 60 * 1000,
+  cooldownMs: 5 * 60 * 1000,
+  temperatureMinDelta: 0.5,
+  humidityMinDelta: 5,
+  luxMinDelta: 15,
+  luxDayNightThreshold: 50,
+} as const;
 
-function clean(value: any) {
+function clean(value: unknown) {
   return String(value ?? "").toLowerCase().trim();
 }
 
-function numericState(value: any) {
+function numericState(value: unknown) {
   const n = Number(String(value ?? "").replace(",", "."));
   return Number.isFinite(n) ? n : null;
 }
@@ -76,8 +82,8 @@ function classifyTemperature({
 
   const delta = Math.abs(newNum - oldNum);
 
-  if (delta < 1) {
-    return result(false, "temperature_delta_under_1", "environment", 1);
+  if (delta < HOME_EVENT_THRESHOLDS.temperatureMinDelta) {
+    return result(false, "temperature_min_delta", "environment", 1);
   }
 
   return result(true, "temperature_delta_ok", "environment", 5);
@@ -102,7 +108,10 @@ function classifyHumidity({
     return result(true, "humidity_low_threshold", "environment", 7);
   }
 
-  if (oldNum !== null && Math.abs(newNum - oldNum) >= 5) {
+  if (
+    oldNum !== null &&
+    Math.abs(newNum - oldNum) >= HOME_EVENT_THRESHOLDS.humidityMinDelta
+  ) {
     return result(true, "humidity_delta_over_5", "environment", 6);
   }
 
@@ -115,12 +124,18 @@ function classifyLux(input: HomeEventSignificanceInput) {
   if (oldNum === null || newNum === null) {
     return result(false, "lux_non_numeric", "environment", 1);
   }
+  const delta = Math.abs(newNum - oldNum);
+  if (delta < HOME_EVENT_THRESHOLDS.luxMinDelta) {
+    return result(false, "lux_min_delta", "environment", 1);
+  }
   const crossed =
-    (oldNum < LUX_DAY_NIGHT_THRESHOLD && newNum >= LUX_DAY_NIGHT_THRESHOLD) ||
-    (oldNum >= LUX_DAY_NIGHT_THRESHOLD && newNum < LUX_DAY_NIGHT_THRESHOLD);
+    (oldNum < HOME_EVENT_THRESHOLDS.luxDayNightThreshold &&
+      newNum >= HOME_EVENT_THRESHOLDS.luxDayNightThreshold) ||
+    (oldNum >= HOME_EVENT_THRESHOLDS.luxDayNightThreshold &&
+      newNum < HOME_EVENT_THRESHOLDS.luxDayNightThreshold);
   return crossed
     ? result(true, "lux_day_night_threshold_crossed", "environment", 4)
-    : result(false, "lux_without_threshold_crossing", "environment", 1);
+    : result(true, "lux_delta_ok", "environment", 3);
 }
 
 function homePresenceState(value: unknown) {
@@ -217,10 +232,10 @@ export function classifyHomeEventSignificance(
     input.eventType === "automation_on" &&
     newClean === "triggered";
   if (oldClean === newClean && !repeatedAutomationTrigger) {
+    const age = millisecondsSince(input.lastOccurredAt);
     return result(
       false,
-      millisecondsSince(input.lastOccurredAt) !== null &&
-        millisecondsSince(input.lastOccurredAt)! <= COOLDOWN_MS
+      age !== null && age <= HOME_EVENT_THRESHOLDS.duplicateWindowMs
         ? "same_state_recent"
         : "same_state",
       "duplicate",
@@ -231,7 +246,7 @@ export function classifyHomeEventSignificance(
   let decision: HomeEventSignificance;
   if (entityType === "temperature") decision = classifyTemperature(input);
   else if (entityType === "humidity") decision = classifyHumidity(input);
-  else if (["pressure", "co2", "noise"].includes(entityType)) {
+  else if (["pressure", "co2", "noise", "battery", "signal"].includes(entityType)) {
     decision = result(false, `${entityType}_raw_environment_ignored`, "environment", 1);
   } else if (entityType === "lux") decision = classifyLux(input);
   else if (["motion", "presence"].includes(entityType)) {
@@ -279,7 +294,11 @@ export function classifyHomeEventSignificance(
     ] as const;
     for (const [timestamp, reason] of cooldowns) {
       const age = millisecondsSince(timestamp);
-      if (age !== null && age >= 0 && age < COOLDOWN_MS) {
+      if (
+        age !== null &&
+        age >= 0 &&
+        age < HOME_EVENT_THRESHOLDS.cooldownMs
+      ) {
         return result(false, reason, "cooldown", 0);
       }
     }

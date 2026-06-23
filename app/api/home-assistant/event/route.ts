@@ -2,6 +2,7 @@ import { after, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getEntityInfo } from "@/lib/ghostme/homeAssistant/homeEntityMapper";
 import { classifyHomeEventSignificance } from "@/lib/ghostme/homeAssistant/homeEventSignificance";
+import { logSignificantHomeEvent } from "@/lib/ghostme/homeAssistant/homeEventLogger";
 import { isDevelopmentEnvironment } from "@/lib/ghostme/auth/serverAuth";
 import { runHouseLightLearning } from "@/lib/ghostme/homeAssistant/houseLightLearningFlow";
 import {
@@ -9,15 +10,25 @@ import {
   getDefaultHomeAssistantUserId,
 } from "@/lib/ghostme/homeAssistant/homeAssistantAccess";
 
-function clean(value: any) {
+function clean(value: unknown) {
   return String(value ?? "").toLowerCase().trim();
 }
 
-function friendlyName(body: any) {
-  return body.attributes?.friendly_name || body.entity_name || body.entity_id;
+function objectValue(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : {};
 }
 
-function getStateValue(value: any) {
+function friendlyName(body: unknown) {
+  const row = objectValue(body);
+  const attributes = objectValue(row.attributes);
+  return String(
+    attributes.friendly_name || row.entity_name || row.entity_id || ""
+  );
+}
+
+function getStateValue(value: unknown) {
   if (value && typeof value === "object" && "state" in value) {
     return String(value.state ?? "");
   }
@@ -25,13 +36,15 @@ function getStateValue(value: any) {
   return String(value ?? "");
 }
 
-function getAttributes(body: any) {
-  if (body.attributes && typeof body.attributes === "object") {
-    return body.attributes;
+function getAttributes(body: unknown) {
+  const row = objectValue(body);
+  if (row.attributes && typeof row.attributes === "object") {
+    return objectValue(row.attributes);
   }
 
-  if (body.new_state?.attributes && typeof body.new_state.attributes === "object") {
-    return body.new_state.attributes;
+  const newState = objectValue(row.new_state);
+  if (newState.attributes && typeof newState.attributes === "object") {
+    return objectValue(newState.attributes);
   }
 
   return {};
@@ -82,6 +95,28 @@ function getEventType(entityType: string, state: string, incomingEventType?: str
   if (entityType === "contact") return ["on", "open"].includes(cleanState) ? "contact_open" : "contact_closed";
 
   return "state_changed";
+}
+
+function needsCooldownContext(entityType: string, eventType: string) {
+  return (
+    ["temperature", "humidity", "lux", "motion", "presence"].includes(entityType) ||
+    (entityType === "automation" && eventType === "automation_on")
+  );
+}
+
+function logSkippedEvent(entityId: string, reason: string) {
+  console.log("HOUSE EVENT SKIPPED:", {
+    entityId,
+    reason,
+  });
+}
+
+function unmappedReason(entityId: string) {
+  return /battery|batteria|linkquality|link_quality|rssi|signal_strength/i.test(
+    entityId
+  )
+    ? "noisy_sensor_ignored"
+    : "unmapped_entity";
 }
 
 async function getLastHouseEvent({
@@ -186,7 +221,7 @@ async function updateHouseEntity({
   return true;
 }
 
-function isAuthorized(req: Request, body: any) {
+function isAuthorized(req: Request, body: unknown) {
   const secret =
     process.env.HOME_ASSISTANT_WEBHOOK_SECRET || process.env.WORKER_SECRET;
 
@@ -196,7 +231,8 @@ function isAuthorized(req: Request, body: any) {
   const headerToken =
     req.headers.get("x-ghostme-ha-secret") ||
     req.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
-  const token = headerToken || url.searchParams.get("token") || body.token;
+  const token =
+    headerToken || url.searchParams.get("token") || objectValue(body).token;
 
   return token === secret;
 }
@@ -249,8 +285,10 @@ export async function POST(req: Request) {
 
     const info = getEntityInfo(entityId);
     if (info.type === "other") {
+      const reason = unmappedReason(entityId);
+      logSkippedEvent(entityId, reason);
       return NextResponse.json(
-        { received: true, significant: false, reason: "unmapped_entity", inserted: false }
+        { received: true, significant: false, reason, inserted: false }
       );
     }
     const userId = mappedUserId;
@@ -269,15 +307,58 @@ export async function POST(req: Request) {
       body.new_state?.last_changed ||
       new Date().toISOString();
 
-    const [last, cooldownContext] = await Promise.all([
-      getLastHouseEvent({ userId, entityId }),
-      getLastCooldownEvents({
-        userId,
+    const hasProvidedOldState =
+      body.old_state !== undefined || body.oldState !== undefined;
+    if (hasProvidedOldState) {
+      const preliminaryDecision = classifyHomeEventSignificance({
+        entityType: info.type,
         entityId,
+        oldState,
+        newState,
         eventType,
-        roomKey: info.room || null,
-      }),
-    ]);
+      });
+      if (!preliminaryDecision.significant) {
+        logSkippedEvent(entityId, preliminaryDecision.reason);
+        return NextResponse.json({
+          received: true,
+          significant: false,
+          reason: preliminaryDecision.reason,
+          inserted: false,
+        });
+      }
+    }
+
+    const last = await getLastHouseEvent({ userId, entityId });
+    const baseDecision = classifyHomeEventSignificance({
+      entityType: info.type,
+      entityId,
+      oldState: oldState || last?.new_state || null,
+      newState,
+      eventType,
+      lastOccurredAt: last?.occurred_at || null,
+    });
+
+    if (!baseDecision.significant) {
+      logSkippedEvent(entityId, baseDecision.reason);
+      return NextResponse.json({
+        received: true,
+        significant: false,
+        reason: baseDecision.reason,
+        inserted: false,
+      });
+    }
+
+    const cooldownContext = needsCooldownContext(info.type, eventType)
+      ? await getLastCooldownEvents({
+          userId,
+          entityId,
+          eventType,
+          roomKey: info.room || null,
+        })
+      : {
+          lastEventTypeOccurredAt: null,
+          lastRoomEventOccurredAt: null,
+        };
     const decision = classifyHomeEventSignificance({
       entityType: info.type,
       entityId,
@@ -289,6 +370,7 @@ export async function POST(req: Request) {
     });
 
     if (!decision.significant) {
+      logSkippedEvent(entityId, decision.reason);
       return NextResponse.json({
         received: true,
         significant: false,
@@ -303,37 +385,35 @@ export async function POST(req: Request) {
       entityName,
     });
 
-    const { data: insertedEvent, error } = await supabaseAdmin
-      .from("house_events")
-      .insert({
-      user_id: userId,
-      entity_id: entityId,
-      entity_name: entityName,
-      entity_type: info.type,
-      room_key: info.room || null,
-      event_type: eventType,
-      old_state: oldState || last?.new_state || null,
-      new_state: newState,
-      value: {
-        attributes,
-        last_changed: body.new_state?.last_changed || null,
-        last_updated: body.new_state?.last_updated || null,
-        person: info.person || null,
-        save_reason: decision.reason,
-        significance_category: decision.category,
-        significance_priority: decision.priority,
-        webhook_event_type: body.event_type || body.eventType || null,
-      },
-      people_home_count: null,
-      target_user: info.person || null,
-      source: "home_assistant_webhook",
-        occurred_at: occurredAt,
-      })
-      .select("id")
-      .single();
+    const loggedEvent = await logSignificantHomeEvent({
+      userId,
+      entityId,
+      entityName,
+      entityType: info.type,
+      roomKey: info.room || null,
+      eventType,
+      oldState,
+      newState,
+      attributes,
+      lastChanged: body.new_state?.last_changed || null,
+      lastUpdated: body.new_state?.last_updated || null,
+      person: info.person || null,
+      occurredAt,
+      decision,
+      previousEvent: last,
+      webhookEventType: body.event_type || body.eventType || null,
+    });
 
-    if (error) {
-      console.log("HA WEBHOOK EVENT INSERT ERROR:", error);
+    if (!loggedEvent.inserted) {
+      if (loggedEvent.reason === "duplicate_recent") {
+        logSkippedEvent(entityId, loggedEvent.reason);
+        return NextResponse.json({
+          received: true,
+          significant: false,
+          reason: loggedEvent.reason,
+          inserted: false,
+        });
+      }
       return NextResponse.json(
         {
           received: true,
@@ -348,11 +428,18 @@ export async function POST(req: Request) {
     after(async () => {
       await runHouseLightLearning({
         userId,
-        eventId: insertedEvent.id,
+        eventId: loggedEvent.id!,
         eventType,
         priority: decision.priority,
         occurredAt,
       });
+    });
+
+    console.log("HOUSE EVENT ACCEPTED:", {
+      entityId,
+      eventType,
+      category: decision.category,
+      reason: decision.reason,
     });
 
     return NextResponse.json({

@@ -1,21 +1,109 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getHAStates } from "./haClient";
 import { getEntityInfo } from "./homeEntityMapper";
-import { classifyHomeEventSignificance } from "./homeEventSignificance";
+import {
+  classifyHomeEventSignificance,
+  HOME_EVENT_THRESHOLDS,
+  type HomeEventSignificance,
+} from "./homeEventSignificance";
 
 type HAState = {
   entity_id: string;
   state: string;
-  attributes?: Record<string, any>;
+  attributes?: Record<string, unknown>;
   last_changed?: string;
   last_updated?: string;
 };
+
+type PreviousHouseEvent = {
+  id?: string | null;
+  new_state?: string | null;
+  occurred_at?: string | null;
+};
+
+export type SignificantHomeEventInput = {
+  userId: string;
+  entityId: string;
+  entityName: string;
+  entityType: string;
+  roomKey?: string | null;
+  eventType: string;
+  oldState?: string | null;
+  newState: string;
+  attributes?: Record<string, unknown>;
+  lastChanged?: string | null;
+  lastUpdated?: string | null;
+  person?: string | null;
+  occurredAt: string;
+  decision: HomeEventSignificance;
+  previousEvent?: PreviousHouseEvent | null;
+  webhookEventType?: string | null;
+};
+
+function isRecentDuplicate(
+  previous: PreviousHouseEvent | null | undefined,
+  newState: string
+) {
+  if (!previous?.occurred_at || clean(previous.new_state) !== clean(newState)) {
+    return false;
+  }
+  const age = Date.now() - new Date(previous.occurred_at).getTime();
+  return (
+    Number.isFinite(age) &&
+    age >= 0 &&
+    age < HOME_EVENT_THRESHOLDS.duplicateWindowMs
+  );
+}
+
+export async function logSignificantHomeEvent(
+  input: SignificantHomeEventInput
+) {
+  if (isRecentDuplicate(input.previousEvent, input.newState)) {
+    return { inserted: false, id: null, reason: "duplicate_recent" };
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from("house_events")
+    .insert({
+      user_id: input.userId,
+      entity_id: input.entityId,
+      entity_name: input.entityName,
+      entity_type: input.entityType,
+      room_key: input.roomKey || null,
+      event_type: input.eventType,
+      old_state: input.oldState || input.previousEvent?.new_state || null,
+      new_state: input.newState,
+      value: {
+        attributes: input.attributes || {},
+        last_changed: input.lastChanged || null,
+        last_updated: input.lastUpdated || null,
+        person: input.person || null,
+        save_reason: input.decision.reason,
+        significance_category: input.decision.category,
+        significance_priority: input.decision.priority,
+        webhook_event_type: input.webhookEventType || null,
+      },
+      people_home_count: null,
+      target_user: input.person || null,
+      source: "home_assistant_webhook",
+      occurred_at: input.occurredAt,
+    })
+    .select("id")
+    .single();
+
+  if (error) {
+    console.log("HOUSE EVENT INSERT ERROR:", error);
+    return { inserted: false, id: null, reason: "insert_failed", error };
+  }
+
+  return { inserted: true, id: data.id, reason: input.decision.reason };
+}
 
 function friendlyName(s: HAState) {
   return s.attributes?.friendly_name || s.entity_id;
 }
 
-function clean(value: any) {
+function clean(value: unknown) {
   return String(value ?? "").toLowerCase().trim();
 }
 
@@ -146,7 +234,7 @@ export async function logHomeAssistantSnapshot(
   let skippedSame = 0;
   let skippedFiltered = 0;
   const filteredReasons: Record<string, number> = {};
-  const errors: any[] = [];
+  const errors: Array<Record<string, unknown>> = [];
 
   const peopleHomeCount = states.filter((s) => {
     const id = clean(s.entity_id);
