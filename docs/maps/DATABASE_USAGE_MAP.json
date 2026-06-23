@@ -9,6 +9,7 @@
       "lib/ghostme/goals/goalsActionsLifecycle.ts",
       "lib/ghostme/goals/goalsSnapshot.ts",
       "lib/ghostme/memory/memorySearchFlow.ts",
+      "lib/ghostme/people/peopleGraphLinkService.ts",
       "lib/ghostme/proactive/dailyBriefingRepository.ts",
       "lib/ghostme/situation/situationEngine.ts"
     ],
@@ -86,6 +87,7 @@
       "lib/ghostme/agenda/reminderEngine.ts",
       "lib/ghostme/calendar/calendarService.ts",
       "lib/ghostme/context/userContextGraph.ts",
+      "lib/ghostme/people/peopleGraphLinkService.ts",
       "lib/ghostme/proactive/dailyBriefingRepository.ts",
       "lib/ghostme/proactive/visibleProactiveMessages.ts",
       "lib/ghostme/situation/situationEngine.ts"
@@ -184,6 +186,7 @@
       "lib/ghostme/context/userContextGraph.ts",
       "lib/ghostme/memory/memorySearchFlow.ts",
       "lib/ghostme/memory/memorySnapshot.ts",
+      "lib/ghostme/people/peopleGraphLinkService.ts",
       "lib/ghostme/proactive/dailyBriefingRepository.ts",
       "lib/ghostme/retrieval.ts",
       "lib/ghostme/situation/situationEngine.ts"
@@ -260,6 +263,7 @@
       "lib/ghostme/goals/goalsSnapshot.ts",
       "lib/ghostme/goalsDesires.ts",
       "lib/ghostme/memory/memorySearchFlow.ts",
+      "lib/ghostme/people/peopleGraphLinkService.ts",
       "lib/ghostme/proactive/dailyBriefingRepository.ts",
       "lib/ghostme/situation/situationEngine.ts"
     ],
@@ -461,6 +465,7 @@
       "lib/ghostme/contradictions.ts",
       "lib/ghostme/memory/memorySearchFlow.ts",
       "lib/ghostme/memory/memorySnapshot.ts",
+      "lib/ghostme/people/peopleGraphLinkService.ts",
       "lib/ghostme/people/peopleGraphService.ts",
       "lib/ghostme/people/peopleSnapshot.ts",
       "lib/ghostme/relationshipResolver.ts",
@@ -521,6 +526,7 @@
     "table": "people_graph",
     "readers": [
       "lib/ghostme/context/userContextGraph.ts",
+      "lib/ghostme/people/peopleGraphLinkService.ts",
       "lib/ghostme/people/peopleGraphService.ts",
       "lib/ghostme/people/peopleSnapshot.ts"
     ],
@@ -536,12 +542,16 @@
   },
   "people_graph_links": {
     "table": "people_graph_links",
-    "readers": [],
+    "readers": [
+      "lib/ghostme/people/peopleGraphLinkService.ts"
+    ],
     "writers": [],
-    "updaters": [],
+    "updaters": [
+      "lib/ghostme/people/peopleGraphLinkService.ts"
+    ],
     "deleters": [],
     "rawUsers": [],
-    "status": "unused"
+    "status": "alive"
   },
   "questions": {
     "table": "questions",

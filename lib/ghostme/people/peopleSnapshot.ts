@@ -1,8 +1,13 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import {
+  getPeopleGraphLinksForPeople,
+  type PeopleGraphLink,
+} from "@/lib/ghostme/people/peopleGraphLinkService";
 
 export type PeopleSnapshot = {
   items: any[];
   importantPeople: any[];
+  links: PeopleGraphLink[];
   relationshipContext: string;
   lastUpdated: string | null;
 };
@@ -389,6 +394,7 @@ export async function buildPeopleSnapshot(
     return {
       items: [],
       importantPeople: [],
+      links: [],
       relationshipContext: "",
       lastUpdated: null,
     };
@@ -421,11 +427,21 @@ export async function buildPeopleSnapshot(
       .limit(20),
   ]);
 
-  const items = mergePeople({
+  const mergedItems = mergePeople({
     peopleRows: peopleRes.data || [],
     topicRows: topicsRes.data || [],
     memoryRows: memoriesRes.data || [],
   });
+  const personIds = mergedItems.map((person) => person.id).filter(Boolean);
+  const links = await getPeopleGraphLinksForPeople({ userId, personIds });
+  const items = mergedItems.map((person) => ({
+    ...person,
+    graph_links: person.id
+      ? links.filter(
+          (link) => link.person_id === person.id || link.target_id === person.id
+        )
+      : [],
+  }));
 
   const importantPeople = items
     .filter(
@@ -438,6 +454,7 @@ export async function buildPeopleSnapshot(
   return {
     items,
     importantPeople,
+    links,
     relationshipContext: buildRelationshipContext(items),
     lastUpdated: latestTimestamp([
       ...(peopleRes.data || []).map((person: any) => person.updated_at),
@@ -445,6 +462,7 @@ export async function buildPeopleSnapshot(
       ...(topicsRes.data || []).map((topic: any) => topic.updated_at),
       ...(topicsRes.data || []).map((topic: any) => topic.last_mentioned_at),
       ...(memoriesRes.data || []).map((memory: any) => memory.updated_at),
+      ...links.map((link) => link.updated_at),
     ]),
   };
 }

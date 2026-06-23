@@ -1071,6 +1071,8 @@
       "lib/ghostme/goals/goalsActionsLifecycle.ts",
       "lib/ghostme/goalsDesires.ts",
       "lib/ghostme/mentalState.ts",
+      "lib/ghostme/people/peopleGraphLinkService.ts",
+      "lib/ghostme/people/peopleGraphService.ts",
       "lib/ghostme/timeline.ts",
       "lib/ghostme/topicDetector.ts",
       "lib/ghostme/topicLinks.ts",
@@ -1094,7 +1096,7 @@
       "memories_active"
     ],
     "tablesDeleted": [],
-    "lines": 510,
+    "lines": 517,
     "status": "god_file_candidate"
   },
   "lib/ghostme/chat/chatPromptBuilder.ts": {
@@ -2376,13 +2378,43 @@
     "lines": 78,
     "status": "active"
   },
+  "lib/ghostme/people/peopleGraphLinkService.ts": {
+    "file": "lib/ghostme/people/peopleGraphLinkService.ts",
+    "imports": [
+      "lib/supabaseAdmin.ts"
+    ],
+    "importedBy": [
+      "lib/ghostme/chat/chatPostProcessing.ts",
+      "lib/ghostme/people/peopleGraphService.ts",
+      "lib/ghostme/people/peopleSnapshot.ts",
+      "lib/ghostme/proactive/proactiveMaintenanceFlow.ts"
+    ],
+    "tablesRead": [
+      "action_intents",
+      "calendar_events",
+      "episodic_memories",
+      "goals_desires",
+      "memories_active",
+      "people_graph",
+      "people_graph_links"
+    ],
+    "tablesWritten": [],
+    "tablesUpdated": [
+      "people_graph_links"
+    ],
+    "tablesDeleted": [],
+    "lines": 485,
+    "status": "active"
+  },
   "lib/ghostme/people/peopleGraphService.ts": {
     "file": "lib/ghostme/people/peopleGraphService.ts",
     "imports": [
+      "lib/ghostme/people/peopleGraphLinkService.ts",
       "lib/ghostme/people/peopleSnapshot.ts",
       "lib/supabaseAdmin.ts"
     ],
     "importedBy": [
+      "lib/ghostme/chat/chatPostProcessing.ts",
       "lib/ghostme/proactive/proactiveMaintenanceFlow.ts",
       "lib/ghostme/situation/situationEngine.ts"
     ],
@@ -2398,12 +2430,13 @@
       "people_graph"
     ],
     "tablesDeleted": [],
-    "lines": 419,
+    "lines": 439,
     "status": "active"
   },
   "lib/ghostme/people/peopleSnapshot.ts": {
     "file": "lib/ghostme/people/peopleSnapshot.ts",
     "imports": [
+      "lib/ghostme/people/peopleGraphLinkService.ts",
       "lib/supabaseAdmin.ts"
     ],
     "importedBy": [
@@ -2422,7 +2455,7 @@
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 451,
+    "lines": 469,
     "status": "active"
   },
   "lib/ghostme/people/relationshipMemorySnapshot.ts": {
@@ -2441,7 +2474,7 @@
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 279,
+    "lines": 347,
     "status": "active"
   },
   "lib/ghostme/people/socialSuggestionSnapshot.ts": {
@@ -2598,6 +2631,7 @@
       "lib/ghostme/calendar/calendarService.ts",
       "lib/ghostme/conversationSummary.ts",
       "lib/ghostme/maintenance/retentionEngine.ts",
+      "lib/ghostme/people/peopleGraphLinkService.ts",
       "lib/ghostme/people/peopleGraphService.ts"
     ],
     "importedBy": [
@@ -2607,7 +2641,7 @@
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 16,
+    "lines": 22,
     "status": "active"
   },
   "lib/ghostme/proactive/proactiveMessageDedupe.ts": {
@@ -3159,6 +3193,7 @@
       "lib/ghostme/observation/observationInsightEngine.ts",
       "lib/ghostme/patterns/patternDecay.ts",
       "lib/ghostme/patterns/patternInsightEngine.ts",
+      "lib/ghostme/people/peopleGraphLinkService.ts",
       "lib/ghostme/people/peopleGraphService.ts",
       "lib/ghostme/people/peopleSnapshot.ts",
       "lib/ghostme/proactive/curiosityCardWriter.ts",

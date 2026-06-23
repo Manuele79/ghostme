@@ -6,6 +6,7 @@ import {
   isPersonTopic,
   normalizePersonName,
 } from "@/lib/ghostme/people/peopleSnapshot";
+import { getPeopleGraphLinksForPeople } from "@/lib/ghostme/people/peopleGraphLinkService";
 
 type PersonCandidate = {
   name: string;
@@ -409,10 +410,29 @@ export async function getPeopleGraphContext(userId: string) {
 
   if (!data?.length) return "";
 
+  const links = await getPeopleGraphLinksForPeople({
+    userId,
+    personIds: data.map((person) => person.id),
+    limit: 80,
+  });
+  const peopleById = new Map(data.map((person) => [person.id, person.name]));
+
   return data
-    .map(
-      (person) =>
-        `- ${person.name} | relazione ${person.relationship_type || "non specificata"} | importanza ${person.importance} | menzioni ${person.mention_count} | ${person.description || ""}`
-    )
+    .map((person) => {
+      const adjacent = links.filter(
+        (link) => link.person_id === person.id || link.target_id === person.id
+      );
+      const cluster = adjacent
+        .slice(0, 5)
+        .map((link) => {
+          const label =
+            link.target_type === "person" && link.target_id === person.id
+              ? peopleById.get(link.person_id) || link.person_id
+              : link.target_label || link.target_key;
+          return `${link.target_type}:${label}`;
+        })
+        .join(", ");
+      return `- ${person.name} | relazione ${person.relationship_type || "non specificata"} | importanza ${person.importance} | menzioni ${person.mention_count} | collegamenti ${adjacent.length}${cluster ? ` [${cluster}]` : ""} | ${person.description || ""}`;
+    })
     .join("\n");
 }

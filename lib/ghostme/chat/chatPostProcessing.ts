@@ -18,6 +18,8 @@ import {
   detectAndCompleteActionIntent,
 } from "@/lib/ghostme/actionLayer";
 import { linkOpenOrphanActionsToGoal } from "@/lib/ghostme/goals/goalsActionsLifecycle";
+import { syncPeopleGraphFromTopics } from "@/lib/ghostme/people/peopleGraphService";
+import { syncPeopleGraphLinks } from "@/lib/ghostme/people/peopleGraphLinkService";
 import type {
   ChatPostProcessingPayload,
   DetectedTopicLike,
@@ -503,6 +505,11 @@ export async function runChatPostProcessing({
     jobs.push(detectAndSaveBehaviorRule({ userId, message }));
 
     await Promise.allSettled(jobs);
+
+    // Link only persisted evidence. This runs after every writer above has settled;
+    // no model output is used by the graph layer itself.
+    await syncPeopleGraphFromTopics(userId);
+    await syncPeopleGraphLinks(userId);
   } catch (err) {
     log("AFTER JOBS ERROR:", err);
   }

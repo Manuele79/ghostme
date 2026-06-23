@@ -4,19 +4,19 @@ Mappa statica generata dal codice locale.
 
 | Tabella | Stato | Lettori | Scrittori | Update | Delete | Raw |
 |---|---:|---:|---:|---:|---:|---:|
-| action_intents | alive | 9 | 1 | 3 | 0 | 0 |
+| action_intents | alive | 10 | 1 | 3 | 0 | 0 |
 | answers | alive | 1 | 1 | 0 | 1 | 0 |
 | autobiographical_timeline | alive | 6 | 1 | 0 | 0 | 0 |
 | behavior_patterns | alive | 6 | 1 | 3 | 0 | 0 |
-| calendar_events | alive | 7 | 1 | 3 | 0 | 0 |
+| calendar_events | alive | 8 | 1 | 3 | 0 | 0 |
 | chat_messages | alive | 2 | 1 | 1 | 1 | 0 |
 | contradictions | alive | 3 | 1 | 0 | 0 | 0 |
 | conversation_summaries | alive | 8 | 1 | 1 | 0 | 0 |
 | dynamic_self_profile | alive | 4 | 2 | 2 | 0 | 0 |
-| episodic_memories | alive | 7 | 1 | 0 | 0 | 0 |
+| episodic_memories | alive | 8 | 1 | 0 | 0 | 0 |
 | ghost_behavior_rules | alive | 3 | 2 | 1 | 0 | 0 |
 | ghost_proactive_messages | alive | 15 | 1 | 8 | 0 | 0 |
-| goals_desires | alive | 9 | 1 | 3 | 0 | 0 |
+| goals_desires | alive | 10 | 1 | 3 | 0 | 0 |
 | house_automation_controls | alive | 3 | 1 | 2 | 0 | 0 |
 | house_entities | alive | 2 | 2 | 0 | 0 | 0 |
 | house_events | alive | 11 | 2 | 1 | 0 | 0 |
@@ -27,11 +27,11 @@ Mappa statica generata dal codice locale.
 | house_suggestions | alive | 3 | 2 | 1 | 0 | 0 |
 | life_topics | alive | 14 | 2 | 3 | 1 | 0 |
 | memories | unused | 0 | 0 | 0 | 0 | 0 |
-| memories_active | alive | 11 | 4 | 3 | 2 | 0 |
+| memories_active | alive | 12 | 4 | 3 | 2 | 0 |
 | mental_states | alive | 3 | 1 | 1 | 0 | 0 |
 | observation_events | alive | 2 | 1 | 1 | 0 | 0 |
-| people_graph | alive | 3 | 1 | 1 | 0 | 0 |
-| people_graph_links | unused | 0 | 0 | 0 | 0 | 0 |
+| people_graph | alive | 4 | 1 | 1 | 0 | 0 |
+| people_graph_links | alive | 1 | 0 | 1 | 0 | 0 |
 | questions | unused | 0 | 0 | 0 | 0 | 0 |
 | significant_places | alive | 3 | 1 | 1 | 1 | 0 |
 | topic_links | alive | 5 | 1 | 1 | 0 | 0 |
@@ -46,7 +46,7 @@ Mappa statica generata dal codice locale.
 
 Stato: **alive**
 
-Readers: app/api/actions/update-status/route.ts, app/api/goals/update-status/route.ts, lib/ghostme/actionLayer.ts, lib/ghostme/context/userContextGraph.ts, lib/ghostme/goals/goalsActionsLifecycle.ts, lib/ghostme/goals/goalsSnapshot.ts, lib/ghostme/memory/memorySearchFlow.ts, lib/ghostme/proactive/dailyBriefingRepository.ts, lib/ghostme/situation/situationEngine.ts
+Readers: app/api/actions/update-status/route.ts, app/api/goals/update-status/route.ts, lib/ghostme/actionLayer.ts, lib/ghostme/context/userContextGraph.ts, lib/ghostme/goals/goalsActionsLifecycle.ts, lib/ghostme/goals/goalsSnapshot.ts, lib/ghostme/memory/memorySearchFlow.ts, lib/ghostme/people/peopleGraphLinkService.ts, lib/ghostme/proactive/dailyBriefingRepository.ts, lib/ghostme/situation/situationEngine.ts
 
 Writers: lib/ghostme/actionLayer.ts
 
@@ -102,7 +102,7 @@ Raw users: -
 
 Stato: **alive**
 
-Readers: app/api/ghostme/proactive/read/route.ts, lib/ghostme/agenda/reminderEngine.ts, lib/ghostme/calendar/calendarService.ts, lib/ghostme/context/userContextGraph.ts, lib/ghostme/proactive/dailyBriefingRepository.ts, lib/ghostme/proactive/visibleProactiveMessages.ts, lib/ghostme/situation/situationEngine.ts
+Readers: app/api/ghostme/proactive/read/route.ts, lib/ghostme/agenda/reminderEngine.ts, lib/ghostme/calendar/calendarService.ts, lib/ghostme/context/userContextGraph.ts, lib/ghostme/people/peopleGraphLinkService.ts, lib/ghostme/proactive/dailyBriefingRepository.ts, lib/ghostme/proactive/visibleProactiveMessages.ts, lib/ghostme/situation/situationEngine.ts
 
 Writers: lib/ghostme/calendar/calendarService.ts
 
@@ -172,7 +172,7 @@ Raw users: -
 
 Stato: **alive**
 
-Readers: lib/ghostme/chat/chatPostProcessing.ts, lib/ghostme/context/userContextGraph.ts, lib/ghostme/memory/memorySearchFlow.ts, lib/ghostme/memory/memorySnapshot.ts, lib/ghostme/proactive/dailyBriefingRepository.ts, lib/ghostme/retrieval.ts, lib/ghostme/situation/situationEngine.ts
+Readers: lib/ghostme/chat/chatPostProcessing.ts, lib/ghostme/context/userContextGraph.ts, lib/ghostme/memory/memorySearchFlow.ts, lib/ghostme/memory/memorySnapshot.ts, lib/ghostme/people/peopleGraphLinkService.ts, lib/ghostme/proactive/dailyBriefingRepository.ts, lib/ghostme/retrieval.ts, lib/ghostme/situation/situationEngine.ts
 
 Writers: lib/ghostme/chat/chatPostProcessing.ts
 
@@ -214,7 +214,7 @@ Raw users: -
 
 Stato: **alive**
 
-Readers: app/api/goals/update-status/route.ts, lib/ghostme/context/userContextGraph.ts, lib/ghostme/curiosity/curiosityEngine.ts, lib/ghostme/goals/goalsActionsLifecycle.ts, lib/ghostme/goals/goalsSnapshot.ts, lib/ghostme/goalsDesires.ts, lib/ghostme/memory/memorySearchFlow.ts, lib/ghostme/proactive/dailyBriefingRepository.ts, lib/ghostme/situation/situationEngine.ts
+Readers: app/api/goals/update-status/route.ts, lib/ghostme/context/userContextGraph.ts, lib/ghostme/curiosity/curiosityEngine.ts, lib/ghostme/goals/goalsActionsLifecycle.ts, lib/ghostme/goals/goalsSnapshot.ts, lib/ghostme/goalsDesires.ts, lib/ghostme/memory/memorySearchFlow.ts, lib/ghostme/people/peopleGraphLinkService.ts, lib/ghostme/proactive/dailyBriefingRepository.ts, lib/ghostme/situation/situationEngine.ts
 
 Writers: lib/ghostme/goalsDesires.ts
 
@@ -368,7 +368,7 @@ Raw users: -
 
 Stato: **alive**
 
-Readers: app/api/memory/route.ts, app/memory/page.tsx, lib/ghostme/chat/chatPostProcessing.ts, lib/ghostme/context/userContextGraph.ts, lib/ghostme/contradictions.ts, lib/ghostme/memory/memorySearchFlow.ts, lib/ghostme/memory/memorySnapshot.ts, lib/ghostme/people/peopleGraphService.ts, lib/ghostme/people/peopleSnapshot.ts, lib/ghostme/relationshipResolver.ts, lib/ghostme/retrieval.ts
+Readers: app/api/memory/route.ts, app/memory/page.tsx, lib/ghostme/chat/chatPostProcessing.ts, lib/ghostme/context/userContextGraph.ts, lib/ghostme/contradictions.ts, lib/ghostme/memory/memorySearchFlow.ts, lib/ghostme/memory/memorySnapshot.ts, lib/ghostme/people/peopleGraphLinkService.ts, lib/ghostme/people/peopleGraphService.ts, lib/ghostme/people/peopleSnapshot.ts, lib/ghostme/relationshipResolver.ts, lib/ghostme/retrieval.ts
 
 Writers: app/api/memory/route.ts, app/memory/page.tsx, lib/ghostme/chat/chatPostProcessing.ts, lib/ghostme/relationshipResolver.ts
 
@@ -410,7 +410,7 @@ Raw users: -
 
 Stato: **alive**
 
-Readers: lib/ghostme/context/userContextGraph.ts, lib/ghostme/people/peopleGraphService.ts, lib/ghostme/people/peopleSnapshot.ts
+Readers: lib/ghostme/context/userContextGraph.ts, lib/ghostme/people/peopleGraphLinkService.ts, lib/ghostme/people/peopleGraphService.ts, lib/ghostme/people/peopleSnapshot.ts
 
 Writers: lib/ghostme/people/peopleGraphService.ts
 
@@ -422,13 +422,13 @@ Raw users: -
 
 ### people_graph_links
 
-Stato: **unused**
+Stato: **alive**
 
-Readers: -
+Readers: lib/ghostme/people/peopleGraphLinkService.ts
 
 Writers: -
 
-Updaters: -
+Updaters: lib/ghostme/people/peopleGraphLinkService.ts
 
 Deleters: -
 

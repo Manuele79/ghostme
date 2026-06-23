@@ -66,7 +66,7 @@ Mappa statica generata dal codice locale.
 | lib/ghostme/chat/chatContextBuilder.ts | active | 1 | 7 | 0 | 0 | 317 |
 | lib/ghostme/chat/chatExternalServices.ts | active | 1 | 3 | 0 | 0 | 85 |
 | lib/ghostme/chat/chatMessageAnalyzer.ts | active | 1 | 5 | 0 | 0 | 58 |
-| lib/ghostme/chat/chatPostProcessing.ts | god_file_candidate | 1 | 12 | 3 | 5 | 510 |
+| lib/ghostme/chat/chatPostProcessing.ts | god_file_candidate | 1 | 14 | 3 | 5 | 517 |
 | lib/ghostme/chat/chatPromptBuilder.ts | active | 2 | 0 | 0 | 0 | 227 |
 | lib/ghostme/chat/chatTypes.ts | active | 4 | 0 | 0 | 0 | 41 |
 | lib/ghostme/chat/ghostChatOrchestrator.ts | active | 1 | 9 | 0 | 0 | 147 |
@@ -128,9 +128,10 @@ Mappa statica generata dal codice locale.
 | lib/ghostme/observation/observationPolicy.ts | active | 2 | 0 | 0 | 0 | 110 |
 | lib/ghostme/patterns/patternDecay.ts | active | 1 | 1 | 1 | 1 | 51 |
 | lib/ghostme/patterns/patternInsightEngine.ts | active | 1 | 1 | 2 | 0 | 78 |
-| lib/ghostme/people/peopleGraphService.ts | active | 2 | 2 | 3 | 2 | 419 |
-| lib/ghostme/people/peopleSnapshot.ts | active | 6 | 1 | 3 | 0 | 451 |
-| lib/ghostme/people/relationshipMemorySnapshot.ts | active | 4 | 2 | 0 | 0 | 279 |
+| lib/ghostme/people/peopleGraphLinkService.ts | active | 4 | 1 | 7 | 1 | 485 |
+| lib/ghostme/people/peopleGraphService.ts | active | 3 | 3 | 3 | 2 | 439 |
+| lib/ghostme/people/peopleSnapshot.ts | active | 6 | 2 | 3 | 0 | 469 |
+| lib/ghostme/people/relationshipMemorySnapshot.ts | active | 4 | 2 | 0 | 0 | 347 |
 | lib/ghostme/people/socialSuggestionSnapshot.ts | active | 2 | 2 | 0 | 0 | 228 |
 | lib/ghostme/proactive/curiosityCardWriter.ts | active | 2 | 4 | 1 | 0 | 154 |
 | lib/ghostme/proactive/dailyBriefingBuilder.ts | active | 1 | 0 | 0 | 0 | 98 |
@@ -139,7 +140,7 @@ Mappa statica generata dal codice locale.
 | lib/ghostme/proactive/proactiveCandidateRanker.ts | active | 1 | 1 | 0 | 0 | 17 |
 | lib/ghostme/proactive/proactiveCardLifecycle.ts | active | 4 | 0 | 0 | 0 | 28 |
 | lib/ghostme/proactive/proactiveDecisionEngine.ts | active | 2 | 1 | 0 | 0 | 152 |
-| lib/ghostme/proactive/proactiveMaintenanceFlow.ts | active | 1 | 6 | 0 | 0 | 16 |
+| lib/ghostme/proactive/proactiveMaintenanceFlow.ts | active | 1 | 7 | 0 | 0 | 22 |
 | lib/ghostme/proactive/proactiveMessageDedupe.ts | active | 5 | 0 | 0 | 0 | 45 |
 | lib/ghostme/proactive/proactiveMessageService.ts | active | 11 | 3 | 1 | 2 | 199 |
 | lib/ghostme/proactive/proactiveTrigger.ts | active | 1 | 5 | 1 | 0 | 82 |
@@ -164,7 +165,7 @@ Mappa statica generata dal codice locale.
 | lib/ghostme/ui/brainUiAdapter.ts | active | 1 | 3 | 0 | 0 | 79 |
 | lib/personality.ts | active | 3 | 0 | 0 | 0 | 184 |
 | lib/supabase.ts | active | 12 | 0 | 0 | 0 | 6 |
-| lib/supabaseAdmin.ts | active | 58 | 0 | 0 | 0 | 6 |
+| lib/supabaseAdmin.ts | active | 59 | 0 | 0 | 0 | 6 |
 
 ## Orfani candidati
 
@@ -177,7 +178,7 @@ Mappa statica generata dal codice locale.
 
 ## God file candidati
 
-- **lib/ghostme/chat/chatPostProcessing.ts** — 510 righe
+- **lib/ghostme/chat/chatPostProcessing.ts** — 517 righe
 - **lib/ghostme/context/decisionSnapshot.ts** — 701 righe
 - **lib/ghostme/context/reasoningService.ts** — 879 righe
 - **lib/ghostme/curiosity/curiositySnapshot.ts** — 775 righe
@@ -1185,7 +1186,7 @@ Stato: **god_file_candidate**
 
 Chiamato da: app/api/chat/route.ts
 
-Importa: lib/ghostme/actionLayer.ts, lib/ghostme/behavior/behaviorRulesEngine.ts, lib/ghostme/chat/chatTypes.ts, lib/ghostme/contradictions.ts, lib/ghostme/dynamicSelfProfile.ts, lib/ghostme/goals/goalsActionsLifecycle.ts, lib/ghostme/goalsDesires.ts, lib/ghostme/mentalState.ts, lib/ghostme/timeline.ts, lib/ghostme/topicDetector.ts, lib/ghostme/topicLinks.ts, lib/supabase.ts
+Importa: lib/ghostme/actionLayer.ts, lib/ghostme/behavior/behaviorRulesEngine.ts, lib/ghostme/chat/chatTypes.ts, lib/ghostme/contradictions.ts, lib/ghostme/dynamicSelfProfile.ts, lib/ghostme/goals/goalsActionsLifecycle.ts, lib/ghostme/goalsDesires.ts, lib/ghostme/mentalState.ts, lib/ghostme/people/peopleGraphLinkService.ts, lib/ghostme/people/peopleGraphService.ts, lib/ghostme/timeline.ts, lib/ghostme/topicDetector.ts, lib/ghostme/topicLinks.ts, lib/supabase.ts
 
 DB read: episodic_memories, life_topics, memories_active
 
@@ -2171,13 +2172,29 @@ DB update: -
 
 DB delete: -
 
+### lib/ghostme/people/peopleGraphLinkService.ts
+
+Stato: **active**
+
+Chiamato da: lib/ghostme/chat/chatPostProcessing.ts, lib/ghostme/people/peopleGraphService.ts, lib/ghostme/people/peopleSnapshot.ts, lib/ghostme/proactive/proactiveMaintenanceFlow.ts
+
+Importa: lib/supabaseAdmin.ts
+
+DB read: action_intents, calendar_events, episodic_memories, goals_desires, memories_active, people_graph, people_graph_links
+
+DB write: -
+
+DB update: people_graph_links
+
+DB delete: -
+
 ### lib/ghostme/people/peopleGraphService.ts
 
 Stato: **active**
 
-Chiamato da: lib/ghostme/proactive/proactiveMaintenanceFlow.ts, lib/ghostme/situation/situationEngine.ts
+Chiamato da: lib/ghostme/chat/chatPostProcessing.ts, lib/ghostme/proactive/proactiveMaintenanceFlow.ts, lib/ghostme/situation/situationEngine.ts
 
-Importa: lib/ghostme/people/peopleSnapshot.ts, lib/supabaseAdmin.ts
+Importa: lib/ghostme/people/peopleGraphLinkService.ts, lib/ghostme/people/peopleSnapshot.ts, lib/supabaseAdmin.ts
 
 DB read: life_topics, memories_active, people_graph
 
@@ -2193,7 +2210,7 @@ Stato: **active**
 
 Chiamato da: lib/ghostme/context/reasoningService.ts, lib/ghostme/curiosity/curiositySnapshot.ts, lib/ghostme/people/peopleGraphService.ts, lib/ghostme/people/relationshipMemorySnapshot.ts, lib/ghostme/people/socialSuggestionSnapshot.ts, lib/ghostme/projects/projectMemorySnapshot.ts
 
-Importa: lib/supabaseAdmin.ts
+Importa: lib/ghostme/people/peopleGraphLinkService.ts, lib/supabaseAdmin.ts
 
 DB read: life_topics, memories_active, people_graph
 
@@ -2353,7 +2370,7 @@ Stato: **active**
 
 Chiamato da: lib/ghostme/proactive/proactiveUserFlow.ts
 
-Importa: lib/ghostme/actionLayer.ts, lib/ghostme/agenda/reminderEngine.ts, lib/ghostme/calendar/calendarService.ts, lib/ghostme/conversationSummary.ts, lib/ghostme/maintenance/retentionEngine.ts, lib/ghostme/people/peopleGraphService.ts
+Importa: lib/ghostme/actionLayer.ts, lib/ghostme/agenda/reminderEngine.ts, lib/ghostme/calendar/calendarService.ts, lib/ghostme/conversationSummary.ts, lib/ghostme/maintenance/retentionEngine.ts, lib/ghostme/people/peopleGraphLinkService.ts, lib/ghostme/people/peopleGraphService.ts
 
 DB read: -
 
@@ -2751,7 +2768,7 @@ DB delete: -
 
 Stato: **active**
 
-Chiamato da: app/api/actions/update-status/route.ts, app/api/ghostme/proactive/read/route.ts, app/api/goals/update-status/route.ts, app/api/home-assistant/event/route.ts, app/api/worker/proactive/route.ts, lib/ghostme/actionLayer.ts, lib/ghostme/agenda/reminderEngine.ts, lib/ghostme/auth/serverAuth.ts, lib/ghostme/behavior/behaviorRulesEngine.ts, lib/ghostme/calendar/calendarService.ts, lib/ghostme/context/contextBuilder.ts, lib/ghostme/context/userContextGraph.ts, lib/ghostme/contradictions.ts, lib/ghostme/conversationSummary.ts, lib/ghostme/curiosity/curiosityEngine.ts, lib/ghostme/dynamicSelfProfile.ts, lib/ghostme/goals/goalsActionsLifecycle.ts, lib/ghostme/goals/goalsSnapshot.ts, lib/ghostme/goalsDesires.ts, lib/ghostme/home/homeComfortRiskSnapshot.ts, lib/ghostme/home/houseRouteSnapshot.ts, lib/ghostme/home/houseStateSnapshot.ts, lib/ghostme/home/houseSuggestionResponseFlow.ts, lib/ghostme/homeAssistant/homeEventLogger.ts, lib/ghostme/homeAssistant/houseAutomationContext.ts, lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts, lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts, lib/ghostme/homeAssistant/houseEntityRegistry.ts, lib/ghostme/homeAssistant/houseLearnedRulesContext.ts, lib/ghostme/homeAssistant/houseLightLearningFlow.ts, lib/ghostme/homeAssistant/housePatternEngine.ts, lib/ghostme/homeAssistant/houseRouteLearningEngine.ts, lib/ghostme/homeAssistant/houseSuggestionEngine.ts, lib/ghostme/location/haLocationBridgeFlow.ts, lib/ghostme/location/locationCurrentStateFlow.ts, lib/ghostme/location/locationDeletePlaceFlow.ts, lib/ghostme/location/locationLearningFlow.ts, lib/ghostme/location/locationUpdateFlow.ts, lib/ghostme/location/placeService.ts, lib/ghostme/maintenance/retentionEngine.ts, lib/ghostme/memory/memorySearchFlow.ts, lib/ghostme/memory/memorySnapshot.ts, lib/ghostme/mentalState.ts, lib/ghostme/observation/observationEngine.ts, lib/ghostme/observation/observationInsightEngine.ts, lib/ghostme/patterns/patternDecay.ts, lib/ghostme/patterns/patternInsightEngine.ts, lib/ghostme/people/peopleGraphService.ts, lib/ghostme/people/peopleSnapshot.ts, lib/ghostme/proactive/curiosityCardWriter.ts, lib/ghostme/proactive/dailyBriefingRepository.ts, lib/ghostme/proactive/proactiveMessageService.ts, lib/ghostme/proactive/proactiveTrigger.ts, lib/ghostme/proactive/trueProactiveCardWriter.ts, lib/ghostme/proactive/visibleProactiveMessages.ts, lib/ghostme/profile/profileBehaviorSeed.ts, lib/ghostme/situation/situationEngine.ts, lib/ghostme/timeline.ts
+Chiamato da: app/api/actions/update-status/route.ts, app/api/ghostme/proactive/read/route.ts, app/api/goals/update-status/route.ts, app/api/home-assistant/event/route.ts, app/api/worker/proactive/route.ts, lib/ghostme/actionLayer.ts, lib/ghostme/agenda/reminderEngine.ts, lib/ghostme/auth/serverAuth.ts, lib/ghostme/behavior/behaviorRulesEngine.ts, lib/ghostme/calendar/calendarService.ts, lib/ghostme/context/contextBuilder.ts, lib/ghostme/context/userContextGraph.ts, lib/ghostme/contradictions.ts, lib/ghostme/conversationSummary.ts, lib/ghostme/curiosity/curiosityEngine.ts, lib/ghostme/dynamicSelfProfile.ts, lib/ghostme/goals/goalsActionsLifecycle.ts, lib/ghostme/goals/goalsSnapshot.ts, lib/ghostme/goalsDesires.ts, lib/ghostme/home/homeComfortRiskSnapshot.ts, lib/ghostme/home/houseRouteSnapshot.ts, lib/ghostme/home/houseStateSnapshot.ts, lib/ghostme/home/houseSuggestionResponseFlow.ts, lib/ghostme/homeAssistant/homeEventLogger.ts, lib/ghostme/homeAssistant/houseAutomationContext.ts, lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts, lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts, lib/ghostme/homeAssistant/houseEntityRegistry.ts, lib/ghostme/homeAssistant/houseLearnedRulesContext.ts, lib/ghostme/homeAssistant/houseLightLearningFlow.ts, lib/ghostme/homeAssistant/housePatternEngine.ts, lib/ghostme/homeAssistant/houseRouteLearningEngine.ts, lib/ghostme/homeAssistant/houseSuggestionEngine.ts, lib/ghostme/location/haLocationBridgeFlow.ts, lib/ghostme/location/locationCurrentStateFlow.ts, lib/ghostme/location/locationDeletePlaceFlow.ts, lib/ghostme/location/locationLearningFlow.ts, lib/ghostme/location/locationUpdateFlow.ts, lib/ghostme/location/placeService.ts, lib/ghostme/maintenance/retentionEngine.ts, lib/ghostme/memory/memorySearchFlow.ts, lib/ghostme/memory/memorySnapshot.ts, lib/ghostme/mentalState.ts, lib/ghostme/observation/observationEngine.ts, lib/ghostme/observation/observationInsightEngine.ts, lib/ghostme/patterns/patternDecay.ts, lib/ghostme/patterns/patternInsightEngine.ts, lib/ghostme/people/peopleGraphLinkService.ts, lib/ghostme/people/peopleGraphService.ts, lib/ghostme/people/peopleSnapshot.ts, lib/ghostme/proactive/curiosityCardWriter.ts, lib/ghostme/proactive/dailyBriefingRepository.ts, lib/ghostme/proactive/proactiveMessageService.ts, lib/ghostme/proactive/proactiveTrigger.ts, lib/ghostme/proactive/trueProactiveCardWriter.ts, lib/ghostme/proactive/visibleProactiveMessages.ts, lib/ghostme/profile/profileBehaviorSeed.ts, lib/ghostme/situation/situationEngine.ts, lib/ghostme/timeline.ts
 
 Importa: -
 

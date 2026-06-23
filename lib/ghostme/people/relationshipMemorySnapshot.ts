@@ -1,5 +1,6 @@
 import type { PeopleSnapshot } from "@/lib/ghostme/people/peopleSnapshot";
 import type { MemorySnapshot } from "@/lib/ghostme/memory/memorySnapshot";
+import type { PeopleGraphLink } from "@/lib/ghostme/people/peopleGraphLinkService";
 
 export type RelationshipMemorySnapshot = {
   relationships: any[];
@@ -142,6 +143,14 @@ function extractRelatedPlaces(rows: any[], people: ReturnType<typeof personNames
   return uniqueBy(related, (item) => `${item.place}|${item.people.join(",")}`).slice(0, 8);
 }
 
+function latestEvidence(link: PeopleGraphLink) {
+  return [...(Array.isArray(link.evidences) ? link.evidences : [])].sort(
+    (left, right) =>
+      new Date(right?.observed_at || 0).getTime() -
+      new Date(left?.observed_at || 0).getTime()
+  )[0] || null;
+}
+
 export function buildRelationshipMemorySnapshot({
   people,
   memory,
@@ -215,15 +224,76 @@ export function buildRelationshipMemorySnapshot({
   ).slice(0, 8);
 
   const relatedPlaces = extractRelatedPlaces(memoryRows, knownPeople);
+  const peopleById = new Map<string, string>(
+    (people.items || []).filter((person) => person.id).map((person) => [person.id, person.name])
+  );
+  const graphLinks = people.links || [];
+  const personForLink = (link: PeopleGraphLink) =>
+    peopleById.get(link.person_id) || null;
+  const graphRecentMentions = graphLinks
+    .filter((link) => ["memory", "episodic_memory"].includes(link.target_type))
+    .map((link) => {
+      const evidence = latestEvidence(link);
+      return {
+        source: link.target_type === "memory" ? "memory" : "episode",
+        title: link.target_label || evidence?.note || null,
+        people: [personForLink(link)].filter(Boolean),
+        at: evidence?.observed_at || link.updated_at || null,
+        linkId: link.id,
+      };
+    });
+  const graphSharedEvents = graphLinks
+    .filter((link) => link.target_type === "calendar_event")
+    .map((link) => {
+      const evidence = latestEvidence(link);
+      return {
+        id: link.target_id,
+        title: link.target_label || evidence?.note || null,
+        people: [personForLink(link)].filter(Boolean),
+        startAt: evidence?.metadata?.start_at || evidence?.observed_at || null,
+        status: evidence?.metadata?.status || null,
+        linkId: link.id,
+      };
+    });
+  const graphOpenLoops = graphLinks
+    .filter((link) => ["action_intent", "goal"].includes(link.target_type))
+    .map((link) => {
+      const evidence = latestEvidence(link);
+      return {
+        id: link.target_id,
+        title: link.target_label || evidence?.note || null,
+        people: [personForLink(link)].filter(Boolean),
+        priority: evidence?.metadata?.importance || null,
+        updatedAt: evidence?.metadata?.updated_at || evidence?.observed_at || null,
+        targetType: link.target_type,
+        linkId: link.id,
+      };
+    });
+  const graphPlaces = graphLinks
+    .filter((link) => link.target_type === "place")
+    .map((link) => ({
+      place: link.target_label || link.target_key,
+      people: [personForLink(link)].filter(Boolean),
+      source: "people_graph_links",
+      linkId: link.id,
+    }));
+  const effectiveRecentMentions = graphRecentMentions.length
+    ? graphRecentMentions
+    : recentMentions;
+  const effectiveSharedEvents = graphSharedEvents.length
+    ? graphSharedEvents
+    : sharedEvents;
+  const effectiveOpenLoops = graphOpenLoops.length ? graphOpenLoops : openLoops;
+  const effectiveRelatedPlaces = graphPlaces.length ? graphPlaces : relatedPlaces;
   const personActivity = knownPeople
     .map((person) => {
-      const mentions = recentMentions.filter((mention) =>
+      const mentions = effectiveRecentMentions.filter((mention) =>
         includesPersonName(mention.people, person.name)
       );
-      const events = sharedEvents.filter((event) =>
+      const events = effectiveSharedEvents.filter((event) =>
         includesPersonName(event.people, person.name)
       );
-      const loops = openLoops.filter((loop) =>
+      const loops = effectiveOpenLoops.filter((loop) =>
         includesPersonName(loop.people, person.name)
       );
       return {
@@ -250,17 +320,17 @@ export function buildRelationshipMemorySnapshot({
   const confidence = Math.min(
     95,
     relationships.length * 15 +
-      recentMentions.length * 8 +
-      sharedEvents.length * 10 +
-      openLoops.length * 10
+      effectiveRecentMentions.length * 8 +
+      effectiveSharedEvents.length * 10 +
+      effectiveOpenLoops.length * 10
   );
 
   return {
     relationships,
-    recentMentions,
-    sharedEvents,
-    relatedPlaces,
-    openLoops,
+    recentMentions: effectiveRecentMentions,
+    sharedEvents: effectiveSharedEvents,
+    relatedPlaces: effectiveRelatedPlaces,
+    openLoops: effectiveOpenLoops,
     personActivity,
     confidence,
     lastUpdated: latestTimestamp([
