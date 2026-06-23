@@ -7,6 +7,11 @@ import {
   filterFutureCalendar,
   filterOpenActions,
 } from "@/lib/ghostme/context/temporalPriority";
+import {
+  cleanObservations,
+  CURRENT_OBSERVATION_WINDOW_MS,
+  MAX_CURRENT_OBSERVATIONS,
+} from "@/lib/ghostme/observation/observationPolicy";
 
 
 export type GhostSituation = {
@@ -288,10 +293,10 @@ export async function buildGhostSituation(userId: string): Promise<GhostSituatio
       .eq("user_id", userId)
       .gte(
         "occurred_at",
-        new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+        new Date(Date.now() - CURRENT_OBSERVATION_WINDOW_MS).toISOString()
       )
       .order("occurred_at", { ascending: false })
-      .limit(12),
+      .limit(30),
 
 
   ]);
@@ -341,7 +346,10 @@ export async function buildGhostSituation(userId: string): Promise<GhostSituatio
   const behaviorRules = behaviorRulesRes.data || [];
 
   const behaviorPatterns = behaviorPatternsRes.data || [];
-  const recentObservations = observationsRes.data || [];
+  const recentObservations = cleanObservations(observationsRes.data || [], {
+    currentOnly: true,
+    limit: MAX_CURRENT_OBSERVATIONS,
+  });
 
   const timeContext = getTimeContext();
   const dayContext = getDayContext();

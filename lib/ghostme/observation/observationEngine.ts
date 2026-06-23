@@ -1,4 +1,8 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import {
+  cleanObservations,
+  observationIdentity,
+} from "@/lib/ghostme/observation/observationPolicy";
 
 export type ObservationEventType =
   | "location_enter"
@@ -25,6 +29,8 @@ const UNKNOWN_PLACE_RADIUS_METERS = 120;
 const UNKNOWN_PLACE_MIN_VISITS = 3;
 const UNKNOWN_PLACE_MIN_CONFIDENCE = 7;
 const DISTINCT_VISIT_WINDOW_MS = 2 * 60 * 60 * 1000;
+const LOCATION_DEDUP_WINDOW_MS = 15 * 60 * 1000;
+const UNKNOWN_LOCATION_DEDUP_WINDOW_MS = DISTINCT_VISIT_WINDOW_MS;
 
 function distanceMeters(
   lat1: number,
@@ -70,21 +76,80 @@ export async function recordObservation({
   occurredAt?: string;
 }) {
   if (!userId || !eventType) return null;
+  if (
+    source === "home_assistant" &&
+    context?.significant !== true &&
+    !context?.significance_category
+  ) {
+    return null;
+  }
+
+  const eventDate = new Date(occurredAt || Date.now());
+  if (Number.isNaN(eventDate.getTime())) return null;
+  const eventIso = eventDate.toISOString();
+  const resolved = await resolveObservationPlace({ userId, placeId, placeLabel });
+  const cleanContext = {
+    ...context,
+    place_category: resolved.category,
+    observation_text:
+      eventType === "place_unknown_detected"
+        ? "Luogo sconosciuto rilevato"
+        : resolved.label
+          ? `Luogo rilevato: ${resolved.label}`
+          : "Cambio di luogo rilevato",
+  };
+  const candidate = {
+    user_id: userId,
+    event_type: eventType,
+    source,
+    place_label: resolved.label,
+    place_id: resolved.id,
+    value,
+    context: cleanContext,
+    occurred_at: eventIso,
+  };
+  const dedupWindow =
+    eventType === "place_unknown_detected"
+      ? UNKNOWN_LOCATION_DEDUP_WINDOW_MS
+      : LOCATION_DEDUP_WINDOW_MS;
+  const { data: recent } = await supabaseAdmin
+    .from("observation_events")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("event_type", eventType)
+    .gte("occurred_at", new Date(eventDate.getTime() - dedupWindow).toISOString())
+    .order("occurred_at", { ascending: false })
+    .limit(10);
+  const duplicate = (recent || []).find(
+    (event) => observationIdentity(event) === observationIdentity(candidate)
+  );
+
+  if (duplicate?.id) {
+    // Per i fix sconosciuti conserviamo l'inizio della visita: spostare ogni volta
+    // occurred_at impedirebbe di riconoscere una visita distinta successiva.
+    if (eventType === "place_unknown_detected") return duplicate;
+
+    const { data, error } = await supabaseAdmin
+      .from("observation_events")
+      .update({
+        source,
+        place_label: resolved.label,
+        place_id: resolved.id,
+        value,
+        context: cleanContext,
+        occurred_at: eventIso,
+      })
+      .eq("id", duplicate.id)
+      .eq("user_id", userId)
+      .select()
+      .single();
+    if (error) console.log("UPDATE OBSERVATION ERROR:", error);
+    return error ? duplicate : data;
+  }
 
   const { data, error } = await supabaseAdmin
     .from("observation_events")
-    .insert([
-      {
-        user_id: userId,
-        event_type: eventType,
-        source,
-        place_label: placeLabel || null,
-        place_id: placeId || null,
-        value,
-        context,
-        occurred_at: occurredAt || new Date().toISOString(),
-      },
-    ])
+    .insert([candidate])
     .select()
     .single();
 
@@ -94,6 +159,56 @@ export async function recordObservation({
   }
 
   return data;
+}
+
+async function resolveObservationPlace({
+  userId,
+  placeId,
+  placeLabel,
+}: {
+  userId: string;
+  placeId?: string | null;
+  placeLabel?: string | null;
+}) {
+  if (placeId) {
+    const { data } = await supabaseAdmin
+      .from("significant_places")
+      .select("id, label, category")
+      .eq("id", placeId)
+      .eq("user_id", userId)
+      .neq("status", "archived")
+      .maybeSingle();
+    if (data) return { id: data.id, label: data.label, category: data.category };
+  }
+
+  if (placeLabel) {
+    const { data } = await supabaseAdmin
+      .from("significant_places")
+      .select("id, label, category")
+      .eq("user_id", userId)
+      .ilike("label", placeLabel)
+      .neq("status", "archived")
+      .limit(1)
+      .maybeSingle();
+    if (data) return { id: data.id, label: data.label, category: data.category };
+  }
+
+  if (!placeId && !placeLabel) {
+    const { data: current } = await supabaseAdmin
+      .from("user_location_state")
+      .select("current_place_id, current_place_label, place_category")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (current?.current_place_id && current?.current_place_label) {
+      return {
+        id: current.current_place_id,
+        label: current.current_place_label,
+        category: current.place_category || null,
+      };
+    }
+  }
+
+  return { id: placeId || null, label: placeLabel || null, category: null };
 }
 
 function getTimeWindow(dateValue: string) {
@@ -299,6 +414,24 @@ async function upsertUnknownPlaceCandidate({
     return null;
   }
 
+  await Promise.all(
+    distinctEvents
+      .filter((event) => event?.id)
+      .map((event) =>
+        supabaseAdmin
+          .from("observation_events")
+          .update({
+            context: {
+              ...(event.context || {}),
+              candidate_place_id: data.id,
+              observation_text: "Luogo sconosciuto visitato più volte",
+            },
+          })
+          .eq("id", event.id)
+          .eq("user_id", userId)
+      )
+  );
+
   return {
     id: data.id,
     latitude,
@@ -331,13 +464,16 @@ export async function analyzeLocationPatterns(userId: string) {
     return [] as UnknownPlaceCandidate[];
   }
 
-  if (!events?.length) return [] as UnknownPlaceCandidate[];
+  const usableEvents = cleanObservations(events || [], {
+    duplicateWindowMs: DISTINCT_VISIT_WINDOW_MS,
+  });
+  if (!usableEvents.length) return [] as UnknownPlaceCandidate[];
 
-  const enterEvents = events.filter((event) =>
+  const enterEvents = usableEvents.filter((event) =>
     ["location_enter", "home_arrived", "work_arrived"].includes(event.event_type)
   );
 
-  const unknownEvents = events.filter(
+  const unknownEvents = usableEvents.filter(
     (event) => event.event_type === "place_unknown_detected"
   );
 
@@ -530,7 +666,7 @@ export async function analyzeLocationPatterns(userId: string) {
 
   const transitions = new Map<string, any[]>();
 
-  for (const event of events) {
+  for (const event of usableEvents) {
     const from = event.value?.from;
     const to = event.value?.to;
 
