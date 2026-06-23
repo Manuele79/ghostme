@@ -55,12 +55,145 @@ function isRecentDuplicate(
   );
 }
 
+const AUTOMATION_CONSEQUENCE_EVENTS = new Set([
+  "light_on",
+  "light_off",
+  "tv_on",
+  "tv_off",
+  "climate_on",
+  "climate_off",
+]);
+
+type RecentAutomation = {
+  id: string;
+  entity_name: string | null;
+  value: Record<string, unknown> | null;
+};
+
+function jsonObject(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function automationResult(attributes: Record<string, unknown> | undefined) {
+  if (!attributes) return null;
+  for (const key of ["result", "action", "service", "target", "description"]) {
+    const value = attributes[key];
+    if (["string", "number", "boolean"].includes(typeof value)) {
+      return String(value);
+    }
+  }
+  return null;
+}
+
+async function findRecentRoomAutomation(input: SignificantHomeEventInput) {
+  if (
+    !input.roomKey ||
+    !AUTOMATION_CONSEQUENCE_EVENTS.has(input.eventType)
+  ) {
+    return null;
+  }
+  const occurredAt = new Date(input.occurredAt).getTime();
+  if (!Number.isFinite(occurredAt)) return null;
+  const since = new Date(
+    occurredAt - HOME_EVENT_THRESHOLDS.automationConsequenceWindowMs
+  ).toISOString();
+  const { data, error } = await supabaseAdmin
+    .from("house_events")
+    .select("id, entity_name, value")
+    .eq("user_id", input.userId)
+    .eq("room_key", input.roomKey)
+    .eq("event_type", "automation_on")
+    .gte("occurred_at", since)
+    .lte("occurred_at", input.occurredAt)
+    .order("occurred_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.log("HOUSE AUTOMATION CORRELATION ERROR:", {
+      userId: input.userId,
+      roomKey: input.roomKey,
+      message: error.message,
+    });
+    return null;
+  }
+  return (data as RecentAutomation | null) || null;
+}
+
+async function attachAutomationConsequence({
+  automation,
+  eventId,
+  input,
+}: {
+  automation: RecentAutomation;
+  eventId: string;
+  input: SignificantHomeEventInput;
+}) {
+  const value = jsonObject(automation.value);
+  const existing = Array.isArray(value.observed_results)
+    ? value.observed_results
+    : [];
+  const observedResult = {
+    event_id: eventId,
+    entity_id: input.entityId,
+    entity_name: input.entityName,
+    event_type: input.eventType,
+    occurred_at: input.occurredAt,
+  };
+  const observedResults = [
+    ...existing.filter(
+      (item) => jsonObject(item).event_id !== eventId
+    ),
+    observedResult,
+  ].slice(-10);
+  const { error } = await supabaseAdmin
+    .from("house_events")
+    .update({ value: { ...value, observed_results: observedResults } })
+    .eq("id", automation.id)
+    .eq("user_id", input.userId);
+  if (error) {
+    console.log("HOUSE AUTOMATION RESULT UPDATE ERROR:", {
+      automationId: automation.id,
+      eventId,
+      message: error.message,
+    });
+  }
+}
+
 export async function logSignificantHomeEvent(
   input: SignificantHomeEventInput
 ) {
   if (isRecentDuplicate(input.previousEvent, input.newState)) {
     return { inserted: false, id: null, reason: "duplicate_recent" };
   }
+
+  const relatedAutomation = await findRecentRoomAutomation(input);
+  const contextOnly = input.decision.category === "context";
+  const value = {
+    attributes: input.attributes || {},
+    last_changed: input.lastChanged || null,
+    last_updated: input.lastUpdated || null,
+    person: input.person || null,
+    save_reason: input.decision.reason,
+    significance_category: input.decision.category,
+    significance_priority: input.decision.priority,
+    webhook_event_type: input.webhookEventType || null,
+    automation_result:
+      input.entityType === "automation"
+        ? automationResult(input.attributes)
+        : null,
+    caused_by_automation: relatedAutomation
+      ? {
+          id: relatedAutomation.id,
+          name: relatedAutomation.entity_name,
+        }
+      : null,
+    ...(contextOnly
+      ? { house_worker_processed_at: new Date().toISOString() }
+      : {}),
+  };
 
   const { data, error } = await supabaseAdmin
     .from("house_events")
@@ -73,16 +206,7 @@ export async function logSignificantHomeEvent(
       event_type: input.eventType,
       old_state: input.oldState || input.previousEvent?.new_state || null,
       new_state: input.newState,
-      value: {
-        attributes: input.attributes || {},
-        last_changed: input.lastChanged || null,
-        last_updated: input.lastUpdated || null,
-        person: input.person || null,
-        save_reason: input.decision.reason,
-        significance_category: input.decision.category,
-        significance_priority: input.decision.priority,
-        webhook_event_type: input.webhookEventType || null,
-      },
+      value,
       people_home_count: null,
       target_user: input.person || null,
       source: "home_assistant_webhook",
@@ -94,6 +218,14 @@ export async function logSignificantHomeEvent(
   if (error) {
     console.log("HOUSE EVENT INSERT ERROR:", error);
     return { inserted: false, id: null, reason: "insert_failed", error };
+  }
+
+  if (relatedAutomation) {
+    await attachAutomationConsequence({
+      automation: relatedAutomation,
+      eventId: data.id,
+      input,
+    });
   }
 
   return { inserted: true, id: data.id, reason: input.decision.reason };
@@ -301,6 +433,9 @@ export async function logHomeAssistantSnapshot(
         save_reason: decision.reason,
         significance_category: decision.category,
         significance_priority: decision.priority,
+        ...(decision.category === "context"
+          ? { house_worker_processed_at: new Date().toISOString() }
+          : {}),
       },
       people_home_count: peopleHomeCount,
       target_user: info.person || null,

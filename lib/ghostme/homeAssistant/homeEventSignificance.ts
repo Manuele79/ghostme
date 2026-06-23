@@ -19,10 +19,11 @@ export type HomeEventSignificance = {
 export const HOME_EVENT_THRESHOLDS = {
   duplicateWindowMs: 2 * 60 * 1000,
   cooldownMs: 5 * 60 * 1000,
-  temperatureMinDelta: 0.5,
-  humidityMinDelta: 5,
+  contextCooldownMs: 10 * 60 * 1000,
+  actuatorCooldownMs: 30 * 1000,
   luxMinDelta: 15,
   luxDayNightThreshold: 50,
+  automationConsequenceWindowMs: 45 * 1000,
 } as const;
 
 function clean(value: unknown) {
@@ -57,68 +58,10 @@ function result(
   };
 }
 
-function classifyTemperature({
-  oldState,
-  newState,
-}: HomeEventSignificanceInput) {
-  const oldNum = numericState(oldState);
-  const newNum = numericState(newState);
-
-  if (newNum === null) {
-    return result(false, "temperature_non_numeric", "environment", 1);
-  }
-
-  if (newNum >= 28 && (oldNum === null || oldNum < 28)) {
-    return result(true, "temperature_hot_threshold", "environment", 8);
-  }
-
-  if (newNum <= 16 && (oldNum === null || oldNum > 16)) {
-    return result(true, "temperature_cold_threshold", "environment", 8);
-  }
-
-  if (oldNum === null) {
-    return result(false, "temperature_first_normal_value", "environment", 2);
-  }
-
-  const delta = Math.abs(newNum - oldNum);
-
-  if (delta < HOME_EVENT_THRESHOLDS.temperatureMinDelta) {
-    return result(false, "temperature_min_delta", "environment", 1);
-  }
-
-  return result(true, "temperature_delta_ok", "environment", 5);
-}
-
-function classifyHumidity({
-  oldState,
-  newState,
-}: HomeEventSignificanceInput) {
-  const oldNum = numericState(oldState);
-  const newNum = numericState(newState);
-
-  if (newNum === null) {
-    return result(false, "humidity_non_numeric", "environment", 1);
-  }
-
-  if (newNum >= 70 && (oldNum === null || oldNum < 70)) {
-    return result(true, "humidity_high_threshold", "environment", 7);
-  }
-
-  if (newNum <= 30 && (oldNum === null || oldNum > 30)) {
-    return result(true, "humidity_low_threshold", "environment", 7);
-  }
-
-  if (
-    oldNum !== null &&
-    Math.abs(newNum - oldNum) >= HOME_EVENT_THRESHOLDS.humidityMinDelta
-  ) {
-    return result(true, "humidity_delta_over_5", "environment", 6);
-  }
-
-  return result(false, "humidity_delta_small", "environment", 1);
-}
-
 function classifyLux(input: HomeEventSignificanceInput) {
+  if (!/(cucina|bagno|sala)/i.test(input.entityId)) {
+    return result(false, "lux_outside_context_rooms", "context", 0);
+  }
   const oldNum = numericState(input.oldState);
   const newNum = numericState(input.newState);
   if (oldNum === null || newNum === null) {
@@ -134,8 +77,8 @@ function classifyLux(input: HomeEventSignificanceInput) {
     (oldNum >= HOME_EVENT_THRESHOLDS.luxDayNightThreshold &&
       newNum < HOME_EVENT_THRESHOLDS.luxDayNightThreshold);
   return crossed
-    ? result(true, "lux_day_night_threshold_crossed", "environment", 4)
-    : result(true, "lux_delta_ok", "environment", 3);
+    ? result(true, "lux_context_threshold_crossed", "context", 2)
+    : result(true, "lux_context_sample", "context", 1);
 }
 
 function homePresenceState(value: unknown) {
@@ -168,15 +111,24 @@ function classifyMotionOrPresence({
   const oldClean = clean(oldState);
   const newClean = clean(newState);
 
-  if (oldClean === "off" && newClean === "on") {
-    return result(true, `${entityType}_activated`, "presence", 9);
+  if (["", "off"].includes(oldClean) && newClean === "on") {
+    return result(true, `${entityType}_context_sample`, "context", 1);
   }
 
-  if (oldClean === "on" && newClean === "off") {
-    return result(true, `${entityType}_cleared`, "presence", 5);
-  }
+  return result(false, `${entityType}_raw_ignored`, "context", 0);
+}
 
-  return result(true, `${entityType}_changed`, "presence", 6);
+function classifyClimate({ oldState, newState }: HomeEventSignificanceInput) {
+  const activeStates = ["heat", "cool", "auto", "dry", "fan_only", "on"];
+  const wasActive = activeStates.includes(clean(oldState));
+  const isActive = activeStates.includes(clean(newState));
+  if (!wasActive && isActive) {
+    return result(true, "climate_turned_on", "consequence", 8);
+  }
+  if (wasActive && !isActive) {
+    return result(true, "climate_turned_off", "consequence", 7);
+  }
+  return result(false, "climate_minor_state_change", "system", 1);
 }
 
 function classifyMedia({ oldState, newState }: HomeEventSignificanceInput) {
@@ -244,8 +196,12 @@ export function classifyHomeEventSignificance(
   }
 
   let decision: HomeEventSignificance;
-  if (entityType === "temperature") decision = classifyTemperature(input);
-  else if (entityType === "humidity") decision = classifyHumidity(input);
+  if (entityType === "temperature") {
+    decision = result(false, "ambient_temperature_ignored", "context", 0);
+  }
+  else if (entityType === "humidity") {
+    decision = result(false, "raw_humidity_ignored", "context", 0);
+  }
   else if (["pressure", "co2", "noise", "battery", "signal"].includes(entityType)) {
     decision = result(false, `${entityType}_raw_environment_ignored`, "environment", 1);
   } else if (entityType === "lux") decision = classifyLux(input);
@@ -263,30 +219,34 @@ export function classifyHomeEventSignificance(
       "security",
       8
     );
-  } else if (["climate", "fan", "appliance", "automation"].includes(entityType)) {
-    decision = result(true, `${entityType}_state_changed`, "system", 4);
+  } else if (entityType === "climate") {
+    decision = classifyClimate(input);
+  } else if (entityType === "automation") {
+    decision = input.eventType === "automation_on"
+      ? result(true, "automation_executed", "automation", 10)
+      : result(false, "automation_non_execution_ignored", "system", 0);
+  } else if (["fan", "appliance"].includes(entityType)) {
+    decision = result(true, `${entityType}_state_changed`, "consequence", 5);
   } else {
     decision = result(false, "unsupported_entity_type", "other", 0);
   }
 
-  const cooldownEligible = [
-    "temperature",
-    "humidity",
-    "lux",
-    "motion",
-    "presence",
-    ...(repeatedAutomationTrigger ? ["automation"] : []),
-  ].includes(entityType);
-  const criticalEnvironmentThreshold =
-    ["temperature", "humidity"].includes(entityType) && decision.priority >= 7;
-  const meaningfulPresenceClear =
-    ["motion", "presence"].includes(entityType) && newClean === "off";
-  if (
-    decision.significant &&
-    cooldownEligible &&
-    !criticalEnvironmentThreshold &&
-    !meaningfulPresenceClear
-  ) {
+  const contextEvent = decision.category === "context";
+  const actuatorEvent = ["light", "switch", "tv", "climate"].includes(entityType);
+  const cooldownEligible =
+    contextEvent || repeatedAutomationTrigger || entityType === "automation";
+  if (decision.significant && actuatorEvent) {
+    const age = millisecondsSince(input.lastOccurredAt);
+    if (
+      age !== null &&
+      age >= 0 &&
+      age < HOME_EVENT_THRESHOLDS.actuatorCooldownMs
+    ) {
+      return result(false, "actuator_cooldown", "cooldown", 0);
+    }
+  }
+
+  if (decision.significant && cooldownEligible) {
     const cooldowns = [
       [input.lastOccurredAt, "same_device_cooldown"],
       [input.lastEventTypeOccurredAt, "same_event_type_cooldown"],
@@ -297,7 +257,9 @@ export function classifyHomeEventSignificance(
       if (
         age !== null &&
         age >= 0 &&
-        age < HOME_EVENT_THRESHOLDS.cooldownMs
+        age < (contextEvent
+          ? HOME_EVENT_THRESHOLDS.contextCooldownMs
+          : HOME_EVENT_THRESHOLDS.cooldownMs)
       ) {
         return result(false, reason, "cooldown", 0);
       }

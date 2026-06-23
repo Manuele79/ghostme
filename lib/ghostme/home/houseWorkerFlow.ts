@@ -52,6 +52,15 @@ function peopleHomeCount(states: HAStateLike[]) {
   return people.size;
 }
 
+function shouldWakeHouseWorker(event: PendingHouseEvent) {
+  const value = jsonObject(event.value);
+  if (value.significance_category === "context") return false;
+  if (Number(value.significance_priority || 0) >= 4) return true;
+  return /^(automation_|light_|tv_|climate_|contact_|person_|phone_|fan_|appliance_)/.test(
+    event.event_type
+  );
+}
+
 async function claimSignificantHouseEvents(userId: string) {
   const cutoff = new Date(Date.now() - HOUSE_WORKER_LOOKBACK_MS).toISOString();
   const { data, error } = await supabaseAdmin
@@ -69,10 +78,15 @@ async function claimSignificantHouseEvents(userId: string) {
       code: error.code || null,
       message: error.message,
     });
-    return { events: [] as PendingHouseEvent[], error: error.message };
+    return {
+      events: [] as PendingHouseEvent[],
+      consumed: 0,
+      error: error.message,
+    };
   }
 
   const claimed: PendingHouseEvent[] = [];
+  let consumed = 0;
   for (const event of (data || []) as PendingHouseEvent[]) {
     const processedAt = new Date().toISOString();
     const value = {
@@ -97,10 +111,14 @@ async function claimSignificantHouseEvents(userId: string) {
       });
       continue;
     }
-    if (claim.data) claimed.push({ ...event, value });
+    if (claim.data) {
+      consumed++;
+      const processedEvent = { ...event, value };
+      if (shouldWakeHouseWorker(processedEvent)) claimed.push(processedEvent);
+    }
   }
 
-  return { events: claimed, error: null };
+  return { events: claimed, consumed, error: null };
 }
 
 export async function houseWorkerFlow(req: Request) {
@@ -140,6 +158,10 @@ export async function houseWorkerFlow(req: Request) {
         reason: "no_significant_events",
         users: users.length,
         eventsClaimed: 0,
+        eventsConsumed: pendingByUser.reduce(
+          (total, user) => total + user.claim.consumed,
+          0
+        ),
         errors: pendingByUser
           .filter((user) => user.claim.error)
           .map((user) => ({ userId: user.user_id, error: user.claim.error })),
@@ -201,6 +223,10 @@ export async function houseWorkerFlow(req: Request) {
       activeUsers: activeUsers.length,
       eventsClaimed: activeUsers.reduce(
         (total, user) => total + user.claim.events.length,
+        0
+      ),
+      eventsConsumed: pendingByUser.reduce(
+        (total, user) => total + user.claim.consumed,
         0
       ),
       results,
