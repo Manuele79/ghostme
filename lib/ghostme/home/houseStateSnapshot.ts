@@ -35,6 +35,7 @@ export type HouseStateSnapshot = {
   }>;
   signals: string[];
   confidence: number;
+  occupancySince: string | null;
   lastUpdated: string | null;
 };
 
@@ -174,6 +175,7 @@ export async function buildHouseStateSnapshot(
       media: [],
       signals: [],
       confidence: 0,
+      occupancySince: null,
       lastUpdated: null,
     };
   }
@@ -284,6 +286,14 @@ export async function buildHouseStateSnapshot(
           : activeRooms.length > 0
             ? "activity_detected"
             : "unknown";
+  const occupancySince =
+    occupancyStatus === "empty"
+      ? latestTimestamp(
+          cleanStates
+            .filter((state) => getEntityInfo(state.entity_id).type === "person")
+            .map((state) => state.last_changed || state.last_updated)
+        )
+      : null;
 
   const signals = buildSignals({
     occupancyStatus,
@@ -308,6 +318,7 @@ export async function buildHouseStateSnapshot(
       hasPersonEntities: people.length > 0,
       activeRooms,
     }),
+    occupancySince,
     lastUpdated,
   };
 }

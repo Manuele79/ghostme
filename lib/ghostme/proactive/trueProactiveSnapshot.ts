@@ -8,7 +8,12 @@ export type TrueProactiveCandidate = {
     | "important_open_loop"
     | "project_focus"
     | "high_confidence_curiosity"
-    | "relationship_attention";
+    | "relationship_attention"
+    | "event_follow_up"
+    | "linked_calendar_action"
+    | "stalled_goal"
+    | "home_empty_long"
+    | "routine_change";
   kind:
     | "insight"
     | "pattern"
@@ -94,6 +99,31 @@ function minutesUntil(value: any) {
   const time = new Date(value || "").getTime();
   if (Number.isNaN(time)) return null;
   return Math.round((time - Date.now()) / 60000);
+}
+
+function rowText(row: any) {
+  return normalize(
+    `${row?.title || ""} ${row?.description || ""} ${row?.content || ""}`
+  );
+}
+
+function sharesConcreteTerms(left: any, right: any) {
+  const ignored = new Set([
+    "azione", "attivita", "evento", "oggi", "domani", "fare", "con", "per",
+    "del", "della", "dei", "delle", "un", "una", "il", "la", "lo",
+  ]);
+  const leftTerms = new Set(
+    rowText(left).split(" ").filter((term) => term.length >= 4 && !ignored.has(term))
+  );
+  return rowText(right)
+    .split(" ")
+    .some((term) => term.length >= 4 && leftTerms.has(term));
+}
+
+function hoursSince(value: any) {
+  if (!value) return null;
+  const time = new Date(value || 0).getTime();
+  return Number.isFinite(time) ? (Date.now() - time) / (60 * 60 * 1000) : null;
 }
 
 function isRecent(row: any, days = 7) {
@@ -225,16 +255,121 @@ function buildRawCandidates({
     }));
   }
 
-  const relationshipAttention = snapshot.people.socialSuggestions.relationshipAttention[0];
-  if (relationshipAttention?.priority >= 3) {
+  const relationshipAttention = snapshot.people.socialSuggestions.relationshipAttention.find(
+    (attention) =>
+      attention.priority >= 3 &&
+      !attention.signals.every((signal) => signal === "relationship_context_sparse")
+  );
+  if (relationshipAttention && relationshipAttention.priority >= 3) {
+    const isPattern = relationshipAttention.signals.some((signal) =>
+      ["frequent_recent_mentions", "many_recent_connections"].includes(signal)
+    );
     candidates.push(candidate({
       type: "relationship_attention",
-      kind: "smart_reminder",
+      kind: isPattern ? "pattern" : "smart_reminder",
       title: relationshipAttention.person,
-      reason: `${relationshipAttention.person} ricorre nella tua memoria, ma il rapporto sembra avere un punto aperto recente.`,
-      priority: 5,
+      reason: relationshipAttention.reason,
+      priority: relationshipAttention.signals.includes("person_with_open_loop") ? 7 : 6,
       confidence: clamp(snapshot.people.socialSuggestions.confidence),
       source: "people.socialSuggestions",
+    }));
+  }
+
+  const recentCompletedEvent = [...(snapshot.calendar.completed || [])]
+    .map((event) => ({
+      event,
+      hours: hoursSince(event.start_at || event.remind_at || event.updated_at),
+    }))
+    .filter(
+      (entry): entry is { event: any; hours: number } =>
+        entry.hours !== null && entry.hours >= 1 && entry.hours <= 72
+    )
+    .sort((left, right) => left.hours - right.hours)[0]?.event;
+  if (recentCompletedEvent?.title) {
+    candidates.push(candidate({
+      type: "event_follow_up",
+      kind: "curiosity",
+      title: recentCompletedEvent.title,
+      reason: `Come è andata con ${recentCompletedEvent.title}?`,
+      priority: 7,
+      confidence: 85,
+      source: "calendar.completed",
+    }));
+  }
+
+  const linkedEventAction = [...(snapshot.calendar.upcoming || []), ...(snapshot.calendar.today || [])]
+    .flatMap((event) =>
+      (snapshot.actions || [])
+        .filter((action) => sharesConcreteTerms(event, action))
+        .map((action) => ({ event, action }))
+    )[0];
+  if (linkedEventAction) {
+    candidates.push(candidate({
+      type: "linked_calendar_action",
+      kind: "smart_reminder",
+      title: linkedEventAction.event.title || "Evento con azione collegata",
+      reason: `Per ${linkedEventAction.event.title}, hai ancora aperto: ${linkedEventAction.action.title || linkedEventAction.action.description}.`,
+      priority: 7,
+      confidence: 82,
+      source: "calendar+actions",
+    }));
+  }
+
+  const staleGoal = (snapshot.goals.activeGoals || []).find((goal) => {
+    const age = hoursSince(goal.updated_at || goal.created_at);
+    return (
+      Number(goal.importance || 0) >= 7 &&
+      age !== null &&
+      age >= 7 * 24 &&
+      !(snapshot.actions || []).some(
+        (action) => isRecent(action, 14) && sharesConcreteTerms(goal, action)
+      )
+    );
+  });
+  if (staleGoal) {
+    candidates.push(candidate({
+      type: "stalled_goal",
+      kind: "curiosity",
+      title: staleGoal.title || "Obiettivo senza passi recenti",
+      reason: `${staleGoal.title || "Questo obiettivo"} è ancora aperto, ma non risultano azioni collegate recenti. Qual è il prossimo passo concreto?`,
+      priority: 6,
+      confidence: clamp(60 + Number(staleGoal.importance || 0) * 3),
+      source: "goals+actions",
+    }));
+  }
+
+  const emptyHours = hoursSince(snapshot.home.state.occupancySince);
+  if (
+    snapshot.home.state.occupancyStatus === "empty" &&
+    emptyHours !== null &&
+    emptyHours >= 3 &&
+    emptyHours <= 24
+  ) {
+    candidates.push(candidate({
+      type: "home_empty_long",
+      kind: "insight",
+      title: "Casa vuota da parecchio",
+      reason: `La casa risulta vuota da circa ${Math.floor(emptyHours)} ore.`,
+      priority: 6,
+      confidence: clamp(snapshot.home.state.confidence),
+      source: "home.state",
+    }));
+  }
+
+  const recentRoute = snapshot.home.routes.recentRoute;
+  if (
+    recentRoute &&
+    snapshot.home.routes.confidence >= 60 &&
+    !snapshot.home.routes.knownRoutes.some((route) => route.path === recentRoute.path)
+  ) {
+    candidates.push(candidate({
+      type: "routine_change",
+      kind: "pattern",
+      title: "Routine di casa diversa",
+      reason: `Il passaggio recente ${recentRoute.from} → ${recentRoute.to} non compare nelle routine note.`,
+      priority: 5,
+      confidence: clamp(snapshot.home.routes.confidence),
+      source: "home.routes",
     }));
   }
 
@@ -321,6 +456,12 @@ function isSelected(candidate: TrueProactiveCandidate) {
   ) {
     return true;
   }
+  if (candidate.type === "stalled_goal" && candidate.confidence >= 75) {
+    return true;
+  }
+  if (candidate.type === "routine_change" && candidate.confidence >= 60) {
+    return true;
+  }
   return false;
 }
 
@@ -394,7 +535,12 @@ export function buildTrueProactiveSnapshot({
     low: 0,
   };
   const candidates: TrueProactiveCandidate[] = [];
+  const maxSelectedCandidates = 3;
   for (const candidate of eligible) {
+    if (candidates.length >= maxSelectedCandidates) {
+      suppressed.push({ ...candidate, suppressionReason: "selection_limit" });
+      continue;
+    }
     if (bandCounts[candidate.priorityBand] >= bandLimits[candidate.priorityBand]) {
       suppressed.push({ ...candidate, suppressionReason: "selection_limit" });
       continue;

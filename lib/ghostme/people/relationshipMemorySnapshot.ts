@@ -7,6 +7,15 @@ export type RelationshipMemorySnapshot = {
   sharedEvents: any[];
   relatedPlaces: any[];
   openLoops: any[];
+  personActivity: Array<{
+    person: string;
+    importance: number;
+    totalMentions: number;
+    recentMentions: number;
+    linkedEvents: number;
+    openLoops: number;
+    lastMentionedAt: string | null;
+  }>;
   confidence: number;
   lastUpdated: string | null;
 };
@@ -46,6 +55,7 @@ function personNames(people: PeopleSnapshot) {
       relationshipType: person.relationship_type || null,
       importance: Number(person.importance || 0),
       mentionCount: Number(person.mention_count || 0),
+      lastMentionedAt: person.last_mentioned_at || person.updated_at || null,
     }))
     .filter((person) => person.name && person.key);
 }
@@ -93,6 +103,20 @@ function uniqueBy(items: any[], keyFn: (item: any) => string) {
   }
 
   return result;
+}
+
+function isRecent(value: any, days = 14) {
+  const time = new Date(value || 0).getTime();
+  return Number.isFinite(time) && time >= Date.now() - days * 24 * 60 * 60 * 1000;
+}
+
+function isRelevantEvent(value: any) {
+  const time = new Date(value || 0).getTime();
+  return (
+    Number.isFinite(time) &&
+    time >= Date.now() - 30 * 24 * 60 * 60 * 1000 &&
+    time <= Date.now() + 90 * 24 * 60 * 60 * 1000
+  );
 }
 
 function extractRelatedPlaces(rows: any[], people: ReturnType<typeof personNames>) {
@@ -151,7 +175,9 @@ export function buildRelationshipMemorySnapshot({
       .filter((item) => item.people.length)
       .map((item) => compactMention(item.row, item.people, item.row.source)),
     (item) => `${item.source}|${item.title}|${item.people.join(",")}`
-  ).slice(0, 10);
+  )
+    .filter((mention) => isRecent(mention.at))
+    .slice(0, 10);
 
   const sharedEvents = uniqueBy(
     calendarEvents
@@ -165,7 +191,9 @@ export function buildRelationshipMemorySnapshot({
         title: item.event.title || item.event.description || null,
         people: item.people,
         startAt: item.event.start_at || item.event.remind_at || null,
-      })),
+        status: item.event.status || null,
+      }))
+      .filter((item) => isRelevantEvent(item.startAt)),
     (item) => `${item.title}|${item.startAt}|${item.people.join(",")}`
   ).slice(0, 8);
 
@@ -187,6 +215,38 @@ export function buildRelationshipMemorySnapshot({
   ).slice(0, 8);
 
   const relatedPlaces = extractRelatedPlaces(memoryRows, knownPeople);
+  const personActivity = knownPeople
+    .map((person) => {
+      const mentions = recentMentions.filter((mention) =>
+        includesPersonName(mention.people, person.name)
+      );
+      const events = sharedEvents.filter((event) =>
+        includesPersonName(event.people, person.name)
+      );
+      const loops = openLoops.filter((loop) =>
+        includesPersonName(loop.people, person.name)
+      );
+      return {
+        person: person.name,
+        importance: person.importance,
+        totalMentions: person.mentionCount,
+        recentMentions: mentions.length,
+        linkedEvents: events.length,
+        openLoops: loops.length,
+        lastMentionedAt: latestTimestamp([
+          person.lastMentionedAt,
+          ...mentions.map((mention) => mention.at),
+          ...events.map((event) => event.startAt),
+          ...loops.map((loop) => loop.updatedAt),
+        ]),
+      };
+    })
+    .sort(
+      (left, right) =>
+        right.recentMentions + right.linkedEvents + right.openLoops -
+        (left.recentMentions + left.linkedEvents + left.openLoops)
+    )
+    .slice(0, 12);
   const confidence = Math.min(
     95,
     relationships.length * 15 +
@@ -201,6 +261,7 @@ export function buildRelationshipMemorySnapshot({
     sharedEvents,
     relatedPlaces,
     openLoops,
+    personActivity,
     confidence,
     lastUpdated: latestTimestamp([
       people.lastUpdated,
@@ -209,4 +270,9 @@ export function buildRelationshipMemorySnapshot({
       ...actions.map((action) => action.updated_at),
     ]),
   };
+}
+
+function includesPersonName(values: any[], name: string) {
+  const key = normalize(name);
+  return (values || []).some((value) => normalize(value) === key);
 }

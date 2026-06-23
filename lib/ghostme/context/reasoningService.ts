@@ -99,6 +99,7 @@ export type GhostBrainSnapshotCore = {
     lastKnown: any | null;
     status: "current" | "stale" | "unknown";
     significantPlaces: any[];
+    behaviorPatterns: any[];
     situation: {
       currentPlace: string | null;
       category: string | null;
@@ -652,6 +653,7 @@ export async function buildGhostBrainSnapshot(
     calendarEvents: [
       ...(graph.calendarUpcoming || []),
       ...(situation.calendarToday || []),
+      ...(situation.completedCalendarEvents || []),
     ],
     actions: goalsSnapshot.pendingActions,
   });
@@ -694,6 +696,7 @@ export async function buildGhostBrainSnapshot(
       media: [],
       signals: [],
       confidence: 0,
+      occupancySince: null,
       lastUpdated: null,
     };
   }
@@ -815,6 +818,7 @@ export async function buildGhostBrainSnapshot(
           ? graph.locationStatus
           : "unknown",
       significantPlaces: graph.significantPlaces || [],
+      behaviorPatterns: graph.behaviorPatterns || [],
       situation: {
         currentPlace: situation.currentPlace || null,
         category: situation.currentPlaceCategory || null,

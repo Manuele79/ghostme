@@ -264,6 +264,10 @@ function latestTimestamp(values: Array<string | null | undefined>) {
   return latest;
 }
 
+function latestValue(left: any, right: any) {
+  return latestTimestamp([left || null, right || null]);
+}
+
 function mergePeople({
   peopleRows,
   topicRows,
@@ -307,6 +311,10 @@ function mergePeople({
       mention_count: Math.max(
         Number(existing?.mention_count || 0),
         Number(topic.mention_count || 0)
+      ),
+      last_mentioned_at: latestValue(
+        existing?.last_mentioned_at,
+        topic.last_mentioned_at || topic.updated_at
       ),
       source: existing?.source || "life_topics",
     });

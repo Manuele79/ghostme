@@ -16,8 +16,16 @@ export type SocialRelationshipAttention = {
     | "reconnect_candidate"
     | "recent_shared_memory"
     | "no_recent_mentions"
+    | "frequent_recent_mentions"
+    | "many_recent_connections"
   >;
   priority: number;
+  reason: string;
+  lastMentionedAt: string | null;
+  recentMentions: number;
+  linkedEvents: number;
+  openLoopTitle: string | null;
+  upcomingEventTitle: string | null;
 };
 
 export type SocialSuggestionSnapshot = {
@@ -71,6 +79,16 @@ function isUpcoming(value: any) {
   return !Number.isNaN(startTime) && startTime >= Date.now();
 }
 
+function titleFor(value: any) {
+  return String(value?.title || value?.description || "").trim();
+}
+
+function isOlderThan(value: any, days: number) {
+  if (!value) return false;
+  const time = new Date(value || 0).getTime();
+  return Number.isFinite(time) && time < Date.now() - days * 24 * 60 * 60 * 1000;
+}
+
 function unique<T>(values: T[]) {
   return Array.from(new Set(values));
 }
@@ -115,26 +133,69 @@ export function buildSocialSuggestionSnapshot({
     const hasOpenLoop = includesPerson(openLoops, name);
     const hasSharedEvent = includesPerson(sharedEvents, name);
     const hasUpcomingEvent = hasUpcomingSharedEvent(sharedEvents, name);
+    const activity = relationshipMemory.personActivity.find(
+      (item) => normalize(item.person) === normalize(name)
+    );
+    const personOpenLoop = openLoops.find((item) =>
+      (item.people || []).some((person: any) => normalize(person) === normalize(name))
+    );
+    const upcomingEvent = sharedEvents.find((item) => {
+      const includes = (item.people || []).some(
+        (person: any) => normalize(person) === normalize(name)
+      );
+      return includes && isUpcoming(item);
+    });
+    const neglected =
+      Number(activity?.importance || relationship.importance || 0) >= 7 &&
+      isOlderThan(activity?.lastMentionedAt, 30);
     const signals: SocialRelationshipAttention["signals"] = [];
 
     if (hasOpenLoop) signals.push("person_with_open_loop");
     if (hasUpcomingEvent) signals.push("upcoming_shared_event");
     if (hasMention) signals.push("recent_shared_memory");
-    if (!hasMention) signals.push("no_recent_mentions");
+    if (neglected) signals.push("no_recent_mentions", "reconnect_candidate");
+    if (Number(activity?.recentMentions || 0) >= 3) {
+      signals.push("frequent_recent_mentions");
+    }
+    if (Number(activity?.linkedEvents || 0) >= 3) {
+      signals.push("many_recent_connections");
+    }
 
     if (!hasMention && !hasOpenLoop && !hasSharedEvent) {
-      signals.push("relationship_context_sparse", "reconnect_candidate");
+      signals.push("relationship_context_sparse");
       sparseRelationships.push(relationship);
     }
 
     const priority =
       (hasOpenLoop ? 4 : 0) +
       (hasUpcomingEvent ? 3 : 0) +
-      (hasMention ? 1 : 0) +
-      (!hasMention && !hasOpenLoop && !hasSharedEvent ? 2 : 0);
+      (Number(activity?.recentMentions || 0) >= 3 ? 3 : hasMention ? 1 : 0) +
+      (Number(activity?.linkedEvents || 0) >= 3 ? 3 : 0) +
+      (neglected ? 3 : 0);
 
     if (signals.length) {
-      relationshipAttention.push({ person: name, signals, priority });
+      const reason = hasOpenLoop
+        ? `C'è ancora un punto aperto: ${titleFor(personOpenLoop)}.`
+        : hasUpcomingEvent
+          ? `${name} è collegato all'evento futuro ${titleFor(upcomingEvent)}.`
+          : Number(activity?.recentMentions || 0) >= 3
+            ? `Hai parlato di ${name} ${activity?.recentMentions} volte nelle ultime due settimane.`
+            : Number(activity?.linkedEvents || 0) >= 3
+              ? `${name} è collegato a ${activity?.linkedEvents} eventi vicini nel tempo.`
+              : neglected
+                ? `È da più di un mese che ${name} non emerge nei dati recenti.`
+                : `Manca ancora contesto utile sul rapporto con ${name}.`;
+      relationshipAttention.push({
+        person: name,
+        signals,
+        priority,
+        reason,
+        lastMentionedAt: activity?.lastMentionedAt || null,
+        recentMentions: Number(activity?.recentMentions || 0),
+        linkedEvents: Number(activity?.linkedEvents || 0),
+        openLoopTitle: titleFor(personOpenLoop) || null,
+        upcomingEventTitle: titleFor(upcomingEvent) || null,
+      });
     }
   }
 
@@ -142,8 +203,9 @@ export function buildSocialSuggestionSnapshot({
   if (sharedEvents.some(isUpcoming)) {
     suggestions.push("check_shared_event");
   }
-  if (sparseRelationships.length) {
-    suggestions.push("enrich_relationship_context", "reconnect_with_person");
+  if (sparseRelationships.length) suggestions.push("enrich_relationship_context");
+  if (relationshipAttention.some((item) => item.signals.includes("reconnect_candidate"))) {
+    suggestions.push("reconnect_with_person");
   }
 
   return {

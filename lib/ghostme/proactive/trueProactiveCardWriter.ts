@@ -14,7 +14,7 @@ export type TrueProactiveCardCategory =
   | "social"
   | "suggestion";
 
-const MAX_TRUE_PROACTIVE_CARDS = 6;
+const MAX_TRUE_PROACTIVE_CARDS = 3;
 
 export function buildTrueProactiveLogicalKey(
   candidate: TrueProactiveCandidate
