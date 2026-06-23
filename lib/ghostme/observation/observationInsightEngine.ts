@@ -62,7 +62,8 @@ Regole:
 - Non creare osservazioni partendo da parole isolate o messaggi tecnici generici.
 - Parla solo della situazione presente o di eventi delle ultime 24 ore.
 - Considera soltanto goal attivi, eventi futuri attivi e action aperte.
-- Se episodi o timeline indicano che qualcosa è già successo, non proporlo.
+- Episodi e timeline sono storici: non usarli per annullare un evento active/future realmente presente nel calendario.
+- Se qualcosa compare soltanto nello storico, non presentarlo come impegno futuro o azione da fare.
 - Ignora completed, archived, dismissed, cancelled ed expired.
         `,
       },

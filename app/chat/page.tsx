@@ -402,6 +402,7 @@ export default function ChatPage() {
           orderedHistory.map((msg) => ({
             role: msg.role as "user" | "assistant",
             content: msg.content,
+            created_at: msg.created_at,
           }))
         );
       }

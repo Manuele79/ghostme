@@ -7,12 +7,9 @@ const CLOSED_STATUSES = new Set([
   "expired",
 ]);
 const RECENT_PAST_WINDOW_MS = 14 * 24 * 60 * 60 * 1000;
-
-const STOP_WORDS = new Set([
-  "anche", "avere", "con", "cosa", "dalla", "delle", "dello", "domani",
-  "dopo", "essere", "fare", "fatto", "oggi", "per", "prima", "sono",
-  "stato", "stata", "un", "una", "uno", "verso",
-]);
+const RAW_CHAT_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+const RECENT_CHAT_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+const MAX_CHAT_CONTEXT_MESSAGES = 16;
 
 function clean(value: unknown) {
   return String(value || "")
@@ -21,6 +18,18 @@ function clean(value: unknown) {
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
+}
+
+export function isLikelyTestData(item: any) {
+  const metadata = clean(`${item?.status || ""} ${item?.category || ""} ${item?.source || ""}`);
+  const text = clean(`${item?.title || ""} ${item?.summary || ""} ${item?.content || ""}`);
+  return (
+    metadata.split(" ").includes("test") ||
+    text.includes("dato di test") ||
+    text.includes("dati di test") ||
+    text.includes("test ghostme") ||
+    text.includes("dummy data")
+  );
 }
 
 function itemText(item: any) {
@@ -49,18 +58,62 @@ function itemTimestamp(item: any) {
   return Number.isNaN(timestamp) ? null : timestamp;
 }
 
-function meaningfulWords(item: any) {
-  return new Set(
-    itemText(item)
-      .split(/\s+/)
-      .filter((word) => word.length >= 3 && !STOP_WORDS.has(word))
-  );
-}
-
 function isRecentPast(item: any, now: number) {
   const timestamp = itemTimestamp(item);
-  return timestamp === null ||
-    (timestamp <= now && now - timestamp <= RECENT_PAST_WINDOW_MS);
+  return timestamp !== null &&
+    timestamp <= now && now - timestamp <= RECENT_PAST_WINDOW_MS;
+}
+
+export function temporalMemoryLabel(item: any, now = Date.now()) {
+  if (isLikelyTestData(item)) return "STORICO/TEST — NON OPERATIVO";
+  const status = clean(item?.status);
+  if (status === "completed") return "COMPLETATO — STORICO, NON OPERATIVO";
+  if (status === "cancelled") return "CANCELLATO — STORICO, NON OPERATIVO";
+  if (["archived", "dismissed", "expired", "answered"].includes(status)) {
+    return "ARCHIVIATO — STORICO, NON OPERATIVO";
+  }
+
+  const timestamp = itemTimestamp(item);
+  if (
+    timestamp !== null &&
+    timestamp <= now &&
+    now - timestamp <= RECENT_PAST_WINDOW_MS
+  ) {
+    return "RECENTE — FATTO PASSATO, NON IMPEGNO FUTURO";
+  }
+  return "STORICO — MEMORIA AUTOBIOGRAFICA, NON STATO ATTUALE";
+}
+
+export function annotateHistoricalRows(items: any[]) {
+  return (items || []).map((item) => ({
+    ...item,
+    temporal_label: temporalMemoryLabel(item),
+  }));
+}
+
+export function prepareChatHistory(messages: any[], now = Date.now()) {
+  return (messages || [])
+    .slice(-MAX_CHAT_CONTEXT_MESSAGES)
+    .map((message) => {
+      const timestamp = message?.created_at
+        ? new Date(message.created_at).getTime()
+        : null;
+      if (
+        timestamp !== null &&
+        (!Number.isFinite(timestamp) || now - timestamp > RAW_CHAT_MAX_AGE_MS)
+      ) {
+        return null;
+      }
+      const label = timestamp === null
+        ? "CHAT ATTUALE"
+        : now - timestamp <= RECENT_CHAT_WINDOW_MS
+          ? "CHAT RECENTE"
+          : "CHAT STORICA — NON STATO ATTUALE";
+      const role = message?.role === "assistant" ? "assistant" : "user";
+      const content = String(message?.content || "").trim();
+      return content ? { role, content: `[${label}] ${content}` } : null;
+    })
+    .filter(Boolean) as Array<{ role: "user" | "assistant"; content: string }>;
 }
 
 function explicitlyDescribesPast(item: any) {
@@ -79,30 +132,6 @@ function explicitlyDescribesPast(item: any) {
     " stato ",
     " stata ",
   ].some((marker) => text.includes(marker));
-}
-
-function describesSameEvent(futureItem: any, pastItem: any) {
-  const futureText = itemText(futureItem);
-  const pastText = itemText(pastItem);
-  if (!futureText || !pastText) return false;
-
-  if (
-    futureText.length >= 8 &&
-    pastText.length >= 8 &&
-    (futureText.includes(pastText) || pastText.includes(futureText))
-  ) {
-    return true;
-  }
-
-  const futureWords = meaningfulWords(futureItem);
-  const pastWords = meaningfulWords(pastItem);
-  if (!futureWords.size || !pastWords.size) return false;
-
-  let shared = 0;
-  for (const word of futureWords) if (pastWords.has(word)) shared += 1;
-
-  const smallerSetSize = Math.min(futureWords.size, pastWords.size);
-  return shared >= 2 && shared / smallerSetSize >= 0.5;
 }
 
 export function buildRecentPastEvidence({
@@ -130,22 +159,35 @@ export function buildRecentPastEvidence({
 }
 
 export function filterFutureCalendar(items: any[], pastEvidence: any[], now = Date.now()) {
+  void pastEvidence;
   return (items || []).filter((item) => {
+    if (isLikelyTestData(item)) return false;
     const status = clean(item?.status);
     if (status && (status !== "active" || CLOSED_STATUSES.has(status))) return false;
 
-    const dateValue = item?.start_at || item?.remind_at;
-    const timestamp = dateValue ? new Date(dateValue).getTime() : Number.NaN;
-    if (!Number.isNaN(timestamp) && timestamp < now) return false;
+    const timestamps = [item?.start_at, item?.remind_at]
+      .filter(Boolean)
+      .map((value) => new Date(value).getTime())
+      .filter(Number.isFinite);
+    if (!timestamps.some((timestamp) => timestamp >= now)) return false;
 
-    return !pastEvidence.some((pastItem) => describesSameEvent(item, pastItem));
+    return true;
   });
 }
 
 export function filterOpenActions(items: any[], pastEvidence: any[]) {
+  void pastEvidence;
   return (items || []).filter((item) => {
+    if (isLikelyTestData(item)) return false;
     const status = clean(item?.status);
     if (!OPEN_ACTION_STATUSES.has(status) || CLOSED_STATUSES.has(status)) return false;
-    return !pastEvidence.some((pastItem) => describesSameEvent(item, pastItem));
+    return true;
+  });
+}
+
+export function filterActiveGoals(items: any[]) {
+  return (items || []).filter((item) => {
+    const status = clean(item?.status);
+    return ["active", "learning"].includes(status) && !isLikelyTestData(item);
   });
 }

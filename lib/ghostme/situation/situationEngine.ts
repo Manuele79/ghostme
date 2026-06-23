@@ -6,6 +6,8 @@ import {
   buildRecentPastEvidence,
   filterFutureCalendar,
   filterOpenActions,
+  filterActiveGoals,
+  temporalMemoryLabel,
 } from "@/lib/ghostme/context/temporalPriority";
 import {
   cleanObservations,
@@ -122,6 +124,9 @@ function formatList(items: any[], mapper: (item: any) => string, empty: string, 
 
 export async function buildGhostSituation(userId: string): Promise<GhostSituation> {
   const nowIso = new Date().toISOString();
+  const recentHistorySince = new Date(
+    Date.now() - 30 * 24 * 60 * 60 * 1000
+  ).toISOString();
 
   const [
     profileRes,
@@ -167,6 +172,7 @@ export async function buildGhostSituation(userId: string): Promise<GhostSituatio
       .select("*")
       .eq("user_id", userId)
       .eq("status", "completed")
+      .gte("updated_at", recentHistorySince)
       .order("updated_at", { ascending: false })
       .limit(10),
 
@@ -200,6 +206,7 @@ export async function buildGhostSituation(userId: string): Promise<GhostSituatio
       .select("*")
       .eq("user_id", userId)
       .eq("status", "completed")
+      .or(`completed_at.gte.${recentHistorySince},updated_at.gte.${recentHistorySince}`)
       .order("completed_at", { ascending: false, nullsFirst: false })
       .order("updated_at", { ascending: false })
       .limit(10),
@@ -224,6 +231,7 @@ export async function buildGhostSituation(userId: string): Promise<GhostSituatio
       .from("episodic_memories")
       .select("*")
       .eq("user_id", userId)
+      .gte("created_at", recentHistorySince)
       .order("created_at", { ascending: false })
       .limit(8),
 
@@ -231,6 +239,7 @@ export async function buildGhostSituation(userId: string): Promise<GhostSituatio
       .from("autobiographical_timeline")
       .select("*")
       .eq("user_id", userId)
+      .gte("event_date", recentHistorySince)
       .order("event_date", { ascending: false })
       .limit(8),
 
@@ -238,6 +247,7 @@ export async function buildGhostSituation(userId: string): Promise<GhostSituatio
       .from("conversation_summaries")
       .select("*")
       .eq("user_id", userId)
+      .gte("updated_at", recentHistorySince)
       .order("updated_at", { ascending: false })
       .limit(5),
 
@@ -317,7 +327,7 @@ export async function buildGhostSituation(userId: string): Promise<GhostSituatio
 
   const completedCalendarEvents = completedCalendarRes.data || [];
   const completedActions = completedActionsRes.data || [];
-  const activeGoals = goalsRes.data || [];
+  const activeGoals = filterActiveGoals(goalsRes.data || []);
   const dominantTopics = topicsRes.data || [];
   const mentalState = mentalRes.data || null;
 
@@ -382,36 +392,37 @@ ${currentPlace || "sconosciuto"}
 ULTIMO LUOGO NOTO NON CORRENTE:
 ${lastKnownPlace || "nessuno"}
 
-CALENDARIO OGGI:
+CALENDARIO ATTUALE/FUTURO VERIFICATO — OGGI:
 ${formatList(
   calendarToday,
   (e) => `- ${e.title} | ${e.start_at || e.remind_at || ""}`,
   "nessun evento oggi"
 )}
 
-FATTI RECENTI (PRIORITÃ€ SUL FUTURO):
+ARCHIVIO RECENTE — FATTI PASSATI, NON OPERATIVI:
 ${formatList(
   [...recentEpisodes, ...recentTimelineEvents, ...completedCalendarEvents, ...completedActions],
-  (item) => `- ${item.title || item.summary || item.description || "evento completato"}`,
+  (item) =>
+    `- [${temporalMemoryLabel(item)}] ${item.title || item.summary || item.description || "evento completato"}`,
   "nessun fatto recente",
   10
 )}
 
-PROSSIMI EVENTI:
+CALENDARIO FUTURO VERIFICATO — PROSSIMI EVENTI:
 ${formatList(
   upcomingEvents,
   (e) => `- ${e.title} | ${e.start_at || e.remind_at || ""}`,
   "nessun evento prossimo"
 )}
 
-GOAL ATTIVI:
+GOAL ATTUALI/ATTIVI:
 ${formatList(
   activeGoals,
   (g) => `- ${g.title} | importanza ${g.importance} | ${g.category}`,
   "nessun goal attivo"
 )}
 
-AZIONI APERTE:
+AZIONI ATTUALI/APERTE:
 ${formatList(
   pendingActions,
   (a) => `- ${a.intent_type}: ${a.title} | priorità ${a.priority}`,
@@ -444,7 +455,7 @@ ${formatList(
 EPISODI RECENTI:
 ${formatList(
   recentEpisodes,
-  (e) => `- ${e.title || e.summary || "episodio"} | ${e.emotional_tone || ""}`,
+  (e) => `- [${temporalMemoryLabel(e)}] ${e.title || e.summary || "episodio"} | ${e.emotional_tone || ""}`,
   "nessun episodio recente",
   5
 )}
@@ -452,7 +463,7 @@ ${formatList(
 TIMELINE RECENTE:
 ${formatList(
   recentTimelineEvents,
-  (e) => `- ${e.title || e.summary || "evento"} | ${e.event_date || ""}`,
+  (e) => `- [${temporalMemoryLabel(e)}] ${e.title || e.summary || "evento"} | ${e.event_date || ""}`,
   "nessun evento timeline recente",
   5
 )}
@@ -460,7 +471,7 @@ ${formatList(
 RIASSUNTI RECENTI:
 ${formatList(
   recentSummaries,
-  (s) => `- ${s.title || "riassunto"} | ${s.summary || ""}`,
+  (s) => `- [${temporalMemoryLabel(s)}] ${s.title || "riassunto"} | ${s.summary || ""}`,
   "nessun riassunto recente",
   3
 )}

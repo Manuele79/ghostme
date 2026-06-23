@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { getRelatedTopicContext } from "@/lib/ghostme/topicLinks";
+import { temporalMemoryLabel } from "@/lib/ghostme/context/temporalPriority";
 
 type DetectedTopic = {
   topic: string;
@@ -24,6 +25,17 @@ function uniq(values: string[]) {
 function includesAny(text: string, terms: string[]) {
   const lower = norm(text);
   return terms.some((term) => lower.includes(norm(term)));
+}
+
+function recencyScore(value: any) {
+  const time = new Date(value || 0).getTime();
+  if (!Number.isFinite(time)) return -20;
+  const days = (Date.now() - time) / (24 * 60 * 60 * 1000);
+  if (days <= 3) return 20;
+  if (days <= 14) return 10;
+  if (days <= 30) return 3;
+  if (days <= 90) return -5;
+  return -15;
 }
 
 export async function buildContextualMemory({
@@ -192,7 +204,7 @@ export async function buildContextualMemory({
       .slice(0, 10)
       .map(
         (t) =>
-          `${t.topic} | ${t.entity_type} | ${t.category} | peso ${t.weight || 0} | forza ${t.relationship_strength || 0} | ${t.description || "nessuna descrizione"}`
+          `[CONTESTO SEMANTICO — NON STATO OPERATIVO] ${t.topic} | ${t.entity_type} | ${t.category} | peso ${t.weight || 0} | forza ${t.relationship_strength || 0} | ${t.description || "nessuna descrizione"}`
       )
       .join("\n")) || "",
     1000
@@ -219,13 +231,16 @@ export async function buildContextualMemory({
       ?.filter((m) => includesAny(`${m.title} ${m.content} ${m.category}`, searchTerms))
       .map((m) => ({
         ...m,
-        score: (m.importance || 0) * 3 + (m.pinned ? 20 : 0),
+        score:
+          (m.importance || 0) * 3 +
+          (m.pinned ? 20 : 0) +
+          recencyScore(m.updated_at),
       }))
       .sort((a, b) => b.score - a.score)
       .slice(0, 8)
       .map(
         (m) =>
-          `${m.pinned ? "[PINNED]" : ""} [${m.category}] (${m.importance}) ${m.title ? `${m.title}: ` : ""}${m.content}`
+          `[MEMORIA STORICA/SEMANTICA — NON CALENDARIO NÉ AZIONE ATTUALE] ${m.pinned ? "[PINNED]" : ""} [${m.category}] (${m.importance}) ${m.title ? `${m.title}: ` : ""}${m.content}`
       )
       .join("\n")) || "",
     1100
@@ -251,10 +266,15 @@ export async function buildContextualMemory({
       const text = `${e.summary} ${(e.related_topics || []).join(" ")}`;
       return includesAny(text, searchTerms);
     })
-    .slice(0, 6)
+    .map((episode) => ({
+      ...episode,
+      score: Number(episode.importance || 0) * 2 + recencyScore(episode.created_at),
+    }))
+    .sort((left, right) => right.score - left.score)
+    .slice(0, 5)
     .map(
       (e) =>
-        `${e.summary} | tono: ${e.emotional_tone} | topics: ${e.related_topics?.join(", ") || ""}`
+        `[${temporalMemoryLabel(e)}] ${e.summary} | data ${e.created_at || "non disponibile"} | tono: ${e.emotional_tone} | topics: ${e.related_topics?.join(", ") || ""}`
     )
     .join("\n")) || "",
   800
@@ -282,10 +302,15 @@ export async function buildContextualMemory({
         const text = `${s.title} ${s.summary} ${(s.topics || []).join(" ")}`;
         return includesAny(text, searchTerms);
       })
-      .slice(0, 4)
+      .map((summary) => ({
+        ...summary,
+        score: recencyScore(summary.updated_at || summary.period_end),
+      }))
+      .sort((left, right) => right.score - left.score)
+      .slice(0, 3)
       .map(
         (s) =>
-          `${s.title || "Riassunto"} | tono: ${s.emotional_tone} | topics: ${(s.topics || []).join(", ")} | ${s.summary}`
+          `[${temporalMemoryLabel(s)}] ${s.title || "Riassunto"} | tono: ${s.emotional_tone} | topics: ${(s.topics || []).join(", ")} | ${s.summary}`
       )
       .join("\n")) || "",
     800
@@ -302,14 +327,7 @@ export async function buildContextualMemory({
   Topic rilevanti:
   ${lifeTopicsContext || "nessun topic rilevante"}
 
-  Memorie rilevanti:
-  ${memoryContext || "nessuna memoria rilevante"}
-
-  Episodi rilevanti:
-  ${episodicContext || "nessun episodio rilevante"}
-
-  Riassunti rilevanti:
-  ${summaryContext || "nessun riassunto rilevante"}
+  Nota temporale: questa rete trova collegamenti, ma non prova che un evento sia futuro o che un'azione sia ancora aperta.
   `.trim(),
     2200
   );

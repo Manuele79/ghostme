@@ -3,6 +3,8 @@ import {
   buildRecentPastEvidence,
   filterFutureCalendar,
   filterOpenActions,
+  annotateHistoricalRows,
+  filterActiveGoals,
 } from "@/lib/ghostme/context/temporalPriority";
 
 export async function loadDailyBriefingContext(userId: string) {
@@ -31,7 +33,7 @@ export async function loadDailyBriefingContext(userId: string) {
 
     supabaseAdmin
       .from("goals_desires")
-      .select("title, description, category, importance, updated_at")
+      .select("title, description, category, importance, status, updated_at")
       .eq("user_id", userId)
       .eq("status", "active")
       .order("importance", { ascending: false })
@@ -110,10 +112,10 @@ export async function loadDailyBriefingContext(userId: string) {
 
   return {
     calendar: filterFutureCalendar(calendarRes.data || [], pastEvidence),
-    goals: goalsRes.data || [],
+    goals: filterActiveGoals(goalsRes.data || []),
     actions: filterOpenActions(actionsRes.data || [], pastEvidence),
     mental: mentalRes.data || null,
-    timeline: pastEvidence,
+    timeline: annotateHistoricalRows(pastEvidence),
     topics: topicsRes.data || [],
   };
 }

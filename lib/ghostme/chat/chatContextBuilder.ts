@@ -7,6 +7,7 @@ import {
 import { trimBlock } from "@/lib/ghostme/chat/chatPromptBuilder";
 import type { DetectedTopicLike } from "@/lib/ghostme/chat/chatTypes";
 import { isFreshLocationState } from "@/lib/ghostme/location/locationStateFreshness";
+import { temporalMemoryLabel } from "@/lib/ghostme/context/temporalPriority";
 
 export type ChatContext = {
   profileContext: string;
@@ -109,7 +110,7 @@ function buildGoalsContext(goals: any[]) {
   return goals
     .map(
       (goal) =>
-        `- ${goal.title || "Goal"} | ${goal.category || ""} | importanza ${
+        `- [ATTUALE — GOAL ATTIVO] ${goal.title || "Goal"} | ${goal.category || ""} | importanza ${
           goal.importance ?? ""
         }\n${goal.description || ""}`
     )
@@ -144,7 +145,7 @@ function buildTimelineContext(snapshot: GhostBrainSnapshot) {
   return history
     .map(
       (event) =>
-        `- [${event.temporal_source}] ${event.title || event.summary || "Evento"} | ${
+        `- [${event.temporal_label || temporalMemoryLabel(event)}] [${event.temporal_source}] ${event.title || event.summary || "Evento"} | ${
           event.event_date || event.created_at || ""
         }\n${event.summary || event.description || ""}`
     )
@@ -170,7 +171,7 @@ function buildActionIntentContext(actions: any[]) {
   return actions
     .map(
       (action) =>
-        `- ${action.intent_type || "azione"}: ${action.title || ""} | priorita ${
+        `- [ATTUALE — AZIONE APERTA] ${action.intent_type || "azione"}: ${action.title || ""} | priorita ${
           action.priority ?? ""
         }\n${action.description || ""}`
     )
@@ -287,7 +288,7 @@ export async function buildChatContext({
     calendarEvents
       .map((event) => {
         const date = formatRomeDateTime(event.start_at || event.remind_at);
-        return `${event.type} | ${event.title} | ${date} | ${event.description || ""}`;
+        return `[FUTURO VERIFICATO — CALENDARIO ACTIVE] ${event.type} | ${event.title} | ${date} | ${event.description || ""}`;
       })
       .join("\n") || "";
 

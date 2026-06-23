@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { filterActiveGoals } from "@/lib/ghostme/context/temporalPriority";
 
 const OPEN_ACTION_STATUSES = ["detected", "active", "open", "pending"];
 
@@ -77,7 +78,7 @@ export async function buildGoalsSnapshot(
   }
 
   const excludedGoalStatuses = new Set(["completed", "archived", "cancelled"]);
-  const activeGoals = (activeGoalsRes.data || [])
+  const activeGoals = filterActiveGoals(activeGoalsRes.data || [])
     .filter(
       (goal: any) =>
         !excludedGoalStatuses.has(String(goal.status || "").toLowerCase())

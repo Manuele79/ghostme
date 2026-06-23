@@ -7,6 +7,7 @@ import { resolveChatExternalService } from "@/lib/ghostme/chat/chatExternalServi
 import { handleChatCalendarFlow } from "@/lib/ghostme/chat/chatCalendarFlow";
 import { analyzeChatMessage } from "@/lib/ghostme/chat/chatMessageAnalyzer";
 import type { GhostChatFlowResult } from "@/lib/ghostme/chat/chatTypes";
+import { prepareChatHistory } from "@/lib/ghostme/context/temporalPriority";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -102,7 +103,7 @@ export async function runGhostChatFlow({
     stream: true,
     messages: [
       { role: "system", content: systemPrompt },
-      ...messages,
+      ...prepareChatHistory(messages),
       { role: "user", content: message },
     ],
   });

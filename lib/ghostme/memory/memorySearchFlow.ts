@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { annotateHistoricalRows } from "@/lib/ghostme/context/temporalPriority";
 
 export async function memorySearchFlow(body: any) {
   if (!body.userId || !body.query?.trim()) {
@@ -85,12 +86,26 @@ export async function memorySearchFlow(body: any) {
       results: {
         topics: topicsRes.data || [],
         memories: memoriesRes.data || [],
-        timeline: timelineRes.data || [],
-        goals: goalsRes.data || [],
-        actions: actionsRes.data || [],
+        timeline: annotateHistoricalRows(timelineRes.data || []),
+        goals: (goalsRes.data || []).map((goal) => ({
+          ...goal,
+          temporal_label: ["active", "learning"].includes(
+            String(goal.status || "").toLowerCase()
+          )
+            ? "ATTUALE — GOAL ATTIVO"
+            : "STORICO — GOAL CHIUSO, NON OPERATIVO",
+        })),
+        actions: (actionsRes.data || []).map((action) => ({
+          ...action,
+          temporal_label: ["detected", "active", "open", "pending"].includes(
+            String(action.status || "").toLowerCase()
+          )
+            ? "ATTUALE — AZIONE APERTA"
+            : "STORICO — AZIONE CHIUSA, NON OPERATIVA",
+        })),
         links: linksRes.data || [],
-        summaries: summariesRes.data || [],
-        episodes: episodesRes.data || [],
+        summaries: annotateHistoricalRows(summariesRes.data || []),
+        episodes: annotateHistoricalRows(episodesRes.data || []),
       },
     },
   };

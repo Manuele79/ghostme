@@ -1,6 +1,7 @@
 import type { MemorySnapshot } from "@/lib/ghostme/memory/memorySnapshot";
 import type { GoalsSnapshot } from "@/lib/ghostme/goals/goalsSnapshot";
 import type { PeopleSnapshot } from "@/lib/ghostme/people/peopleSnapshot";
+import { isLikelyTestData } from "@/lib/ghostme/context/temporalPriority";
 
 export type ProjectMemoryItem = {
   name: string;
@@ -71,6 +72,12 @@ function mentionsProject(row: any, projectKey: string) {
   return normalize(textFor(row)).includes(projectKey);
 }
 
+function isRecentProjectEvidence(row: any, days = 30) {
+  const value = row?.updated_at || row?.created_at || row?.event_date || row?.start_at;
+  const time = new Date(value || 0).getTime();
+  return Number.isFinite(time) && time >= Date.now() - days * 24 * 60 * 60 * 1000;
+}
+
 function uniqueByName(values: Array<{ name: string; source?: string }>) {
   const seen = new Set<string>();
   const result: Array<{ name: string; source?: string }> = [];
@@ -104,6 +111,7 @@ function discoverProjects({
   const candidates: Array<{ name: string; source?: string }> = [];
 
   for (const topic of memory.topics || []) {
+    if (isLikelyTestData(topic)) continue;
     if (["project", "work", "passion"].includes(clean(topic.entity_type))) {
       candidates.push({ name: topic.topic, source: "topic" });
     }
@@ -122,7 +130,11 @@ function discoverProjects({
   ];
 
   for (const hint of PROJECT_HINTS) {
-    if (allRows.some((row) => normalize(textFor(row)).includes(hint))) {
+    if (
+      allRows.some(
+        (row) => !isLikelyTestData(row) && normalize(textFor(row)).includes(hint)
+      )
+    ) {
       candidates.push({ name: titleCase(hint), source: "hint" });
     }
   }
@@ -236,7 +248,9 @@ export function buildProjectMemorySnapshot({
       .filter((event) => mentionsProject(event, projectKey))
       .slice(0, 6);
     const recentMemories = memoryRows
-      .filter((row) => mentionsProject(row, projectKey))
+      .filter(
+        (row) => mentionsProject(row, projectKey) && isRecentProjectEvidence(row)
+      )
       .slice(0, 8);
     const signals = progressSignals({
       relatedGoals,

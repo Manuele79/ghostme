@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { annotateHistoricalRows } from "@/lib/ghostme/context/temporalPriority";
 
 export type MemorySnapshot = {
   activeMemories: any[];
@@ -95,10 +96,10 @@ export async function buildMemorySnapshot(
   ]);
 
   return {
-    activeMemories: memoriesRes.data || [],
-    episodicMemories: episodesRes.data || [],
-    summaries: summariesRes.data || [],
-    timeline: timelineRes.data || [],
+    activeMemories: annotateHistoricalRows(memoriesRes.data || []),
+    episodicMemories: annotateHistoricalRows(episodesRes.data || []),
+    summaries: annotateHistoricalRows(summariesRes.data || []),
+    timeline: annotateHistoricalRows(timelineRes.data || []),
     topics: topicsRes.data || [],
     lastUpdated: latestTimestamp([
       ...(memoriesRes.data || []).map((memory: any) => memory.updated_at),

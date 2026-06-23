@@ -4,6 +4,7 @@ import { buildGhostSituation } from "@/lib/ghostme/situation/situationEngine";
 import { buildBehaviorPrompt } from "@/lib/ghostme/behavior/behaviorRulesEngine";
 import { buildHomeReasoning } from "@/lib/ghostme/homeAssistant/homeReasoningBuilder";
 import { buildContextSignals, ContextSignal } from "@/lib/ghostme/context/contextSignals";
+import { temporalMemoryLabel } from "@/lib/ghostme/context/temporalPriority";
 
 export type GhostCurrentContext = {
   timeContext: string;
@@ -115,11 +116,11 @@ export async function buildCurrentContext(
     .slice(0, 5);
 
   const completedCalendar = situation.completedCalendarEvents
-    .map((event) => `${event.type}: ${event.title}`)
+    .map((event) => `[COMPLETATO — STORICO] ${event.type}: ${event.title}`)
     .slice(0, 5);
 
   const completedActions = situation.completedActions
-    .map((action) => `${action.intent_type}: ${action.title}`)
+    .map((action) => `[COMPLETATA — STORICO] ${action.intent_type}: ${action.title}`)
     .slice(0, 5);
 
   const dominantTopics = situation.dominantTopics
@@ -135,15 +136,23 @@ export async function buildCurrentContext(
     : "nessuno stato mentale recente";
 
     const recentEpisodes = situation.recentEpisodes
-      .map((e) => e.title || e.summary || e.description || "episodio")
+      .map(
+        (e) =>
+          `[${temporalMemoryLabel(e)}] ${e.title || e.summary || e.description || "episodio"}`
+      )
       .slice(0, 5);
 
     const recentTimelineEvents = situation.recentTimelineEvents
-      .map((e) => e.title || e.summary || "evento timeline")
+      .map(
+        (e) =>
+          `[${temporalMemoryLabel(e)}] ${e.title || e.summary || "evento timeline"}`
+      )
       .slice(0, 5);
 
     const recentSummaries = situation.recentSummaries
-      .map((s) => s.title || s.summary || "riassunto")
+      .map(
+        (s) => `[${temporalMemoryLabel(s)}] ${s.title || s.summary || "riassunto"}`
+      )
       .slice(0, 5);
 
     const dynamicProfile = situation.dynamicProfile
@@ -190,9 +199,9 @@ export async function buildCurrentContext(
       Azioni aperte: ${pendingActions.join(", ") || "nessuna"}.
       Eventi oggi: ${calendarToday.join(", ") || "nessuno"}.
       Stato mentale: ${mentalState}.
-      Memorie recenti utili: ${recentEpisodes.join(", ") || "nessuna"}.
-      Eventi calendario completati: ${completedCalendar.join(", ") || "nessuno"}.
-      Azioni completate: ${completedActions.join(", ") || "nessuna"}.
+      Memorie recenti storiche, non operative: ${recentEpisodes.join(", ") || "nessuna"}.
+      Eventi calendario completati/storici: ${completedCalendar.join(", ") || "nessuno"}.
+      Azioni completate/storiche: ${completedActions.join(", ") || "nessuna"}.
       Collegamenti importanti: ${importantLinks.join(", ") || "nessuno"}.
       Pattern comportamentali: ${behaviorPatterns.join(", ") || "nessuno"}.
       Regole comportamentali: ${behaviorRules.join(", ") || "nessuna"}.
@@ -225,9 +234,9 @@ export async function buildCurrentContext(
       Prossimi eventi: ${upcomingCalendar.join(", ") || "nessuno"}
       Topic dominanti: ${dominantTopics.join(", ") || "nessuno"}
       Stato mentale: ${mentalState}
-      Episodi recenti: ${recentEpisodes.join(", ") || "nessuno"}
-      Timeline recente: ${recentTimelineEvents.join(", ") || "nessuna"}
-      Riassunti recenti: ${recentSummaries.join(", ") || "nessuno"}
+      Episodi recenti — storico non operativo: ${recentEpisodes.join(", ") || "nessuno"}
+      Timeline recente — storico non operativo: ${recentTimelineEvents.join(", ") || "nessuna"}
+      Riassunti recenti — storico non operativo: ${recentSummaries.join(", ") || "nessuno"}
       Eventi calendario completati: ${completedCalendar.join(", ") || "nessuno"}
       Azioni completate: ${completedActions.join(", ") || "nessuna"}
       Profilo dinamico: ${dynamicProfile.join(", ") || "nessuno"}

@@ -105,14 +105,28 @@ ${mentalStateContext || "nessuno stato mentale recente rilevante"}
 
 CONTESTO MENTALE ATTIVO
 
-PRIORITÃ€ TEMPORALE — FATTI GIÃ€ AVVENUTI:
+GERARCHIA TEMPORALE DELLE FONTI:
+1. stato corrente verificato;
+2. calendario active/future;
+3. action aperte;
+4. goal attivi;
+5. osservazioni recenti;
+6. episodi e timeline recenti;
+7. memoria storica;
+8. chat grezza vecchia.
+
+Solo Calendario reale e Azioni attuali possono giustificare il futuro operativo "devi fare".
+Se un appuntamento non compare nel Calendario reale, non presentarlo come futuro usando memoria, timeline, episodi, riassunti o chat.
+Una memoria passata con lo stesso titolo non annulla un nuovo evento active/future presente nel calendario.
+
+ARCHIVIO TEMPORALE — FATTI GIÀ AVVENUTI, NON OPERATIVI:
 ${timelineContext || "nessun fatto recente rilevante"}
 
 Regole temporali inderogabili:
-- Episodi recenti e timeline prevalgono sempre su calendario e azioni future.
+- Episodi recenti e timeline sono fonti storiche: non prevalgono su calendario active/future o action aperte.
 - Un fatto descritto come giÃ  avvenuto non va proposto, suggerito o raccontato al futuro.
-- Eventi e azioni completed, archived, cancelled o dismissed non sono cose da fare.
-- Se passato e futuro si contraddicono, considera vero il passato recente.
+- Eventi e azioni completed, archived, cancelled, answered, expired o dismissed non sono cose da fare.
+- Se storico e fonti operative si contraddicono, prevalgono stato corrente, calendario active/future e action aperte.
 - Formula i fatti avvenuti al passato: per esempio "Sei stato al mare con Giulio oggi".
 
 Contesto cognitivo mirato:
@@ -124,25 +138,25 @@ ${lifeTopicsContext || "nessun topic diretto rilevante"}
 Relazioni mentali tra topic:
 ${linkedTopicsContext || "nessuna relazione rilevante"}
 
-Episodi collegati:
+Episodi collegati — STORICO/RECENTE, NON OPERATIVO:
 ${episodicContext || "nessun episodio collegato"}
 
-Archivio conversazioni recenti:
+Archivio conversazioni — STORICO, NON OPERATIVO:
 ${summaryContext || "nessun riassunto recente"}
 
-Memorie importanti:
+Memorie importanti — STORICO/SEMANTICO, NON OPERATIVO:
 ${memoryContext || "nessuna memoria attiva collegata"}
 
-Obiettivi e desideri attivi:
+Obiettivi e desideri — ATTUALI:
 ${goalsContext || "nessun obiettivo attivo rilevante"}
 
-Azioni future rilevate:
+Azioni — ATTUALI E APERTE:
 ${actionIntentContext || "nessuna azione futura rilevante"}
 
 Servizi esterni:
 ${serviceContext || "nessun servizio esterno usato"}
 
-Calendario reale:
+Calendario reale — FUTURO VERIFICATO:
 ${calendarContext || "nessun appuntamento o promemoria salvato"}
 
 Luogo attuale:

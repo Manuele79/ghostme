@@ -1,5 +1,10 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { classifyLocationState } from "@/lib/ghostme/location/locationStateFreshness";
+import {
+  filterActiveGoals,
+  filterFutureCalendar,
+  filterOpenActions,
+} from "@/lib/ghostme/context/temporalPriority";
 
 function cleanHint(value: any) {
   return String(value || "").trim().replace(/\s+/g, " ");
@@ -108,7 +113,7 @@ export async function loadUserContextGraph(userId: string) {
 
     supabaseAdmin
       .from("calendar_events")
-      .select("id, type, title, description, start_at, remind_at")
+      .select("id, type, title, description, start_at, remind_at, status")
       .eq("user_id", userId)
       .eq("status", "active")
       .or(`start_at.gte.${now},remind_at.gte.${now}`)
@@ -117,7 +122,7 @@ export async function loadUserContextGraph(userId: string) {
 
     supabaseAdmin
       .from("goals_desires")
-      .select("id, title, description, category, importance, updated_at")
+      .select("id, title, description, category, importance, status, updated_at")
       .eq("user_id", userId)
       .eq("status", "active")
       .order("importance", { ascending: false })
@@ -126,7 +131,7 @@ export async function loadUserContextGraph(userId: string) {
 
     supabaseAdmin
       .from("action_intents")
-      .select("id, intent_type, title, description, priority, updated_at")
+      .select("id, intent_type, title, description, priority, status, updated_at")
       .eq("user_id", userId)
       .in("status", ["detected", "pending"])
       .order("priority", { ascending: false })
@@ -244,9 +249,9 @@ export async function loadUserContextGraph(userId: string) {
     lastKnownLocation: locationFreshness.lastKnownLocation,
     locationStatus: locationFreshness.status,
     significantPlaces: placesRes.data || [],
-    calendarUpcoming: calendarRes.data || [],
-    goals: goalsRes.data || [],
-    actionIntents: actionsRes.data || [],
+    calendarUpcoming: filterFutureCalendar(calendarRes.data || [], []),
+    goals: filterActiveGoals(goalsRes.data || []),
+    actionIntents: filterOpenActions(actionsRes.data || [], []),
     people: peopleRes.data || [],
     proactiveRecent: proactiveRes.data || [],
     proactiveHandledRecent: proactiveHandledRes.data || [],
