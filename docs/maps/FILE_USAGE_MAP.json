@@ -169,6 +169,7 @@
       "lib/ghostme/auth/serverAuth.ts",
       "lib/ghostme/homeAssistant/homeAssistantAccess.ts",
       "lib/ghostme/homeAssistant/homeEntityMapper.ts",
+      "lib/ghostme/homeAssistant/homeEventLogger.ts",
       "lib/ghostme/homeAssistant/homeEventSignificance.ts",
       "lib/ghostme/homeAssistant/houseLightLearningFlow.ts",
       "lib/supabaseAdmin.ts"
@@ -178,12 +179,11 @@
       "house_events"
     ],
     "tablesWritten": [
-      "house_entities",
-      "house_events"
+      "house_entities"
     ],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 377,
+    "lines": 464,
     "status": "entrypoint"
   },
   "app/api/house-suggestion-response/route.ts": {
@@ -635,7 +635,7 @@
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 2021,
+    "lines": 2214,
     "status": "entrypoint"
   },
   "components/ghost/GhostGlobalStyles.tsx": {
@@ -722,7 +722,7 @@
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 66,
+    "lines": 81,
     "status": "entrypoint"
   },
   "hooks/useGhostBrain.ts": {
@@ -740,7 +740,7 @@
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 86,
+    "lines": 87,
     "status": "entrypoint"
   },
   "hooks/useGhostChat.ts": {
@@ -1008,6 +1008,7 @@
     "imports": [
       "lib/ghostme/behavior/behaviorRulesEngine.ts",
       "lib/ghostme/chat/chatPromptBuilder.ts",
+      "lib/ghostme/chat/chatRecallPolicy.ts",
       "lib/ghostme/chat/chatTypes.ts",
       "lib/ghostme/context/reasoningService.ts",
       "lib/ghostme/context/temporalPriority.ts",
@@ -1021,7 +1022,7 @@
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 317,
+    "lines": 424,
     "status": "active"
   },
   "lib/ghostme/chat/chatExternalServices.ts": {
@@ -1110,7 +1111,33 @@
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 227,
+    "lines": 257,
+    "status": "active"
+  },
+  "lib/ghostme/chat/chatRecallPolicy.ts": {
+    "file": "lib/ghostme/chat/chatRecallPolicy.ts",
+    "imports": [],
+    "importedBy": [
+      "lib/ghostme/chat/chatContextBuilder.ts"
+    ],
+    "tablesRead": [],
+    "tablesWritten": [],
+    "tablesUpdated": [],
+    "tablesDeleted": [],
+    "lines": 58,
+    "status": "active"
+  },
+  "lib/ghostme/chat/chatResponseSanitizer.ts": {
+    "file": "lib/ghostme/chat/chatResponseSanitizer.ts",
+    "imports": [],
+    "importedBy": [
+      "lib/ghostme/chat/ghostChatOrchestrator.ts"
+    ],
+    "tablesRead": [],
+    "tablesWritten": [],
+    "tablesUpdated": [],
+    "tablesDeleted": [],
+    "lines": 45,
     "status": "active"
   },
   "lib/ghostme/chat/chatTypes.ts": {
@@ -1137,6 +1164,7 @@
       "lib/ghostme/chat/chatExternalServices.ts",
       "lib/ghostme/chat/chatMessageAnalyzer.ts",
       "lib/ghostme/chat/chatPromptBuilder.ts",
+      "lib/ghostme/chat/chatResponseSanitizer.ts",
       "lib/ghostme/chat/chatTypes.ts",
       "lib/ghostme/context/temporalPriority.ts",
       "lib/ghostme/memoryDecay.ts",
@@ -1149,7 +1177,7 @@
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 147,
+    "lines": 162,
     "status": "active"
   },
   "lib/ghostme/context/contextBuilder.ts": {
@@ -1278,7 +1306,7 @@
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 194,
+    "lines": 188,
     "status": "active"
   },
   "lib/ghostme/context/userContextGraph.ts": {
@@ -1597,12 +1625,13 @@
     ],
     "tablesRead": [
       "house_entities",
-      "house_events"
+      "house_events",
+      "user_location_state"
     ],
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 325,
+    "lines": 448,
     "status": "active"
   },
   "lib/ghostme/home/houseSuggestionResponseFlow.ts": {
@@ -1638,23 +1667,28 @@
       "lib/ghostme/auth/serverAuth.ts",
       "lib/ghostme/homeAssistant/haClient.ts",
       "lib/ghostme/homeAssistant/homeAssistantAccess.ts",
-      "lib/ghostme/homeAssistant/homeEventLogger.ts",
+      "lib/ghostme/homeAssistant/homeEntityMapper.ts",
       "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
       "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
       "lib/ghostme/homeAssistant/houseEntityRegistry.ts",
       "lib/ghostme/homeAssistant/housePatternEngine.ts",
       "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts",
       "lib/ghostme/homeAssistant/houseSuggestionEngine.ts",
-      "lib/ghostme/location/haLocationBridgeFlow.ts"
+      "lib/ghostme/location/haLocationBridgeFlow.ts",
+      "lib/supabaseAdmin.ts"
     ],
     "importedBy": [
       "app/api/worker/house/route.ts"
     ],
-    "tablesRead": [],
+    "tablesRead": [
+      "house_events"
+    ],
     "tablesWritten": [],
-    "tablesUpdated": [],
+    "tablesUpdated": [
+      "house_events"
+    ],
     "tablesDeleted": [],
-    "lines": 75,
+    "lines": 236,
     "status": "active"
   },
   "lib/ghostme/homeAssistant/cognitiveHouseBuilder.ts": {
@@ -1734,6 +1768,7 @@
       "app/api/debug-house-logger/route.ts",
       "app/api/home-assistant/event/route.ts",
       "lib/ghostme/home/houseStateSnapshot.ts",
+      "lib/ghostme/home/houseWorkerFlow.ts",
       "lib/ghostme/homeAssistant/homeEventLogger.ts",
       "lib/ghostme/homeAssistant/houseEntityRegistry.ts"
     ],
@@ -1753,7 +1788,7 @@
       "lib/supabaseAdmin.ts"
     ],
     "importedBy": [
-      "lib/ghostme/home/houseWorkerFlow.ts"
+      "app/api/home-assistant/event/route.ts"
     ],
     "tablesRead": [
       "house_events"
@@ -1761,9 +1796,11 @@
     "tablesWritten": [
       "house_events"
     ],
-    "tablesUpdated": [],
+    "tablesUpdated": [
+      "house_events"
+    ],
     "tablesDeleted": [],
-    "lines": 250,
+    "lines": 473,
     "status": "active"
   },
   "lib/ghostme/homeAssistant/homeEventSignificance.ts": {
@@ -1777,7 +1814,7 @@
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 290,
+    "lines": 271,
     "status": "active"
   },
   "lib/ghostme/homeAssistant/homeReasoningBuilder.ts": {
@@ -2387,6 +2424,7 @@
       "lib/ghostme/chat/chatPostProcessing.ts",
       "lib/ghostme/people/peopleGraphService.ts",
       "lib/ghostme/people/peopleSnapshot.ts",
+      "lib/ghostme/people/relationshipMemorySnapshot.ts",
       "lib/ghostme/proactive/proactiveMaintenanceFlow.ts"
     ],
     "tablesRead": [
@@ -2403,7 +2441,7 @@
       "people_graph_links"
     ],
     "tablesDeleted": [],
-    "lines": 485,
+    "lines": 487,
     "status": "active"
   },
   "lib/ghostme/people/peopleGraphService.ts": {
@@ -2455,13 +2493,14 @@
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 469,
+    "lines": 474,
     "status": "active"
   },
   "lib/ghostme/people/relationshipMemorySnapshot.ts": {
     "file": "lib/ghostme/people/relationshipMemorySnapshot.ts",
     "imports": [
       "lib/ghostme/memory/memorySnapshot.ts",
+      "lib/ghostme/people/peopleGraphLinkService.ts",
       "lib/ghostme/people/peopleSnapshot.ts"
     ],
     "importedBy": [
@@ -2474,7 +2513,7 @@
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 347,
+    "lines": 349,
     "status": "active"
   },
   "lib/ghostme/people/socialSuggestionSnapshot.ts": {
@@ -2917,12 +2956,14 @@
     "imports": [
       "lib/ghostme/context/temporalPriority.ts",
       "lib/ghostme/topicLinks.ts",
-      "lib/supabase.ts"
+      "lib/supabase.ts",
+      "lib/supabaseAdmin.ts"
     ],
     "importedBy": [
       "lib/ghostme/chat/chatContextBuilder.ts"
     ],
     "tablesRead": [
+      "autobiographical_timeline",
       "conversation_summaries",
       "episodic_memories",
       "life_topics",
@@ -2932,7 +2973,7 @@
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 345,
+    "lines": 415,
     "status": "active"
   },
   "lib/ghostme/services/serviceRouter.ts": {
@@ -3083,7 +3124,7 @@
       "topic_links"
     ],
     "tablesDeleted": [],
-    "lines": 290,
+    "lines": 291,
     "status": "active"
   },
   "lib/ghostme/ui/brainUiAdapter.ts": {
@@ -3100,7 +3141,7 @@
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 79,
+    "lines": 146,
     "status": "active"
   },
   "lib/personality.ts": {
@@ -3169,6 +3210,7 @@
       "lib/ghostme/home/houseRouteSnapshot.ts",
       "lib/ghostme/home/houseStateSnapshot.ts",
       "lib/ghostme/home/houseSuggestionResponseFlow.ts",
+      "lib/ghostme/home/houseWorkerFlow.ts",
       "lib/ghostme/homeAssistant/homeEventLogger.ts",
       "lib/ghostme/homeAssistant/houseAutomationContext.ts",
       "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
@@ -3203,6 +3245,7 @@
       "lib/ghostme/proactive/trueProactiveCardWriter.ts",
       "lib/ghostme/proactive/visibleProactiveMessages.ts",
       "lib/ghostme/profile/profileBehaviorSeed.ts",
+      "lib/ghostme/retrieval.ts",
       "lib/ghostme/situation/situationEngine.ts",
       "lib/ghostme/timeline.ts"
     ],

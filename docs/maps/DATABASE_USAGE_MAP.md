@@ -6,7 +6,7 @@ Mappa statica generata dal codice locale.
 |---|---:|---:|---:|---:|---:|---:|
 | action_intents | alive | 10 | 1 | 3 | 0 | 0 |
 | answers | alive | 1 | 1 | 0 | 1 | 0 |
-| autobiographical_timeline | alive | 6 | 1 | 0 | 0 | 0 |
+| autobiographical_timeline | alive | 7 | 1 | 0 | 0 | 0 |
 | behavior_patterns | alive | 6 | 1 | 3 | 0 | 0 |
 | calendar_events | alive | 8 | 1 | 3 | 0 | 0 |
 | chat_messages | alive | 2 | 1 | 1 | 1 | 0 |
@@ -19,7 +19,7 @@ Mappa statica generata dal codice locale.
 | goals_desires | alive | 10 | 1 | 3 | 0 | 0 |
 | house_automation_controls | alive | 3 | 1 | 2 | 0 | 0 |
 | house_entities | alive | 2 | 2 | 0 | 0 | 0 |
-| house_events | alive | 11 | 2 | 1 | 0 | 0 |
+| house_events | alive | 12 | 1 | 3 | 0 | 0 |
 | house_learned_rules | alive | 6 | 2 | 2 | 0 | 0 |
 | house_paths | unused | 0 | 0 | 0 | 0 | 0 |
 | house_patterns | alive | 3 | 1 | 1 | 0 | 0 |
@@ -37,7 +37,7 @@ Mappa statica generata dal codice locale.
 | topic_links | alive | 5 | 1 | 1 | 0 | 0 |
 | traits | alive | 3 | 1 | 0 | 1 | 0 |
 | triggers | unused | 0 | 0 | 0 | 0 | 0 |
-| user_location_state | alive | 7 | 2 | 1 | 0 | 0 |
+| user_location_state | alive | 8 | 2 | 1 | 0 | 0 |
 | user_profiles | alive | 6 | 1 | 0 | 0 | 0 |
 
 ## Dettaglio
@@ -74,7 +74,7 @@ Raw users: -
 
 Stato: **alive**
 
-Readers: lib/ghostme/curiosity/curiosityEngine.ts, lib/ghostme/memory/memorySearchFlow.ts, lib/ghostme/memory/memorySnapshot.ts, lib/ghostme/proactive/dailyBriefingRepository.ts, lib/ghostme/situation/situationEngine.ts, lib/ghostme/timeline.ts
+Readers: lib/ghostme/curiosity/curiosityEngine.ts, lib/ghostme/memory/memorySearchFlow.ts, lib/ghostme/memory/memorySnapshot.ts, lib/ghostme/proactive/dailyBriefingRepository.ts, lib/ghostme/retrieval.ts, lib/ghostme/situation/situationEngine.ts, lib/ghostme/timeline.ts
 
 Writers: lib/ghostme/timeline.ts
 
@@ -256,11 +256,11 @@ Raw users: -
 
 Stato: **alive**
 
-Readers: app/api/home-assistant/event/route.ts, lib/ghostme/home/homeComfortRiskSnapshot.ts, lib/ghostme/home/houseRouteSnapshot.ts, lib/ghostme/home/houseStateSnapshot.ts, lib/ghostme/homeAssistant/homeEventLogger.ts, lib/ghostme/homeAssistant/houseAutomationContext.ts, lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts, lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts, lib/ghostme/homeAssistant/houseLightLearningFlow.ts, lib/ghostme/homeAssistant/housePatternEngine.ts, lib/ghostme/homeAssistant/houseRouteLearningEngine.ts
+Readers: app/api/home-assistant/event/route.ts, lib/ghostme/home/homeComfortRiskSnapshot.ts, lib/ghostme/home/houseRouteSnapshot.ts, lib/ghostme/home/houseStateSnapshot.ts, lib/ghostme/home/houseWorkerFlow.ts, lib/ghostme/homeAssistant/homeEventLogger.ts, lib/ghostme/homeAssistant/houseAutomationContext.ts, lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts, lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts, lib/ghostme/homeAssistant/houseLightLearningFlow.ts, lib/ghostme/homeAssistant/housePatternEngine.ts, lib/ghostme/homeAssistant/houseRouteLearningEngine.ts
 
-Writers: app/api/home-assistant/event/route.ts, lib/ghostme/homeAssistant/homeEventLogger.ts
+Writers: lib/ghostme/homeAssistant/homeEventLogger.ts
 
-Updaters: lib/ghostme/homeAssistant/houseLightLearningFlow.ts
+Updaters: lib/ghostme/home/houseWorkerFlow.ts, lib/ghostme/homeAssistant/homeEventLogger.ts, lib/ghostme/homeAssistant/houseLightLearningFlow.ts
 
 Deleters: -
 
@@ -508,7 +508,7 @@ Raw users: -
 
 Stato: **alive**
 
-Readers: lib/ghostme/context/userContextGraph.ts, lib/ghostme/location/haLocationBridgeFlow.ts, lib/ghostme/location/locationCurrentStateFlow.ts, lib/ghostme/location/locationLearningFlow.ts, lib/ghostme/location/locationUpdateFlow.ts, lib/ghostme/location/placeService.ts, lib/ghostme/observation/observationEngine.ts
+Readers: lib/ghostme/context/userContextGraph.ts, lib/ghostme/home/houseStateSnapshot.ts, lib/ghostme/location/haLocationBridgeFlow.ts, lib/ghostme/location/locationCurrentStateFlow.ts, lib/ghostme/location/locationLearningFlow.ts, lib/ghostme/location/locationUpdateFlow.ts, lib/ghostme/location/placeService.ts, lib/ghostme/observation/observationEngine.ts
 
 Writers: lib/ghostme/location/haLocationBridgeFlow.ts, lib/ghostme/location/locationUpdateFlow.ts
 

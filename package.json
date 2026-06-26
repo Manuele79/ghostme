@@ -7,7 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "graph:all": "node scripts/generate-graphs.mjs"
+    "audit": "node scripts/project-audit.mjs",
+    "db:map": "node scripts/db-usage-map.mjs",
+    "file:map": "node scripts/file-usage-map.mjs",
+    "graph:all": "node scripts/generate-graphs.mjs",
+    "audit:all": "npm run audit && npm run db:map && npm run file:map && npm run graph:all",
+    "refresh": "npm run audit:all && npm run build"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.105.4",

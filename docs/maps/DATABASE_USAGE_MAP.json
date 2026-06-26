@@ -47,6 +47,7 @@
       "lib/ghostme/memory/memorySearchFlow.ts",
       "lib/ghostme/memory/memorySnapshot.ts",
       "lib/ghostme/proactive/dailyBriefingRepository.ts",
+      "lib/ghostme/retrieval.ts",
       "lib/ghostme/situation/situationEngine.ts",
       "lib/ghostme/timeline.ts"
     ],
@@ -319,6 +320,7 @@
       "lib/ghostme/home/homeComfortRiskSnapshot.ts",
       "lib/ghostme/home/houseRouteSnapshot.ts",
       "lib/ghostme/home/houseStateSnapshot.ts",
+      "lib/ghostme/home/houseWorkerFlow.ts",
       "lib/ghostme/homeAssistant/homeEventLogger.ts",
       "lib/ghostme/homeAssistant/houseAutomationContext.ts",
       "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
@@ -328,10 +330,11 @@
       "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts"
     ],
     "writers": [
-      "app/api/home-assistant/event/route.ts",
       "lib/ghostme/homeAssistant/homeEventLogger.ts"
     ],
     "updaters": [
+      "lib/ghostme/home/houseWorkerFlow.ts",
+      "lib/ghostme/homeAssistant/homeEventLogger.ts",
       "lib/ghostme/homeAssistant/houseLightLearningFlow.ts"
     ],
     "deleters": [],
@@ -630,6 +633,7 @@
     "table": "user_location_state",
     "readers": [
       "lib/ghostme/context/userContextGraph.ts",
+      "lib/ghostme/home/houseStateSnapshot.ts",
       "lib/ghostme/location/haLocationBridgeFlow.ts",
       "lib/ghostme/location/locationCurrentStateFlow.ts",
       "lib/ghostme/location/locationLearningFlow.ts",
