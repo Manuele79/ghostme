@@ -62,6 +62,20 @@ type LinkSource = {
   rows: SourceRow[];
 };
 
+type LinkCandidate = {
+  userId: string;
+  personId: string;
+  targetType: PeopleGraphTargetType;
+  targetId: string;
+  targetKey: string;
+  targetLabel: string | null;
+  linkType: string;
+  weight: number;
+  confidence: number;
+  evidence: PeopleGraphEvidence;
+  errorKey: string;
+};
+
 const LINK_SELECT =
   "id, user_id, person_id, target_type, target_id, target_key, target_label, link_type, weight, confidence, evidences, status, last_reinforced_at, last_decayed_at, created_at, updated_at";
 
@@ -174,6 +188,105 @@ function logLinkError(stage: string, error: unknown, context: Record<string, unk
     message: errorProperty(error, "message") || String(error || "unknown_error"),
     ...context,
   });
+}
+
+function canonicalizeCandidate(candidate: LinkCandidate): LinkCandidate {
+  if (
+    candidate.targetType !== "person" ||
+    !candidate.targetId ||
+    candidate.targetId >= candidate.personId
+  ) {
+    return candidate;
+  }
+
+  return {
+    ...candidate,
+    personId: candidate.targetId,
+    targetId: candidate.personId,
+    targetKey: candidate.personId,
+    targetLabel: null,
+  };
+}
+
+function candidateKey(candidate: LinkCandidate) {
+  const canonical = canonicalizeCandidate(candidate);
+  return [
+    canonical.userId,
+    canonical.personId,
+    canonical.targetType,
+    canonical.targetKey,
+    canonical.linkType,
+  ].join("|");
+}
+
+function candidateRunKey(candidate: LinkCandidate) {
+  return `${candidateKey(candidate)}|${candidate.evidence.key}`;
+}
+
+function hasEvidence(link: PeopleGraphLink | undefined, evidenceKey: string) {
+  if (!link || !evidenceKey) return false;
+  return (Array.isArray(link.evidences) ? link.evidences : []).some(
+    (item) => item?.key === evidenceKey
+  );
+}
+
+function linkNeedsUpsert(
+  link: PeopleGraphLink | undefined,
+  candidate: LinkCandidate
+) {
+  if (!link) return true;
+
+  const canonical = canonicalizeCandidate(candidate);
+  if ((link.target_id || null) !== (canonical.targetId || null)) return true;
+  if ((link.target_label || null) !== (canonical.targetLabel || null)) return true;
+
+  return !hasEvidence(link, canonical.evidence.key);
+}
+
+async function loadExistingCandidateLinks({
+  userId,
+  candidates,
+}: {
+  userId: string;
+  candidates: LinkCandidate[];
+}) {
+  const personIds = Array.from(
+    new Set(candidates.map((candidate) => canonicalizeCandidate(candidate).personId))
+  );
+  const existingByKey = new Map<string, PeopleGraphLink>();
+
+  if (!userId || !personIds.length) return existingByKey;
+
+  const { data, error } = await supabaseAdmin
+    .from("people_graph_links")
+    .select(LINK_SELECT)
+    .eq("user_id", userId)
+    .in("person_id", personIds)
+    .limit(Math.max(1000, candidates.length * 2));
+
+  if (error) {
+    logLinkError("existing_read", error, {
+      userId,
+      candidateCount: candidates.length,
+      personCount: personIds.length,
+    });
+    return existingByKey;
+  }
+
+  for (const link of (data || []) as PeopleGraphLink[]) {
+    existingByKey.set(
+      [
+        link.user_id,
+        link.person_id,
+        link.target_type,
+        link.target_key,
+        link.link_type,
+      ].join("|"),
+      link
+    );
+  }
+
+  return existingByKey;
 }
 
 export async function upsertPeopleGraphLink({
@@ -373,11 +486,28 @@ async function loadLinkSources(userId: string): Promise<{
 }
 
 export async function syncPeopleGraphLinks(userId: string) {
-  if (!userId) return { linked: 0, candidates: 0, errors: ["missing_user_id"] };
+  if (!userId) {
+    return { linked: 0, candidates: 0, skipped: 0, errors: ["missing_user_id"] };
+  }
 
   const { people, sources, errors } = await loadLinkSources(userId);
-  let candidates = 0;
+  const candidates: LinkCandidate[] = [];
+  let discoveredCandidates = 0;
   let linked = 0;
+  let skipped = 0;
+  const runKeys = new Set<string>();
+
+  function addCandidate(candidate: LinkCandidate) {
+    discoveredCandidates++;
+    const runKey = candidateRunKey(candidate);
+    if (runKeys.has(runKey)) {
+      skipped++;
+      return;
+    }
+
+    runKeys.add(runKey);
+    candidates.push(canonicalizeCandidate(candidate));
+  }
 
   for (const source of sources) {
     for (const row of source.rows) {
@@ -394,48 +524,63 @@ export async function syncPeopleGraphLinks(userId: string) {
       const evidence = evidenceFor(source, row);
 
       for (const person of matches) {
-        candidates++;
         const direct = relatedTopics.has(normalizePersonName(person.name));
         const strength = edgeStrength(row, direct);
-        const result = await upsertPeopleGraphLink({
+        addCandidate({
           userId,
           personId: person.id,
           targetType: source.targetType,
           targetId,
+          targetKey: targetId,
           targetLabel: rowLabel(row),
           linkType: "mentioned_in",
           ...strength,
           evidence,
+          errorKey: `${source.targetType}:${targetId}:${person.id}`,
         });
-        if (result) linked++;
-        else errors.push(`${source.targetType}:${targetId}:${person.id}`);
       }
 
       for (let left = 0; left < matches.length; left++) {
         for (let right = left + 1; right < matches.length; right++) {
-          candidates++;
           const pair = [matches[left], matches[right]].sort((a, b) =>
             a.id.localeCompare(b.id)
           );
-          const result = await upsertPeopleGraphLink({
+          addCandidate({
             userId,
             personId: pair[0].id,
             targetType: "person",
             targetId: pair[1].id,
+            targetKey: pair[1].id,
             targetLabel: pair[1].name,
             linkType: "co_occurs_with",
             weight: 3,
             confidence: 75,
             evidence,
+            errorKey: `person:${pair[0].id}:${pair[1].id}`,
           });
-          if (result) linked++;
-          else errors.push(`person:${pair[0].id}:${pair[1].id}`);
         }
       }
     }
   }
 
-  return { linked, candidates, errors };
+  const existingByKey = await loadExistingCandidateLinks({ userId, candidates });
+  for (const candidate of candidates) {
+    const existing = existingByKey.get(candidateKey(candidate));
+    if (!linkNeedsUpsert(existing, candidate)) {
+      skipped++;
+      continue;
+    }
+
+    const result = await upsertPeopleGraphLink(candidate);
+    if (result) {
+      linked++;
+      existingByKey.set(candidateKey(candidate), result);
+    } else {
+      errors.push(candidate.errorKey);
+    }
+  }
+
+  return { linked, candidates: discoveredCandidates, skipped, errors };
 }
 
 export async function decayPeopleGraphLinks({
