@@ -5,6 +5,157 @@ export function trimBlock(s: string, max = 1100) {
   return s.length > max ? s.slice(0, max) + "\n[...]" : s;
 }
 
+function numberFromContext(context: string, key: string) {
+  const match = context.match(new RegExp(`${key}:\\s*(\\d+)`, "i"));
+  return match ? Number(match[1]) : 0;
+}
+
+function hasBehaviorRule(context: string, patterns: string[]) {
+  const lower = context.toLowerCase();
+  return patterns.some((pattern) => lower.includes(pattern));
+}
+
+function buildRuntimeBehaviorProfile({
+  profileContext,
+  mentalStateContext,
+  dynamicSelfProfileContext,
+  behaviorRulesContext,
+  cognitiveDecision,
+}: {
+  profileContext: string;
+  mentalStateContext: string;
+  dynamicSelfProfileContext: string;
+  behaviorRulesContext: string;
+  cognitiveDecision?: CognitiveDecision;
+}) {
+  const stress = numberFromContext(mentalStateContext, "stress");
+  const frustration = numberFromContext(mentalStateContext, "frustrazione");
+  const fatigue = numberFromContext(mentalStateContext, "stanchezza");
+  const focus = numberFromContext(mentalStateContext, "focus");
+  const enthusiasm = numberFromContext(mentalStateContext, "entusiasmo");
+  const control = numberFromContext(mentalStateContext, "controllo");
+  const actions = new Set(cognitiveDecision?.requestedActions || []);
+  const noAutomaticClosing = hasBehaviorRule(behaviorRulesContext, [
+    "non chiudere",
+    "domanda finale",
+    "fammi sapere",
+    "se hai altre domande",
+    "call-to-action automatiche",
+  ]);
+  const wantsCodeShape =
+    cognitiveDecision?.tone === "technical" ||
+    actions.has("project") ||
+    cognitiveDecision?.messageType === "project" ||
+    hasBehaviorRule(behaviorRulesContext, [
+      "codice",
+      "code",
+      "dove incollare",
+      "soluzione stabile",
+    ]);
+  const wantsConcise =
+    cognitiveDecision?.tone === "synthetic" ||
+    hasBehaviorRule(behaviorRulesContext, [
+      "risposte brevi",
+      "sintetico",
+      "breve",
+      "pochi fronzoli",
+    ]);
+  const correctionMode =
+    cognitiveDecision?.addressee === "ghostme" &&
+    (cognitiveDecision.persistence === "permanent" ||
+      actions.has("behavior") ||
+      actions.has("memory"));
+  const highTension = stress >= 7 || frustration >= 7 || fatigue >= 7;
+  const highFocus = focus >= 7 || control >= 7;
+
+  const tone =
+    behaviorRulesContext && hasBehaviorRule(behaviorRulesContext, ["non usare tono motivazionale"])
+      ? "concreto, sobrio, senza motivazione artificiale"
+      : highTension
+        ? "calmo, asciutto, concreto, senza entusiasmo finto"
+        : cognitiveDecision?.tone === "emotional"
+          ? "caldo ma contenuto, presente, senza psicologizzare"
+          : cognitiveDecision?.tone === "technical"
+            ? "tecnico, preciso, da architect pratico"
+            : enthusiasm >= 7
+              ? "naturale e partecipe, senza esagerare"
+              : "diretto, umano, naturale";
+  const length =
+    wantsConcise || highTension
+      ? "breve: rispondi solo con cio che serve"
+      : cognitiveDecision?.memoryDepth === "deep_recall"
+        ? "medio: abbastanza contesto, ma senza enciclopedia"
+        : "compatto: spiega il necessario";
+  const technicalLevel = wantsCodeShape
+    ? "alto: ragiona prima da architect, poi dai passi precisi e soluzione stabile"
+    : cognitiveDecision?.tone === "technical"
+      ? "medio-alto: precisione senza gergo inutile"
+      : "adeguato alla richiesta, non tecnico se non serve";
+  const emotionalLevel = highTension
+    ? "basso ma presente: niente entusiasmo finto, niente psicologia, solo aiuto concreto"
+    : cognitiveDecision?.tone === "emotional"
+      ? "medio: riconosci il tono senza farne una seduta"
+      : "leggero: non aggiungere emozioni non espresse";
+  const proactivity =
+    noAutomaticClosing || cognitiveDecision?.followUpNeed === "wait"
+      ? "minima: niente rilanci automatici e niente domanda finale"
+      : cognitiveDecision?.followUpNeed === "ask"
+        ? "mirata: una sola domanda se davvero necessaria"
+        : actions.has("proactive")
+          ? "pratica: proponi al massimo il prossimo passo utile"
+          : "contenuta: non anticipare troppo";
+  const finalQuestions = noAutomaticClosing
+    ? "vietate come chiusura automatica; concludi naturalmente"
+    : cognitiveDecision?.followUpNeed === "ask"
+      ? "ammesse solo se servono davvero"
+      : "evitale se non aggiungono valore";
+  const explanationStyle = wantsCodeShape
+    ? "per codice/progetto: problema, causa, modifica, verifica; evita micro-patch inutili"
+    : highFocus
+      ? "ordinato e operativo: checklist breve quando aiuta"
+      : "naturale: non elencare se una frase basta";
+  const correctionStyle = correctionMode
+    ? "se l'utente corregge GhostMe, riconosci la correzione, applicala subito e non difenderti"
+    : "se emerge una correzione stabile, rispettala senza trasformarla in discorso meta";
+
+  return `
+PROFILO COMPORTAMENTALE ATTUALE DI GHOSTME
+
+Questa sezione decide come GhostMe si pone in questa risposta.
+Non e una nuova personalita: e l'adattamento runtime dell'identita stabile.
+
+Priorita operative:
+1. Regole comportamentali attive dell'utente, soprattutto boundary/chat.
+2. Decisione Cognitiva sul messaggio.
+3. Stato mentale recente come influenza di tono, senza inventare emozioni.
+4. Profilo utente e profilo dinamico come contesto leggero.
+5. Identity operativa generale.
+
+Scelte runtime:
+- Tono operativo scelto: ${tone}.
+- Lunghezza: ${length}.
+- Livello tecnico: ${technicalLevel}.
+- Livello emotivo: ${emotionalLevel}.
+- Proattivita: ${proactivity}.
+- Domande finali: ${finalQuestions}.
+- Modo di spiegare: ${explanationStyle}.
+- Modo di gestire correzioni: ${correctionStyle}.
+
+Fattori che hanno influenzato il comportamento:
+- Behavior rules: ${behaviorRulesContext ? "presenti e prioritarie" : "nessuna regola attiva specifica"}.
+- CognitiveDecision: tono ${cognitiveDecision?.tone || "non specificato"}, follow-up ${cognitiveDecision?.followUpNeed || "non specificato"}, profondita ${cognitiveDecision?.memoryDepth || "non specificata"}.
+- Mental state: stress ${stress}, frustrazione ${frustration}, stanchezza ${fatigue}, focus ${focus}, controllo ${control}.
+- Profilo dinamico: ${dynamicSelfProfileContext ? "disponibile, usalo solo se non contraddice regole esplicite" : "non disponibile"}.
+- Profilo utente: ${profileContext ? "disponibile come contesto di stile leggero" : "non disponibile"}.
+
+Vincoli:
+- Non creare azioni persistenti da solo.
+- Non cambiare personalita in modo casuale.
+- Non usare entusiasmo artificiale.
+- Non chiudere con formule automatiche se le regole utente lo vietano.
+`.trim();
+}
+
 function buildIdentityDirective(cognitiveDecision?: CognitiveDecision) {
   if (!cognitiveDecision) {
     return `
@@ -146,6 +297,13 @@ export function buildSystemPrompt({
   cognitiveDecision?: CognitiveDecision;
 }) {
   const identityDirective = buildIdentityDirective(cognitiveDecision);
+  const runtimeBehaviorProfile = buildRuntimeBehaviorProfile({
+    profileContext,
+    mentalStateContext,
+    dynamicSelfProfileContext,
+    behaviorRulesContext,
+    cognitiveDecision,
+  });
 
   return `
 Sei GhostMe.
@@ -216,6 +374,8 @@ Regola di precedenza comportamentale:
 - Le regole comportamentali attive sono vincolanti quando riguardano la chat o lo stile della risposta.
 - Se una regola utente contraddice IDENTITA OPERATIVA, proattivita, curiosity, osservazioni o domande, segui la regola utente.
 - Le regole boundary in area chat hanno priorita massima sulle chiusure di cortesia e sulle domande finali.
+
+${runtimeBehaviorProfile}
 
 IDENTITA OPERATIVA DI GHOSTME:
 ${identityDirective}
