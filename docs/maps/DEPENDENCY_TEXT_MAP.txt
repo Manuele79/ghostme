@@ -1,6 +1,6 @@
 # DEPENDENCY TEXT MAP
 
-Generated: 2026-06-27T02:12:21.058Z
+Generated: 2026-06-27T23:45:10.263Z
 
 ## Chi chiama chi
 
@@ -335,6 +335,7 @@ lib/ghostme/homeAssistant/houseSuggestionEngine.ts -> lib/supabaseAdmin.ts
 lib/ghostme/location/haLocationBridgeFlow.ts -> lib/ghostme/homeAssistant/haClient.ts
 lib/ghostme/location/haLocationBridgeFlow.ts -> lib/ghostme/homeAssistant/homeAssistantAccess.ts
 lib/ghostme/location/haLocationBridgeFlow.ts -> lib/ghostme/location/locationStateFreshness.ts
+lib/ghostme/location/haLocationBridgeFlow.ts -> lib/ghostme/observation/observationEngine.ts
 lib/ghostme/location/haLocationBridgeFlow.ts -> lib/supabaseAdmin.ts
 lib/ghostme/location/locationCurrentStateFlow.ts -> lib/ghostme/location/locationStateFreshness.ts
 lib/ghostme/location/locationCurrentStateFlow.ts -> lib/supabaseAdmin.ts
@@ -392,6 +393,7 @@ lib/ghostme/proactive/proactiveCandidateBuilder.ts -> lib/ghostme/observation/ob
 lib/ghostme/proactive/proactiveCandidateBuilder.ts -> lib/ghostme/patterns/patternDecay.ts
 lib/ghostme/proactive/proactiveCandidateBuilder.ts -> lib/ghostme/patterns/patternInsightEngine.ts
 lib/ghostme/proactive/proactiveCandidateBuilder.ts -> lib/ghostme/proactive/proactiveDecisionEngine.ts
+lib/ghostme/proactive/proactiveCandidateBuilder.ts -> lib/supabaseAdmin.ts
 lib/ghostme/proactive/proactiveCandidateRanker.ts -> lib/ghostme/proactive/proactiveMessageDedupe.ts
 lib/ghostme/proactive/proactiveCardLifecycle.ts -> -
 lib/ghostme/proactive/proactiveDecisionEngine.ts -> node_modules/openai/index.d.ts
@@ -481,6 +483,8 @@ scripts/generate-graphs.mjs -> path
 scripts/generate-graphs.mjs -> url
 scripts/project-audit.mjs -> fs
 scripts/project-audit.mjs -> path
+scripts/supabase-schema-map.mjs -> fs
+scripts/supabase-schema-map.mjs -> path
 scripts/system-docs.mjs -> fs
 scripts/system-docs.mjs -> path
 url -> -

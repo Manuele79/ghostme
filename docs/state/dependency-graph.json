@@ -4477,6 +4477,26 @@
           "matchesDoNotFollow": false,
           "circular": false,
           "valid": true
+        },
+        {
+          "module": "@/lib/supabaseAdmin",
+          "moduleSystem": "es6",
+          "dynamic": false,
+          "exoticallyRequired": false,
+          "dependencyTypes": [
+            "aliased",
+            "aliased-tsconfig",
+            "aliased-tsconfig-paths",
+            "local",
+            "import"
+          ],
+          "resolved": "lib/supabaseAdmin.ts",
+          "coreModule": false,
+          "followable": true,
+          "couldNotResolve": false,
+          "matchesDoNotFollow": false,
+          "circular": false,
+          "valid": true
         }
       ],
       "orphan": false,
@@ -7683,6 +7703,26 @@
           "valid": true
         },
         {
+          "module": "@/lib/ghostme/observation/observationEngine",
+          "moduleSystem": "es6",
+          "dynamic": false,
+          "exoticallyRequired": false,
+          "dependencyTypes": [
+            "aliased",
+            "aliased-tsconfig",
+            "aliased-tsconfig-paths",
+            "local",
+            "import"
+          ],
+          "resolved": "lib/ghostme/observation/observationEngine.ts",
+          "coreModule": false,
+          "followable": true,
+          "couldNotResolve": false,
+          "matchesDoNotFollow": false,
+          "circular": false,
+          "valid": true
+        },
+        {
           "module": "@/lib/supabaseAdmin",
           "moduleSystem": "es6",
           "dynamic": false,
@@ -9684,6 +9724,47 @@
       "valid": true
     },
     {
+      "source": "scripts/supabase-schema-map.mjs",
+      "dependencies": [
+        {
+          "module": "fs",
+          "moduleSystem": "es6",
+          "dynamic": false,
+          "exoticallyRequired": false,
+          "dependencyTypes": [
+            "core",
+            "import"
+          ],
+          "resolved": "fs",
+          "coreModule": true,
+          "followable": false,
+          "couldNotResolve": false,
+          "matchesDoNotFollow": false,
+          "circular": false,
+          "valid": true
+        },
+        {
+          "module": "path",
+          "moduleSystem": "es6",
+          "dynamic": false,
+          "exoticallyRequired": false,
+          "dependencyTypes": [
+            "core",
+            "import"
+          ],
+          "resolved": "path",
+          "coreModule": true,
+          "followable": false,
+          "couldNotResolve": false,
+          "matchesDoNotFollow": false,
+          "circular": false,
+          "valid": true
+        }
+      ],
+      "orphan": false,
+      "valid": true
+    },
+    {
       "source": "scripts/system-docs.mjs",
       "dependencies": [
         {
@@ -9770,8 +9851,8 @@
     "warn": 4,
     "info": 0,
     "ignore": 0,
-    "totalCruised": 184,
-    "totalDependenciesCruised": 433,
+    "totalCruised": 185,
+    "totalDependenciesCruised": 437,
     "optionsUsed": {
       "baseDir": "C:\\Users\\Manuele\\Documents\\ghostme",
       "combinedDependencies": false,

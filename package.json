@@ -13,7 +13,8 @@
     "graph:all": "node scripts/generate-graphs.mjs",
     "system:docs": "node scripts/system-docs.mjs",
     "audit:all": "npm run audit && npm run db:map && npm run file:map && npm run graph:all && npm run system:docs",
-    "refresh": "npm run audit:all"
+    "schema:map": "node scripts/supabase-schema-map.mjs",
+    "refresh": "npm run audit:all && npm run schema:map"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.105.4",

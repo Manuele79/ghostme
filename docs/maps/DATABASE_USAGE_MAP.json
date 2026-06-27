@@ -518,6 +518,7 @@
     "table": "observation_events",
     "readers": [
       "lib/ghostme/observation/observationEngine.ts",
+      "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
       "lib/ghostme/situation/situationEngine.ts"
     ],
     "writers": [
@@ -574,11 +575,13 @@
     "table": "significant_places",
     "readers": [
       "lib/ghostme/context/userContextGraph.ts",
+      "lib/ghostme/location/haLocationBridgeFlow.ts",
       "lib/ghostme/location/placeService.ts",
       "lib/ghostme/observation/observationEngine.ts",
       "lib/ghostme/proactive/dailyBriefingRepository.ts"
     ],
     "writers": [
+      "lib/ghostme/location/haLocationBridgeFlow.ts",
       "lib/ghostme/location/placeService.ts"
     ],
     "updaters": [

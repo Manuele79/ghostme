@@ -44,11 +44,11 @@ Mappa statica generata dal codice locale.
 | memories | unused | 0 | 0 | 0 | 0 | 0 |
 | memories_active | alive | 12 | 4 | 3 | 2 | 0 |
 | mental_states | alive | 3 | 1 | 1 | 0 | 0 |
-| observation_events | alive | 2 | 1 | 1 | 0 | 0 |
+| observation_events | alive | 3 | 1 | 1 | 0 | 0 |
 | people_graph | alive | 4 | 1 | 1 | 0 | 0 |
 | people_graph_links | alive | 1 | 0 | 1 | 0 | 0 |
 | questions | unused | 0 | 0 | 0 | 0 | 0 |
-| significant_places | alive | 4 | 1 | 1 | 1 | 0 |
+| significant_places | alive | 5 | 2 | 1 | 1 | 0 |
 | topic_links | alive | 5 | 1 | 1 | 0 | 0 |
 | traits | alive | 3 | 1 | 0 | 1 | 0 |
 | triggers | unused | 0 | 0 | 0 | 0 | 0 |
@@ -411,7 +411,7 @@ Raw users: -
 
 Stato: **alive**
 
-Readers: lib/ghostme/observation/observationEngine.ts, lib/ghostme/situation/situationEngine.ts
+Readers: lib/ghostme/observation/observationEngine.ts, lib/ghostme/proactive/proactiveCandidateBuilder.ts, lib/ghostme/situation/situationEngine.ts
 
 Writers: lib/ghostme/observation/observationEngine.ts
 
@@ -467,9 +467,9 @@ Raw users: -
 
 Stato: **alive**
 
-Readers: lib/ghostme/context/userContextGraph.ts, lib/ghostme/location/placeService.ts, lib/ghostme/observation/observationEngine.ts, lib/ghostme/proactive/dailyBriefingRepository.ts
+Readers: lib/ghostme/context/userContextGraph.ts, lib/ghostme/location/haLocationBridgeFlow.ts, lib/ghostme/location/placeService.ts, lib/ghostme/observation/observationEngine.ts, lib/ghostme/proactive/dailyBriefingRepository.ts
 
-Writers: lib/ghostme/location/placeService.ts
+Writers: lib/ghostme/location/haLocationBridgeFlow.ts, lib/ghostme/location/placeService.ts
 
 Updaters: lib/ghostme/location/placeService.ts
 

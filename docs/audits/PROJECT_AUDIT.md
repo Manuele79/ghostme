@@ -1,10 +1,10 @@
 # PROJECT AUDIT FULL
 
-Generato: 2026-06-27T02:12:18.610Z
+Generato: 2026-06-27T23:45:07.755Z
 
 # 1. RIASSUNTO
 
-- File analizzati: 174
+- File analizzati: 175
 - Cartelle: 64
 - API routes: 28
 - Tabelle Supabase usate: 31
@@ -380,6 +380,7 @@ Generato: 2026-06-27T02:12:18.610Z
 - scripts/file-usage-map.mjs
 - scripts/generate-graphs.mjs
 - scripts/project-audit.mjs
+- scripts/supabase-schema-map.mjs
 - scripts/system-docs.mjs
 
 ---
@@ -1047,6 +1048,7 @@ Chiamata da:
 
 ### Read
 - lib/ghostme/observation/observationEngine.ts
+- lib/ghostme/proactive/proactiveCandidateBuilder.ts
 - lib/ghostme/situation/situationEngine.ts
 
 ### Insert
@@ -1102,6 +1104,7 @@ Chiamata da:
 
 ### Read
 - lib/ghostme/context/userContextGraph.ts
+- lib/ghostme/location/haLocationBridgeFlow.ts
 - lib/ghostme/location/placeService.ts
 - lib/ghostme/observation/observationEngine.ts
 - lib/ghostme/proactive/dailyBriefingRepository.ts
@@ -1113,7 +1116,7 @@ Chiamata da:
 - lib/ghostme/location/placeService.ts
 
 ### Upsert
-- nessuno
+- lib/ghostme/location/haLocationBridgeFlow.ts
 
 ### Delete
 - lib/ghostme/location/locationDeletePlaceFlow.ts
@@ -1972,7 +1975,7 @@ Righe: 320
 
 ## components/ghost/GhostChat.tsx
 
-Righe: 338
+Righe: 389
 
 ### Importa
 - react
@@ -2013,7 +2016,7 @@ Righe: 172
 
 ## components/ghost/GhostDrawers.tsx
 
-Righe: 2214
+Righe: 2243
 
 ### Importa
 - components/ghost/types.ts
@@ -2127,7 +2130,7 @@ Righe: 153
 
 ## components/ghost/types.ts
 
-Righe: 81
+Righe: 89
 
 ### Importa
 - lib/ghostme/context/reasoningService.ts
@@ -2379,7 +2382,7 @@ Righe: 152
 
 ## lib/ghostme/behavior/behaviorRulesEngine.ts
 
-Righe: 225
+Righe: 381
 
 ### Importa
 - lib/supabaseAdmin.ts
@@ -2395,6 +2398,7 @@ Righe: 225
 - nessuno
 
 ### Export
+- isNoAutomaticClosingRule
 - getActiveBehaviorRules
 - saveBehaviorRule
 - buildBehaviorPrompt
@@ -2499,7 +2503,7 @@ Righe: 105
 
 ## lib/ghostme/chat/chatContextBuilder.ts
 
-Righe: 450
+Righe: 451
 
 ### Importa
 - lib/ghostme/behavior/behaviorRulesEngine.ts
@@ -2605,7 +2609,7 @@ Righe: 531
 
 ## lib/ghostme/chat/chatPromptBuilder.ts
 
-Righe: 358
+Righe: 541
 
 ### Importa
 - lib/ghostme/chat/chatTypes.ts
@@ -2718,7 +2722,7 @@ Righe: 172
 
 ## lib/ghostme/context/contextBuilder.ts
 
-Righe: 296
+Righe: 308
 
 ### Importa
 - lib/supabaseAdmin.ts
@@ -2791,7 +2795,7 @@ Righe: 701
 
 ## lib/ghostme/context/reasoningService.ts
 
-Righe: 879
+Righe: 975
 
 ### Importa
 - lib/ghostme/context/contextSignals.ts
@@ -3670,13 +3674,14 @@ Righe: 194
 
 ## lib/ghostme/location/haLocationBridgeFlow.ts
 
-Righe: 143
+Righe: 186
 
 ### Importa
 - lib/supabaseAdmin.ts
 - lib/ghostme/homeAssistant/haClient.ts
 - lib/ghostme/homeAssistant/homeAssistantAccess.ts
 - lib/ghostme/location/locationStateFreshness.ts
+- lib/ghostme/observation/observationEngine.ts
 
 ### Importato da
 - lib/ghostme/home/houseWorkerFlow.ts
@@ -3689,6 +3694,7 @@ Righe: 143
 
 ### Tabelle
 - user_location_state: select, upsert
+- significant_places: select, upsert
 
 ## lib/ghostme/location/locationCurrentStateFlow.ts
 
@@ -3987,7 +3993,7 @@ Righe: 93
 
 ## lib/ghostme/mentalState.ts
 
-Righe: 212
+Righe: 330
 
 ### Importa
 - openai
@@ -4014,6 +4020,7 @@ Righe: 712
 - lib/ghostme/observation/observationPolicy.ts
 
 ### Importato da
+- lib/ghostme/location/haLocationBridgeFlow.ts
 - lib/ghostme/location/locationLearningFlow.ts
 - lib/ghostme/location/locationUpdateFlow.ts
 
@@ -4117,7 +4124,7 @@ Righe: 78
 
 ## lib/ghostme/people/peopleGraphLinkService.ts
 
-Righe: 487
+Righe: 632
 
 ### Importa
 - lib/supabaseAdmin.ts
@@ -4280,7 +4287,7 @@ Righe: 154
 
 ## lib/ghostme/proactive/dailyBriefingBuilder.ts
 
-Righe: 130
+Righe: 163
 
 ### Importa
 - openai
@@ -4299,7 +4306,7 @@ Righe: 130
 
 ## lib/ghostme/proactive/dailyBriefingRepository.ts
 
-Righe: 173
+Righe: 181
 
 ### Importa
 - lib/supabaseAdmin.ts
@@ -4331,7 +4338,7 @@ Righe: 173
 
 ## lib/ghostme/proactive/proactiveCandidateBuilder.ts
 
-Righe: 283
+Righe: 558
 
 ### Importa
 - lib/ghostme/context/reasoningService.ts
@@ -4343,6 +4350,7 @@ Righe: 283
 - lib/ghostme/patterns/patternInsightEngine.ts
 - lib/ghostme/patterns/patternDecay.ts
 - lib/ghostme/butler/butlerEngine.ts
+- lib/supabaseAdmin.ts
 
 ### Importato da
 - lib/ghostme/proactive/proactiveUserFlow.ts
@@ -4351,14 +4359,15 @@ Righe: 283
 - nessuno
 
 ### Export
+- buildContinuityCandidate
 - buildProactiveCandidatesForUser
 
 ### Tabelle
-- nessuna
+- observation_events: select
 
 ## lib/ghostme/proactive/proactiveCandidateRanker.ts
 
-Righe: 17
+Righe: 19
 
 ### Importa
 - lib/ghostme/proactive/proactiveMessageDedupe.ts
@@ -4475,7 +4484,7 @@ Righe: 45
 
 ## lib/ghostme/proactive/proactiveMessageService.ts
 
-Righe: 201
+Righe: 231
 
 ### Importa
 - lib/supabaseAdmin.ts
@@ -4530,7 +4539,7 @@ Righe: 82
 
 ## lib/ghostme/proactive/proactiveUserFlow.ts
 
-Righe: 229
+Righe: 312
 
 ### Importa
 - lib/ghostme/proactive/proactiveMessageService.ts
@@ -4556,6 +4565,7 @@ Righe: 229
 ### Export
 - runProactiveFlowForUser
 - runAppOpenProactiveLifecycle
+- runAppOpenContinuityLifecycle
 
 ### Tabelle
 - ghost_proactive_messages: select

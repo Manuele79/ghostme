@@ -1,6 +1,6 @@
 # GHOSTME SYSTEM MAP V6
 
-Generato automaticamente: 2026-06-27T02:12:37.927Z
+Generato automaticamente: 2026-06-27T23:45:25.851Z
 
 ## Inventario
 
@@ -3039,14 +3039,17 @@ Chi chiama:
 - lib/ghostme/homeAssistant/haClient.ts
 - lib/ghostme/homeAssistant/homeAssistantAccess.ts
 - lib/ghostme/location/locationStateFreshness.ts
+- lib/ghostme/observation/observationEngine.ts
 - lib/supabaseAdmin.ts
 
 Tabelle usate:
+- significant_places (read)
+- significant_places (write)
 - user_location_state (read)
 - user_location_state (write)
 
 Engine collegati:
-- nessuno
+- lib/ghostme/observation/observationEngine.ts
 
 Snapshot collegati:
 - nessuno
@@ -3418,6 +3421,7 @@ Stato: **ATTIVO**
 Responsabilita: Calcola decisioni, insight o trasformazioni cognitive. Area: lib/ghostme/observation. Modulo: observationEngine.
 
 Chi lo chiama:
+- lib/ghostme/location/haLocationBridgeFlow.ts
 - lib/ghostme/location/locationLearningFlow.ts
 - lib/ghostme/location/locationUpdateFlow.ts
 
@@ -3804,9 +3808,10 @@ Chi chiama:
 - lib/ghostme/patterns/patternDecay.ts
 - lib/ghostme/patterns/patternInsightEngine.ts
 - lib/ghostme/proactive/proactiveDecisionEngine.ts
+- lib/supabaseAdmin.ts
 
 Tabelle usate:
-- nessuno
+- observation_events (read)
 
 Engine collegati:
 - lib/ghostme/agenda/agendaEngine.ts
@@ -4682,6 +4687,7 @@ Chi lo chiama:
 - lib/ghostme/people/peopleSnapshot.ts
 - lib/ghostme/proactive/curiosityCardWriter.ts
 - lib/ghostme/proactive/dailyBriefingRepository.ts
+- lib/ghostme/proactive/proactiveCandidateBuilder.ts
 - lib/ghostme/proactive/proactiveMessageService.ts
 - lib/ghostme/proactive/proactiveTrigger.ts
 - lib/ghostme/proactive/proactiveUserFlow.ts
