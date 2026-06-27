@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import {
@@ -11,6 +11,7 @@ import {
 import {
   GhostMode,
   modeLabels,
+  PendingProactiveReply,
   ProactiveMessage,
 } from "@/components/ghost/types";
 
@@ -33,6 +34,22 @@ import {
 
 const GPS_HEARTBEAT_MS = 15 * 60 * 1000;
 const GPS_SIGNIFICANT_MOVEMENT_METERS = 100;
+
+function proactiveReplyTitle(message: {
+  title?: string | null;
+  message?: string | null;
+  category?: string | null;
+}) {
+  if (message.title?.trim()) return message.title.trim();
+  if (message.category === "curiosity") return "Curiosita GhostMe";
+  if (message.category === "daily_briefing") return "Daily Briefing";
+  if (message.category === "home_question") return "Domanda Casa";
+  if (message.category === "suggestion") return "Suggerimento GhostMe";
+  if (message.category === "observation") return "Osservazione GhostMe";
+
+  const fallback = message.message?.trim().replace(/\s+/g, " ") || "Card GhostMe";
+  return fallback.length > 54 ? `${fallback.slice(0, 54)}...` : fallback;
+}
 
 function gpsDistanceMeters(
   first: { latitude: number; longitude: number },
@@ -70,9 +87,12 @@ export default function ChatPage() {
   const [pendingProactiveReplyId, setPendingProactiveReplyId] = useState<
     string | null
   >(null);
+  const [pendingProactiveReply, setPendingProactiveReply] =
+    useState<PendingProactiveReply | null>(null);
   const [pendingLocationCard, setPendingLocationCard] = useState<
     Pick<ProactiveMessage, "id" | "message" | "logical_key"> | null
   >(null);
+  const chatFocusRef = useRef<HTMLDivElement | null>(null);
 
   const [activeMemoryTab, setActiveMemoryTab] = useState<
     "memory" | "timeline" | "goals" | "state"
@@ -640,6 +660,7 @@ export default function ChatPage() {
     if (pendingProactiveReplyId) {
       const answeredMessageId = pendingProactiveReplyId;
       setPendingProactiveReplyId(null);
+      setPendingProactiveReply(null);
       await markProactiveMessage(answeredMessageId, "answered");
     }
   } catch (err) {
@@ -661,7 +682,11 @@ export default function ChatPage() {
   function replyToProactiveMessage(
     message: string,
     messageId?: string,
-    logicalKey?: string | null
+    logicalKey?: string | null,
+    meta?: {
+      title?: string | null;
+      category?: string | null;
+    }
   ) {
     if (messageId && String(logicalKey || "").startsWith("location_candidate_")) {
       setPendingLocationCard({ id: messageId, message, logical_key: logicalKey });
@@ -672,21 +697,45 @@ export default function ChatPage() {
 
     if (messageId) {
       setPendingProactiveReplyId(messageId);
+      setPendingProactiveReply({
+        id: messageId,
+        title: proactiveReplyTitle({
+          title: meta?.title,
+          message,
+          category: meta?.category,
+        }),
+        message,
+        category: meta?.category,
+        logical_key: logicalKey,
+      });
     }
 
-    setInput(
-      `Sto rispondendo alla tua osservazione:\n\n"${message}"\n\nRisposta: `
-    );
+    setInput((currentInput) => currentInput || "");
 
     setServicesOpen(false);
+    setMemoryOpen(false);
+
+    window.setTimeout(() => {
+      chatFocusRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "end",
+      });
+      const inputEl = chatFocusRef.current?.querySelector("textarea");
+      inputEl?.focus();
+    }, 80);
   }
 
   function replyToProactiveCard(message: {
     id: string;
+    title?: string | null;
     message: string;
+    category?: string | null;
     logical_key?: string | null;
   }) {
-    replyToProactiveMessage(message.message, message.id, message.logical_key);
+    replyToProactiveMessage(message.message, message.id, message.logical_key, {
+      title: message.title,
+      category: message.category,
+    });
   }
 
   async function logout() {
@@ -783,6 +832,7 @@ export default function ChatPage() {
           />
         ) : (
           <GhostChat
+            focusRef={chatFocusRef}
             mode={mode}
             voiceState={voiceState}
             micEnabled={micEnabled}
@@ -799,6 +849,11 @@ export default function ChatPage() {
             proactiveMessages={brainData.proactiveMessages}
             onProactiveSeen={markProactiveAsRead}
             onProactiveReply={replyToProactiveCard}
+            pendingProactiveReply={pendingProactiveReply}
+            onCancelProactiveReply={() => {
+              setPendingProactiveReplyId(null);
+              setPendingProactiveReply(null);
+            }}
             onReminderDone={markReminderAsDone}
             userName={userName}
             openHistory={() => setHistoryOpen(true)}

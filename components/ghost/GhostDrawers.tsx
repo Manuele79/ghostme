@@ -33,6 +33,21 @@ function readableHomeTitle(item: Record<string, unknown>) {
   ).replaceAll("_", " ");
 }
 
+function proactiveReplyButtonLabel(category?: string | null) {
+  if (category === "curiosity") return "Rispondi in chat";
+  if (category === "daily_briefing") return "Apri in chat";
+  if (
+    category === "observation" ||
+    category === "suggestion" ||
+    category === "home_question" ||
+    category === "situation_question"
+  ) {
+    return "Commenta in chat";
+  }
+
+  return "Rispondi in chat";
+}
+
 
 
 export function MemoryDrawer({
@@ -166,7 +181,12 @@ export function ServicesDrawer ({
   refreshBrain: (userId: string) => Promise<void>;
   currentUserId: string;
   logout: () => void;
-  onReplyObservation: (message: string, messageId?: string, logicalKey?: string | null) => void;
+  onReplyObservation: (
+    message: string,
+    messageId?: string,
+    logicalKey?: string | null,
+    meta?: { title?: string | null; category?: string | null }
+  ) => void;
   pendingLocationCard?: { id: string; message: string; logical_key?: string | null } | null;
   onLocationCandidateHandled?: (messageId: string) => void;
 }) {
@@ -315,7 +335,12 @@ function ServicePanelContent({
   calendarEvents: CalendarEvent[];
   refreshBrain: (userId: string) => Promise<void>;
   currentUserId: string;
-  onReplyObservation: (message: string, messageId?: string, logicalKey?: string | null) => void;
+  onReplyObservation: (
+    message: string,
+    messageId?: string,
+    logicalKey?: string | null,
+    meta?: { title?: string | null; category?: string | null }
+  ) => void;
   pendingLocationCard?: { id: string; message: string; logical_key?: string | null } | null;
   onLocationCandidateHandled?: (messageId: string) => void;
 }) {
@@ -888,12 +913,16 @@ async function saveLocationCandidate() {
                         onReplyObservation(
                           item.message || "",
                           item.id,
-                          item.logical_key
+                          item.logical_key,
+                          {
+                            title: item.title,
+                            category: item.category,
+                          }
                         );
                       }}
-                      className="rounded-xl border border-cyan-400/30 px-3 py-2 text-xs font-bold text-cyan-300"
+                      className="rounded-xl border border-cyan-400/40 bg-cyan-400/10 px-3 py-2 text-xs font-bold text-cyan-200 hover:bg-cyan-400/20"
                     >
-                      Rispondi
+                      {proactiveReplyButtonLabel(item.category)}
                     </button>
                   ) : null}
                   <button

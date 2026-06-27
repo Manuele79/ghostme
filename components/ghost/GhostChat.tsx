@@ -1,8 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { RefObject, useState } from "react";
 import { getAuthenticatedJsonHeaders } from "@/lib/ghostme/auth/clientAuthHeaders";
-import { GhostMode, VoiceState, ProactiveMessage } from "./types";
+import {
+  GhostMode,
+  PendingProactiveReply,
+  VoiceState,
+  ProactiveMessage,
+} from "./types";
 
 type ProactiveCard = Pick<
   ProactiveMessage,
@@ -10,6 +15,7 @@ type ProactiveCard = Pick<
 >;
 
 export default function GhostChat({
+  focusRef,
   mode,
   voiceState,
   micEnabled,
@@ -26,10 +32,13 @@ export default function GhostChat({
   proactiveMessages,
   onProactiveSeen,
   onProactiveReply,
+  pendingProactiveReply,
+  onCancelProactiveReply,
   onReminderDone,
   userName,
   openHistory,
 }: {
+  focusRef?: RefObject<HTMLDivElement | null>;
   mode: GhostMode;
   voiceState: VoiceState;
   micEnabled: boolean;
@@ -52,6 +61,8 @@ export default function GhostChat({
   proactiveMessages?: ProactiveCard[];
   onProactiveSeen?: (messageId?: string) => void;
   onProactiveReply?: (message: ProactiveCard) => void;
+  pendingProactiveReply?: PendingProactiveReply | null;
+  onCancelProactiveReply?: () => void;
   onReminderDone?: (messageId?: string) => void;
   userName: string;
   openHistory: () => void;
@@ -63,9 +74,9 @@ export default function GhostChat({
         ? [proactiveMessage]
         : [];
 
- function replyToProactive(message: ProactiveCard) {
-  onProactiveReply?.(message);
-}      
+  function replyToProactive(message: ProactiveCard) {
+    onProactiveReply?.(message);
+  }
 
 
   const [answeredHomeMessages, setAnsweredHomeMessages] = useState<Record<string, string>>({});
@@ -89,7 +100,10 @@ export default function GhostChat({
   }        
 
   return (
-    <section className="relative mx-auto mt-8 flex w-full max-w-4xl flex-1 flex-col justify-end">
+    <section
+      ref={focusRef}
+      className="relative mx-auto mt-8 flex w-full max-w-4xl flex-1 flex-col justify-end"
+    >
       <div className="relative z-10 flex min-h-[42vh] flex-col justify-end gap-5 pb-5">
         {visibleProactiveMessages.length > 0 && (
           <div className="mx-auto mb-4 flex w-full max-w-3xl flex-col gap-3">
@@ -124,9 +138,9 @@ export default function GhostChat({
               <div className="mt-4">
                 <button
                   onClick={() => replyToProactive(message)}
-                  className="rounded-2xl border border-cyan-400/40 px-4 py-2 text-xs font-black text-cyan-200 hover:bg-cyan-400/10"
+                  className="w-full rounded-2xl border border-cyan-400/50 bg-cyan-400/10 px-4 py-3 text-xs font-black text-cyan-100 shadow-[0_0_18px_rgba(34,211,238,0.12)] transition hover:bg-cyan-400/20 sm:w-auto sm:py-2"
                 >
-                  Rispondi
+                  {getProactiveReplyLabel(message.category)}
                 </button>
               </div>
             )}              
@@ -233,6 +247,24 @@ export default function GhostChat({
       </button>
 
       <div className="relative z-20 rounded-[1.6rem] border border-cyan-400/10 bg-black/60 p-2 backdrop-blur-md">
+        {pendingProactiveReply && (
+          <div className="mb-2 flex flex-col gap-2 rounded-2xl border border-cyan-400/25 bg-cyan-400/10 px-3 py-2 text-xs text-cyan-100 sm:flex-row sm:items-center sm:justify-between">
+            <span>
+              <span className="font-black text-cyan-200">
+                Risposta alla card:
+              </span>{" "}
+              {pendingProactiveReply.title}
+            </span>
+
+            <button
+              onClick={onCancelProactiveReply}
+              className="self-start rounded-xl border border-cyan-400/25 px-2 py-1 font-bold text-cyan-200 hover:bg-cyan-400/10 sm:self-auto"
+            >
+              Annulla
+            </button>
+          </div>
+        )}
+
         <div className="flex gap-2">
           <button
             onClick={cycleMode}
@@ -261,7 +293,11 @@ export default function GhostChat({
                 sendMessage();
               }
             }}
-            placeholder="Scrivi qualcosa..."
+            placeholder={
+              pendingProactiveReply
+                ? "Scrivi qui la risposta alla card..."
+                : "Scrivi qualcosa..."
+            }
             className="h-16 flex-1 resize-none rounded-2xl border border-zinc-800 bg-zinc-950/90 p-4 text-white outline-none placeholder:text-zinc-600 focus:border-cyan-400"
           />
 
@@ -304,6 +340,21 @@ function getProactiveLabel(category?: string | null) {
   if (category === "situation_question") return "Domanda Situazione";
 
   return "GhostMe";
+}
+
+function getProactiveReplyLabel(category?: string | null) {
+  if (category === "curiosity") return "Rispondi in chat";
+  if (category === "daily_briefing") return "Apri in chat";
+  if (
+    category === "observation" ||
+    category === "suggestion" ||
+    category === "home_question" ||
+    category === "situation_question"
+  ) {
+    return "Commenta in chat";
+  }
+
+  return "Rispondi in chat";
 }
 
 function ChatBubble({
