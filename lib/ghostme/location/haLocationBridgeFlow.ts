@@ -5,6 +5,10 @@ import {
   getHomeAssistantPersonForUser,
 } from "@/lib/ghostme/homeAssistant/homeAssistantAccess";
 import { classifyLocationState } from "@/lib/ghostme/location/locationStateFreshness";
+import {
+  analyzeLocationPatterns,
+  recordObservation,
+} from "@/lib/ghostme/observation/observationEngine";
 
 type HAState = {
   entity_id: string;
@@ -95,7 +99,7 @@ export async function bridgeHomeAssistantLocationFlow({
 
   const { data: currentState } = await supabaseAdmin
     .from("user_location_state")
-    .select("source, current_place_label, place_category, updated_at, last_changed_at")
+    .select("source, current_place_id, current_place_label, place_category, updated_at, last_changed_at")
     .eq("user_id", userId)
     .maybeSingle();
   const currentSource = clean(currentState?.source);
@@ -110,17 +114,35 @@ export async function bridgeHomeAssistantLocationFlow({
     };
   }
 
+  const { data: homePlace } = await supabaseAdmin
+    .from("significant_places")
+    .select("id, label, category, address")
+    .eq("user_id", userId)
+    .neq("status", "archived")
+    .or("label.ilike.Casa,category.eq.home")
+    .limit(1)
+    .maybeSingle();
+  const previousPlace = currentState?.current_place_label || null;
+  const previousPlaceId = currentState?.current_place_id || null;
+  const nextPlace = homePlace?.label || "Casa";
+  const placeChanged =
+    previousPlace !== nextPlace || previousPlaceId !== (homePlace?.id || null);
+
   const { error } = await supabaseAdmin
     .from("user_location_state")
     .upsert(
       {
         user_id: userId,
-        current_place_label: "Casa",
-        place_category: "home",
+        current_place_id: homePlace?.id || null,
+        current_place_label: nextPlace,
+        place_category: homePlace?.category || "home",
+        address: homePlace?.address || null,
         source: "home_assistant",
         confidence: 90,
         updated_at: now,
-        last_changed_at: now,
+        last_changed_at: placeChanged
+          ? now
+          : currentState?.last_changed_at || now,
       },
       { onConflict: "user_id" }
     );
@@ -132,6 +154,27 @@ export async function bridgeHomeAssistantLocationFlow({
       reason: "update_failed",
       source: "home_assistant",
     };
+  }
+
+  if (placeChanged) {
+    await recordObservation({
+      userId,
+      eventType: "home_arrived",
+      source: "home_assistant",
+      placeLabel: nextPlace,
+      placeId: homePlace?.id || null,
+      value: {
+        from: previousPlace,
+        to: nextPlace,
+      },
+      context: {
+        significant: true,
+        significance_category: "presence",
+        source_reason: reason,
+        previous_place_id: previousPlaceId,
+      },
+    });
+    await analyzeLocationPatterns(userId);
   }
 
   return {

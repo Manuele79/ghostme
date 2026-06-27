@@ -23,6 +23,7 @@ export type GhostCurrentContext = {
   dominantTopics: string[];
   mentalState: string;
   situationSummary: string;
+  currentSituationSummary: string;
   contextSummary: string;
   recentEpisodes: string[];
   recentTimelineEvents: string[];
@@ -215,9 +216,19 @@ export async function buildCurrentContext(
       ${homeSignalSummary}
       `.trim();  
 
+    const currentSituationSummary = `
+      ${situation.currentPlace ? `Manuele e a ${situation.currentPlace}.` : "Luogo attuale di Manuele sconosciuto."}
+      ${homeSignalSummary !== "nessun segnale casa forte" ? `Casa: ${homeSignalSummary.replace(/\n/g, " ")}` : ""}
+      Pattern comportamentali: ${behaviorPatterns.join(", ") || "nessuno"}.
+      Osservazioni recenti: ${recentObservations.join(", ") || "nessuna"}.
+    `.trim();
+
     const contextSummary = `
       SITUAZIONE ATTUALE:
       ${situation.situationSummary}
+
+      SITUAZIONE ATTUALE INTEGRATA:
+      ${currentSituationSummary}
 
       INTERPRETAZIONE CONTESTUALE:
       Momento: ${situation.timeContext}, ${situation.dayContext}
@@ -275,6 +286,7 @@ export async function buildCurrentContext(
     dominantTopics,
     mentalState,
     situationSummary: situation.situationSummary,
+    currentSituationSummary,
     contextSummary,
     recentEpisodes,
     recentTimelineEvents,

@@ -94,8 +94,11 @@ function buildCurrentContextFromSnapshot({
   const homeSignalSummary = homeSignals.length
     ? homeSignals.map((signal) => `- ${signal}`).join("\n")
     : "nessun segnale casa forte";
+  const currentSituationSummary =
+    snapshot.currentSituation?.summary || "situazione attuale non integrata";
 
   const reasoningSummary = `
+      Situazione attuale integrata: ${currentSituationSummary}
       Luogo attuale: ${snapshot.location.situation.currentPlace || "luogo sconosciuto"}.
       Categoria luogo: ${snapshot.location.situation.category || "non classificata"}.
       Indirizzo luogo: ${snapshot.location.situation.address || "non disponibile"}.
@@ -114,6 +117,8 @@ function buildCurrentContextFromSnapshot({
       ${signalSummary}
       Contesto casa:
       ${snapshot.home.context || "Home Assistant non disponibile"}
+      Situazione attuale integrata:
+      ${currentSituationSummary}
       Segnali casa:
       ${homeSignalSummary}
       `.trim();
@@ -121,6 +126,9 @@ function buildCurrentContextFromSnapshot({
   const contextSummary = `
       SITUAZIONE ATTUALE:
       Snapshot generato: ${snapshot.generatedAt}
+
+      SITUAZIONE ATTUALE INTEGRATA:
+      ${currentSituationSummary}
 
       INTERPRETAZIONE CONTESTUALE:
       Localita profilo: ${snapshot.profile?.location || "non specificata"}
@@ -171,6 +179,7 @@ function buildCurrentContextFromSnapshot({
     dominantTopics,
     mentalState,
     situationSummary: contextSummary,
+    currentSituationSummary,
     contextSummary,
     recentEpisodes,
     recentTimelineEvents,

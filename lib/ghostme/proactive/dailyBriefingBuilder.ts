@@ -18,6 +18,7 @@ export async function buildDailyBriefingMessage({
   houseEvents = [],
   housePatterns = [],
   houseSuggestions = [],
+  currentSituation = null,
 }: {
   user: any;
   calendar: any[];
@@ -32,6 +33,7 @@ export async function buildDailyBriefingMessage({
   houseEvents?: unknown[];
   housePatterns?: unknown[];
   houseSuggestions?: unknown[];
+  currentSituation?: unknown;
 }) {
   const systemPrompt = `
 Sei GhostMe.
@@ -40,7 +42,9 @@ Devi creare un briefing proattivo personale per l'utente.
 Massimo 130 parole.
 Solo cose operative: appuntamenti, promemoria, azioni concrete, anomalie utili.
 CALENDARIO FUTURO VERIFICATO e AZIONI ATTUALI APERTE sono le fonti operative prioritarie.
+Usa prima SITUAZIONE ATTUALE se disponibile: e la sintesi gia integrata di luogo, presenza, casa, media e pattern.
 Usa casa, luoghi, pattern e riassunti solo se producono una conseguenza pratica oggi.
+Non elencare sensori grezzi: traduci in situazione umana concreta.
 TIMELINE STORICA descrive fatti passati e non può creare o cancellare un impegno futuro presente nel calendario active.
 Se un elemento compare soltanto nella timeline o nella memoria, non presentarlo come appuntamento futuro o cosa da fare.
 Non citare elementi completed, archived, dismissed, cancelled o expired.
@@ -94,6 +98,9 @@ ${JSON.stringify(topics || [], null, 2)}
 
 RIASSUNTI CONVERSAZIONE:
 ${JSON.stringify(summaries || [], null, 2)}
+
+SITUAZIONE ATTUALE INTEGRATA:
+${JSON.stringify(currentSituation || null, null, 2)}
 
 LUOGHI SIGNIFICATIVI:
 ${JSON.stringify(places || [], null, 2)}

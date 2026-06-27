@@ -136,6 +136,18 @@ export type GhostBrainSnapshotCore = {
     recent: any[];
     handledRecent: any[];
   };
+  currentSituation: {
+    summary: string;
+    facts: string[];
+    currentPlace: string | null;
+    placeCategory: string | null;
+    peopleAtHome: string[];
+    activeMedia: string[];
+    activeRooms: string[];
+    relevantPatterns: string[];
+    confidence: number;
+    updatedAt: string;
+  };
   signals: {
     simple: GhostBrainSimpleSignals;
     context: ContextSignal[];
@@ -432,6 +444,81 @@ function buildHomePresenceFromHouseState(houseState: HouseStateSnapshot) {
     reason: houseState.signals.length
       ? "house_state_snapshot"
       : "no_home_signal",
+  };
+}
+
+function buildCurrentSituationSummary({
+  situation,
+  houseState,
+  homeConsistency,
+  behaviorPatterns,
+  housePatterns,
+  generatedAt,
+}: {
+  situation: GhostSituation;
+  houseState: HouseStateSnapshot;
+  homeConsistency: HomeLocationConsistency;
+  behaviorPatterns: any[];
+  housePatterns: any[];
+  generatedAt: string;
+}) {
+  const currentPlace = situation.currentPlace || null;
+  const placeCategory = situation.currentPlaceCategory || null;
+  const peopleAtHome = (houseState.people || [])
+    .filter((person) => person.presenceKnown && person.isHome)
+    .map((person) => person.name);
+  const activeMedia = (houseState.media || []).map((media) => media.name);
+  const activeRooms = houseState.activeRooms || [];
+  const relevantPatterns = [
+    ...(behaviorPatterns || []),
+    ...(housePatterns || []),
+  ]
+    .filter((pattern) => ["active", "learning"].includes(String(pattern.status || "")))
+    .sort(
+      (a, b) =>
+        Number(b.confidence || 0) + Number(b.occurrences || 0) -
+        (Number(a.confidence || 0) + Number(a.occurrences || 0))
+    )
+    .slice(0, 5)
+    .map((pattern) => pattern.title || pattern.description || pattern.pattern_type)
+    .filter(Boolean);
+
+  const facts = [
+    currentPlace
+      ? `Manuele e a ${currentPlace}.`
+      : situation.lastKnownPlace
+        ? `Ultimo luogo noto di Manuele: ${situation.lastKnownPlace}.`
+        : "Luogo attuale di Manuele sconosciuto.",
+    peopleAtHome.length
+      ? `${peopleAtHome.join(", ")} ${peopleAtHome.length === 1 ? "e presente" : "sono presenti"} a casa.`
+      : houseState.occupancyStatus === "empty"
+        ? "La casa risulta vuota."
+        : "",
+    activeMedia.length ? `${activeMedia.join(", ")} attiva.` : "",
+    activeRooms.length ? `Stanze attive: ${activeRooms.join(", ")}.` : "",
+    homeConsistency.mismatch
+      ? `Segnale incoerente tra posizione e casa: ${homeConsistency.reason}.`
+      : "",
+    relevantPatterns.length
+      ? `Pattern rilevanti: ${relevantPatterns.join("; ")}.`
+      : "",
+  ].filter(Boolean);
+
+  return {
+    summary: facts.join(" "),
+    facts,
+    currentPlace,
+    placeCategory,
+    peopleAtHome,
+    activeMedia,
+    activeRooms,
+    relevantPatterns,
+    confidence: Math.max(
+      Number(situation.locationConfidence || 0),
+      Number(houseState.confidence || 0),
+      Number(homeConsistency.confidence || 0)
+    ),
+    updatedAt: generatedAt,
   };
 }
 
@@ -763,6 +850,14 @@ export async function buildGhostBrainSnapshot(
     importantPeople: peopleSnapshot.importantPeople,
     mentalState: situation.mentalState,
   });
+  const currentSituation = buildCurrentSituationSummary({
+    situation,
+    houseState,
+    homeConsistency,
+    behaviorPatterns: graph.behaviorPatterns || [],
+    housePatterns: homeAssistantAccess ? graph.housePatterns || [] : [],
+    generatedAt,
+  });
   const curiosity = buildCuriositySnapshot({
     people: peopleSnapshot,
     relationshipMemory,
@@ -858,6 +953,7 @@ export async function buildGhostBrainSnapshot(
       recent: graph.proactiveRecent || [],
       handledRecent: graph.proactiveHandledRecent || [],
     },
+    currentSituation,
     signals: {
       simple: simpleSignals,
       context: contextSignals,

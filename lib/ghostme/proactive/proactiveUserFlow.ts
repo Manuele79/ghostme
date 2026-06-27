@@ -63,7 +63,10 @@ async function hasTodayDailyBriefing(userId: string) {
   return Boolean(data?.id);
 }
 
-async function writeDailyBriefingForUser(user: ProactiveUser) {
+async function writeDailyBriefingForUser(
+  user: ProactiveUser,
+  snapshot?: GhostBrainSnapshot
+) {
   const userId = user.user_id;
   const dailyContext = await loadDailyBriefingContext(userId);
   const { dailyMessage } = await buildDailyBriefingMessage({
@@ -80,6 +83,7 @@ async function writeDailyBriefingForUser(user: ProactiveUser) {
     houseEvents: dailyContext.houseEvents,
     housePatterns: dailyContext.housePatterns,
     houseSuggestions: dailyContext.houseSuggestions,
+    currentSituation: snapshot?.currentSituation || null,
   });
 
   return upsertProactiveMessage({
@@ -155,7 +159,7 @@ export async function runProactiveFlowForUser(user: ProactiveUser): Promise<{
     }));
   }
 
-  created += countWrite(await writeDailyBriefingForUser(user));
+  created += countWrite(await writeDailyBriefingForUser(user, snapshot));
 
   return { created };
 }
@@ -222,7 +226,7 @@ export async function runAppOpenProactiveLifecycle({
     }));
   }
 
-  created += countWrite(await writeDailyBriefingForUser(user));
+  created += countWrite(await writeDailyBriefingForUser(user, currentSnapshot));
 
   return { created, skipped: false };
 }
