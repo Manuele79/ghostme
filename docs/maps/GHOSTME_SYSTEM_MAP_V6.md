@@ -1,506 +1,4717 @@
-# GHOSTME SYSTEM MAP V6 - FLOW AUDIT
-
-Data audit: 2026-06-19  
-Modalita: analisi statica in sola lettura del workspace.  
-Perimetro: `app`, `app/api`, `components`, `hooks`, `lib`, `lib/ghostme`, `public`, `scripts`, `package.json`, `vercel.json`, migration SQL e schema Supabase fornito.
-
-## 1. Inventario
-
-- File nelle aree applicative analizzate: 164.
-- File TypeScript: 132; TSX: 16.
-- Route API: 26.
-- Moduli `lib/ghostme`: 99.
-- File oltre 200 righe: 42.
-- Framework: Next.js 16 App Router, React 19, TypeScript, Supabase, OpenAI SDK.
-- Cron dichiarati: solo `/api/worker/proactive`, ogni 5 minuti.
-- Canali HA: webhook event-driven e worker house manuale/backup.
-
-## 2. Topologia Reale
-
-```text
-UI (app/chat + GhostChat + GhostDrawers)
-  -> /api/chat -> ghostChatOrchestrator -> OpenAI streaming
-       -> chatContextBuilder -> GhostBrainSnapshot + retrieval -> prompt
-       -> chatCalendarFlow -> calendarService -> calendar/proactive DB
-       -> after(runChatPostProcessing) -> memory/topics/goals/actions/etc.
-  -> /api/ghostme/brain -> GhostBrainSnapshot -> adapter legacy -> useGhostBrain
-  -> API CRUD calendar/location/goals/actions/proactive
-
-Cron + boot browser
-  -> /api/worker/proactive -> proactiveUserFlow
-       -> maintenance -> reminder/summary/retention/people/calendar cleanup
-       -> candidateBuilder -> engine AI storici
-       -> ranker -> proactiveMessageService
-       -> daily briefing + agenda
-
-Home Assistant webhook
-  -> /api/home-assistant/event -> significance -> house_entities/house_events
-
-Worker house manuale
-  -> snapshot HA -> entities/events -> patterns/routes/suggestions/controls
-```
-
-Esistono due layer cognitivi sovrapposti:
-
-1. Runtime storico: `situationEngine`, `contextBuilder`, `proactiveDecisionEngine`, observation/pattern/curiosity AI engines.
-2. Snapshot: `reasoningService`, `DecisionSnapshot`, People/Memory/Project/House/Curiosity/TrueProactive snapshots.
-
-La chat usa il GhostBrainSnapshot come sorgente primaria. Il worker proactive lo usa per ricostruire parte del vecchio `GhostCurrentContext`, ma la selezione delle card continua a dipendere dagli engine storici. `trueProactiveSnapshot.selected` non alimenta il writer delle card.
-
-## 3. Catalogo Funzioni e Dipendenze
-
-Legenda: R = lettura DB; W = scrittura DB; UI/API/worker indica il consumer effettivo. Le funzioni private sono descritte nel flusso del file che le contiene.
-
-### Chat, analisi e post-processing
-
-| Funzione | File | Chi la chiama | Chi chiama | DB R/W | API/UI/worker | Stato |
-|---|---|---|---|---|---|---|
-| `runGhostChatFlow` | `chat/ghostChatOrchestrator.ts` | `/api/chat` | analyzer, decay, relationships, context, services, calendar, prompt, OpenAI | indiretto | chat UI | CORE |
-| `analyzeChatMessage` | `chat/chatMessageAnalyzer.ts` | orchestrator | classifier, topic detector, entity extractor, resolver | indiretto | chat | CORE |
-| `classifyGhostMessage` | `core/messageClassifier.ts` | analyzer | regole locali | - | chat | ATTIVO |
-| `extractEntitiesWithAI` | `entityExtractor.ts` | analyzer | topic detector, OpenAI | - | chat | ATTIVO |
-| `buildChatContext` | `chat/chatContextBuilder.ts` | orchestrator | GhostBrainSnapshot, retrieval, prompt helpers | molte R indirette | chat | CORE |
-| `createEmptyChatContext` | stesso file | `buildChatContext` | - | - | chat | helper |
-| `resolveChatExternalService` | `chat/chatExternalServices.ts` | orchestrator | router, weather, web | - | chat | ATTIVO |
-| `buildSystemPrompt` | `chat/chatPromptBuilder.ts` | orchestrator | `trimBlock` | - | chat/OpenAI | CORE |
-| `trimBlock` | stesso file | prompt/context builders | - | - | chat | helper condiviso |
-| `handleChatCalendarFlow` | `chat/chatCalendarFlow.ts` | orchestrator | parser + create event | W calendar/proactive indiretta | chat | ATTIVO |
-| `runChatPostProcessing` | `chat/chatPostProcessing.ts` | `/api/chat` via `after()` | memory, topics, contradictions, mental, goals, timeline, actions, behavior | R/W molte | post-response | CORE/GOD FLOW |
-| `detectTopicsFromMessage`, `isPossibleEpisode`, `detectEmotionalTone`, `shouldSaveActiveMemory`, `detectImportanceLevel`, `detectMemoryCategory` | `topicDetector.ts` | analyzer/post-processing | regole locali | - | chat | ATTIVE |
-
-Helper privati principali di `chatPostProcessing`: `saveActiveMemory`, `saveLifeTopics`, `saveEpisodicMemory`, classificazione chiarimenti e memoria relazionale. Tutti vengono orchestrati con `Promise.allSettled`; un errore non blocca gli altri writer e non viene riportato alla UI.
-
-### Memory, topic, profilo e comportamento
-
-| Funzione | File | Caller | DB | Consumer | Stato |
-|---|---|---|---|---|---|
-| `buildContextualMemory` | `retrieval.ts` | chatContextBuilder | R memories/topics/links/episodes/summaries | prompt chat | ATTIVO |
-| `buildMemorySnapshot` | `memory/memorySnapshot.ts` | reasoningService | R 6 famiglie memory | Brain/chat/projects | CORE |
-| `memorySearchFlow` | `memory/memorySearchFlow.ts` | `/api/memory/search` | R 8 famiglie | Memory drawer | ATTIVO |
-| `saveTopicLinks`, `getRelatedTopicContext` | `topicLinks.ts` | post-processing/retrieval | R/W life_topics/topic_links | memory | ATTIVE |
-| `applyMemoryDecay` | `memoryDecay.ts` | orchestrator | R/W life_topics | chat | ATTIVO a ogni chat |
-| `detectAndSaveContradictions` | `contradictions.ts` | post-processing | R memories/topics; W contradictions | situation/curiosity | ATTIVO |
-| `detectAndSaveTimelineEvent`, `getTimelineContext` | `timeline.ts` | post-processing; getter senza caller | W/R timeline | Brain | writer attivo, getter morto |
-| `generateDailyConversationSummary` | `conversationSummary.ts` | maintenance + API | R chat; W summaries | memory | ATTIVO |
-| `updateMentalState` | `mentalState.ts` | post-processing | W mental_states | situation/Brain | ATTIVO |
-| `updateDynamicSelfProfile`, `getDynamicSelfProfileContext` | `dynamicSelfProfile.ts` | post-processing; getter senza caller | W/R dynamic profile | Brain | writer attivo, getter morto |
-| `detectAndSaveBehaviorRule`, `buildBehaviorPrompt`, `getActiveBehaviorRules`, `saveBehaviorRule` | `behaviorRulesEngine.ts` | post-processing/proactive/profile | R/W rules | chat/proactive | ATTIVE |
-| `seedBehaviorFromProfile` | `profile/profileBehaviorSeed.ts` | setup profile | R traits/profile; W profile/rules | setup | ATTIVO |
-
-### Goals e actions
-
-| Funzione | File | Caller | DB | Consumer | Stato/limite |
-|---|---|---|---|---|---|
-| `detectAndSaveGoalsDesires` | `goalsDesires.ts` | post-processing | R/W goals_desires | GoalsSnapshot | ATTIVO |
-| `getGoalsDesiresContext` | stesso file | nessun caller | R goals_desires | nessuno | EXPORT MORTO |
-| `detectAndSaveActionIntent` | `actionLayer.ts` | post-processing | W action_intents | GoalsSnapshot/Brain | ATTIVO |
-| `detectAndCompleteActionIntent` | stesso file | post-processing | R/W action_intents | Brain | ATTIVO, AI-based |
-| `cleanupOldActionIntents` | stesso file | proactive maintenance | W action_intents | worker | ATTIVO |
-| `getActionIntentContext` | stesso file | nessun caller | R action_intents | nessuno | EXPORT MORTO |
-| `buildGoalsSnapshot` | `goals/goalsSnapshot.ts` | reasoningService | R goals + actions | Brain/UI/projects | CORE |
-
-`goals_desires` e `action_intents` condividono solo testo/topic; non esiste FK o `goal_id`. Gli snapshot tentano collegamenti lessicali, non relazioni persistite.
-
-### Calendar, agenda e reminder
-
-| Funzione | File | Caller | DB | Consumer | Stato |
-|---|---|---|---|---|---|
-| `parseCalendarIntent` | `calendar/calendarIntent.ts` | chatCalendarFlow | - + OpenAI | chat | ATTIVO |
-| `createCalendarEvent` | `calendar/calendarService.ts` | chat flow + calendar API | W calendar; W proactive indiretto | UI/agenda | CORE |
-| `getUpcomingCalendarEvents` | stesso file | nessun caller | R calendar | nessuno | EXPORT MORTO |
-| `refreshAgendaMessage` | stesso file | create/update/delete, proactive flow/trigger | R calendar/situation; R/W proactive | card | CORE |
-| `cleanupExpiredEvents` | stesso file | maintenance | W calendar | worker | ATTIVO |
-| `buildAgendaMessage` | `agenda/agendaEngine.ts` | calendar + candidate builder | dati situation | card agenda | ATTIVO |
-| `refreshReminderMessage` | `agenda/reminderEngine.ts` | agenda refresh + maintenance | R calendar; W proactive | card reminder | CORE |
-| `sendAppointmentReminderNotification` | `agenda/appointmentReminderNotification.ts` | nessuno | - | nessuno | FILE MORTO |
-
-### Context, reasoning e snapshot
-
-| Funzione | File | Caller | Dipendenze/DB | Consumer | Stato |
-|---|---|---|---|---|---|
-| `buildGhostSituation` | `situation/situationEngine.ts` | reasoning, agenda, legacy engines | R 15 tabelle | chat/proactive | CORE, query-heavy |
-| `loadUserContextGraph` | `context/userContextGraph.ts` | reasoningService | R 17 query parallele | snapshot | CORE loader |
-| `buildGhostBrainSnapshot` | `context/reasoningService.ts` | Brain API, chat, candidate builder, debug | graph + situation + domain snapshots | chat/Brain/proactive | ORCHESTRATOR CENTRALE |
-| `buildReasoningSnapshot` | stesso file | nessuno | situation + signals + home reasoning | nessuno | EXPORT MORTO/LEGACY |
-| `buildContextSignals` | `context/contextSignals.ts` | reasoning, contextBuilder, curiosity | dati situation | snapshot/proactive | ATTIVO |
-| `buildGhostBrainSimpleSignals` | stesso file | reasoning | dati gia caricati | snapshot | ATTIVO |
-| `buildDecisionSnapshot` | `context/decisionSnapshot.ts` | reasoning + debug + trueProactive | snapshot read-only | debug/true proactive | ATTIVO MA NON UI |
-| `buildCurrentContext` | `context/contextBuilder.ts` | proactiveTrigger | situation + HA + proactive | legacy proactive | ATTIVO solo trigger location |
-
-`reasoningService.ts` e `decisionSnapshot.ts` sono rispettivamente 851 e 700 righe. Il primo orchestra loader, snapshot e derivazioni; il secondo concentra molte regole di priorita. Il ciclo di import `reasoningService -> decisionSnapshot -> type reasoningService` e analogo con `trueProactiveSnapshot` e solo type-level, quindi viene eliminato a runtime, ma segnala forte accoppiamento dei contratti.
-
-### People e relationships
-
-| Funzione | File | Caller | DB | Consumer | Stato |
-|---|---|---|---|---|---|
-| `resolveNamedRelationship`, `removeGenericRelationshipTopics` | `relationshipResolver.ts` | chat analyzer/orchestrator | R/W topics/memories | post-processing | ATTIVO |
-| `syncPeopleGraphFromTopics` | `peopleGraphService.ts` | proactive maintenance | R life_topics; W people_graph | snapshot | ATTIVO solo worker |
-| `upsertPersonFromTopic` | stesso file | sync | R/W people_graph | snapshot | ATTIVO |
-| `getPeopleGraphContext` | stesso file | situationEngine | R people_graph | situation | ATTIVO |
-| `buildPeopleSnapshot` | `people/peopleSnapshot.ts` | reasoningService | R people_graph/topics/memories | Brain | CORE |
-| `buildRelationshipMemorySnapshot` | `people/relationshipMemorySnapshot.ts` | reasoningService | usa snapshot gia caricati | Brain/projects | DERIVATO |
-| `buildSocialSuggestionSnapshot` | `people/socialSuggestionSnapshot.ts` | reasoningService | usa snapshot | Brain/trueProactive | DERIVATO |
-
-`people_graph_links` non ha reader o writer. `people_graph` puo essere popolata solo da topic con `entity_type = person` durante maintenance proactive.
-
-### Projects e curiosity
-
-| Funzione | File | Caller | Input | Consumer effettivo | Stato |
-|---|---|---|---|---|---|
-| `buildProjectMemorySnapshot` | `projects/projectMemorySnapshot.ts` | reasoningService | memory/goals/people/calendar | decision, advisor, curiosity | DERIVATO |
-| `buildGoalProjectConsistencySnapshot` | `projects/goalProjectConsistencySnapshot.ts` | reasoningService | goals/projects | decision/advisor/curiosity | DERIVATO |
-| `buildProjectAdvisorSnapshot` | `projects/projectAdvisorSnapshot.ts` | reasoningService | project/goals/consistency/relationships | decision/curiosity | DERIVATO |
-| `buildCuriositySnapshot` | `curiosity/curiositySnapshot.ts` | reasoningService | tutti gli snapshot | trueProactive/debug | DERIVATO |
-| `generateCuriosityMessage` | `curiosity/curiosityEngine.ts` | proactiveCandidateBuilder | DB + situation + OpenAI | candidato card | RUNTIME |
-| `buildTrueProactiveSnapshot` | `proactive/trueProactiveSnapshot.ts` | reasoningService | snapshot + decision | campo snapshot | DEBUG/INERTE PER CARD |
-
-Non esiste un modulo `projectSuggestions`. Le suggestion progetto sono inferenze del DecisionSnapshot/TrueProactive, non writer DB e non card runtime.
-
-### Proactive runtime
-
-| Funzione | File | Caller | DB/side effect | Stato |
-|---|---|---|---|---|
-| `runProactiveFlowForUser` | `proactiveUserFlow.ts` | worker proactive | maintenance + best candidate + agenda + briefing | ORCHESTRATOR |
-| `runProactiveMaintenanceFlow` | `proactiveMaintenanceFlow.ts` | user flow | reminder, summaries, retention, actions, people, calendar cleanup | MULTI-SIDE-EFFECT |
-| `buildProactiveCandidatesForUser` | `proactiveCandidateBuilder.ts` | user flow | snapshot + 4 engine OpenAI + decay | GOD BUILDER |
-| `pickBestProactiveCandidate` | `proactiveCandidateRanker.ts` | user flow | sort solo priority | ATTIVO, ranking minimo |
-| `decideProactiveMessage` | `proactiveDecisionEngine.ts` | candidate builder + trigger | OpenAI | ATTIVO |
-| `upsertProactiveMessage` | `proactiveMessageService.ts` | calendar, reminder, proactive, house | R/W proactive | WRITER CENTRALE PARZIALE |
-| `buildDailyProactiveLogicalKey` | stesso file | agenda/reminder/briefing | - | ATTIVO |
-| `dedupeProactiveMessages` | `proactiveMessageDedupe.ts` | Brain/proactive APIs | read-time only | ATTIVO |
-| `runProactiveTrigger` | `proactiveTrigger.ts` | locationUpdateFlow | context + AI decision + card | EVENT-DRIVEN LOCATION |
-| `generateObservationInsight` | `observationInsightEngine.ts` | candidate builder | R proactive/situation + OpenAI | candidato |
-| `generatePatternInsight` | `patternInsightEngine.ts` | candidate builder | R patterns/proactive + OpenAI | candidato |
-| `generateButlerMessage` | `butlerEngine.ts` | candidate builder | OpenAI | candidato |
-| `buildDailyBriefingMessage` / `loadDailyBriefingContext` | proactive briefing files | user flow | OpenAI + R calendar/goals/actions/etc. | card briefing |
-
-### Home Assistant e home reasoning
-
-| Funzione | File | Caller | DB | Stato |
-|---|---|---|---|---|
-| `getHAStates` | `haClient.ts` | snapshots, worker, test | HA HTTP | CORE integration |
-| `getEntityInfo` | `homeEntityMapper.ts` | webhook/logger/snapshots | - | CORE mapping |
-| `classifyHomeEventSignificance` | `homeEventSignificance.ts` | webhook/logger | - | CORE filter |
-| `logHomeAssistantSnapshot` | `homeEventLogger.ts` | house worker | R/W house_events | backup polling |
-| `syncHouseEntities` | `houseEntityRegistry.ts` | house worker | W house_entities | backup sync |
-| `analyzeHousePatterns` | `housePatternEngine.ts` | house worker + suggestion engine | R events; R/W house_patterns | ATTIVO solo worker |
-| `learnHouseRoutes` | `houseRouteLearningEngine.ts` | house worker | R events; R/W learned_rules | ATTIVO solo worker |
-| `generateHouseSuggestions` | `houseSuggestionEngine.ts` | house worker | R/W suggestions + proactive | ATTIVO solo worker |
-| `generateHouseAutomationSuggestions` | automation suggestion engine | house worker | R events; W suggestions/proactive | ATTIVO solo worker |
-| `planHouseAutomationControls` | control planner | house worker | R events/rules; W controls/proactive | ATTIVO solo worker |
-| `buildHouseStateSnapshot` | `home/houseStateSnapshot.ts` | reasoningService | HA live + R entities/events | Brain/chat |
-| `buildHouseRouteSnapshot` | `home/houseRouteSnapshot.ts` | reasoningService | R rules/events | Brain |
-| `buildHomeComfortRiskSnapshot` | `home/homeComfortRiskSnapshot.ts` | reasoningService | R events + snapshot | Brain/decision |
-| `buildHomeLocationConsistency` | home consistency | reasoningService | input gia caricato | Brain/decision |
-| `bridgeHomeAssistantLocationFlow` | location HA bridge | house worker | HA + W location state | worker only |
-| `buildHomeContext` | HA context builder | test route soltanto | HA | TEST/LEGACY |
-| `buildHomeReasoning` | HA reasoning builder | contextBuilder, legacy reasoning, test | HA | LEGACY ACTIVE |
-| `buildHouseAutomationContext` | HA automation context | nessuno | R events | FILE MORTO |
-| `buildHouseLearnedRulesContext` | HA learned context | nessuno | R rules | FILE MORTO; omonimo helper chat |
-
-### Location, services e observations
-
-| Funzione | File | Caller | DB/esterno | Stato |
-|---|---|---|---|---|
-| `saveSignificantPlace`, `getSignificantPlaces`, `detectCurrentPlace`, `getCurrentLocationState` | `location/placeService.ts` | location flows/situation | R/W places/location | ATTIVE |
-| `getLastKnownPlace` | stesso file | nessuno | R location | EXPORT MORTO |
-| location flow functions | `location/*Flow.ts` | API location | R/W location/places | ATTIVE |
-| `classifyLocationSignal` | `location/locationEngine.ts` | nessuno | - | FILE MORTO |
-| `recordObservation`, `analyzeLocationPatterns` | `observationEngine.ts` | location update | R/W observations/patterns | ATTIVE |
-| `decideGhostService` | `serviceRouter.ts` | chat external services | - | ATTIVO |
-| `runWeatherSearch`, `runWebSearch` | services | chat external services | HTTP/OpenAI web search | ATTIVE |
-| `getLocalTimeContext` | `timeService.ts` | nessuno | - | FILE MORTO |
-
-## 4. API -> Moduli -> Tabelle -> Consumer
-
-| API | Metodo | Moduli/tabelle | Consumer | Osservazioni |
-|---|---|---|---|---|
-| `/api/chat` | POST | orchestrator + post-processing | chat UI | auth server; OpenAI streaming |
-| `/api/ghostme/brain` | POST | GhostBrainSnapshot + proactive DB | `useGhostBrain` | adapter legacy; hook ignora `snapshot` completo |
-| `/api/debug-reasoning` | GET | snapshot + decision | manuale | debug autenticato/override controllato |
-| `/api/proactive/messages` | POST | R proactive | GhostDrawers | solo 6 categorie e unread/read |
-| `/api/ghostme/proactive/read` | POST | R/W proactive; W calendar reminder | chat/drawers | auth; dipende da logical_key |
-| `/api/worker/proactive` | GET | profiles -> proactive flow | cron + boot browser | nessuna auth/secret nella route |
-| `/api/worker/house` | GET | houseWorkerFlow | manuale | secret solo se env presente |
-| `/api/home-assistant/event` | POST | mapper/significance; W entities/events | HA webhook | token opzionale se env assente |
-| `/api/calendar-events` | POST/PATCH/DELETE | calendar service; R/W calendar/proactive | drawer calendario | usa userId body, nessuna auth server |
-| `/api/goals/update-status` | POST | W goals | Memory drawer | usa userId body, nessuna auth server |
-| `/api/actions/update-status` | PATCH | W actions | Services drawer | auth server |
-| `/api/memory` | POST | W memories_active via client Supabase | non rilevato chiaramente | usa client anon server-side |
-| `/api/memory/search` | POST | memorySearchFlow, molte R | Memory drawer | userId body, nessuna auth nel flow/route |
-| `/api/conversation-summary` | POST | summary engine | chat background | userId body, nessuna auth |
-| `/api/house-suggestion-response` | POST | suggestion flow, W suggestions/rules/proactive | GhostChat | nessuna auth rilevata |
-| location `current-place`, `places`, `current-state`, `save-place`, `delete-place`, `update-current` | POST/DELETE | location flows/service | chat + drawers | prevalentemente userId body; auth non centralizzata |
-| `/api/debug-ha-entities`, `/api/debug-house-logger`, `/api/test-ha`, `/api/test-home-context`, `/api/test-home-reasoning` | GET | HA live/context | manuale | route debug/test esposte |
-
-## 5. Tabelle: Writer, Reader e Connessione
-
-| Tabella | Writer | Reader | Stato flow |
-|---|---|---|---|
-| `chat_messages` | chat UI | chat boot, summary | attiva; insert dipende da contratto `message_order` |
-| `memories_active` | post-processing/API | retrieval, snapshots, people/projects | core |
-| `life_topics` | post-processing/resolver/decay | quasi tutto il cognition layer | core |
-| `topic_links` | post-processing | retrieval/memory | attiva |
-| `episodic_memories` | post-processing | retrieval/snapshots/situation | attiva |
-| `conversation_summaries` | maintenance/API | retrieval/snapshots | attiva |
-| `autobiographical_timeline` | post-processing | snapshots/situation/curiosity | attiva |
-| `goals_desires` | goal detector/API | snapshots/projects/curiosity | attiva ma scollegata dalle actions |
-| `action_intents` | action detector/API/cleanup | snapshots/projects/briefing | attiva ma scollegata dai goals |
-| `calendar_events` | chat/calendar API/cleanup/reminder completion | context/agenda/reminder/UI | attiva |
-| `ghost_proactive_messages` | service + calendar + house + lifecycle | APIs/context/engines | attiva, molti writer |
-| `people_graph` | proactive maintenance sync | situation/PeopleSnapshot | pipeline parziale; DB fornito vuoto |
-| `people_graph_links` | nessuno | nessuno | scollegata |
-| `observation_events` | location observation | situation/patterns | attiva |
-| `behavior_patterns` | observation/decay | situation/pattern/graph | attiva |
-| `mental_states` | post-processing | situation/briefing | attiva |
-| `dynamic_self_profile` | post-processing/profile seed | situation/curiosity | attiva |
-| `contradictions` | post-processing | situation/curiosity | attiva |
-| `house_entities` | webhook/house worker | HouseStateSnapshot | attiva |
-| `house_events` | webhook/house worker | tutti gli engine home | core, volume elevato |
-| `house_patterns` | house worker | UserContextGraph | contratto SQL presente in migration, applicazione DB non verificata |
-| `house_learned_rules` | route learning/response | snapshots/planner | attiva |
-| `house_suggestions` | house engines | response | attiva solo house worker |
-| `house_automation_controls` | planner | graph/comfort | quasi vuota per pipeline manuale e condizioni strette |
-| `house_paths`, `house_rooms` | nessuno | nessuno | dati DB scollegati |
-| `answers`, `traits`, `users`, `user_profiles` | setup | setup/profile/worker/context | setup/profile |
-| `significant_places`, `user_location_state` | location flows/HA bridge | situation/graph/UI | attive |
-| `memories`, `questions`, `triggers` | nessuno runtime | nessuno runtime | legacy/scollegate |
-
-Non risultano writer persistenti completamente privi di reader fra le tabelle usate. Non risultano reader attivi completamente privi di writer. Il problema dominante non e R/W unidirezionale, ma writer e reader collegati da identita deboli, worker non garantiti o adapter che scartano parte dei dati.
-
-## 6. Flussi Completi
-
-### Chat
-
-```text
-GhostChat/app chat
- -> POST /api/chat (user autenticato)
- -> analyzeChatMessage (classifier + topics + entities/relationships)
- -> memory decay + relationship resolution
- -> buildGhostBrainSnapshot + buildContextualMemory
- -> external service router
- -> parseCalendarIntent; se evento: save + risposta immediata
- -> altrimenti buildSystemPrompt -> OpenAI stream
- -> UI salva user/assistant in chat_messages
- -> server after(): runChatPostProcessing
- -> UI refresh Brain dopo timer
-```
-
-Il post-processing viene saltato interamente quando `shouldRunHeavyEngines` e falso. La risposta immediata calendario non contiene `postProcessingPayload`, quindi il messaggio calendario non passa dal normale post-processing di goals/actions/memory.
-
-### Goals
-
-```text
-chat post-processing
- -> detectAndSaveGoalsDesires (OpenAI)
- -> insert/update goals_desires status active
- -> buildGoalsSnapshot
- -> GhostBrainSnapshot.goals.activeGoals
- -> Brain API goals[]
- -> useGhostBrain
- -> MemoryDrawer tab Goals
- -> Completa/Archivia -> /api/goals/update-status -> refreshBrain
-```
-
-Possono non apparire se il post-processing e classificato leggero, se l'`after()` non termina nel runtime, se il refresh avviene prima della scrittura, se l'API Brain fallisce, o se il goal viene archiviato. L'attuale drawer non persiste piu gli ID goal in `ghost_hidden_cards`.
-
-### Actions
-
-```text
-chat post-processing
- -> detectAndCompleteActionIntent e detectAndSaveActionIntent in parallelo
- -> action_intents detected/completed
- -> buildGoalsSnapshot.pendingActions
- -> GhostBrainSnapshot.actions
- -> Brain API actions[]
- -> ServicesDrawer tab Azioni
- -> PATCH /api/actions/update-status
-```
-
-Creazione e completamento girano nello stesso `Promise.allSettled`: sullo stesso messaggio possono competere senza ordine. Non esiste relazione DB con un goal, quindi completare un'action non completa con certezza alcun goal.
-
-### Calendar, agenda e reminder
-
-```text
-chat -> parseCalendarIntent -> createCalendarEvent
-UI -> /api/calendar-events POST/PATCH/DELETE
-create/PATCH/DELETE -> refreshAgendaMessage
-refreshAgendaMessage -> refreshReminderMessage
-                    -> buildGhostSituation -> buildAgendaMessage
-                    -> upsertProactiveMessage
-worker proactive maintenance -> refreshReminderMessage ogni 5 minuti
-Brain/proactive API -> unread/read categorie ammesse -> UI
-```
-
-Le card sono generate realmente da `calendarService` e `reminderEngine`, non da `agendaEngine` da solo. `agendaEngine` formatta soltanto testo. Reminder usa finestra da -30 a +30 minuti su `start_at`. Quando non trova eventi nella finestra marca expired tutte le reminder card ancora unread/read.
-
-### Proactive cards
-
-Writer effettivi:
-
-- `proactiveMessageService`: writer centrale usato da agenda, reminder, worker, trigger e house.
-- `calendarService`: aggiornamenti diretti per scadere/deduplicare agenda.
-- `reminderEngine`: aggiornamento diretto per scadere reminder.
-- `proactive/read`: lifecycle read/dismissed/answered/expired e completamento calendar reminder.
-- `houseSuggestionResponseFlow`: aggiorna proactive collegata.
-- retention: archivia/scade messaggi vecchi.
-
-Categorie effettive:
-
-- `agenda`: calendar service e proactive user flow.
-- `reminder`: reminder engine.
-- `daily_briefing`: proactive user flow.
-- `observation`: proactive decision, observation insight, pattern insight, butler candidati.
-- `curiosity`: vecchio Curiosity Engine candidato.
-- `home_question`: house suggestions e controls.
-- `suggestion`, `project`, `social`: nessun writer runtime dedicato rilevato.
-
-Solo il miglior candidato generico viene scritto per esecuzione utente. Agenda e briefing vengono gestiti separatamente. Questo spiega perche observation e curiosity possono essere calcolate ma non apparire: competono fra loro e con decision/butler, e il ranker considera solo `priority`.
-
-### People
-
-```text
-chat analyzer/resolver -> life_topics/memories
-worker proactive maintenance -> syncPeopleGraphFromTopics
- -> solo life_topics entity_type=person -> people_graph
-PeopleSnapshot -> merge people_graph + topic/memory fallback
-RelationshipMemory/SocialSuggestions -> Brain/Decision/TrueProactive
-```
-
-`people_graph_links` non partecipa. Con il DB fornito `people_graph` e vuota: o non esistono topic classificati `person`, o maintenance non ha completato il sync, o gli upsert hanno fallito. PeopleSnapshot puo comunque mostrare persone da topic/memorie, mascherando il vuoto della tabella principale.
-
-### Projects
-
-```text
-MemorySnapshot + GoalsSnapshot + PeopleSnapshot + Calendar
- -> ProjectMemorySnapshot
- -> consistency + advisor
- -> DecisionSnapshot + CuriositySnapshot + TrueProactiveSnapshot
-```
-
-Il progetto influenza il DecisionSnapshot e il TrueProactiveSnapshot. Tuttavia il DecisionSnapshot non e consumato dalla UI ordinaria e `trueProactive.selected` non viene passato al proactive writer. Nel candidate builder storico i progetti vengono ricostruiti dai topic, non da ProjectAdvisor. Impatto runtime card: indiretto o nullo.
-
-### Curiosity
-
-- Vecchio `curiosityEngine`: query DB + OpenAI, produce una stringa candidata; puo diventare card se vince il ranker.
-- Nuovo `curiositySnapshot`: deterministico/read-only, entra in snapshot, decision e true proactive; non crea card.
-
-Sono due implementazioni con stesso scopo cognitivo ma consumer diversi.
-
-### True Proactive
-
-`buildTrueProactiveSnapshot` raccoglie safety, calendario, open loop, progetti, curiosity e relationships; deduplica e seleziona massimo tre candidati. Il risultato viene restituito dentro `snapshot.trueProactive`. Nessun runtime usa `selected` per chiamare `upsertProactiveMessage`. E quindi un layer di osservazione/debug, non il selettore delle card.
-
-### House / Home Assistant
-
-```text
-HA state_changed -> POST /api/home-assistant/event
- -> map entity -> update house_entities
- -> significance filter -> insert house_events se significativo
-
-GET /api/worker/house (manuale)
- -> log snapshot HA
- -> HA -> location bridge
- -> sync entities
- -> analyze house_patterns
- -> learn house routes/rules
- -> suggestions + automation suggestions + controls
- -> proactive home_question
-
-GhostBrain
- -> HA live + entities/events -> HouseStateSnapshot
- -> rules/events -> routes
- -> events -> comfort/risk
- -> DecisionSnapshot
-```
-
-Il webhook non avvia pattern/rule/suggestion/control learning. Poiche non esiste cron house, tali tabelle avanzano solo quando il worker house viene invocato manualmente. `house_paths` e `house_rooms` non sono lette; route reasoning usa costanti statiche e `house_learned_rules`.
-
-## 7. UI Flow
-
-- `useGhostBrain` chiama Brain API e conserva solo adapter legacy: memories, timeline, goals, mentalState, actions, calendarEvents e proactiveMessages. Scarta il campo `snapshot` completo.
-- `GhostChat` mostra le proactive principali; reminder espone Fatto/Archivia, altre categorie spunta/Rispondi.
-- `ServicesDrawer` mostra actions, calendar, places e observations. Observations vengono ricaricate da `/api/proactive/messages`.
-- `MemoryDrawer` mostra memories, timeline, goals e mental state.
-- Goals vengono letti da `data.goals`, cioe `snapshot.goals.activeGoals` adattato dalla Brain API.
-- Actions vengono lette da `data.actions`, cioe `snapshot.goals.pendingActions`.
-- Calendar viene letto da `snapshot.calendar.upcoming`; eventi passati o non active non arrivano.
-- Il local storage `ghost_hidden_cards` continua per memory/timeline, ma filtra fuori chiavi `goals-*`.
-- Dopo chat il refresh Brain e schedulato a 5 secondi; il salvataggio conversazione esegue anche un refresh dopo summary. Il post-processing server resta asincrono e puo concludersi dopo entrambi.
-
-## 8. File Morti o Quasi Morti
-
-Certi, nessun caller applicativo:
-
-- `agenda/appointmentReminderNotification.ts`
-- `homeAssistant/houseAutomationContext.ts`
-- `homeAssistant/houseLearnedRulesContext.ts`
-- `location/locationEngine.ts`
-- `services/timeService.ts`
-- export `buildReasoningSnapshot`
-- export `getActionIntentContext`
-- export `getGoalsDesiresContext`
-- export `getTimelineContext`
-- export `getDynamicSelfProfileContext`
-- export `getUpcomingCalendarEvents`
-- export `getLastKnownPlace`
-
-Quasi isolati/test-only:
-
-- `homeAssistant/homeContextBuilder.ts`: usato solo da route test.
-- route `debug-*` e `test-*`: cinque entry point HA/debug fuori dai flow utente.
-- `scripts/project-audit.mjs`: tool manuale che genera artefatti audit, non runtime.
-
-## 9. Doppioni e Sovrapposizioni
-
-- `buildGhostSituation` e `loadUserContextGraph`: molte query sovrapposte.
-- `buildCurrentContext` e adapter snapshot nel candidate builder: stesso contratto costruito da sorgenti diverse.
-- vecchio `curiosityEngine` e nuovo `curiositySnapshot`.
-- `proactiveDecisionEngine` e `DecisionSnapshot`/`TrueProactiveSnapshot`.
-- `homeContextBuilder`, `homeReasoningBuilder`, `HouseStateSnapshot` e comfort/route snapshots.
-- `housePatternEngine` e `behavior_patterns` engine: pattern casa e pattern generali separati ma con schema simile.
-- dedup proactive alla scrittura (`upsertProactiveMessage`) e alla lettura (`dedupeProactiveMessages`) piu dedup speciale agenda.
-- normalizzazione titolo calendario duplicata in API, chat flow e calendar service.
-- helper `buildHouseLearnedRulesContext` omonimo in file morto HA e helper locale chat.
-
-## 10. Cicli e Accoppiamento
-
-- Cicli type-only: reasoningService <-> decisionSnapshot e reasoningService <-> trueProactiveSnapshot. Non sono cicli runtime, ma i tipi dipendono dall'orchestratore concreto.
-- `reasoningService` e un god orchestrator: importa 19 moduli dominio e costruisce tutto in una chiamata.
-- `buildGhostBrainSnapshot` richiama sia UserContextGraph sia SituationEngine sia snapshot separati, provocando query duplicate.
-- `proactiveCandidateBuilder` richiama GhostBrainSnapshot e poi quattro/cinque engine AI storici: e il principale collo di bottiglia cognitivo e di costo.
-- `GhostDrawers.tsx` (1700 righe) e `app/chat/page.tsx` (755) accoppiano fetch, stato, lifecycle e rendering.
-
-## 11. Bug Certi
-
-1. Il DB fornito non contiene `house_patterns`, `logical_key`, `answered_at`; il codice li usa. La migration V1 esiste nel workspace, ma la sua esecuzione sul DB non e verificata.
-2. `action_intents` non ha relazione strutturale con `goals_desires`; completare un'action non puo completare con certezza il goal.
-3. `detectAndCompleteActionIntent` e `detectAndSaveActionIntent` girano in parallelo sullo stesso messaggio.
-4. `trueProactiveSnapshot.selected` non alimenta alcuna card.
-5. Project Advisor e nuova Curiosity influenzano snapshot/decision, ma non il writer proactive runtime.
-6. `house_paths`, `house_rooms` e `people_graph_links` non hanno accessi applicativi.
-7. Il webhook HA aggiorna eventi/entita ma non avvia il learning; il worker house non ha cron.
-8. `/api/worker/proactive` non verifica sessione o secret e processa tutti i profili; viene chiamato sia dal cron sia dal boot browser.
-9. `/api/goals/update-status` e `/api/calendar-events` usano `supabaseAdmin` fidandosi del `userId` del body, senza `getAuthenticatedUserId`.
-10. `/api/memory/search`, `/api/conversation-summary` e vari endpoint location/house response non applicano uniformemente l'helper auth server.
-11. L'API Brain filtra le proactive a sei categorie; eventuali future categorie `project`, `social`, `suggestion` sarebbero invisibili.
-12. `runProactiveFlowForUser.created` conta solo il best candidate, non agenda o briefing creati/aggiornati.
-13. La UI non consuma il GhostBrainSnapshot completo restituito dalla Brain API.
-14. Nessun writer o reader usa `people_graph_links`; la relazione persone-dati resta testuale.
-
-## 12. Bug Probabili / Da Verificare Runtime
-
-1. `chat_messages.message_order` e NOT NULL senza default nello schema fornito, ma il frontend non lo invia. Un trigger DB potrebbe salvarlo; senza trigger, gli insert falliscono.
-2. `people_graph` vuota nonostante dati topic/memory: probabile classificazione `entity_type` insufficiente o maintenance non completata.
-3. Refresh Brain a 5 secondi puo precedere il completamento di `after(runChatPostProcessing)`, facendo apparire goals/actions solo al refresh successivo.
-4. La finestra reminder basata su `start_at` e l'expire globale quando non ci sono eventi nella finestra possono rendere le card apparentemente intermittenti.
-5. Senza migrazione DB applicata, il fallback proactive non copre in modo affidabile anche `answered_at`, quindi update lifecycle possono fallire.
-6. Le chiamate OpenAI multiple del worker proactive ogni cinque minuti per ogni profilo possono causare timeout, costi e salti parziali del flow.
-7. `house_automation_controls` quasi vuota e coerente con un worker manuale piu condizioni molto strette, non necessariamente con un errore DB.
-8. La codifica mojibake visibile in diversi sorgenti (`Ã`, `â†’`) puo produrre testo UI/prompt corrotto e rompere confronti di route se presente realmente nei byte, non solo nella console.
-9. Il webhook HA accetta `userId` dal payload e diventa aperto se entrambi i secret env mancano; impatto dipendente dalla configurazione deploy.
-10. API CRUD miste fra Supabase client, admin e auth helper producono isolamento utente non uniforme.
-
-## 13. Verdetto di Connessione
-
-GhostMe possiede una catena completa Chat -> Memory/Context -> Snapshot -> Brain UI e una catena Proactive separata e funzionante. Il problema principale non e assenza di moduli: e la presenza di due cervelli concorrenti. Il nuovo GhostBrain calcola molte informazioni corrette, ma il runtime proactive continua a decidere con l'architettura precedente. Home learning dipende da un worker non schedulato; People dipende da maintenance e classificazione topic; Goals e Actions non condividono identita persistita. La UI riceve un adapter ridotto e non vede gran parte dello snapshot che il backend calcola.
+# GHOSTME SYSTEM MAP V6
+
+Generato automaticamente: 2026-06-27T01:11:06.081Z
+
+## Inventario
+
+- engine: 16
+- snapshot: 14
+- service: 10
+- flow: 13
+- adapter: 1
+- ui: 17
+- api: 25
+- worker: 3
+- orchestrator: 1
+- hook: 3
+- module: 61
+
+## Punti di ingresso
+
+- app/api/actions/update-status/route.ts
+- app/api/calendar-events/route.ts
+- app/api/chat/route.ts
+- app/api/conversation-summary/route.ts
+- app/api/debug-ha-entities/route.ts
+- app/api/debug-house-logger/route.ts
+- app/api/debug-reasoning/route.ts
+- app/api/ghostme/brain/route.ts
+- app/api/ghostme/proactive/read/route.ts
+- app/api/goals/update-status/route.ts
+- app/api/home-assistant/event/route.ts
+- app/api/house-suggestion-response/route.ts
+- app/api/location/candidate/route.ts
+- app/api/location/current-place/route.ts
+- app/api/location/current-state/route.ts
+- app/api/location/delete-place/route.ts
+- app/api/location/places/route.ts
+- app/api/location/save-place/route.ts
+- app/api/location/update-current/route.ts
+- app/api/memory/route.ts
+- app/api/memory/search/route.ts
+- app/api/proactive/messages/route.ts
+- app/api/test-ha/route.ts
+- app/api/test-home-context/route.ts
+- app/api/test-home-reasoning/route.ts
+- app/api/worker/house/route.ts
+- app/api/worker/proactive/route.ts
+- app/api/worker/reminder/route.ts
+- app/chat/page.tsx
+- app/layout.tsx
+- app/login/page.tsx
+- app/memory/page.tsx
+- app/page.tsx
+- app/setup/page.tsx
+- app/setup/profile/page.tsx
+- hooks/useGhostBrain.ts
+- hooks/useGhostChat.ts
+- hooks/useGhostVoice.ts
+
+## Punti di uscita
+
+- app/api/actions/update-status/route.ts
+- app/api/ghostme/proactive/read/route.ts
+- app/api/goals/update-status/route.ts
+- app/api/home-assistant/event/route.ts
+- app/api/memory/route.ts
+- app/chat/page.tsx
+- app/memory/page.tsx
+- app/setup/page.tsx
+- app/setup/profile/page.tsx
+- lib/ghostme/actionLayer.ts
+- lib/ghostme/agenda/reminderEngine.ts
+- lib/ghostme/behavior/behaviorRulesEngine.ts
+- lib/ghostme/calendar/calendarService.ts
+- lib/ghostme/chat/chatPostProcessing.ts
+- lib/ghostme/contradictions.ts
+- lib/ghostme/conversationSummary.ts
+- lib/ghostme/dynamicSelfProfile.ts
+- lib/ghostme/goals/goalsActionsLifecycle.ts
+- lib/ghostme/goalsDesires.ts
+- lib/ghostme/home/houseSuggestionResponseFlow.ts
+- lib/ghostme/home/houseWorkerFlow.ts
+- lib/ghostme/homeAssistant/haClient.ts
+- lib/ghostme/homeAssistant/homeEventLogger.ts
+- lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts
+- lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts
+- lib/ghostme/homeAssistant/houseEntityRegistry.ts
+- lib/ghostme/homeAssistant/houseLightLearningFlow.ts
+- lib/ghostme/homeAssistant/housePatternEngine.ts
+- lib/ghostme/homeAssistant/houseRouteLearningEngine.ts
+- lib/ghostme/homeAssistant/houseSuggestionEngine.ts
+- lib/ghostme/location/haLocationBridgeFlow.ts
+- lib/ghostme/location/locationDeletePlaceFlow.ts
+- lib/ghostme/location/locationLearningFlow.ts
+- lib/ghostme/location/locationUpdateFlow.ts
+- lib/ghostme/location/placeService.ts
+- lib/ghostme/maintenance/retentionEngine.ts
+- lib/ghostme/memoryDecay.ts
+- lib/ghostme/mentalState.ts
+- lib/ghostme/observation/observationEngine.ts
+- lib/ghostme/patterns/patternDecay.ts
+- lib/ghostme/people/peopleGraphLinkService.ts
+- lib/ghostme/people/peopleGraphService.ts
+- lib/ghostme/proactive/proactiveMessageService.ts
+- lib/ghostme/proactive/visibleProactiveMessages.ts
+- lib/ghostme/profile/profileBehaviorSeed.ts
+- lib/ghostme/relationshipResolver.ts
+- lib/ghostme/services/weatherService.ts
+- lib/ghostme/services/webSearchService.ts
+- lib/ghostme/timeline.ts
+- lib/ghostme/topicLinks.ts
+
+## Moduli
+
+### app/api/actions/update-status/route.ts
+
+Tipo: **api**
+
+Stato: **ATTIVO**
+
+Responsabilita: Espone un punto di ingresso HTTP. Area: app/api/actions/update-status. Modulo: route.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- lib/ghostme/auth/serverAuth.ts
+- lib/ghostme/goals/goalsActionsLifecycle.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- action_intents (read)
+- action_intents (update)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### app/api/calendar-events/route.ts
+
+Tipo: **api**
+
+Stato: **ATTIVO**
+
+Responsabilita: Espone un punto di ingresso HTTP. Area: app/api/calendar-events. Modulo: route.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- lib/ghostme/auth/serverAuth.ts
+- lib/ghostme/calendar/calendarService.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### app/api/chat/route.ts
+
+Tipo: **api**
+
+Stato: **ATTIVO**
+
+Responsabilita: Espone un punto di ingresso HTTP. Area: app/api/chat. Modulo: route.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- lib/ghostme/auth/serverAuth.ts
+- lib/ghostme/chat/chatPostProcessing.ts
+- lib/ghostme/chat/ghostChatOrchestrator.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### app/api/conversation-summary/route.ts
+
+Tipo: **api**
+
+Stato: **ATTIVO**
+
+Responsabilita: Espone un punto di ingresso HTTP. Area: app/api/conversation-summary. Modulo: route.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- lib/ghostme/conversationSummary.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### app/api/debug-ha-entities/route.ts
+
+Tipo: **api**
+
+Stato: **ATTIVO**
+
+Responsabilita: Espone un punto di ingresso HTTP. Area: app/api/debug-ha-entities. Modulo: route.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- lib/ghostme/auth/serverAuth.ts
+- lib/ghostme/homeAssistant/haClient.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### app/api/debug-house-logger/route.ts
+
+Tipo: **api**
+
+Stato: **ATTIVO**
+
+Responsabilita: Espone un punto di ingresso HTTP. Area: app/api/debug-house-logger. Modulo: route.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- lib/ghostme/auth/serverAuth.ts
+- lib/ghostme/homeAssistant/haClient.ts
+- lib/ghostme/homeAssistant/homeEntityMapper.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### app/api/debug-reasoning/route.ts
+
+Tipo: **api**
+
+Stato: **ATTIVO**
+
+Responsabilita: Espone un punto di ingresso HTTP. Area: app/api/debug-reasoning. Modulo: route.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- lib/ghostme/auth/serverAuth.ts
+- lib/ghostme/context/decisionSnapshot.ts
+- lib/ghostme/context/reasoningService.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- lib/ghostme/context/decisionSnapshot.ts
+
+### app/api/ghostme/brain/route.ts
+
+Tipo: **api**
+
+Stato: **ATTIVO**
+
+Responsabilita: Espone un punto di ingresso HTTP. Area: app/api/ghostme/brain. Modulo: route.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- lib/ghostme/auth/serverAuth.ts
+- lib/ghostme/calendar/calendarService.ts
+- lib/ghostme/context/decisionSnapshot.ts
+- lib/ghostme/context/reasoningService.ts
+- lib/ghostme/location/locationStateFreshness.ts
+- lib/ghostme/proactive/proactiveUserFlow.ts
+- lib/ghostme/proactive/visibleProactiveMessages.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- lib/ghostme/context/decisionSnapshot.ts
+
+### app/api/ghostme/proactive/read/route.ts
+
+Tipo: **api**
+
+Stato: **ATTIVO**
+
+Responsabilita: Espone un punto di ingresso HTTP. Area: app/api/ghostme/proactive/read. Modulo: route.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- lib/ghostme/auth/serverAuth.ts
+- lib/ghostme/calendar/calendarService.ts
+- lib/ghostme/proactive/proactiveCardLifecycle.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- calendar_events (read)
+- calendar_events (update)
+- ghost_proactive_messages (read)
+- ghost_proactive_messages (update)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### app/api/goals/update-status/route.ts
+
+Tipo: **api**
+
+Stato: **ATTIVO**
+
+Responsabilita: Espone un punto di ingresso HTTP. Area: app/api/goals/update-status. Modulo: route.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- lib/ghostme/auth/serverAuth.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- action_intents (read)
+- goals_desires (read)
+- goals_desires (update)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### app/api/home-assistant/event/route.ts
+
+Tipo: **api**
+
+Stato: **ATTIVO**
+
+Responsabilita: Espone un punto di ingresso HTTP. Area: app/api/home-assistant/event. Modulo: route.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- lib/ghostme/auth/serverAuth.ts
+- lib/ghostme/homeAssistant/homeAssistantAccess.ts
+- lib/ghostme/homeAssistant/homeEntityMapper.ts
+- lib/ghostme/homeAssistant/homeEventLogger.ts
+- lib/ghostme/homeAssistant/homeEventSignificance.ts
+- lib/ghostme/homeAssistant/houseLightLearningFlow.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- house_entities (write)
+- house_events (read)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### app/api/house-suggestion-response/route.ts
+
+Tipo: **api**
+
+Stato: **ATTIVO**
+
+Responsabilita: Espone un punto di ingresso HTTP. Area: app/api/house-suggestion-response. Modulo: route.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- lib/ghostme/auth/serverAuth.ts
+- lib/ghostme/home/houseSuggestionResponseFlow.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### app/api/location/candidate/route.ts
+
+Tipo: **api**
+
+Stato: **ATTIVO**
+
+Responsabilita: Espone un punto di ingresso HTTP. Area: app/api/location/candidate. Modulo: route.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- lib/ghostme/auth/serverAuth.ts
+- lib/ghostme/location/locationLearningFlow.ts
+- lib/ghostme/location/placeService.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### app/api/location/current-place/route.ts
+
+Tipo: **api**
+
+Stato: **ATTIVO**
+
+Responsabilita: Espone un punto di ingresso HTTP. Area: app/api/location/current-place. Modulo: route.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- lib/ghostme/auth/serverAuth.ts
+- lib/ghostme/location/placeService.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### app/api/location/current-state/route.ts
+
+Tipo: **api**
+
+Stato: **ATTIVO**
+
+Responsabilita: Espone un punto di ingresso HTTP. Area: app/api/location/current-state. Modulo: route.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- lib/ghostme/auth/serverAuth.ts
+- lib/ghostme/location/locationCurrentStateFlow.ts
+- lib/ghostme/location/locationStateFreshness.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### app/api/location/delete-place/route.ts
+
+Tipo: **api**
+
+Stato: **ATTIVO**
+
+Responsabilita: Espone un punto di ingresso HTTP. Area: app/api/location/delete-place. Modulo: route.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- lib/ghostme/auth/serverAuth.ts
+- lib/ghostme/location/locationDeletePlaceFlow.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### app/api/location/places/route.ts
+
+Tipo: **api**
+
+Stato: **ATTIVO**
+
+Responsabilita: Espone un punto di ingresso HTTP. Area: app/api/location/places. Modulo: route.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- lib/ghostme/auth/serverAuth.ts
+- lib/ghostme/location/placeService.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### app/api/location/save-place/route.ts
+
+Tipo: **api**
+
+Stato: **ATTIVO**
+
+Responsabilita: Espone un punto di ingresso HTTP. Area: app/api/location/save-place. Modulo: route.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- lib/ghostme/auth/serverAuth.ts
+- lib/ghostme/location/locationSavePlaceFlow.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### app/api/location/update-current/route.ts
+
+Tipo: **api**
+
+Stato: **ATTIVO**
+
+Responsabilita: Espone un punto di ingresso HTTP. Area: app/api/location/update-current. Modulo: route.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- lib/ghostme/auth/serverAuth.ts
+- lib/ghostme/location/locationStateFreshness.ts
+- lib/ghostme/location/locationUpdateFlow.ts
+- lib/ghostme/location/placeService.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### app/api/memory/route.ts
+
+Tipo: **api**
+
+Stato: **ATTIVO**
+
+Responsabilita: Espone un punto di ingresso HTTP. Area: app/api/memory. Modulo: route.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- lib/supabase.ts
+
+Tabelle usate:
+- memories_active (read)
+- memories_active (write)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### app/api/memory/search/route.ts
+
+Tipo: **api**
+
+Stato: **ATTIVO**
+
+Responsabilita: Espone un punto di ingresso HTTP. Area: app/api/memory/search. Modulo: route.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- lib/ghostme/auth/serverAuth.ts
+- lib/ghostme/memory/memorySearchFlow.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### app/api/proactive/messages/route.ts
+
+Tipo: **api**
+
+Stato: **ATTIVO**
+
+Responsabilita: Espone un punto di ingresso HTTP. Area: app/api/proactive/messages. Modulo: route.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- lib/ghostme/auth/serverAuth.ts
+- lib/ghostme/proactive/visibleProactiveMessages.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### app/api/test-ha/route.ts
+
+Tipo: **api**
+
+Stato: **ATTIVO**
+
+Responsabilita: Espone un punto di ingresso HTTP. Area: app/api/test-ha. Modulo: route.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- lib/ghostme/auth/serverAuth.ts
+- lib/ghostme/homeAssistant/haClient.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### app/api/test-home-context/route.ts
+
+Tipo: **api**
+
+Stato: **ATTIVO**
+
+Responsabilita: Espone un punto di ingresso HTTP. Area: app/api/test-home-context. Modulo: route.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- lib/ghostme/auth/serverAuth.ts
+- lib/ghostme/homeAssistant/homeContextBuilder.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### app/api/test-home-reasoning/route.ts
+
+Tipo: **api**
+
+Stato: **ATTIVO**
+
+Responsabilita: Espone un punto di ingresso HTTP. Area: app/api/test-home-reasoning. Modulo: route.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- lib/ghostme/auth/serverAuth.ts
+- lib/ghostme/homeAssistant/homeReasoningBuilder.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### app/api/worker/house/route.ts
+
+Tipo: **worker**
+
+Stato: **ATTIVO**
+
+Responsabilita: Esegue un ciclo worker o cron. Area: app/api/worker/house. Modulo: route.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- lib/ghostme/home/houseWorkerFlow.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### app/api/worker/proactive/route.ts
+
+Tipo: **worker**
+
+Stato: **ATTIVO**
+
+Responsabilita: Esegue un ciclo worker o cron. Area: app/api/worker/proactive. Modulo: route.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- lib/ghostme/auth/serverAuth.ts
+- lib/ghostme/proactive/proactiveUserFlow.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- user_profiles (read)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### app/api/worker/reminder/route.ts
+
+Tipo: **worker**
+
+Stato: **ATTIVO**
+
+Responsabilita: Esegue un ciclo worker o cron. Area: app/api/worker/reminder. Modulo: route.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- lib/ghostme/agenda/reminderEngine.ts
+- lib/ghostme/auth/serverAuth.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- lib/ghostme/agenda/reminderEngine.ts
+
+Snapshot collegati:
+- nessuno
+
+### app/chat/page.tsx
+
+Tipo: **ui**
+
+Stato: **ATTIVO**
+
+Responsabilita: Renderizza o coordina esperienza utente. Area: app/chat. Modulo: page.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- components/ghost/GhostBackground.tsx
+- components/ghost/GhostChat.tsx
+- components/ghost/GhostDrawers.tsx
+- components/ghost/GhostHeader.tsx
+- components/ghost/GhostLayout.tsx
+- components/ghost/GhostVoiceMode.tsx
+- components/ghost/types.ts
+- hooks/useGhostBrain.ts
+- hooks/useGhostChat.ts
+- hooks/useGhostVoice.ts
+- lib/ghostme/auth/clientAuthHeaders.ts
+- lib/personality.ts
+- lib/supabase.ts
+
+Tabelle usate:
+- chat_messages (read)
+- chat_messages (write)
+- traits (read)
+- user_profiles (read)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### app/layout.tsx
+
+Tipo: **ui**
+
+Stato: **ATTIVO**
+
+Responsabilita: Renderizza o coordina esperienza utente. Area: app. Modulo: layout.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- nessuno
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### app/login/page.tsx
+
+Tipo: **ui**
+
+Stato: **ATTIVO**
+
+Responsabilita: Renderizza o coordina esperienza utente. Area: app/login. Modulo: page.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- lib/supabase.ts
+
+Tabelle usate:
+- traits (read)
+- user_profiles (read)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### app/memory/page.tsx
+
+Tipo: **ui**
+
+Stato: **ATTIVO**
+
+Responsabilita: Renderizza o coordina esperienza utente. Area: app/memory. Modulo: page.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- lib/supabase.ts
+
+Tabelle usate:
+- memories_active (delete)
+- memories_active (read)
+- memories_active (update)
+- memories_active (write)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### app/page.tsx
+
+Tipo: **ui**
+
+Stato: **ATTIVO**
+
+Responsabilita: Renderizza o coordina esperienza utente. Area: app. Modulo: page.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- nessuno
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### app/setup/page.tsx
+
+Tipo: **ui**
+
+Stato: **ATTIVO**
+
+Responsabilita: Renderizza o coordina esperienza utente. Area: app/setup. Modulo: page.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- lib/ghostme/profile/profileBehaviorSeed.ts
+- lib/personality.ts
+- lib/supabase.ts
+
+Tabelle usate:
+- answers (delete)
+- answers (read)
+- answers (write)
+- traits (delete)
+- traits (write)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### app/setup/profile/page.tsx
+
+Tipo: **ui**
+
+Stato: **ATTIVO**
+
+Responsabilita: Renderizza o coordina esperienza utente. Area: app/setup/profile. Modulo: page.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- lib/supabase.ts
+
+Tabelle usate:
+- user_profiles (write)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### components/ghost/GhostBackground.tsx
+
+Tipo: **ui**
+
+Stato: **ATTIVO**
+
+Responsabilita: Renderizza o coordina esperienza utente. Area: components/ghost. Modulo: GhostBackground.
+
+Chi lo chiama:
+- app/chat/page.tsx
+
+Chi chiama:
+- components/ghost/types.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### components/ghost/GhostCanvasCore.tsx
+
+Tipo: **ui**
+
+Stato: **ATTIVO**
+
+Responsabilita: Renderizza o coordina esperienza utente. Area: components/ghost. Modulo: GhostCanvasCore.
+
+Chi lo chiama:
+- components/ghost/GhostVoiceMode.tsx
+
+Chi chiama:
+- components/ghost/types.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### components/ghost/GhostChat.tsx
+
+Tipo: **ui**
+
+Stato: **ATTIVO**
+
+Responsabilita: Renderizza o coordina esperienza utente. Area: components/ghost. Modulo: GhostChat.
+
+Chi lo chiama:
+- app/chat/page.tsx
+
+Chi chiama:
+- components/ghost/types.ts
+- lib/ghostme/auth/clientAuthHeaders.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### components/ghost/GhostCore.tsx
+
+Tipo: **ui**
+
+Stato: **ATTIVO**
+
+Responsabilita: Renderizza o coordina esperienza utente. Area: components/ghost. Modulo: GhostCore.
+
+Chi lo chiama:
+- components/ghost/GhostVoiceMode.tsx
+
+Chi chiama:
+- components/ghost/types.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### components/ghost/GhostDrawers.tsx
+
+Tipo: **ui**
+
+Stato: **ATTIVO**
+
+Responsabilita: Renderizza o coordina esperienza utente. Area: components/ghost. Modulo: GhostDrawers.
+
+Chi lo chiama:
+- app/chat/page.tsx
+
+Chi chiama:
+- components/ghost/types.ts
+- lib/ghostme/auth/clientAuthHeaders.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### components/ghost/GhostGlobalStyles.tsx
+
+Tipo: **ui**
+
+Stato: **ATTIVO**
+
+Responsabilita: Renderizza o coordina esperienza utente. Area: components/ghost. Modulo: GhostGlobalStyles.
+
+Chi lo chiama:
+- components/ghost/GhostLayout.tsx
+
+Chi chiama:
+- nessuno
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### components/ghost/GhostHeader.tsx
+
+Tipo: **ui**
+
+Stato: **ATTIVO**
+
+Responsabilita: Renderizza o coordina esperienza utente. Area: components/ghost. Modulo: GhostHeader.
+
+Chi lo chiama:
+- app/chat/page.tsx
+
+Chi chiama:
+- components/ghost/types.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### components/ghost/GhostLayout.tsx
+
+Tipo: **ui**
+
+Stato: **ATTIVO**
+
+Responsabilita: Renderizza o coordina esperienza utente. Area: components/ghost. Modulo: GhostLayout.
+
+Chi lo chiama:
+- app/chat/page.tsx
+
+Chi chiama:
+- components/ghost/GhostGlobalStyles.tsx
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### components/ghost/GhostVoiceMode.tsx
+
+Tipo: **ui**
+
+Stato: **ATTIVO**
+
+Responsabilita: Renderizza o coordina esperienza utente. Area: components/ghost. Modulo: GhostVoiceMode.
+
+Chi lo chiama:
+- app/chat/page.tsx
+
+Chi chiama:
+- components/ghost/GhostCanvasCore.tsx
+- components/ghost/GhostCore.tsx
+- components/ghost/types.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### components/ghost/types.ts
+
+Tipo: **ui**
+
+Stato: **ATTIVO**
+
+Responsabilita: Renderizza o coordina esperienza utente. Area: components/ghost. Modulo: types.
+
+Chi lo chiama:
+- app/chat/page.tsx
+- components/ghost/GhostBackground.tsx
+- components/ghost/GhostCanvasCore.tsx
+- components/ghost/GhostChat.tsx
+- components/ghost/GhostCore.tsx
+- components/ghost/GhostDrawers.tsx
+- components/ghost/GhostHeader.tsx
+- components/ghost/GhostVoiceMode.tsx
+- hooks/useGhostBrain.ts
+- hooks/useGhostChat.ts
+- hooks/useGhostVoice.ts
+- lib/ghostme/ui/brainUiAdapter.ts
+
+Chi chiama:
+- lib/ghostme/context/decisionSnapshot.ts
+- lib/ghostme/context/reasoningService.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- lib/ghostme/context/decisionSnapshot.ts
+
+### hooks/useGhostBrain.ts
+
+Tipo: **hook**
+
+Stato: **ATTIVO**
+
+Responsabilita: Gestisce stato client e chiamate UI. Area: hooks. Modulo: useGhostBrain.
+
+Chi lo chiama:
+- app/chat/page.tsx
+
+Chi chiama:
+- components/ghost/types.ts
+- lib/ghostme/auth/clientAuthHeaders.ts
+- lib/ghostme/ui/brainUiAdapter.ts
+- lib/personality.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### hooks/useGhostChat.ts
+
+Tipo: **hook**
+
+Stato: **ATTIVO**
+
+Responsabilita: Gestisce stato client e chiamate UI. Area: hooks. Modulo: useGhostChat.
+
+Chi lo chiama:
+- app/chat/page.tsx
+
+Chi chiama:
+- components/ghost/types.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### hooks/useGhostVoice.ts
+
+Tipo: **hook**
+
+Stato: **ATTIVO**
+
+Responsabilita: Gestisce stato client e chiamate UI. Area: hooks. Modulo: useGhostVoice.
+
+Chi lo chiama:
+- app/chat/page.tsx
+
+Chi chiama:
+- components/ghost/types.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/actionLayer.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme. Modulo: actionLayer.
+
+Chi lo chiama:
+- lib/ghostme/chat/chatPostProcessing.ts
+- lib/ghostme/proactive/proactiveMaintenanceFlow.ts
+
+Chi chiama:
+- lib/ghostme/goals/goalsActionsLifecycle.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- action_intents (read)
+- action_intents (update)
+- action_intents (write)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/agenda/agendaEngine.ts
+
+Tipo: **engine**
+
+Stato: **ATTIVO**
+
+Responsabilita: Calcola decisioni, insight o trasformazioni cognitive. Area: lib/ghostme/agenda. Modulo: agendaEngine.
+
+Chi lo chiama:
+- lib/ghostme/calendar/calendarService.ts
+- lib/ghostme/proactive/proactiveCandidateBuilder.ts
+
+Chi chiama:
+- lib/ghostme/situation/situationEngine.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- lib/ghostme/situation/situationEngine.ts
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/agenda/appointmentReminderNotification.ts
+
+Tipo: **module**
+
+Stato: **ORFANO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/agenda. Modulo: appointmentReminderNotification.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- nessuno
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/agenda/reminderEngine.ts
+
+Tipo: **engine**
+
+Stato: **ATTIVO**
+
+Responsabilita: Calcola decisioni, insight o trasformazioni cognitive. Area: lib/ghostme/agenda. Modulo: reminderEngine.
+
+Chi lo chiama:
+- app/api/worker/reminder/route.ts
+- lib/ghostme/calendar/calendarService.ts
+- lib/ghostme/proactive/proactiveMaintenanceFlow.ts
+
+Chi chiama:
+- lib/ghostme/proactive/proactiveMessageService.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- calendar_events (read)
+- ghost_proactive_messages (read)
+- ghost_proactive_messages (update)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/auth/clientAuthHeaders.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/auth. Modulo: clientAuthHeaders.
+
+Chi lo chiama:
+- app/chat/page.tsx
+- components/ghost/GhostChat.tsx
+- components/ghost/GhostDrawers.tsx
+- hooks/useGhostBrain.ts
+
+Chi chiama:
+- lib/supabase.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/auth/serverAuth.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/auth. Modulo: serverAuth.
+
+Chi lo chiama:
+- app/api/actions/update-status/route.ts
+- app/api/calendar-events/route.ts
+- app/api/chat/route.ts
+- app/api/debug-ha-entities/route.ts
+- app/api/debug-house-logger/route.ts
+- app/api/debug-reasoning/route.ts
+- app/api/ghostme/brain/route.ts
+- app/api/ghostme/proactive/read/route.ts
+- app/api/goals/update-status/route.ts
+- app/api/home-assistant/event/route.ts
+- app/api/house-suggestion-response/route.ts
+- app/api/location/candidate/route.ts
+- app/api/location/current-place/route.ts
+- app/api/location/current-state/route.ts
+- app/api/location/delete-place/route.ts
+- app/api/location/places/route.ts
+- app/api/location/save-place/route.ts
+- app/api/location/update-current/route.ts
+- app/api/memory/search/route.ts
+- app/api/proactive/messages/route.ts
+- app/api/test-ha/route.ts
+- app/api/test-home-context/route.ts
+- app/api/test-home-reasoning/route.ts
+- app/api/worker/proactive/route.ts
+- app/api/worker/reminder/route.ts
+- lib/ghostme/home/houseWorkerFlow.ts
+
+Chi chiama:
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/behavior/behaviorRulesEngine.ts
+
+Tipo: **engine**
+
+Stato: **ATTIVO**
+
+Responsabilita: Calcola decisioni, insight o trasformazioni cognitive. Area: lib/ghostme/behavior. Modulo: behaviorRulesEngine.
+
+Chi lo chiama:
+- lib/ghostme/chat/chatContextBuilder.ts
+- lib/ghostme/chat/chatPostProcessing.ts
+- lib/ghostme/context/contextBuilder.ts
+- lib/ghostme/proactive/proactiveCandidateBuilder.ts
+
+Chi chiama:
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- ghost_behavior_rules (read)
+- ghost_behavior_rules (update)
+- ghost_behavior_rules (write)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/butler/butlerEngine.ts
+
+Tipo: **engine**
+
+Stato: **ATTIVO**
+
+Responsabilita: Calcola decisioni, insight o trasformazioni cognitive. Area: lib/ghostme/butler. Modulo: butlerEngine.
+
+Chi lo chiama:
+- lib/ghostme/proactive/proactiveCandidateBuilder.ts
+
+Chi chiama:
+- lib/ghostme/context/contextBuilder.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/calendar/calendarIntent.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/calendar. Modulo: calendarIntent.
+
+Chi lo chiama:
+- lib/ghostme/chat/chatCalendarFlow.ts
+
+Chi chiama:
+- nessuno
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/calendar/calendarService.ts
+
+Tipo: **service**
+
+Stato: **ATTIVO**
+
+Responsabilita: Integra servizi o accesso dati specializzato. Area: lib/ghostme/calendar. Modulo: calendarService.
+
+Chi lo chiama:
+- app/api/calendar-events/route.ts
+- app/api/ghostme/brain/route.ts
+- app/api/ghostme/proactive/read/route.ts
+- lib/ghostme/chat/chatCalendarFlow.ts
+- lib/ghostme/proactive/proactiveMaintenanceFlow.ts
+- lib/ghostme/proactive/proactiveTrigger.ts
+
+Chi chiama:
+- lib/ghostme/agenda/agendaEngine.ts
+- lib/ghostme/agenda/reminderEngine.ts
+- lib/ghostme/proactive/proactiveMessageService.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- calendar_events (read)
+- calendar_events (update)
+- calendar_events (write)
+- ghost_proactive_messages (read)
+- ghost_proactive_messages (update)
+
+Engine collegati:
+- lib/ghostme/agenda/agendaEngine.ts
+- lib/ghostme/agenda/reminderEngine.ts
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/chat/chatCalendarFlow.ts
+
+Tipo: **flow**
+
+Stato: **ATTIVO**
+
+Responsabilita: Implementa un workflow applicativo specifico. Area: lib/ghostme/chat. Modulo: chatCalendarFlow.
+
+Chi lo chiama:
+- lib/ghostme/chat/ghostChatOrchestrator.ts
+
+Chi chiama:
+- lib/ghostme/calendar/calendarIntent.ts
+- lib/ghostme/calendar/calendarService.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/chat/chatContextBuilder.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/chat. Modulo: chatContextBuilder.
+
+Chi lo chiama:
+- lib/ghostme/chat/ghostChatOrchestrator.ts
+
+Chi chiama:
+- lib/ghostme/behavior/behaviorRulesEngine.ts
+- lib/ghostme/chat/chatPromptBuilder.ts
+- lib/ghostme/chat/chatRecallPolicy.ts
+- lib/ghostme/chat/chatTypes.ts
+- lib/ghostme/context/reasoningService.ts
+- lib/ghostme/context/temporalPriority.ts
+- lib/ghostme/location/locationStateFreshness.ts
+- lib/ghostme/retrieval.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- lib/ghostme/behavior/behaviorRulesEngine.ts
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/chat/chatExternalServices.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/chat. Modulo: chatExternalServices.
+
+Chi lo chiama:
+- lib/ghostme/chat/ghostChatOrchestrator.ts
+
+Chi chiama:
+- lib/ghostme/services/serviceRouter.ts
+- lib/ghostme/services/weatherService.ts
+- lib/ghostme/services/webSearchService.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/chat/chatMessageAnalyzer.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/chat. Modulo: chatMessageAnalyzer.
+
+Chi lo chiama:
+- lib/ghostme/chat/ghostChatOrchestrator.ts
+
+Chi chiama:
+- lib/ghostme/chat/chatTypes.ts
+- lib/ghostme/core/messageClassifier.ts
+- lib/ghostme/entityExtractor.ts
+- lib/ghostme/relationshipResolver.ts
+- lib/ghostme/topicDetector.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/chat/chatPostProcessing.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/chat. Modulo: chatPostProcessing.
+
+Chi lo chiama:
+- app/api/chat/route.ts
+
+Chi chiama:
+- lib/ghostme/actionLayer.ts
+- lib/ghostme/behavior/behaviorRulesEngine.ts
+- lib/ghostme/chat/chatTypes.ts
+- lib/ghostme/contradictions.ts
+- lib/ghostme/dynamicSelfProfile.ts
+- lib/ghostme/goals/goalsActionsLifecycle.ts
+- lib/ghostme/goalsDesires.ts
+- lib/ghostme/mentalState.ts
+- lib/ghostme/people/peopleGraphLinkService.ts
+- lib/ghostme/people/peopleGraphService.ts
+- lib/ghostme/timeline.ts
+- lib/ghostme/topicDetector.ts
+- lib/ghostme/topicLinks.ts
+- lib/supabase.ts
+
+Tabelle usate:
+- episodic_memories (read)
+- episodic_memories (write)
+- life_topics (read)
+- life_topics (update)
+- life_topics (write)
+- memories_active (read)
+- memories_active (update)
+- memories_active (write)
+
+Engine collegati:
+- lib/ghostme/behavior/behaviorRulesEngine.ts
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/chat/chatPromptBuilder.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/chat. Modulo: chatPromptBuilder.
+
+Chi lo chiama:
+- lib/ghostme/chat/chatContextBuilder.ts
+- lib/ghostme/chat/ghostChatOrchestrator.ts
+
+Chi chiama:
+- nessuno
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/chat/chatRecallPolicy.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/chat. Modulo: chatRecallPolicy.
+
+Chi lo chiama:
+- lib/ghostme/chat/chatContextBuilder.ts
+
+Chi chiama:
+- nessuno
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/chat/chatResponseSanitizer.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/chat. Modulo: chatResponseSanitizer.
+
+Chi lo chiama:
+- lib/ghostme/chat/ghostChatOrchestrator.ts
+
+Chi chiama:
+- nessuno
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/chat/chatTypes.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/chat. Modulo: chatTypes.
+
+Chi lo chiama:
+- lib/ghostme/chat/chatContextBuilder.ts
+- lib/ghostme/chat/chatMessageAnalyzer.ts
+- lib/ghostme/chat/chatPostProcessing.ts
+- lib/ghostme/chat/ghostChatOrchestrator.ts
+
+Chi chiama:
+- nessuno
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/chat/ghostChatOrchestrator.ts
+
+Tipo: **orchestrator**
+
+Stato: **ATTIVO**
+
+Responsabilita: Coordina un flusso applicativo multi-modulo. Area: lib/ghostme/chat. Modulo: ghostChatOrchestrator.
+
+Chi lo chiama:
+- app/api/chat/route.ts
+
+Chi chiama:
+- lib/ghostme/chat/chatCalendarFlow.ts
+- lib/ghostme/chat/chatContextBuilder.ts
+- lib/ghostme/chat/chatExternalServices.ts
+- lib/ghostme/chat/chatMessageAnalyzer.ts
+- lib/ghostme/chat/chatPromptBuilder.ts
+- lib/ghostme/chat/chatResponseSanitizer.ts
+- lib/ghostme/chat/chatTypes.ts
+- lib/ghostme/context/temporalPriority.ts
+- lib/ghostme/memoryDecay.ts
+- lib/ghostme/relationshipResolver.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/context/contextBuilder.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/context. Modulo: contextBuilder.
+
+Chi lo chiama:
+- lib/ghostme/butler/butlerEngine.ts
+- lib/ghostme/proactive/proactiveCandidateBuilder.ts
+- lib/ghostme/proactive/proactiveDecisionEngine.ts
+- lib/ghostme/proactive/proactiveTrigger.ts
+
+Chi chiama:
+- lib/ghostme/behavior/behaviorRulesEngine.ts
+- lib/ghostme/context/contextSignals.ts
+- lib/ghostme/context/temporalPriority.ts
+- lib/ghostme/homeAssistant/homeReasoningBuilder.ts
+- lib/ghostme/situation/situationEngine.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- ghost_proactive_messages (read)
+
+Engine collegati:
+- lib/ghostme/behavior/behaviorRulesEngine.ts
+- lib/ghostme/butler/butlerEngine.ts
+- lib/ghostme/proactive/proactiveDecisionEngine.ts
+- lib/ghostme/situation/situationEngine.ts
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/context/contextSignals.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/context. Modulo: contextSignals.
+
+Chi lo chiama:
+- lib/ghostme/context/contextBuilder.ts
+- lib/ghostme/context/reasoningService.ts
+- lib/ghostme/curiosity/curiositySnapshot.ts
+
+Chi chiama:
+- lib/ghostme/situation/situationEngine.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- lib/ghostme/situation/situationEngine.ts
+
+Snapshot collegati:
+- lib/ghostme/curiosity/curiositySnapshot.ts
+
+### lib/ghostme/context/decisionSnapshot.ts
+
+Tipo: **snapshot**
+
+Stato: **ATTIVO**
+
+Responsabilita: Costruisce una vista strutturata dello stato utente/sistema. Area: lib/ghostme/context. Modulo: decisionSnapshot.
+
+Chi lo chiama:
+- app/api/debug-reasoning/route.ts
+- app/api/ghostme/brain/route.ts
+- components/ghost/types.ts
+- lib/ghostme/context/reasoningService.ts
+- lib/ghostme/proactive/trueProactiveSnapshot.ts
+- lib/ghostme/ui/brainUiAdapter.ts
+
+Chi chiama:
+- lib/ghostme/context/reasoningService.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- lib/ghostme/proactive/trueProactiveSnapshot.ts
+
+### lib/ghostme/context/reasoningService.ts
+
+Tipo: **service**
+
+Stato: **ATTIVO**
+
+Responsabilita: Integra servizi o accesso dati specializzato. Area: lib/ghostme/context. Modulo: reasoningService.
+
+Chi lo chiama:
+- app/api/debug-reasoning/route.ts
+- app/api/ghostme/brain/route.ts
+- components/ghost/types.ts
+- lib/ghostme/chat/chatContextBuilder.ts
+- lib/ghostme/context/decisionSnapshot.ts
+- lib/ghostme/proactive/proactiveCandidateBuilder.ts
+- lib/ghostme/proactive/proactiveUserFlow.ts
+- lib/ghostme/proactive/trueProactiveSnapshot.ts
+- lib/ghostme/ui/brainUiAdapter.ts
+
+Chi chiama:
+- lib/ghostme/context/contextSignals.ts
+- lib/ghostme/context/decisionSnapshot.ts
+- lib/ghostme/context/temporalPriority.ts
+- lib/ghostme/context/userContextGraph.ts
+- lib/ghostme/curiosity/curiositySnapshot.ts
+- lib/ghostme/goals/goalsSnapshot.ts
+- lib/ghostme/home/homeComfortRiskSnapshot.ts
+- lib/ghostme/home/homeLocationConsistency.ts
+- lib/ghostme/home/houseRouteSnapshot.ts
+- lib/ghostme/home/houseStateSnapshot.ts
+- lib/ghostme/homeAssistant/homeAssistantAccess.ts
+- lib/ghostme/homeAssistant/homeReasoningBuilder.ts
+- lib/ghostme/memory/memorySnapshot.ts
+- lib/ghostme/people/peopleSnapshot.ts
+- lib/ghostme/people/relationshipMemorySnapshot.ts
+- lib/ghostme/people/socialSuggestionSnapshot.ts
+- lib/ghostme/proactive/trueProactiveSnapshot.ts
+- lib/ghostme/projects/goalProjectConsistencySnapshot.ts
+- lib/ghostme/projects/projectAdvisorSnapshot.ts
+- lib/ghostme/projects/projectMemorySnapshot.ts
+- lib/ghostme/situation/situationEngine.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- lib/ghostme/situation/situationEngine.ts
+
+Snapshot collegati:
+- lib/ghostme/context/decisionSnapshot.ts
+- lib/ghostme/curiosity/curiositySnapshot.ts
+- lib/ghostme/goals/goalsSnapshot.ts
+- lib/ghostme/home/homeComfortRiskSnapshot.ts
+- lib/ghostme/home/houseRouteSnapshot.ts
+- lib/ghostme/home/houseStateSnapshot.ts
+- lib/ghostme/memory/memorySnapshot.ts
+- lib/ghostme/people/peopleSnapshot.ts
+- lib/ghostme/people/relationshipMemorySnapshot.ts
+- lib/ghostme/people/socialSuggestionSnapshot.ts
+- lib/ghostme/proactive/trueProactiveSnapshot.ts
+- lib/ghostme/projects/goalProjectConsistencySnapshot.ts
+- lib/ghostme/projects/projectAdvisorSnapshot.ts
+- lib/ghostme/projects/projectMemorySnapshot.ts
+
+### lib/ghostme/context/temporalPriority.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/context. Modulo: temporalPriority.
+
+Chi lo chiama:
+- lib/ghostme/chat/chatContextBuilder.ts
+- lib/ghostme/chat/ghostChatOrchestrator.ts
+- lib/ghostme/context/contextBuilder.ts
+- lib/ghostme/context/reasoningService.ts
+- lib/ghostme/context/userContextGraph.ts
+- lib/ghostme/goals/goalsSnapshot.ts
+- lib/ghostme/memory/memorySearchFlow.ts
+- lib/ghostme/memory/memorySnapshot.ts
+- lib/ghostme/proactive/dailyBriefingRepository.ts
+- lib/ghostme/projects/projectMemorySnapshot.ts
+- lib/ghostme/retrieval.ts
+- lib/ghostme/situation/situationEngine.ts
+
+Chi chiama:
+- nessuno
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- lib/ghostme/situation/situationEngine.ts
+
+Snapshot collegati:
+- lib/ghostme/goals/goalsSnapshot.ts
+- lib/ghostme/memory/memorySnapshot.ts
+- lib/ghostme/projects/projectMemorySnapshot.ts
+
+### lib/ghostme/context/userContextGraph.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/context. Modulo: userContextGraph.
+
+Chi lo chiama:
+- lib/ghostme/context/reasoningService.ts
+
+Chi chiama:
+- lib/ghostme/context/temporalPriority.ts
+- lib/ghostme/location/locationStateFreshness.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- action_intents (read)
+- behavior_patterns (read)
+- calendar_events (read)
+- conversation_summaries (read)
+- episodic_memories (read)
+- ghost_proactive_messages (read)
+- goals_desires (read)
+- house_automation_controls (read)
+- house_learned_rules (read)
+- house_patterns (read)
+- life_topics (read)
+- memories_active (read)
+- people_graph (read)
+- significant_places (read)
+- user_location_state (read)
+- user_profiles (read)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/contradictions.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme. Modulo: contradictions.
+
+Chi lo chiama:
+- lib/ghostme/chat/chatPostProcessing.ts
+
+Chi chiama:
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- contradictions (read)
+- contradictions (write)
+- life_topics (read)
+- memories_active (read)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/conversationSummary.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme. Modulo: conversationSummary.
+
+Chi lo chiama:
+- app/api/conversation-summary/route.ts
+- lib/ghostme/proactive/proactiveMaintenanceFlow.ts
+
+Chi chiama:
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- chat_messages (read)
+- conversation_summaries (read)
+- conversation_summaries (update)
+- conversation_summaries (write)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/core/messageClassifier.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/core. Modulo: messageClassifier.
+
+Chi lo chiama:
+- lib/ghostme/chat/chatMessageAnalyzer.ts
+
+Chi chiama:
+- nessuno
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/curiosity/curiosityEngine.ts
+
+Tipo: **engine**
+
+Stato: **ORFANO**
+
+Responsabilita: Calcola decisioni, insight o trasformazioni cognitive. Area: lib/ghostme/curiosity. Modulo: curiosityEngine.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- lib/ghostme/situation/situationEngine.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- autobiographical_timeline (read)
+- contradictions (read)
+- conversation_summaries (read)
+- dynamic_self_profile (read)
+- ghost_proactive_messages (read)
+- goals_desires (read)
+- life_topics (read)
+
+Engine collegati:
+- lib/ghostme/situation/situationEngine.ts
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/curiosity/curiositySnapshot.ts
+
+Tipo: **snapshot**
+
+Stato: **ATTIVO**
+
+Responsabilita: Costruisce una vista strutturata dello stato utente/sistema. Area: lib/ghostme/curiosity. Modulo: curiositySnapshot.
+
+Chi lo chiama:
+- lib/ghostme/context/reasoningService.ts
+- lib/ghostme/proactive/curiosityCardWriter.ts
+
+Chi chiama:
+- lib/ghostme/context/contextSignals.ts
+- lib/ghostme/goals/goalsSnapshot.ts
+- lib/ghostme/home/homeComfortRiskSnapshot.ts
+- lib/ghostme/home/houseRouteSnapshot.ts
+- lib/ghostme/memory/memorySnapshot.ts
+- lib/ghostme/people/peopleSnapshot.ts
+- lib/ghostme/people/relationshipMemorySnapshot.ts
+- lib/ghostme/people/socialSuggestionSnapshot.ts
+- lib/ghostme/projects/goalProjectConsistencySnapshot.ts
+- lib/ghostme/projects/projectAdvisorSnapshot.ts
+- lib/ghostme/projects/projectMemorySnapshot.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- lib/ghostme/goals/goalsSnapshot.ts
+- lib/ghostme/home/homeComfortRiskSnapshot.ts
+- lib/ghostme/home/houseRouteSnapshot.ts
+- lib/ghostme/memory/memorySnapshot.ts
+- lib/ghostme/people/peopleSnapshot.ts
+- lib/ghostme/people/relationshipMemorySnapshot.ts
+- lib/ghostme/people/socialSuggestionSnapshot.ts
+- lib/ghostme/projects/goalProjectConsistencySnapshot.ts
+- lib/ghostme/projects/projectAdvisorSnapshot.ts
+- lib/ghostme/projects/projectMemorySnapshot.ts
+
+### lib/ghostme/dynamicSelfProfile.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme. Modulo: dynamicSelfProfile.
+
+Chi lo chiama:
+- lib/ghostme/chat/chatPostProcessing.ts
+
+Chi chiama:
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- dynamic_self_profile (read)
+- dynamic_self_profile (update)
+- dynamic_self_profile (write)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/entityExtractor.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme. Modulo: entityExtractor.
+
+Chi lo chiama:
+- lib/ghostme/chat/chatMessageAnalyzer.ts
+
+Chi chiama:
+- lib/ghostme/topicDetector.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/goals/goalsActionsLifecycle.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/goals. Modulo: goalsActionsLifecycle.
+
+Chi lo chiama:
+- app/api/actions/update-status/route.ts
+- lib/ghostme/actionLayer.ts
+- lib/ghostme/chat/chatPostProcessing.ts
+
+Chi chiama:
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- action_intents (read)
+- action_intents (update)
+- goals_desires (read)
+- goals_desires (update)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/goals/goalsSnapshot.ts
+
+Tipo: **snapshot**
+
+Stato: **ATTIVO**
+
+Responsabilita: Costruisce una vista strutturata dello stato utente/sistema. Area: lib/ghostme/goals. Modulo: goalsSnapshot.
+
+Chi lo chiama:
+- lib/ghostme/context/reasoningService.ts
+- lib/ghostme/curiosity/curiositySnapshot.ts
+- lib/ghostme/projects/goalProjectConsistencySnapshot.ts
+- lib/ghostme/projects/projectAdvisorSnapshot.ts
+- lib/ghostme/projects/projectMemorySnapshot.ts
+
+Chi chiama:
+- lib/ghostme/context/temporalPriority.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- action_intents (read)
+- goals_desires (read)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- lib/ghostme/curiosity/curiositySnapshot.ts
+- lib/ghostme/projects/goalProjectConsistencySnapshot.ts
+- lib/ghostme/projects/projectAdvisorSnapshot.ts
+- lib/ghostme/projects/projectMemorySnapshot.ts
+
+### lib/ghostme/goalsDesires.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme. Modulo: goalsDesires.
+
+Chi lo chiama:
+- lib/ghostme/chat/chatPostProcessing.ts
+
+Chi chiama:
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- goals_desires (read)
+- goals_desires (update)
+- goals_desires (write)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/home/homeComfortRiskSnapshot.ts
+
+Tipo: **snapshot**
+
+Stato: **ATTIVO**
+
+Responsabilita: Costruisce una vista strutturata dello stato utente/sistema. Area: lib/ghostme/home. Modulo: homeComfortRiskSnapshot.
+
+Chi lo chiama:
+- lib/ghostme/context/reasoningService.ts
+- lib/ghostme/curiosity/curiositySnapshot.ts
+
+Chi chiama:
+- lib/ghostme/home/houseRouteSnapshot.ts
+- lib/ghostme/home/houseStateSnapshot.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- house_events (read)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- lib/ghostme/curiosity/curiositySnapshot.ts
+- lib/ghostme/home/houseRouteSnapshot.ts
+- lib/ghostme/home/houseStateSnapshot.ts
+
+### lib/ghostme/home/homeLocationConsistency.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/home. Modulo: homeLocationConsistency.
+
+Chi lo chiama:
+- lib/ghostme/context/reasoningService.ts
+
+Chi chiama:
+- lib/ghostme/home/houseStateSnapshot.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- lib/ghostme/home/houseStateSnapshot.ts
+
+### lib/ghostme/home/houseRouteSnapshot.ts
+
+Tipo: **snapshot**
+
+Stato: **ATTIVO**
+
+Responsabilita: Costruisce una vista strutturata dello stato utente/sistema. Area: lib/ghostme/home. Modulo: houseRouteSnapshot.
+
+Chi lo chiama:
+- lib/ghostme/context/reasoningService.ts
+- lib/ghostme/curiosity/curiositySnapshot.ts
+- lib/ghostme/home/homeComfortRiskSnapshot.ts
+
+Chi chiama:
+- lib/ghostme/home/houseStateSnapshot.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- house_events (read)
+- house_learned_rules (read)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- lib/ghostme/curiosity/curiositySnapshot.ts
+- lib/ghostme/home/homeComfortRiskSnapshot.ts
+- lib/ghostme/home/houseStateSnapshot.ts
+
+### lib/ghostme/home/houseStateSnapshot.ts
+
+Tipo: **snapshot**
+
+Stato: **ATTIVO**
+
+Responsabilita: Costruisce una vista strutturata dello stato utente/sistema. Area: lib/ghostme/home. Modulo: houseStateSnapshot.
+
+Chi lo chiama:
+- lib/ghostme/context/reasoningService.ts
+- lib/ghostme/home/homeComfortRiskSnapshot.ts
+- lib/ghostme/home/homeLocationConsistency.ts
+- lib/ghostme/home/houseRouteSnapshot.ts
+- lib/ghostme/homeAssistant/homeReasoningBuilder.ts
+- lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts
+
+Chi chiama:
+- lib/ghostme/homeAssistant/haClient.ts
+- lib/ghostme/homeAssistant/homeAssistantAccess.ts
+- lib/ghostme/homeAssistant/homeEntityMapper.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- house_entities (read)
+- house_events (read)
+- user_location_state (read)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- lib/ghostme/home/homeComfortRiskSnapshot.ts
+- lib/ghostme/home/houseRouteSnapshot.ts
+
+### lib/ghostme/home/houseSuggestionResponseFlow.ts
+
+Tipo: **flow**
+
+Stato: **ATTIVO**
+
+Responsabilita: Implementa un workflow applicativo specifico. Area: lib/ghostme/home. Modulo: houseSuggestionResponseFlow.
+
+Chi lo chiama:
+- app/api/house-suggestion-response/route.ts
+
+Chi chiama:
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- ghost_proactive_messages (read)
+- ghost_proactive_messages (update)
+- house_automation_controls (read)
+- house_automation_controls (update)
+- house_learned_rules (read)
+- house_learned_rules (update)
+- house_learned_rules (write)
+- house_suggestions (read)
+- house_suggestions (update)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/home/houseWorkerFlow.ts
+
+Tipo: **flow**
+
+Stato: **ATTIVO**
+
+Responsabilita: Implementa un workflow applicativo specifico. Area: lib/ghostme/home. Modulo: houseWorkerFlow.
+
+Chi lo chiama:
+- app/api/worker/house/route.ts
+
+Chi chiama:
+- lib/ghostme/auth/serverAuth.ts
+- lib/ghostme/homeAssistant/haClient.ts
+- lib/ghostme/homeAssistant/homeAssistantAccess.ts
+- lib/ghostme/homeAssistant/homeEntityMapper.ts
+- lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts
+- lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts
+- lib/ghostme/homeAssistant/houseEntityRegistry.ts
+- lib/ghostme/homeAssistant/housePatternEngine.ts
+- lib/ghostme/homeAssistant/houseRouteLearningEngine.ts
+- lib/ghostme/homeAssistant/houseSuggestionEngine.ts
+- lib/ghostme/location/haLocationBridgeFlow.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- house_events (read)
+- house_events (update)
+
+Engine collegati:
+- lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts
+- lib/ghostme/homeAssistant/housePatternEngine.ts
+- lib/ghostme/homeAssistant/houseRouteLearningEngine.ts
+- lib/ghostme/homeAssistant/houseSuggestionEngine.ts
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/homeAssistant/cognitiveHouseBuilder.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/homeAssistant. Modulo: cognitiveHouseBuilder.
+
+Chi lo chiama:
+- lib/ghostme/homeAssistant/houseSuggestionEngine.ts
+
+Chi chiama:
+- lib/ghostme/homeAssistant/haClient.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- lib/ghostme/homeAssistant/houseSuggestionEngine.ts
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/homeAssistant/haClient.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/homeAssistant. Modulo: haClient.
+
+Chi lo chiama:
+- app/api/debug-ha-entities/route.ts
+- app/api/debug-house-logger/route.ts
+- app/api/test-ha/route.ts
+- lib/ghostme/home/houseStateSnapshot.ts
+- lib/ghostme/home/houseWorkerFlow.ts
+- lib/ghostme/homeAssistant/cognitiveHouseBuilder.ts
+- lib/ghostme/homeAssistant/homeContextBuilder.ts
+- lib/ghostme/homeAssistant/homeEventLogger.ts
+- lib/ghostme/homeAssistant/houseEntityRegistry.ts
+- lib/ghostme/location/haLocationBridgeFlow.ts
+
+Chi chiama:
+- nessuno
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- lib/ghostme/home/houseStateSnapshot.ts
+
+### lib/ghostme/homeAssistant/homeAssistantAccess.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/homeAssistant. Modulo: homeAssistantAccess.
+
+Chi lo chiama:
+- app/api/home-assistant/event/route.ts
+- lib/ghostme/context/reasoningService.ts
+- lib/ghostme/home/houseStateSnapshot.ts
+- lib/ghostme/home/houseWorkerFlow.ts
+- lib/ghostme/homeAssistant/homeReasoningBuilder.ts
+- lib/ghostme/location/haLocationBridgeFlow.ts
+
+Chi chiama:
+- nessuno
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- lib/ghostme/home/houseStateSnapshot.ts
+
+### lib/ghostme/homeAssistant/homeContextBuilder.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/homeAssistant. Modulo: homeContextBuilder.
+
+Chi lo chiama:
+- app/api/test-home-context/route.ts
+
+Chi chiama:
+- lib/ghostme/homeAssistant/haClient.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/homeAssistant/homeEntityMapper.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/homeAssistant. Modulo: homeEntityMapper.
+
+Chi lo chiama:
+- app/api/debug-house-logger/route.ts
+- app/api/home-assistant/event/route.ts
+- lib/ghostme/home/houseStateSnapshot.ts
+- lib/ghostme/home/houseWorkerFlow.ts
+- lib/ghostme/homeAssistant/homeEventLogger.ts
+- lib/ghostme/homeAssistant/houseEntityRegistry.ts
+
+Chi chiama:
+- nessuno
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- lib/ghostme/home/houseStateSnapshot.ts
+
+### lib/ghostme/homeAssistant/homeEventLogger.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/homeAssistant. Modulo: homeEventLogger.
+
+Chi lo chiama:
+- app/api/home-assistant/event/route.ts
+
+Chi chiama:
+- lib/ghostme/homeAssistant/haClient.ts
+- lib/ghostme/homeAssistant/homeEntityMapper.ts
+- lib/ghostme/homeAssistant/homeEventSignificance.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- house_events (read)
+- house_events (update)
+- house_events (write)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/homeAssistant/homeEventSignificance.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/homeAssistant. Modulo: homeEventSignificance.
+
+Chi lo chiama:
+- app/api/home-assistant/event/route.ts
+- lib/ghostme/homeAssistant/homeEventLogger.ts
+
+Chi chiama:
+- nessuno
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/homeAssistant/homeReasoningBuilder.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/homeAssistant. Modulo: homeReasoningBuilder.
+
+Chi lo chiama:
+- app/api/test-home-reasoning/route.ts
+- lib/ghostme/context/contextBuilder.ts
+- lib/ghostme/context/reasoningService.ts
+
+Chi chiama:
+- lib/ghostme/home/houseStateSnapshot.ts
+- lib/ghostme/homeAssistant/homeAssistantAccess.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- lib/ghostme/home/houseStateSnapshot.ts
+
+### lib/ghostme/homeAssistant/houseAutomationContext.ts
+
+Tipo: **module**
+
+Stato: **ORFANO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/homeAssistant. Modulo: houseAutomationContext.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- house_events (read)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/homeAssistant. Modulo: houseAutomationControlPlanner.
+
+Chi lo chiama:
+- lib/ghostme/home/houseWorkerFlow.ts
+
+Chi chiama:
+- lib/ghostme/home/houseStateSnapshot.ts
+- lib/ghostme/proactive/proactiveMessageService.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- house_automation_controls (read)
+- house_automation_controls (update)
+- house_automation_controls (write)
+- house_entities (read)
+- house_events (read)
+- house_learned_rules (read)
+- house_patterns (read)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- lib/ghostme/home/houseStateSnapshot.ts
+
+### lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts
+
+Tipo: **engine**
+
+Stato: **ATTIVO**
+
+Responsabilita: Calcola decisioni, insight o trasformazioni cognitive. Area: lib/ghostme/homeAssistant. Modulo: houseAutomationSuggestionEngine.
+
+Chi lo chiama:
+- lib/ghostme/home/houseWorkerFlow.ts
+- lib/ghostme/proactive/proactiveUserFlow.ts
+
+Chi chiama:
+- lib/ghostme/proactive/proactiveMessageService.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- house_events (read)
+- house_suggestions (read)
+- house_suggestions (write)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/homeAssistant/houseEntityRegistry.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/homeAssistant. Modulo: houseEntityRegistry.
+
+Chi lo chiama:
+- lib/ghostme/home/houseWorkerFlow.ts
+
+Chi chiama:
+- lib/ghostme/homeAssistant/haClient.ts
+- lib/ghostme/homeAssistant/homeEntityMapper.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- house_entities (write)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/homeAssistant/houseLearnedRulesContext.ts
+
+Tipo: **module**
+
+Stato: **ORFANO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/homeAssistant. Modulo: houseLearnedRulesContext.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- house_learned_rules (read)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/homeAssistant/houseLightLearningFlow.ts
+
+Tipo: **flow**
+
+Stato: **ATTIVO**
+
+Responsabilita: Implementa un workflow applicativo specifico. Area: lib/ghostme/homeAssistant. Modulo: houseLightLearningFlow.
+
+Chi lo chiama:
+- app/api/home-assistant/event/route.ts
+
+Chi chiama:
+- lib/ghostme/homeAssistant/housePatternEngine.ts
+- lib/ghostme/homeAssistant/houseRouteLearningEngine.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- house_events (read)
+- house_events (update)
+
+Engine collegati:
+- lib/ghostme/homeAssistant/housePatternEngine.ts
+- lib/ghostme/homeAssistant/houseRouteLearningEngine.ts
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/homeAssistant/housePatternEngine.ts
+
+Tipo: **engine**
+
+Stato: **ATTIVO**
+
+Responsabilita: Calcola decisioni, insight o trasformazioni cognitive. Area: lib/ghostme/homeAssistant. Modulo: housePatternEngine.
+
+Chi lo chiama:
+- lib/ghostme/home/houseWorkerFlow.ts
+- lib/ghostme/homeAssistant/houseLightLearningFlow.ts
+- lib/ghostme/homeAssistant/houseSuggestionEngine.ts
+
+Chi chiama:
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- house_events (read)
+- house_patterns (read)
+- house_patterns (update)
+- house_patterns (write)
+
+Engine collegati:
+- lib/ghostme/homeAssistant/houseSuggestionEngine.ts
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/homeAssistant/houseRouteLearningEngine.ts
+
+Tipo: **engine**
+
+Stato: **ATTIVO**
+
+Responsabilita: Calcola decisioni, insight o trasformazioni cognitive. Area: lib/ghostme/homeAssistant. Modulo: houseRouteLearningEngine.
+
+Chi lo chiama:
+- lib/ghostme/home/houseWorkerFlow.ts
+- lib/ghostme/homeAssistant/houseLightLearningFlow.ts
+
+Chi chiama:
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- house_events (read)
+- house_learned_rules (read)
+- house_learned_rules (update)
+- house_learned_rules (write)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/homeAssistant/houseSuggestionEngine.ts
+
+Tipo: **engine**
+
+Stato: **ATTIVO**
+
+Responsabilita: Calcola decisioni, insight o trasformazioni cognitive. Area: lib/ghostme/homeAssistant. Modulo: houseSuggestionEngine.
+
+Chi lo chiama:
+- lib/ghostme/home/houseWorkerFlow.ts
+- lib/ghostme/proactive/proactiveUserFlow.ts
+
+Chi chiama:
+- lib/ghostme/homeAssistant/cognitiveHouseBuilder.ts
+- lib/ghostme/homeAssistant/housePatternEngine.ts
+- lib/ghostme/proactive/proactiveMessageService.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- house_suggestions (read)
+- house_suggestions (write)
+
+Engine collegati:
+- lib/ghostme/homeAssistant/housePatternEngine.ts
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/location/haLocationBridgeFlow.ts
+
+Tipo: **flow**
+
+Stato: **ATTIVO**
+
+Responsabilita: Implementa un workflow applicativo specifico. Area: lib/ghostme/location. Modulo: haLocationBridgeFlow.
+
+Chi lo chiama:
+- lib/ghostme/home/houseWorkerFlow.ts
+
+Chi chiama:
+- lib/ghostme/homeAssistant/haClient.ts
+- lib/ghostme/homeAssistant/homeAssistantAccess.ts
+- lib/ghostme/location/locationStateFreshness.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- user_location_state (read)
+- user_location_state (write)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/location/locationCurrentStateFlow.ts
+
+Tipo: **flow**
+
+Stato: **ATTIVO**
+
+Responsabilita: Implementa un workflow applicativo specifico. Area: lib/ghostme/location. Modulo: locationCurrentStateFlow.
+
+Chi lo chiama:
+- app/api/location/current-state/route.ts
+
+Chi chiama:
+- lib/ghostme/location/locationStateFreshness.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- user_location_state (read)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/location/locationDeletePlaceFlow.ts
+
+Tipo: **flow**
+
+Stato: **ATTIVO**
+
+Responsabilita: Implementa un workflow applicativo specifico. Area: lib/ghostme/location. Modulo: locationDeletePlaceFlow.
+
+Chi lo chiama:
+- app/api/location/delete-place/route.ts
+
+Chi chiama:
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- significant_places (delete)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/location/locationEngine.ts
+
+Tipo: **engine**
+
+Stato: **ORFANO**
+
+Responsabilita: Calcola decisioni, insight o trasformazioni cognitive. Area: lib/ghostme/location. Modulo: locationEngine.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- nessuno
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/location/locationLearningFlow.ts
+
+Tipo: **flow**
+
+Stato: **ATTIVO**
+
+Responsabilita: Implementa un workflow applicativo specifico. Area: lib/ghostme/location. Modulo: locationLearningFlow.
+
+Chi lo chiama:
+- app/api/location/candidate/route.ts
+- lib/ghostme/location/locationUpdateFlow.ts
+
+Chi chiama:
+- lib/ghostme/location/locationStateFreshness.ts
+- lib/ghostme/location/placeService.ts
+- lib/ghostme/observation/observationEngine.ts
+- lib/ghostme/proactive/proactiveMessageService.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- behavior_patterns (read)
+- behavior_patterns (update)
+- ghost_proactive_messages (read)
+- ghost_proactive_messages (update)
+- user_location_state (read)
+- user_location_state (update)
+
+Engine collegati:
+- lib/ghostme/observation/observationEngine.ts
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/location/locationSavePlaceFlow.ts
+
+Tipo: **flow**
+
+Stato: **ATTIVO**
+
+Responsabilita: Implementa un workflow applicativo specifico. Area: lib/ghostme/location. Modulo: locationSavePlaceFlow.
+
+Chi lo chiama:
+- app/api/location/save-place/route.ts
+
+Chi chiama:
+- lib/ghostme/location/placeService.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/location/locationStateFreshness.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/location. Modulo: locationStateFreshness.
+
+Chi lo chiama:
+- app/api/ghostme/brain/route.ts
+- app/api/location/current-state/route.ts
+- app/api/location/update-current/route.ts
+- lib/ghostme/chat/chatContextBuilder.ts
+- lib/ghostme/context/userContextGraph.ts
+- lib/ghostme/location/haLocationBridgeFlow.ts
+- lib/ghostme/location/locationCurrentStateFlow.ts
+- lib/ghostme/location/locationLearningFlow.ts
+- lib/ghostme/situation/situationEngine.ts
+
+Chi chiama:
+- nessuno
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- lib/ghostme/situation/situationEngine.ts
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/location/locationUpdateFlow.ts
+
+Tipo: **flow**
+
+Stato: **ATTIVO**
+
+Responsabilita: Implementa un workflow applicativo specifico. Area: lib/ghostme/location. Modulo: locationUpdateFlow.
+
+Chi lo chiama:
+- app/api/location/update-current/route.ts
+
+Chi chiama:
+- lib/ghostme/location/locationLearningFlow.ts
+- lib/ghostme/location/placeService.ts
+- lib/ghostme/observation/observationEngine.ts
+- lib/ghostme/proactive/proactiveTrigger.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- user_location_state (read)
+- user_location_state (write)
+
+Engine collegati:
+- lib/ghostme/observation/observationEngine.ts
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/location/placeService.ts
+
+Tipo: **service**
+
+Stato: **ATTIVO**
+
+Responsabilita: Integra servizi o accesso dati specializzato. Area: lib/ghostme/location. Modulo: placeService.
+
+Chi lo chiama:
+- app/api/location/candidate/route.ts
+- app/api/location/current-place/route.ts
+- app/api/location/places/route.ts
+- app/api/location/update-current/route.ts
+- lib/ghostme/location/locationLearningFlow.ts
+- lib/ghostme/location/locationSavePlaceFlow.ts
+- lib/ghostme/location/locationUpdateFlow.ts
+- lib/ghostme/situation/situationEngine.ts
+
+Chi chiama:
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- significant_places (read)
+- significant_places (update)
+- significant_places (write)
+- user_location_state (read)
+
+Engine collegati:
+- lib/ghostme/situation/situationEngine.ts
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/maintenance/retentionEngine.ts
+
+Tipo: **engine**
+
+Stato: **ATTIVO**
+
+Responsabilita: Calcola decisioni, insight o trasformazioni cognitive. Area: lib/ghostme/maintenance. Modulo: retentionEngine.
+
+Chi lo chiama:
+- lib/ghostme/proactive/proactiveMaintenanceFlow.ts
+
+Chi chiama:
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- calendar_events (update)
+- chat_messages (delete)
+- chat_messages (update)
+- ghost_proactive_messages (update)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/memory/memorySearchFlow.ts
+
+Tipo: **flow**
+
+Stato: **ATTIVO**
+
+Responsabilita: Implementa un workflow applicativo specifico. Area: lib/ghostme/memory. Modulo: memorySearchFlow.
+
+Chi lo chiama:
+- app/api/memory/search/route.ts
+
+Chi chiama:
+- lib/ghostme/context/temporalPriority.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- action_intents (read)
+- autobiographical_timeline (read)
+- conversation_summaries (read)
+- episodic_memories (read)
+- goals_desires (read)
+- life_topics (read)
+- memories_active (read)
+- topic_links (read)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/memory/memorySnapshot.ts
+
+Tipo: **snapshot**
+
+Stato: **ATTIVO**
+
+Responsabilita: Costruisce una vista strutturata dello stato utente/sistema. Area: lib/ghostme/memory. Modulo: memorySnapshot.
+
+Chi lo chiama:
+- lib/ghostme/context/reasoningService.ts
+- lib/ghostme/curiosity/curiositySnapshot.ts
+- lib/ghostme/people/relationshipMemorySnapshot.ts
+- lib/ghostme/projects/projectMemorySnapshot.ts
+
+Chi chiama:
+- lib/ghostme/context/temporalPriority.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- autobiographical_timeline (read)
+- conversation_summaries (read)
+- episodic_memories (read)
+- life_topics (read)
+- memories_active (read)
+- topic_links (read)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- lib/ghostme/curiosity/curiositySnapshot.ts
+- lib/ghostme/people/relationshipMemorySnapshot.ts
+- lib/ghostme/projects/projectMemorySnapshot.ts
+
+### lib/ghostme/memoryDecay.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme. Modulo: memoryDecay.
+
+Chi lo chiama:
+- lib/ghostme/chat/ghostChatOrchestrator.ts
+
+Chi chiama:
+- lib/supabase.ts
+
+Tabelle usate:
+- life_topics (read)
+- life_topics (update)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/mentalState.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme. Modulo: mentalState.
+
+Chi lo chiama:
+- lib/ghostme/chat/chatPostProcessing.ts
+
+Chi chiama:
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- mental_states (read)
+- mental_states (update)
+- mental_states (write)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/observation/observationEngine.ts
+
+Tipo: **engine**
+
+Stato: **ATTIVO**
+
+Responsabilita: Calcola decisioni, insight o trasformazioni cognitive. Area: lib/ghostme/observation. Modulo: observationEngine.
+
+Chi lo chiama:
+- lib/ghostme/location/locationLearningFlow.ts
+- lib/ghostme/location/locationUpdateFlow.ts
+
+Chi chiama:
+- lib/ghostme/observation/observationPolicy.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- behavior_patterns (read)
+- behavior_patterns (update)
+- behavior_patterns (write)
+- observation_events (read)
+- observation_events (update)
+- observation_events (write)
+- significant_places (read)
+- user_location_state (read)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/observation/observationInsightEngine.ts
+
+Tipo: **engine**
+
+Stato: **ATTIVO**
+
+Responsabilita: Calcola decisioni, insight o trasformazioni cognitive. Area: lib/ghostme/observation. Modulo: observationInsightEngine.
+
+Chi lo chiama:
+- lib/ghostme/proactive/proactiveCandidateBuilder.ts
+
+Chi chiama:
+- lib/ghostme/situation/situationEngine.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- ghost_proactive_messages (read)
+
+Engine collegati:
+- lib/ghostme/situation/situationEngine.ts
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/observation/observationPolicy.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/observation. Modulo: observationPolicy.
+
+Chi lo chiama:
+- lib/ghostme/observation/observationEngine.ts
+- lib/ghostme/situation/situationEngine.ts
+
+Chi chiama:
+- nessuno
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- lib/ghostme/observation/observationEngine.ts
+- lib/ghostme/situation/situationEngine.ts
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/patterns/patternDecay.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/patterns. Modulo: patternDecay.
+
+Chi lo chiama:
+- lib/ghostme/proactive/proactiveCandidateBuilder.ts
+
+Chi chiama:
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- behavior_patterns (read)
+- behavior_patterns (update)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/patterns/patternInsightEngine.ts
+
+Tipo: **engine**
+
+Stato: **ATTIVO**
+
+Responsabilita: Calcola decisioni, insight o trasformazioni cognitive. Area: lib/ghostme/patterns. Modulo: patternInsightEngine.
+
+Chi lo chiama:
+- lib/ghostme/proactive/proactiveCandidateBuilder.ts
+
+Chi chiama:
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- behavior_patterns (read)
+- ghost_proactive_messages (read)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/people/peopleGraphLinkService.ts
+
+Tipo: **service**
+
+Stato: **ATTIVO**
+
+Responsabilita: Integra servizi o accesso dati specializzato. Area: lib/ghostme/people. Modulo: peopleGraphLinkService.
+
+Chi lo chiama:
+- lib/ghostme/chat/chatPostProcessing.ts
+- lib/ghostme/people/peopleGraphService.ts
+- lib/ghostme/people/peopleSnapshot.ts
+- lib/ghostme/people/relationshipMemorySnapshot.ts
+- lib/ghostme/proactive/proactiveMaintenanceFlow.ts
+
+Chi chiama:
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- action_intents (read)
+- calendar_events (read)
+- episodic_memories (read)
+- goals_desires (read)
+- memories_active (read)
+- people_graph (read)
+- people_graph_links (read)
+- people_graph_links (update)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- lib/ghostme/people/peopleSnapshot.ts
+- lib/ghostme/people/relationshipMemorySnapshot.ts
+
+### lib/ghostme/people/peopleGraphService.ts
+
+Tipo: **service**
+
+Stato: **ATTIVO**
+
+Responsabilita: Integra servizi o accesso dati specializzato. Area: lib/ghostme/people. Modulo: peopleGraphService.
+
+Chi lo chiama:
+- lib/ghostme/chat/chatPostProcessing.ts
+- lib/ghostme/proactive/proactiveMaintenanceFlow.ts
+- lib/ghostme/situation/situationEngine.ts
+
+Chi chiama:
+- lib/ghostme/people/peopleGraphLinkService.ts
+- lib/ghostme/people/peopleSnapshot.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- life_topics (read)
+- memories_active (read)
+- people_graph (read)
+- people_graph (update)
+- people_graph (write)
+
+Engine collegati:
+- lib/ghostme/situation/situationEngine.ts
+
+Snapshot collegati:
+- lib/ghostme/people/peopleSnapshot.ts
+
+### lib/ghostme/people/peopleSnapshot.ts
+
+Tipo: **snapshot**
+
+Stato: **ATTIVO**
+
+Responsabilita: Costruisce una vista strutturata dello stato utente/sistema. Area: lib/ghostme/people. Modulo: peopleSnapshot.
+
+Chi lo chiama:
+- lib/ghostme/context/reasoningService.ts
+- lib/ghostme/curiosity/curiositySnapshot.ts
+- lib/ghostme/people/peopleGraphService.ts
+- lib/ghostme/people/relationshipMemorySnapshot.ts
+- lib/ghostme/people/socialSuggestionSnapshot.ts
+- lib/ghostme/projects/projectMemorySnapshot.ts
+
+Chi chiama:
+- lib/ghostme/people/peopleGraphLinkService.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- life_topics (read)
+- memories_active (read)
+- people_graph (read)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- lib/ghostme/curiosity/curiositySnapshot.ts
+- lib/ghostme/people/relationshipMemorySnapshot.ts
+- lib/ghostme/people/socialSuggestionSnapshot.ts
+- lib/ghostme/projects/projectMemorySnapshot.ts
+
+### lib/ghostme/people/relationshipMemorySnapshot.ts
+
+Tipo: **snapshot**
+
+Stato: **ATTIVO**
+
+Responsabilita: Costruisce una vista strutturata dello stato utente/sistema. Area: lib/ghostme/people. Modulo: relationshipMemorySnapshot.
+
+Chi lo chiama:
+- lib/ghostme/context/reasoningService.ts
+- lib/ghostme/curiosity/curiositySnapshot.ts
+- lib/ghostme/people/socialSuggestionSnapshot.ts
+- lib/ghostme/projects/projectAdvisorSnapshot.ts
+
+Chi chiama:
+- lib/ghostme/memory/memorySnapshot.ts
+- lib/ghostme/people/peopleGraphLinkService.ts
+- lib/ghostme/people/peopleSnapshot.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- lib/ghostme/curiosity/curiositySnapshot.ts
+- lib/ghostme/memory/memorySnapshot.ts
+- lib/ghostme/people/peopleSnapshot.ts
+- lib/ghostme/people/socialSuggestionSnapshot.ts
+- lib/ghostme/projects/projectAdvisorSnapshot.ts
+
+### lib/ghostme/people/socialSuggestionSnapshot.ts
+
+Tipo: **snapshot**
+
+Stato: **ATTIVO**
+
+Responsabilita: Costruisce una vista strutturata dello stato utente/sistema. Area: lib/ghostme/people. Modulo: socialSuggestionSnapshot.
+
+Chi lo chiama:
+- lib/ghostme/context/reasoningService.ts
+- lib/ghostme/curiosity/curiositySnapshot.ts
+
+Chi chiama:
+- lib/ghostme/people/peopleSnapshot.ts
+- lib/ghostme/people/relationshipMemorySnapshot.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- lib/ghostme/curiosity/curiositySnapshot.ts
+- lib/ghostme/people/peopleSnapshot.ts
+- lib/ghostme/people/relationshipMemorySnapshot.ts
+
+### lib/ghostme/proactive/curiosityCardWriter.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/proactive. Modulo: curiosityCardWriter.
+
+Chi lo chiama:
+- lib/ghostme/proactive/proactiveUserFlow.ts
+- lib/ghostme/proactive/trueProactiveCardWriter.ts
+
+Chi chiama:
+- lib/ghostme/curiosity/curiositySnapshot.ts
+- lib/ghostme/proactive/proactiveMessageDedupe.ts
+- lib/ghostme/proactive/proactiveMessageService.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- ghost_proactive_messages (read)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- lib/ghostme/curiosity/curiositySnapshot.ts
+
+### lib/ghostme/proactive/dailyBriefingBuilder.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/proactive. Modulo: dailyBriefingBuilder.
+
+Chi lo chiama:
+- lib/ghostme/proactive/proactiveUserFlow.ts
+
+Chi chiama:
+- nessuno
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/proactive/dailyBriefingRepository.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/proactive. Modulo: dailyBriefingRepository.
+
+Chi lo chiama:
+- lib/ghostme/proactive/proactiveUserFlow.ts
+
+Chi chiama:
+- lib/ghostme/context/temporalPriority.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- action_intents (read)
+- autobiographical_timeline (read)
+- behavior_patterns (read)
+- calendar_events (read)
+- conversation_summaries (read)
+- episodic_memories (read)
+- goals_desires (read)
+- house_events (read)
+- house_patterns (read)
+- house_suggestions (read)
+- life_topics (read)
+- mental_states (read)
+- significant_places (read)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/proactive/proactiveCandidateBuilder.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/proactive. Modulo: proactiveCandidateBuilder.
+
+Chi lo chiama:
+- lib/ghostme/proactive/proactiveUserFlow.ts
+
+Chi chiama:
+- lib/ghostme/agenda/agendaEngine.ts
+- lib/ghostme/behavior/behaviorRulesEngine.ts
+- lib/ghostme/butler/butlerEngine.ts
+- lib/ghostme/context/contextBuilder.ts
+- lib/ghostme/context/reasoningService.ts
+- lib/ghostme/observation/observationInsightEngine.ts
+- lib/ghostme/patterns/patternDecay.ts
+- lib/ghostme/patterns/patternInsightEngine.ts
+- lib/ghostme/proactive/proactiveDecisionEngine.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- lib/ghostme/agenda/agendaEngine.ts
+- lib/ghostme/behavior/behaviorRulesEngine.ts
+- lib/ghostme/butler/butlerEngine.ts
+- lib/ghostme/observation/observationInsightEngine.ts
+- lib/ghostme/patterns/patternInsightEngine.ts
+- lib/ghostme/proactive/proactiveDecisionEngine.ts
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/proactive/proactiveCandidateRanker.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/proactive. Modulo: proactiveCandidateRanker.
+
+Chi lo chiama:
+- lib/ghostme/proactive/proactiveUserFlow.ts
+
+Chi chiama:
+- lib/ghostme/proactive/proactiveMessageDedupe.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/proactive/proactiveCardLifecycle.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/proactive. Modulo: proactiveCardLifecycle.
+
+Chi lo chiama:
+- app/api/ghostme/proactive/read/route.ts
+- lib/ghostme/proactive/proactiveMessageService.ts
+- lib/ghostme/proactive/trueProactiveCardWriter.ts
+- lib/ghostme/proactive/visibleProactiveMessages.ts
+
+Chi chiama:
+- nessuno
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/proactive/proactiveDecisionEngine.ts
+
+Tipo: **engine**
+
+Stato: **ATTIVO**
+
+Responsabilita: Calcola decisioni, insight o trasformazioni cognitive. Area: lib/ghostme/proactive. Modulo: proactiveDecisionEngine.
+
+Chi lo chiama:
+- lib/ghostme/proactive/proactiveCandidateBuilder.ts
+- lib/ghostme/proactive/proactiveTrigger.ts
+
+Chi chiama:
+- lib/ghostme/context/contextBuilder.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/proactive/proactiveMaintenanceFlow.ts
+
+Tipo: **flow**
+
+Stato: **ATTIVO**
+
+Responsabilita: Implementa un workflow applicativo specifico. Area: lib/ghostme/proactive. Modulo: proactiveMaintenanceFlow.
+
+Chi lo chiama:
+- lib/ghostme/proactive/proactiveUserFlow.ts
+
+Chi chiama:
+- lib/ghostme/actionLayer.ts
+- lib/ghostme/agenda/reminderEngine.ts
+- lib/ghostme/calendar/calendarService.ts
+- lib/ghostme/conversationSummary.ts
+- lib/ghostme/maintenance/retentionEngine.ts
+- lib/ghostme/people/peopleGraphLinkService.ts
+- lib/ghostme/people/peopleGraphService.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- lib/ghostme/agenda/reminderEngine.ts
+- lib/ghostme/maintenance/retentionEngine.ts
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/proactive/proactiveMessageDedupe.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/proactive. Modulo: proactiveMessageDedupe.
+
+Chi lo chiama:
+- lib/ghostme/proactive/curiosityCardWriter.ts
+- lib/ghostme/proactive/proactiveCandidateRanker.ts
+- lib/ghostme/proactive/proactiveMessageService.ts
+- lib/ghostme/proactive/trueProactiveCardWriter.ts
+- lib/ghostme/proactive/visibleProactiveMessages.ts
+
+Chi chiama:
+- nessuno
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/proactive/proactiveMessageService.ts
+
+Tipo: **service**
+
+Stato: **ATTIVO**
+
+Responsabilita: Integra servizi o accesso dati specializzato. Area: lib/ghostme/proactive. Modulo: proactiveMessageService.
+
+Chi lo chiama:
+- lib/ghostme/agenda/reminderEngine.ts
+- lib/ghostme/calendar/calendarService.ts
+- lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts
+- lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts
+- lib/ghostme/homeAssistant/houseSuggestionEngine.ts
+- lib/ghostme/location/locationLearningFlow.ts
+- lib/ghostme/proactive/curiosityCardWriter.ts
+- lib/ghostme/proactive/proactiveTrigger.ts
+- lib/ghostme/proactive/proactiveUserFlow.ts
+- lib/ghostme/proactive/trueProactiveCardWriter.ts
+- lib/ghostme/proactive/visibleProactiveMessages.ts
+
+Chi chiama:
+- lib/ghostme/proactive/proactiveCardLifecycle.ts
+- lib/ghostme/proactive/proactiveMessageDedupe.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- ghost_proactive_messages (read)
+- ghost_proactive_messages (update)
+- ghost_proactive_messages (write)
+
+Engine collegati:
+- lib/ghostme/agenda/reminderEngine.ts
+- lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts
+- lib/ghostme/homeAssistant/houseSuggestionEngine.ts
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/proactive/proactiveTrigger.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/proactive. Modulo: proactiveTrigger.
+
+Chi lo chiama:
+- lib/ghostme/location/locationUpdateFlow.ts
+
+Chi chiama:
+- lib/ghostme/calendar/calendarService.ts
+- lib/ghostme/context/contextBuilder.ts
+- lib/ghostme/proactive/proactiveDecisionEngine.ts
+- lib/ghostme/proactive/proactiveMessageService.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- ghost_proactive_messages (read)
+
+Engine collegati:
+- lib/ghostme/proactive/proactiveDecisionEngine.ts
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/proactive/proactiveUserFlow.ts
+
+Tipo: **flow**
+
+Stato: **ATTIVO**
+
+Responsabilita: Implementa un workflow applicativo specifico. Area: lib/ghostme/proactive. Modulo: proactiveUserFlow.
+
+Chi lo chiama:
+- app/api/ghostme/brain/route.ts
+- app/api/worker/proactive/route.ts
+
+Chi chiama:
+- lib/ghostme/context/reasoningService.ts
+- lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts
+- lib/ghostme/homeAssistant/houseSuggestionEngine.ts
+- lib/ghostme/proactive/curiosityCardWriter.ts
+- lib/ghostme/proactive/dailyBriefingBuilder.ts
+- lib/ghostme/proactive/dailyBriefingRepository.ts
+- lib/ghostme/proactive/proactiveCandidateBuilder.ts
+- lib/ghostme/proactive/proactiveCandidateRanker.ts
+- lib/ghostme/proactive/proactiveMaintenanceFlow.ts
+- lib/ghostme/proactive/proactiveMessageService.ts
+- lib/ghostme/proactive/trueProactiveCardWriter.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- ghost_proactive_messages (read)
+
+Engine collegati:
+- lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts
+- lib/ghostme/homeAssistant/houseSuggestionEngine.ts
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/proactive/trueProactiveCardWriter.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/proactive. Modulo: trueProactiveCardWriter.
+
+Chi lo chiama:
+- lib/ghostme/proactive/proactiveUserFlow.ts
+
+Chi chiama:
+- lib/ghostme/proactive/curiosityCardWriter.ts
+- lib/ghostme/proactive/proactiveCardLifecycle.ts
+- lib/ghostme/proactive/proactiveMessageDedupe.ts
+- lib/ghostme/proactive/proactiveMessageService.ts
+- lib/ghostme/proactive/trueProactiveSnapshot.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- ghost_proactive_messages (read)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- lib/ghostme/proactive/trueProactiveSnapshot.ts
+
+### lib/ghostme/proactive/trueProactiveSnapshot.ts
+
+Tipo: **snapshot**
+
+Stato: **ATTIVO**
+
+Responsabilita: Costruisce una vista strutturata dello stato utente/sistema. Area: lib/ghostme/proactive. Modulo: trueProactiveSnapshot.
+
+Chi lo chiama:
+- lib/ghostme/context/reasoningService.ts
+- lib/ghostme/proactive/trueProactiveCardWriter.ts
+
+Chi chiama:
+- lib/ghostme/context/decisionSnapshot.ts
+- lib/ghostme/context/reasoningService.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- lib/ghostme/context/decisionSnapshot.ts
+
+### lib/ghostme/proactive/visibleProactiveMessages.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/proactive. Modulo: visibleProactiveMessages.
+
+Chi lo chiama:
+- app/api/ghostme/brain/route.ts
+- app/api/proactive/messages/route.ts
+
+Chi chiama:
+- lib/ghostme/proactive/proactiveCardLifecycle.ts
+- lib/ghostme/proactive/proactiveMessageDedupe.ts
+- lib/ghostme/proactive/proactiveMessageService.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- calendar_events (read)
+- ghost_proactive_messages (read)
+- ghost_proactive_messages (update)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/profile/profileBehaviorSeed.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/profile. Modulo: profileBehaviorSeed.
+
+Chi lo chiama:
+- app/setup/page.tsx
+
+Chi chiama:
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- dynamic_self_profile (read)
+- dynamic_self_profile (update)
+- dynamic_self_profile (write)
+- ghost_behavior_rules (read)
+- ghost_behavior_rules (write)
+- traits (read)
+- user_profiles (read)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/projects/goalProjectConsistencySnapshot.ts
+
+Tipo: **snapshot**
+
+Stato: **ATTIVO**
+
+Responsabilita: Costruisce una vista strutturata dello stato utente/sistema. Area: lib/ghostme/projects. Modulo: goalProjectConsistencySnapshot.
+
+Chi lo chiama:
+- lib/ghostme/context/reasoningService.ts
+- lib/ghostme/curiosity/curiositySnapshot.ts
+- lib/ghostme/projects/projectAdvisorSnapshot.ts
+
+Chi chiama:
+- lib/ghostme/goals/goalsSnapshot.ts
+- lib/ghostme/projects/projectMemorySnapshot.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- lib/ghostme/curiosity/curiositySnapshot.ts
+- lib/ghostme/goals/goalsSnapshot.ts
+- lib/ghostme/projects/projectAdvisorSnapshot.ts
+- lib/ghostme/projects/projectMemorySnapshot.ts
+
+### lib/ghostme/projects/projectAdvisorSnapshot.ts
+
+Tipo: **snapshot**
+
+Stato: **ATTIVO**
+
+Responsabilita: Costruisce una vista strutturata dello stato utente/sistema. Area: lib/ghostme/projects. Modulo: projectAdvisorSnapshot.
+
+Chi lo chiama:
+- lib/ghostme/context/reasoningService.ts
+- lib/ghostme/curiosity/curiositySnapshot.ts
+
+Chi chiama:
+- lib/ghostme/goals/goalsSnapshot.ts
+- lib/ghostme/people/relationshipMemorySnapshot.ts
+- lib/ghostme/projects/goalProjectConsistencySnapshot.ts
+- lib/ghostme/projects/projectMemorySnapshot.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- lib/ghostme/curiosity/curiositySnapshot.ts
+- lib/ghostme/goals/goalsSnapshot.ts
+- lib/ghostme/people/relationshipMemorySnapshot.ts
+- lib/ghostme/projects/goalProjectConsistencySnapshot.ts
+- lib/ghostme/projects/projectMemorySnapshot.ts
+
+### lib/ghostme/projects/projectMemorySnapshot.ts
+
+Tipo: **snapshot**
+
+Stato: **ATTIVO**
+
+Responsabilita: Costruisce una vista strutturata dello stato utente/sistema. Area: lib/ghostme/projects. Modulo: projectMemorySnapshot.
+
+Chi lo chiama:
+- lib/ghostme/context/reasoningService.ts
+- lib/ghostme/curiosity/curiositySnapshot.ts
+- lib/ghostme/projects/goalProjectConsistencySnapshot.ts
+- lib/ghostme/projects/projectAdvisorSnapshot.ts
+
+Chi chiama:
+- lib/ghostme/context/temporalPriority.ts
+- lib/ghostme/goals/goalsSnapshot.ts
+- lib/ghostme/memory/memorySnapshot.ts
+- lib/ghostme/people/peopleSnapshot.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- lib/ghostme/curiosity/curiositySnapshot.ts
+- lib/ghostme/goals/goalsSnapshot.ts
+- lib/ghostme/memory/memorySnapshot.ts
+- lib/ghostme/people/peopleSnapshot.ts
+- lib/ghostme/projects/goalProjectConsistencySnapshot.ts
+- lib/ghostme/projects/projectAdvisorSnapshot.ts
+
+### lib/ghostme/relationshipResolver.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme. Modulo: relationshipResolver.
+
+Chi lo chiama:
+- lib/ghostme/chat/chatMessageAnalyzer.ts
+- lib/ghostme/chat/ghostChatOrchestrator.ts
+
+Chi chiama:
+- lib/supabase.ts
+
+Tabelle usate:
+- life_topics (delete)
+- life_topics (read)
+- life_topics (update)
+- life_topics (write)
+- memories_active (delete)
+- memories_active (read)
+- memories_active (update)
+- memories_active (write)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/retrieval.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme. Modulo: retrieval.
+
+Chi lo chiama:
+- lib/ghostme/chat/chatContextBuilder.ts
+
+Chi chiama:
+- lib/ghostme/context/temporalPriority.ts
+- lib/ghostme/topicLinks.ts
+- lib/supabase.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- autobiographical_timeline (read)
+- conversation_summaries (read)
+- episodic_memories (read)
+- life_topics (read)
+- memories_active (read)
+- topic_links (read)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/services/serviceRouter.ts
+
+Tipo: **service**
+
+Stato: **ATTIVO**
+
+Responsabilita: Integra servizi o accesso dati specializzato. Area: lib/ghostme/services. Modulo: serviceRouter.
+
+Chi lo chiama:
+- lib/ghostme/chat/chatExternalServices.ts
+
+Chi chiama:
+- nessuno
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/services/timeService.ts
+
+Tipo: **service**
+
+Stato: **ORFANO**
+
+Responsabilita: Integra servizi o accesso dati specializzato. Area: lib/ghostme/services. Modulo: timeService.
+
+Chi lo chiama:
+- nessuno
+
+Chi chiama:
+- nessuno
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/services/weatherService.ts
+
+Tipo: **service**
+
+Stato: **ATTIVO**
+
+Responsabilita: Integra servizi o accesso dati specializzato. Area: lib/ghostme/services. Modulo: weatherService.
+
+Chi lo chiama:
+- lib/ghostme/chat/chatExternalServices.ts
+
+Chi chiama:
+- lib/ghostme/services/webSearchService.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/services/webSearchService.ts
+
+Tipo: **service**
+
+Stato: **ATTIVO**
+
+Responsabilita: Integra servizi o accesso dati specializzato. Area: lib/ghostme/services. Modulo: webSearchService.
+
+Chi lo chiama:
+- lib/ghostme/chat/chatExternalServices.ts
+- lib/ghostme/services/weatherService.ts
+
+Chi chiama:
+- nessuno
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/situation/situationEngine.ts
+
+Tipo: **engine**
+
+Stato: **ATTIVO**
+
+Responsabilita: Calcola decisioni, insight o trasformazioni cognitive. Area: lib/ghostme/situation. Modulo: situationEngine.
+
+Chi lo chiama:
+- lib/ghostme/agenda/agendaEngine.ts
+- lib/ghostme/context/contextBuilder.ts
+- lib/ghostme/context/contextSignals.ts
+- lib/ghostme/context/reasoningService.ts
+- lib/ghostme/curiosity/curiosityEngine.ts
+- lib/ghostme/observation/observationInsightEngine.ts
+
+Chi chiama:
+- lib/ghostme/context/temporalPriority.ts
+- lib/ghostme/location/locationStateFreshness.ts
+- lib/ghostme/location/placeService.ts
+- lib/ghostme/observation/observationPolicy.ts
+- lib/ghostme/people/peopleGraphService.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- action_intents (read)
+- autobiographical_timeline (read)
+- behavior_patterns (read)
+- calendar_events (read)
+- contradictions (read)
+- conversation_summaries (read)
+- dynamic_self_profile (read)
+- episodic_memories (read)
+- ghost_behavior_rules (read)
+- goals_desires (read)
+- life_topics (read)
+- mental_states (read)
+- observation_events (read)
+- topic_links (read)
+- user_profiles (read)
+
+Engine collegati:
+- lib/ghostme/agenda/agendaEngine.ts
+- lib/ghostme/curiosity/curiosityEngine.ts
+- lib/ghostme/observation/observationInsightEngine.ts
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/timeline.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme. Modulo: timeline.
+
+Chi lo chiama:
+- lib/ghostme/chat/chatPostProcessing.ts
+
+Chi chiama:
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- autobiographical_timeline (read)
+- autobiographical_timeline (write)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/topicDetector.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme. Modulo: topicDetector.
+
+Chi lo chiama:
+- lib/ghostme/chat/chatMessageAnalyzer.ts
+- lib/ghostme/chat/chatPostProcessing.ts
+- lib/ghostme/entityExtractor.ts
+
+Chi chiama:
+- nessuno
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/topicLinks.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme. Modulo: topicLinks.
+
+Chi lo chiama:
+- lib/ghostme/chat/chatPostProcessing.ts
+- lib/ghostme/retrieval.ts
+
+Chi chiama:
+- lib/supabase.ts
+
+Tabelle usate:
+- life_topics (read)
+- topic_links (read)
+- topic_links (update)
+- topic_links (write)
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/ui/brainUiAdapter.ts
+
+Tipo: **adapter**
+
+Stato: **ATTIVO**
+
+Responsabilita: Adatta dati tra domini o verso la UI. Area: lib/ghostme/ui. Modulo: brainUiAdapter.
+
+Chi lo chiama:
+- hooks/useGhostBrain.ts
+
+Chi chiama:
+- components/ghost/types.ts
+- lib/ghostme/context/decisionSnapshot.ts
+- lib/ghostme/context/reasoningService.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- lib/ghostme/context/decisionSnapshot.ts
+
+### lib/personality.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib. Modulo: personality.
+
+Chi lo chiama:
+- app/chat/page.tsx
+- app/setup/page.tsx
+- hooks/useGhostBrain.ts
+
+Chi chiama:
+- nessuno
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/supabase.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib. Modulo: supabase.
+
+Chi lo chiama:
+- app/api/memory/route.ts
+- app/chat/page.tsx
+- app/login/page.tsx
+- app/memory/page.tsx
+- app/setup/page.tsx
+- app/setup/profile/page.tsx
+- lib/ghostme/auth/clientAuthHeaders.ts
+- lib/ghostme/chat/chatPostProcessing.ts
+- lib/ghostme/memoryDecay.ts
+- lib/ghostme/relationshipResolver.ts
+- lib/ghostme/retrieval.ts
+- lib/ghostme/topicLinks.ts
+
+Chi chiama:
+- nessuno
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- nessuno
+
+### lib/supabaseAdmin.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib. Modulo: supabaseAdmin.
+
+Chi lo chiama:
+- app/api/actions/update-status/route.ts
+- app/api/ghostme/proactive/read/route.ts
+- app/api/goals/update-status/route.ts
+- app/api/home-assistant/event/route.ts
+- app/api/worker/proactive/route.ts
+- lib/ghostme/actionLayer.ts
+- lib/ghostme/agenda/reminderEngine.ts
+- lib/ghostme/auth/serverAuth.ts
+- lib/ghostme/behavior/behaviorRulesEngine.ts
+- lib/ghostme/calendar/calendarService.ts
+- lib/ghostme/context/contextBuilder.ts
+- lib/ghostme/context/userContextGraph.ts
+- lib/ghostme/contradictions.ts
+- lib/ghostme/conversationSummary.ts
+- lib/ghostme/curiosity/curiosityEngine.ts
+- lib/ghostme/dynamicSelfProfile.ts
+- lib/ghostme/goals/goalsActionsLifecycle.ts
+- lib/ghostme/goals/goalsSnapshot.ts
+- lib/ghostme/goalsDesires.ts
+- lib/ghostme/home/homeComfortRiskSnapshot.ts
+- lib/ghostme/home/houseRouteSnapshot.ts
+- lib/ghostme/home/houseStateSnapshot.ts
+- lib/ghostme/home/houseSuggestionResponseFlow.ts
+- lib/ghostme/home/houseWorkerFlow.ts
+- lib/ghostme/homeAssistant/homeEventLogger.ts
+- lib/ghostme/homeAssistant/houseAutomationContext.ts
+- lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts
+- lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts
+- lib/ghostme/homeAssistant/houseEntityRegistry.ts
+- lib/ghostme/homeAssistant/houseLearnedRulesContext.ts
+- lib/ghostme/homeAssistant/houseLightLearningFlow.ts
+- lib/ghostme/homeAssistant/housePatternEngine.ts
+- lib/ghostme/homeAssistant/houseRouteLearningEngine.ts
+- lib/ghostme/homeAssistant/houseSuggestionEngine.ts
+- lib/ghostme/location/haLocationBridgeFlow.ts
+- lib/ghostme/location/locationCurrentStateFlow.ts
+- lib/ghostme/location/locationDeletePlaceFlow.ts
+- lib/ghostme/location/locationLearningFlow.ts
+- lib/ghostme/location/locationUpdateFlow.ts
+- lib/ghostme/location/placeService.ts
+- lib/ghostme/maintenance/retentionEngine.ts
+- lib/ghostme/memory/memorySearchFlow.ts
+- lib/ghostme/memory/memorySnapshot.ts
+- lib/ghostme/mentalState.ts
+- lib/ghostme/observation/observationEngine.ts
+- lib/ghostme/observation/observationInsightEngine.ts
+- lib/ghostme/patterns/patternDecay.ts
+- lib/ghostme/patterns/patternInsightEngine.ts
+- lib/ghostme/people/peopleGraphLinkService.ts
+- lib/ghostme/people/peopleGraphService.ts
+- lib/ghostme/people/peopleSnapshot.ts
+- lib/ghostme/proactive/curiosityCardWriter.ts
+- lib/ghostme/proactive/dailyBriefingRepository.ts
+- lib/ghostme/proactive/proactiveMessageService.ts
+- lib/ghostme/proactive/proactiveTrigger.ts
+- lib/ghostme/proactive/proactiveUserFlow.ts
+- lib/ghostme/proactive/trueProactiveCardWriter.ts
+- lib/ghostme/proactive/visibleProactiveMessages.ts
+- lib/ghostme/profile/profileBehaviorSeed.ts
+- lib/ghostme/retrieval.ts
+- lib/ghostme/situation/situationEngine.ts
+- lib/ghostme/timeline.ts
+
+Chi chiama:
+- nessuno
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- lib/ghostme/agenda/reminderEngine.ts
+- lib/ghostme/behavior/behaviorRulesEngine.ts
+- lib/ghostme/curiosity/curiosityEngine.ts
+- lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts
+- lib/ghostme/homeAssistant/housePatternEngine.ts
+- lib/ghostme/homeAssistant/houseRouteLearningEngine.ts
+- lib/ghostme/homeAssistant/houseSuggestionEngine.ts
+- lib/ghostme/maintenance/retentionEngine.ts
+- lib/ghostme/observation/observationEngine.ts
+- lib/ghostme/observation/observationInsightEngine.ts
+- lib/ghostme/patterns/patternInsightEngine.ts
+- lib/ghostme/situation/situationEngine.ts
+
+Snapshot collegati:
+- lib/ghostme/goals/goalsSnapshot.ts
+- lib/ghostme/home/homeComfortRiskSnapshot.ts
+- lib/ghostme/home/houseRouteSnapshot.ts
+- lib/ghostme/home/houseStateSnapshot.ts
+- lib/ghostme/memory/memorySnapshot.ts
+- lib/ghostme/people/peopleSnapshot.ts

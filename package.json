@@ -11,8 +11,9 @@
     "db:map": "node scripts/db-usage-map.mjs",
     "file:map": "node scripts/file-usage-map.mjs",
     "graph:all": "node scripts/generate-graphs.mjs",
-    "audit:all": "npm run audit && npm run db:map && npm run file:map && npm run graph:all",
-    "refresh": "npm run audit:all && npm run build"
+    "system:docs": "node scripts/system-docs.mjs",
+    "audit:all": "npm run audit && npm run db:map && npm run file:map && npm run graph:all && npm run system:docs",
+    "refresh": "npm run audit:all"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.105.4",

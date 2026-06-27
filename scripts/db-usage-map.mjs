@@ -175,6 +175,19 @@ const md = [
   "",
   "Mappa statica generata dal codice locale.",
   "",
+  "## Riepilogo",
+  "",
+  `- Tabelle censite: ${Object.values(map).length}`,
+  `- Tabelle lette: ${Object.values(map).filter((entry) => entry.readers.length).length}`,
+  `- Tabelle scritte: ${Object.values(map).filter((entry) => entry.writers.length || entry.updaters.length || entry.deleters.length).length}`,
+  `- Tabelle mai usate: ${Object.values(map).filter((entry) => entry.status === "unused").length}`,
+  "",
+  "## Tabelle mai usate",
+  "",
+  ...Object.values(map)
+    .filter((entry) => entry.status === "unused")
+    .map((entry) => `- ${entry.table}`),
+  "",
   "| Tabella | Stato | Lettori | Scrittori | Update | Delete | Raw |",
   "|---|---:|---:|---:|---:|---:|---:|",
   ...Object.values(map).map((entry) => {

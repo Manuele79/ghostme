@@ -67,6 +67,7 @@
       "lib/ghostme/observation/observationEngine.ts",
       "lib/ghostme/patterns/patternDecay.ts",
       "lib/ghostme/patterns/patternInsightEngine.ts",
+      "lib/ghostme/proactive/dailyBriefingRepository.ts",
       "lib/ghostme/situation/situationEngine.ts"
     ],
     "writers": [
@@ -234,6 +235,7 @@
       "lib/ghostme/proactive/curiosityCardWriter.ts",
       "lib/ghostme/proactive/proactiveMessageService.ts",
       "lib/ghostme/proactive/proactiveTrigger.ts",
+      "lib/ghostme/proactive/proactiveUserFlow.ts",
       "lib/ghostme/proactive/trueProactiveCardWriter.ts",
       "lib/ghostme/proactive/visibleProactiveMessages.ts"
     ],
@@ -327,7 +329,8 @@
       "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
       "lib/ghostme/homeAssistant/houseLightLearningFlow.ts",
       "lib/ghostme/homeAssistant/housePatternEngine.ts",
-      "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts"
+      "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts",
+      "lib/ghostme/proactive/dailyBriefingRepository.ts"
     ],
     "writers": [
       "lib/ghostme/homeAssistant/homeEventLogger.ts"
@@ -377,7 +380,8 @@
     "readers": [
       "lib/ghostme/context/userContextGraph.ts",
       "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
-      "lib/ghostme/homeAssistant/housePatternEngine.ts"
+      "lib/ghostme/homeAssistant/housePatternEngine.ts",
+      "lib/ghostme/proactive/dailyBriefingRepository.ts"
     ],
     "writers": [
       "lib/ghostme/homeAssistant/housePatternEngine.ts"
@@ -403,7 +407,8 @@
     "readers": [
       "lib/ghostme/home/houseSuggestionResponseFlow.ts",
       "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
-      "lib/ghostme/homeAssistant/houseSuggestionEngine.ts"
+      "lib/ghostme/homeAssistant/houseSuggestionEngine.ts",
+      "lib/ghostme/proactive/dailyBriefingRepository.ts"
     ],
     "writers": [
       "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
@@ -570,7 +575,8 @@
     "readers": [
       "lib/ghostme/context/userContextGraph.ts",
       "lib/ghostme/location/placeService.ts",
-      "lib/ghostme/observation/observationEngine.ts"
+      "lib/ghostme/observation/observationEngine.ts",
+      "lib/ghostme/proactive/dailyBriefingRepository.ts"
     ],
     "writers": [
       "lib/ghostme/location/placeService.ts"

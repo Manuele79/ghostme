@@ -3,8 +3,12 @@ import path from "path";
 
 const ROOT = process.cwd();
 
-const OUT_MD = path.join(ROOT, "PROJECT_AUDIT_FULL.md");
-const OUT_JSON = path.join(ROOT, "PROJECT_AUDIT_FULL.json");
+const OUT_MD = path.join(ROOT, "docs", "audits", "PROJECT_AUDIT_FULL.md");
+const OUT_JSON = path.join(ROOT, "docs", "state", "PROJECT_AUDIT_FULL.json");
+const LEGACY_OUT_MD = path.join(ROOT, "docs", "audits", "PROJECT_AUDIT.md");
+const LEGACY_OUT_JSON = path.join(ROOT, "docs", "state", "PROJECT_AUDIT.json");
+const ROOT_OUT_MD = path.join(ROOT, "PROJECT_AUDIT_FULL.md");
+const ROOT_OUT_JSON = path.join(ROOT, "PROJECT_AUDIT_FULL.json");
 
 const INCLUDE_EXT = [".ts", ".tsx", ".js", ".jsx", ".mjs"];
 const IGNORE_DIRS = new Set([
@@ -481,9 +485,19 @@ ${Object.keys(data.tables).length ? Object.entries(data.tables)
 `;
 }
 
-fs.writeFileSync(OUT_JSON, JSON.stringify(analysis, null, 2));
+fs.mkdirSync(path.dirname(OUT_MD), { recursive: true });
+fs.mkdirSync(path.dirname(OUT_JSON), { recursive: true });
+
+const json = JSON.stringify(analysis, null, 2);
+fs.writeFileSync(OUT_JSON, json);
 fs.writeFileSync(OUT_MD, md);
+fs.writeFileSync(LEGACY_OUT_JSON, json);
+fs.writeFileSync(LEGACY_OUT_MD, md);
+fs.writeFileSync(ROOT_OUT_JSON, json);
+fs.writeFileSync(ROOT_OUT_MD, md);
 
 console.log("Creati:");
-console.log("- PROJECT_AUDIT_FULL.md");
-console.log("- PROJECT_AUDIT_FULL.json");
+console.log("- docs/audits/PROJECT_AUDIT_FULL.md");
+console.log("- docs/state/PROJECT_AUDIT_FULL.json");
+console.log("- docs/audits/PROJECT_AUDIT.md");
+console.log("- docs/state/PROJECT_AUDIT.json");

@@ -121,6 +121,15 @@ function collectImports(content) {
   return imports;
 }
 
+function collectExports(content) {
+  return [
+    ...content.matchAll(/export\s+(?:async\s+)?function\s+([A-Za-z0-9_]+)/g),
+    ...content.matchAll(/export\s+const\s+([A-Za-z0-9_]+)/g),
+    ...content.matchAll(/export\s+type\s+([A-Za-z0-9_]+)/g),
+    ...content.matchAll(/export\s+class\s+([A-Za-z0-9_]+)/g),
+  ].map((match) => match[1]);
+}
+
 function tableUsage(content, table) {
   const q = String.raw`["'\`]${table}["'\`]`;
   const from = new RegExp(String.raw`\.from\(\s*${q}\s*\)`);
@@ -161,6 +170,7 @@ for (const file of files) {
   map[rel] = {
     file: rel,
     imports: [],
+    exports: [],
     importedBy: [],
     tablesRead: [],
     tablesWritten: [],
@@ -169,6 +179,8 @@ for (const file of files) {
     lines: content.split(/\r?\n/).length,
     status: "unknown",
   };
+
+  map[rel].exports = collectExports(content);
 
   for (const rawImport of collectImports(content)) {
     const resolved = resolveImport(file, rawImport);
@@ -225,11 +237,15 @@ for (const entry of Object.values(map)) {
   }
 
   entry.imports = [...new Set(entry.imports)].sort();
+  entry.exports = [...new Set(entry.exports)].sort();
   entry.importedBy = [...new Set(entry.importedBy)].sort();
   entry.tablesRead = [...new Set(entry.tablesRead)].sort();
   entry.tablesWritten = [...new Set(entry.tablesWritten)].sort();
   entry.tablesUpdated = [...new Set(entry.tablesUpdated)].sort();
   entry.tablesDeleted = [...new Set(entry.tablesDeleted)].sort();
+  entry.callerCount = entry.importedBy.length;
+  entry.dependencyCount = entry.imports.length;
+  entry.exportCount = entry.exports.length;
 }
 
 const docsDir = path.join(ROOT, "docs", "maps");
@@ -247,13 +263,19 @@ const md = [
   "",
   "Mappa statica generata dal codice locale.",
   "",
-  "| File | Stato | Chiamato da | Importa | DB read | DB write/update/delete | Righe |",
-  "|---|---:|---:|---:|---:|---:|---:|",
+  "| File | Stato | Chiamanti | Dipendenze | Export | DB read | DB write/update/delete | Righe |",
+  "|---|---:|---:|---:|---:|---:|---:|---:|",
   ...rows.map((e) => {
     const writes =
       e.tablesWritten.length + e.tablesUpdated.length + e.tablesDeleted.length;
-    return `| ${e.file} | ${e.status} | ${e.importedBy.length} | ${e.imports.length} | ${e.tablesRead.length} | ${writes} | ${e.lines} |`;
+    return `| ${e.file} | ${e.status} | ${e.callerCount} | ${e.dependencyCount} | ${e.exportCount} | ${e.tablesRead.length} | ${writes} | ${e.lines} |`;
   }),
+  "",
+  "## Riepilogo",
+  "",
+  `- File: ${rows.length}`,
+  `- File orfani: ${rows.filter((e) => e.status.includes("orphan")).length}`,
+  `- God file candidati: ${rows.filter((e) => e.status === "god_file_candidate").length}`,
   "",
   "## Orfani candidati",
   "",
@@ -286,6 +308,12 @@ const md = [
     `Chiamato da: ${e.importedBy.length ? e.importedBy.join(", ") : "-"}`,
     "",
     `Importa: ${e.imports.length ? e.imports.join(", ") : "-"}`,
+    "",
+    `Export: ${e.exports.length ? e.exports.join(", ") : "-"}`,
+    "",
+    `Numero chiamanti: ${e.callerCount}`,
+    "",
+    `Numero dipendenze: ${e.dependencyCount}`,
     "",
     `DB read: ${e.tablesRead.length ? e.tablesRead.join(", ") : "-"}`,
     "",

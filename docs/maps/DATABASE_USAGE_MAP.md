@@ -2,12 +2,27 @@
 
 Mappa statica generata dal codice locale.
 
+## Riepilogo
+
+- Tabelle censite: 35
+- Tabelle lette: 30
+- Tabelle scritte: 30
+- Tabelle mai usate: 5
+
+## Tabelle mai usate
+
+- house_paths
+- house_rooms
+- memories
+- questions
+- triggers
+
 | Tabella | Stato | Lettori | Scrittori | Update | Delete | Raw |
 |---|---:|---:|---:|---:|---:|---:|
 | action_intents | alive | 10 | 1 | 3 | 0 | 0 |
 | answers | alive | 1 | 1 | 0 | 1 | 0 |
 | autobiographical_timeline | alive | 7 | 1 | 0 | 0 | 0 |
-| behavior_patterns | alive | 6 | 1 | 3 | 0 | 0 |
+| behavior_patterns | alive | 7 | 1 | 3 | 0 | 0 |
 | calendar_events | alive | 8 | 1 | 3 | 0 | 0 |
 | chat_messages | alive | 2 | 1 | 1 | 1 | 0 |
 | contradictions | alive | 3 | 1 | 0 | 0 | 0 |
@@ -15,16 +30,16 @@ Mappa statica generata dal codice locale.
 | dynamic_self_profile | alive | 4 | 2 | 2 | 0 | 0 |
 | episodic_memories | alive | 8 | 1 | 0 | 0 | 0 |
 | ghost_behavior_rules | alive | 3 | 2 | 1 | 0 | 0 |
-| ghost_proactive_messages | alive | 15 | 1 | 8 | 0 | 0 |
+| ghost_proactive_messages | alive | 16 | 1 | 8 | 0 | 0 |
 | goals_desires | alive | 10 | 1 | 3 | 0 | 0 |
 | house_automation_controls | alive | 3 | 1 | 2 | 0 | 0 |
 | house_entities | alive | 2 | 2 | 0 | 0 | 0 |
-| house_events | alive | 12 | 1 | 3 | 0 | 0 |
+| house_events | alive | 13 | 1 | 3 | 0 | 0 |
 | house_learned_rules | alive | 6 | 2 | 2 | 0 | 0 |
 | house_paths | unused | 0 | 0 | 0 | 0 | 0 |
-| house_patterns | alive | 3 | 1 | 1 | 0 | 0 |
+| house_patterns | alive | 4 | 1 | 1 | 0 | 0 |
 | house_rooms | unused | 0 | 0 | 0 | 0 | 0 |
-| house_suggestions | alive | 3 | 2 | 1 | 0 | 0 |
+| house_suggestions | alive | 4 | 2 | 1 | 0 | 0 |
 | life_topics | alive | 14 | 2 | 3 | 1 | 0 |
 | memories | unused | 0 | 0 | 0 | 0 | 0 |
 | memories_active | alive | 12 | 4 | 3 | 2 | 0 |
@@ -33,7 +48,7 @@ Mappa statica generata dal codice locale.
 | people_graph | alive | 4 | 1 | 1 | 0 | 0 |
 | people_graph_links | alive | 1 | 0 | 1 | 0 | 0 |
 | questions | unused | 0 | 0 | 0 | 0 | 0 |
-| significant_places | alive | 3 | 1 | 1 | 1 | 0 |
+| significant_places | alive | 4 | 1 | 1 | 1 | 0 |
 | topic_links | alive | 5 | 1 | 1 | 0 | 0 |
 | traits | alive | 3 | 1 | 0 | 1 | 0 |
 | triggers | unused | 0 | 0 | 0 | 0 | 0 |
@@ -88,7 +103,7 @@ Raw users: -
 
 Stato: **alive**
 
-Readers: lib/ghostme/context/userContextGraph.ts, lib/ghostme/location/locationLearningFlow.ts, lib/ghostme/observation/observationEngine.ts, lib/ghostme/patterns/patternDecay.ts, lib/ghostme/patterns/patternInsightEngine.ts, lib/ghostme/situation/situationEngine.ts
+Readers: lib/ghostme/context/userContextGraph.ts, lib/ghostme/location/locationLearningFlow.ts, lib/ghostme/observation/observationEngine.ts, lib/ghostme/patterns/patternDecay.ts, lib/ghostme/patterns/patternInsightEngine.ts, lib/ghostme/proactive/dailyBriefingRepository.ts, lib/ghostme/situation/situationEngine.ts
 
 Writers: lib/ghostme/observation/observationEngine.ts
 
@@ -200,7 +215,7 @@ Raw users: -
 
 Stato: **alive**
 
-Readers: app/api/ghostme/proactive/read/route.ts, lib/ghostme/agenda/reminderEngine.ts, lib/ghostme/calendar/calendarService.ts, lib/ghostme/context/contextBuilder.ts, lib/ghostme/context/userContextGraph.ts, lib/ghostme/curiosity/curiosityEngine.ts, lib/ghostme/home/houseSuggestionResponseFlow.ts, lib/ghostme/location/locationLearningFlow.ts, lib/ghostme/observation/observationInsightEngine.ts, lib/ghostme/patterns/patternInsightEngine.ts, lib/ghostme/proactive/curiosityCardWriter.ts, lib/ghostme/proactive/proactiveMessageService.ts, lib/ghostme/proactive/proactiveTrigger.ts, lib/ghostme/proactive/trueProactiveCardWriter.ts, lib/ghostme/proactive/visibleProactiveMessages.ts
+Readers: app/api/ghostme/proactive/read/route.ts, lib/ghostme/agenda/reminderEngine.ts, lib/ghostme/calendar/calendarService.ts, lib/ghostme/context/contextBuilder.ts, lib/ghostme/context/userContextGraph.ts, lib/ghostme/curiosity/curiosityEngine.ts, lib/ghostme/home/houseSuggestionResponseFlow.ts, lib/ghostme/location/locationLearningFlow.ts, lib/ghostme/observation/observationInsightEngine.ts, lib/ghostme/patterns/patternInsightEngine.ts, lib/ghostme/proactive/curiosityCardWriter.ts, lib/ghostme/proactive/proactiveMessageService.ts, lib/ghostme/proactive/proactiveTrigger.ts, lib/ghostme/proactive/proactiveUserFlow.ts, lib/ghostme/proactive/trueProactiveCardWriter.ts, lib/ghostme/proactive/visibleProactiveMessages.ts
 
 Writers: lib/ghostme/proactive/proactiveMessageService.ts
 
@@ -256,7 +271,7 @@ Raw users: -
 
 Stato: **alive**
 
-Readers: app/api/home-assistant/event/route.ts, lib/ghostme/home/homeComfortRiskSnapshot.ts, lib/ghostme/home/houseRouteSnapshot.ts, lib/ghostme/home/houseStateSnapshot.ts, lib/ghostme/home/houseWorkerFlow.ts, lib/ghostme/homeAssistant/homeEventLogger.ts, lib/ghostme/homeAssistant/houseAutomationContext.ts, lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts, lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts, lib/ghostme/homeAssistant/houseLightLearningFlow.ts, lib/ghostme/homeAssistant/housePatternEngine.ts, lib/ghostme/homeAssistant/houseRouteLearningEngine.ts
+Readers: app/api/home-assistant/event/route.ts, lib/ghostme/home/homeComfortRiskSnapshot.ts, lib/ghostme/home/houseRouteSnapshot.ts, lib/ghostme/home/houseStateSnapshot.ts, lib/ghostme/home/houseWorkerFlow.ts, lib/ghostme/homeAssistant/homeEventLogger.ts, lib/ghostme/homeAssistant/houseAutomationContext.ts, lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts, lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts, lib/ghostme/homeAssistant/houseLightLearningFlow.ts, lib/ghostme/homeAssistant/housePatternEngine.ts, lib/ghostme/homeAssistant/houseRouteLearningEngine.ts, lib/ghostme/proactive/dailyBriefingRepository.ts
 
 Writers: lib/ghostme/homeAssistant/homeEventLogger.ts
 
@@ -298,7 +313,7 @@ Raw users: -
 
 Stato: **alive**
 
-Readers: lib/ghostme/context/userContextGraph.ts, lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts, lib/ghostme/homeAssistant/housePatternEngine.ts
+Readers: lib/ghostme/context/userContextGraph.ts, lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts, lib/ghostme/homeAssistant/housePatternEngine.ts, lib/ghostme/proactive/dailyBriefingRepository.ts
 
 Writers: lib/ghostme/homeAssistant/housePatternEngine.ts
 
@@ -326,7 +341,7 @@ Raw users: -
 
 Stato: **alive**
 
-Readers: lib/ghostme/home/houseSuggestionResponseFlow.ts, lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts, lib/ghostme/homeAssistant/houseSuggestionEngine.ts
+Readers: lib/ghostme/home/houseSuggestionResponseFlow.ts, lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts, lib/ghostme/homeAssistant/houseSuggestionEngine.ts, lib/ghostme/proactive/dailyBriefingRepository.ts
 
 Writers: lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts, lib/ghostme/homeAssistant/houseSuggestionEngine.ts
 
@@ -452,7 +467,7 @@ Raw users: -
 
 Stato: **alive**
 
-Readers: lib/ghostme/context/userContextGraph.ts, lib/ghostme/location/placeService.ts, lib/ghostme/observation/observationEngine.ts
+Readers: lib/ghostme/context/userContextGraph.ts, lib/ghostme/location/placeService.ts, lib/ghostme/observation/observationEngine.ts, lib/ghostme/proactive/dailyBriefingRepository.ts
 
 Writers: lib/ghostme/location/placeService.ts
 

@@ -6,6 +6,9 @@
       "lib/ghostme/goals/goalsActionsLifecycle.ts",
       "lib/supabaseAdmin.ts"
     ],
+    "exports": [
+      "PATCH"
+    ],
     "importedBy": [],
     "tablesRead": [
       "action_intents"
@@ -16,7 +19,10 @@
     ],
     "tablesDeleted": [],
     "lines": 129,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 0,
+    "dependencyCount": 3,
+    "exportCount": 1
   },
   "app/api/calendar-events/route.ts": {
     "file": "app/api/calendar-events/route.ts",
@@ -24,13 +30,21 @@
       "lib/ghostme/auth/serverAuth.ts",
       "lib/ghostme/calendar/calendarService.ts"
     ],
+    "exports": [
+      "DELETE",
+      "PATCH",
+      "POST"
+    ],
     "importedBy": [],
     "tablesRead": [],
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 104,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 0,
+    "dependencyCount": 2,
+    "exportCount": 3
   },
   "app/api/chat/route.ts": {
     "file": "app/api/chat/route.ts",
@@ -39,18 +53,28 @@
       "lib/ghostme/chat/chatPostProcessing.ts",
       "lib/ghostme/chat/ghostChatOrchestrator.ts"
     ],
+    "exports": [
+      "POST",
+      "runtime"
+    ],
     "importedBy": [],
     "tablesRead": [],
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 73,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 0,
+    "dependencyCount": 3,
+    "exportCount": 2
   },
   "app/api/conversation-summary/route.ts": {
     "file": "app/api/conversation-summary/route.ts",
     "imports": [
       "lib/ghostme/conversationSummary.ts"
+    ],
+    "exports": [
+      "POST"
     ],
     "importedBy": [],
     "tablesRead": [],
@@ -58,7 +82,10 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 29,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 0,
+    "dependencyCount": 1,
+    "exportCount": 1
   },
   "app/api/debug-ha-entities/route.ts": {
     "file": "app/api/debug-ha-entities/route.ts",
@@ -66,13 +93,19 @@
       "lib/ghostme/auth/serverAuth.ts",
       "lib/ghostme/homeAssistant/haClient.ts"
     ],
+    "exports": [
+      "GET"
+    ],
     "importedBy": [],
     "tablesRead": [],
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 49,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 0,
+    "dependencyCount": 2,
+    "exportCount": 1
   },
   "app/api/debug-house-logger/route.ts": {
     "file": "app/api/debug-house-logger/route.ts",
@@ -81,13 +114,19 @@
       "lib/ghostme/homeAssistant/haClient.ts",
       "lib/ghostme/homeAssistant/homeEntityMapper.ts"
     ],
+    "exports": [
+      "GET"
+    ],
     "importedBy": [],
     "tablesRead": [],
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 56,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 0,
+    "dependencyCount": 3,
+    "exportCount": 1
   },
   "app/api/debug-reasoning/route.ts": {
     "file": "app/api/debug-reasoning/route.ts",
@@ -96,13 +135,19 @@
       "lib/ghostme/context/decisionSnapshot.ts",
       "lib/ghostme/context/reasoningService.ts"
     ],
+    "exports": [
+      "GET"
+    ],
     "importedBy": [],
     "tablesRead": [],
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 36,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 0,
+    "dependencyCount": 3,
+    "exportCount": 1
   },
   "app/api/ghostme/brain/route.ts": {
     "file": "app/api/ghostme/brain/route.ts",
@@ -112,15 +157,22 @@
       "lib/ghostme/context/decisionSnapshot.ts",
       "lib/ghostme/context/reasoningService.ts",
       "lib/ghostme/location/locationStateFreshness.ts",
+      "lib/ghostme/proactive/proactiveUserFlow.ts",
       "lib/ghostme/proactive/visibleProactiveMessages.ts"
+    ],
+    "exports": [
+      "POST"
     ],
     "importedBy": [],
     "tablesRead": [],
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 61,
-    "status": "entrypoint"
+    "lines": 67,
+    "status": "entrypoint",
+    "callerCount": 0,
+    "dependencyCount": 7,
+    "exportCount": 1
   },
   "app/api/ghostme/proactive/read/route.ts": {
     "file": "app/api/ghostme/proactive/read/route.ts",
@@ -129,6 +181,9 @@
       "lib/ghostme/calendar/calendarService.ts",
       "lib/ghostme/proactive/proactiveCardLifecycle.ts",
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "POST"
     ],
     "importedBy": [],
     "tablesRead": [
@@ -142,13 +197,19 @@
     ],
     "tablesDeleted": [],
     "lines": 185,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 0,
+    "dependencyCount": 4,
+    "exportCount": 1
   },
   "app/api/goals/update-status/route.ts": {
     "file": "app/api/goals/update-status/route.ts",
     "imports": [
       "lib/ghostme/auth/serverAuth.ts",
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "POST"
     ],
     "importedBy": [],
     "tablesRead": [
@@ -161,7 +222,10 @@
     ],
     "tablesDeleted": [],
     "lines": 144,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 0,
+    "dependencyCount": 2,
+    "exportCount": 1
   },
   "app/api/home-assistant/event/route.ts": {
     "file": "app/api/home-assistant/event/route.ts",
@@ -174,6 +238,9 @@
       "lib/ghostme/homeAssistant/houseLightLearningFlow.ts",
       "lib/supabaseAdmin.ts"
     ],
+    "exports": [
+      "POST"
+    ],
     "importedBy": [],
     "tablesRead": [
       "house_events"
@@ -184,7 +251,10 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 464,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 0,
+    "dependencyCount": 7,
+    "exportCount": 1
   },
   "app/api/house-suggestion-response/route.ts": {
     "file": "app/api/house-suggestion-response/route.ts",
@@ -192,13 +262,19 @@
       "lib/ghostme/auth/serverAuth.ts",
       "lib/ghostme/home/houseSuggestionResponseFlow.ts"
     ],
+    "exports": [
+      "POST"
+    ],
     "importedBy": [],
     "tablesRead": [],
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 27,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 0,
+    "dependencyCount": 2,
+    "exportCount": 1
   },
   "app/api/location/candidate/route.ts": {
     "file": "app/api/location/candidate/route.ts",
@@ -207,13 +283,20 @@
       "lib/ghostme/location/locationLearningFlow.ts",
       "lib/ghostme/location/placeService.ts"
     ],
+    "exports": [
+      "PATCH",
+      "POST"
+    ],
     "importedBy": [],
     "tablesRead": [],
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 53,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 0,
+    "dependencyCount": 3,
+    "exportCount": 2
   },
   "app/api/location/current-place/route.ts": {
     "file": "app/api/location/current-place/route.ts",
@@ -221,13 +304,19 @@
       "lib/ghostme/auth/serverAuth.ts",
       "lib/ghostme/location/placeService.ts"
     ],
+    "exports": [
+      "POST"
+    ],
     "importedBy": [],
     "tablesRead": [],
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 36,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 0,
+    "dependencyCount": 2,
+    "exportCount": 1
   },
   "app/api/location/current-state/route.ts": {
     "file": "app/api/location/current-state/route.ts",
@@ -236,13 +325,19 @@
       "lib/ghostme/location/locationCurrentStateFlow.ts",
       "lib/ghostme/location/locationStateFreshness.ts"
     ],
+    "exports": [
+      "POST"
+    ],
     "importedBy": [],
     "tablesRead": [],
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 32,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 0,
+    "dependencyCount": 3,
+    "exportCount": 1
   },
   "app/api/location/delete-place/route.ts": {
     "file": "app/api/location/delete-place/route.ts",
@@ -250,13 +345,19 @@
       "lib/ghostme/auth/serverAuth.ts",
       "lib/ghostme/location/locationDeletePlaceFlow.ts"
     ],
+    "exports": [
+      "DELETE"
+    ],
     "importedBy": [],
     "tablesRead": [],
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 26,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 0,
+    "dependencyCount": 2,
+    "exportCount": 1
   },
   "app/api/location/places/route.ts": {
     "file": "app/api/location/places/route.ts",
@@ -264,13 +365,19 @@
       "lib/ghostme/auth/serverAuth.ts",
       "lib/ghostme/location/placeService.ts"
     ],
+    "exports": [
+      "POST"
+    ],
     "importedBy": [],
     "tablesRead": [],
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 22,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 0,
+    "dependencyCount": 2,
+    "exportCount": 1
   },
   "app/api/location/save-place/route.ts": {
     "file": "app/api/location/save-place/route.ts",
@@ -278,13 +385,19 @@
       "lib/ghostme/auth/serverAuth.ts",
       "lib/ghostme/location/locationSavePlaceFlow.ts"
     ],
+    "exports": [
+      "POST"
+    ],
     "importedBy": [],
     "tablesRead": [],
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 26,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 0,
+    "dependencyCount": 2,
+    "exportCount": 1
   },
   "app/api/location/update-current/route.ts": {
     "file": "app/api/location/update-current/route.ts",
@@ -294,18 +407,27 @@
       "lib/ghostme/location/locationUpdateFlow.ts",
       "lib/ghostme/location/placeService.ts"
     ],
+    "exports": [
+      "POST"
+    ],
     "importedBy": [],
     "tablesRead": [],
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 32,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 0,
+    "dependencyCount": 4,
+    "exportCount": 1
   },
   "app/api/memory/route.ts": {
     "file": "app/api/memory/route.ts",
     "imports": [
       "lib/supabase.ts"
+    ],
+    "exports": [
+      "POST"
     ],
     "importedBy": [],
     "tablesRead": [
@@ -317,7 +439,10 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 51,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 0,
+    "dependencyCount": 1,
+    "exportCount": 1
   },
   "app/api/memory/search/route.ts": {
     "file": "app/api/memory/search/route.ts",
@@ -325,13 +450,19 @@
       "lib/ghostme/auth/serverAuth.ts",
       "lib/ghostme/memory/memorySearchFlow.ts"
     ],
+    "exports": [
+      "POST"
+    ],
     "importedBy": [],
     "tablesRead": [],
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 30,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 0,
+    "dependencyCount": 2,
+    "exportCount": 1
   },
   "app/api/proactive/messages/route.ts": {
     "file": "app/api/proactive/messages/route.ts",
@@ -339,13 +470,19 @@
       "lib/ghostme/auth/serverAuth.ts",
       "lib/ghostme/proactive/visibleProactiveMessages.ts"
     ],
+    "exports": [
+      "POST"
+    ],
     "importedBy": [],
     "tablesRead": [],
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 29,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 0,
+    "dependencyCount": 2,
+    "exportCount": 1
   },
   "app/api/test-ha/route.ts": {
     "file": "app/api/test-ha/route.ts",
@@ -353,13 +490,19 @@
       "lib/ghostme/auth/serverAuth.ts",
       "lib/ghostme/homeAssistant/haClient.ts"
     ],
+    "exports": [
+      "GET"
+    ],
     "importedBy": [],
     "tablesRead": [],
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 32,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 0,
+    "dependencyCount": 2,
+    "exportCount": 1
   },
   "app/api/test-home-context/route.ts": {
     "file": "app/api/test-home-context/route.ts",
@@ -367,13 +510,19 @@
       "lib/ghostme/auth/serverAuth.ts",
       "lib/ghostme/homeAssistant/homeContextBuilder.ts"
     ],
+    "exports": [
+      "GET"
+    ],
     "importedBy": [],
     "tablesRead": [],
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 16,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 0,
+    "dependencyCount": 2,
+    "exportCount": 1
   },
   "app/api/test-home-reasoning/route.ts": {
     "file": "app/api/test-home-reasoning/route.ts",
@@ -381,18 +530,27 @@
       "lib/ghostme/auth/serverAuth.ts",
       "lib/ghostme/homeAssistant/homeReasoningBuilder.ts"
     ],
+    "exports": [
+      "GET"
+    ],
     "importedBy": [],
     "tablesRead": [],
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 16,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 0,
+    "dependencyCount": 2,
+    "exportCount": 1
   },
   "app/api/worker/house/route.ts": {
     "file": "app/api/worker/house/route.ts",
     "imports": [
       "lib/ghostme/home/houseWorkerFlow.ts"
+    ],
+    "exports": [
+      "GET"
     ],
     "importedBy": [],
     "tablesRead": [],
@@ -400,7 +558,10 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 14,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 0,
+    "dependencyCount": 1,
+    "exportCount": 1
   },
   "app/api/worker/proactive/route.ts": {
     "file": "app/api/worker/proactive/route.ts",
@@ -408,6 +569,9 @@
       "lib/ghostme/auth/serverAuth.ts",
       "lib/ghostme/proactive/proactiveUserFlow.ts",
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "GET"
     ],
     "importedBy": [],
     "tablesRead": [
@@ -417,7 +581,10 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 49,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 0,
+    "dependencyCount": 3,
+    "exportCount": 1
   },
   "app/api/worker/reminder/route.ts": {
     "file": "app/api/worker/reminder/route.ts",
@@ -425,13 +592,19 @@
       "lib/ghostme/agenda/reminderEngine.ts",
       "lib/ghostme/auth/serverAuth.ts"
     ],
+    "exports": [
+      "GET"
+    ],
     "importedBy": [],
     "tablesRead": [],
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 33,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 0,
+    "dependencyCount": 2,
+    "exportCount": 1
   },
   "app/chat/page.tsx": {
     "file": "app/chat/page.tsx",
@@ -450,6 +623,7 @@
       "lib/personality.ts",
       "lib/supabase.ts"
     ],
+    "exports": [],
     "importedBy": [],
     "tablesRead": [
       "chat_messages",
@@ -461,25 +635,36 @@
     ],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 835,
-    "status": "entrypoint"
+    "lines": 811,
+    "status": "entrypoint",
+    "callerCount": 0,
+    "dependencyCount": 13,
+    "exportCount": 0
   },
   "app/layout.tsx": {
     "file": "app/layout.tsx",
     "imports": [],
+    "exports": [
+      "metadata",
+      "viewport"
+    ],
     "importedBy": [],
     "tablesRead": [],
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 44,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 0,
+    "dependencyCount": 0,
+    "exportCount": 2
   },
   "app/login/page.tsx": {
     "file": "app/login/page.tsx",
     "imports": [
       "lib/supabase.ts"
     ],
+    "exports": [],
     "importedBy": [],
     "tablesRead": [
       "traits",
@@ -489,13 +674,17 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 127,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 0,
+    "dependencyCount": 1,
+    "exportCount": 0
   },
   "app/memory/page.tsx": {
     "file": "app/memory/page.tsx",
     "imports": [
       "lib/supabase.ts"
     ],
+    "exports": [],
     "importedBy": [],
     "tablesRead": [
       "memories_active"
@@ -510,18 +699,25 @@
       "memories_active"
     ],
     "lines": 374,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 0,
+    "dependencyCount": 1,
+    "exportCount": 0
   },
   "app/page.tsx": {
     "file": "app/page.tsx",
     "imports": [],
+    "exports": [],
     "importedBy": [],
     "tablesRead": [],
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 5,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 0,
+    "dependencyCount": 0,
+    "exportCount": 0
   },
   "app/setup/page.tsx": {
     "file": "app/setup/page.tsx",
@@ -530,6 +726,7 @@
       "lib/personality.ts",
       "lib/supabase.ts"
     ],
+    "exports": [],
     "importedBy": [],
     "tablesRead": [
       "answers"
@@ -544,13 +741,17 @@
       "traits"
     ],
     "lines": 628,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 0,
+    "dependencyCount": 3,
+    "exportCount": 0
   },
   "app/setup/profile/page.tsx": {
     "file": "app/setup/profile/page.tsx",
     "imports": [
       "lib/supabase.ts"
     ],
+    "exports": [],
     "importedBy": [],
     "tablesRead": [],
     "tablesWritten": [
@@ -559,13 +760,17 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 213,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 0,
+    "dependencyCount": 1,
+    "exportCount": 0
   },
   "components/ghost/GhostBackground.tsx": {
     "file": "components/ghost/GhostBackground.tsx",
     "imports": [
       "components/ghost/types.ts"
     ],
+    "exports": [],
     "importedBy": [
       "app/chat/page.tsx"
     ],
@@ -574,13 +779,17 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 121,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 1,
+    "dependencyCount": 1,
+    "exportCount": 0
   },
   "components/ghost/GhostCanvasCore.tsx": {
     "file": "components/ghost/GhostCanvasCore.tsx",
     "imports": [
       "components/ghost/types.ts"
     ],
+    "exports": [],
     "importedBy": [
       "components/ghost/GhostVoiceMode.tsx"
     ],
@@ -589,7 +798,10 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 320,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 1,
+    "dependencyCount": 1,
+    "exportCount": 0
   },
   "components/ghost/GhostChat.tsx": {
     "file": "components/ghost/GhostChat.tsx",
@@ -597,6 +809,7 @@
       "components/ghost/types.ts",
       "lib/ghostme/auth/clientAuthHeaders.ts"
     ],
+    "exports": [],
     "importedBy": [
       "app/chat/page.tsx"
     ],
@@ -605,13 +818,17 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 338,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 1,
+    "dependencyCount": 2,
+    "exportCount": 0
   },
   "components/ghost/GhostCore.tsx": {
     "file": "components/ghost/GhostCore.tsx",
     "imports": [
       "components/ghost/types.ts"
     ],
+    "exports": [],
     "importedBy": [
       "components/ghost/GhostVoiceMode.tsx"
     ],
@@ -620,13 +837,21 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 172,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 1,
+    "dependencyCount": 1,
+    "exportCount": 0
   },
   "components/ghost/GhostDrawers.tsx": {
     "file": "components/ghost/GhostDrawers.tsx",
     "imports": [
       "components/ghost/types.ts",
       "lib/ghostme/auth/clientAuthHeaders.ts"
+    ],
+    "exports": [
+      "HistoryDrawer",
+      "MemoryDrawer",
+      "ServicesDrawer"
     ],
     "importedBy": [
       "app/chat/page.tsx"
@@ -636,11 +861,15 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 2214,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 1,
+    "dependencyCount": 2,
+    "exportCount": 3
   },
   "components/ghost/GhostGlobalStyles.tsx": {
     "file": "components/ghost/GhostGlobalStyles.tsx",
     "imports": [],
+    "exports": [],
     "importedBy": [
       "components/ghost/GhostLayout.tsx"
     ],
@@ -649,13 +878,17 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 65,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 1,
+    "dependencyCount": 0,
+    "exportCount": 0
   },
   "components/ghost/GhostHeader.tsx": {
     "file": "components/ghost/GhostHeader.tsx",
     "imports": [
       "components/ghost/types.ts"
     ],
+    "exports": [],
     "importedBy": [
       "app/chat/page.tsx"
     ],
@@ -664,13 +897,17 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 69,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 1,
+    "dependencyCount": 1,
+    "exportCount": 0
   },
   "components/ghost/GhostLayout.tsx": {
     "file": "components/ghost/GhostLayout.tsx",
     "imports": [
       "components/ghost/GhostGlobalStyles.tsx"
     ],
+    "exports": [],
     "importedBy": [
       "app/chat/page.tsx"
     ],
@@ -679,7 +916,10 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 37,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 1,
+    "dependencyCount": 1,
+    "exportCount": 0
   },
   "components/ghost/GhostVoiceMode.tsx": {
     "file": "components/ghost/GhostVoiceMode.tsx",
@@ -688,6 +928,7 @@
       "components/ghost/GhostCore.tsx",
       "components/ghost/types.ts"
     ],
+    "exports": [],
     "importedBy": [
       "app/chat/page.tsx"
     ],
@@ -696,13 +937,26 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 153,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 1,
+    "dependencyCount": 3,
+    "exportCount": 0
   },
   "components/ghost/types.ts": {
     "file": "components/ghost/types.ts",
     "imports": [
       "lib/ghostme/context/decisionSnapshot.ts",
       "lib/ghostme/context/reasoningService.ts"
+    ],
+    "exports": [
+      "BrainData",
+      "CalendarEvent",
+      "ChatMessage",
+      "GhostMode",
+      "HomeUiModel",
+      "ProactiveMessage",
+      "VoiceState",
+      "modeLabels"
     ],
     "importedBy": [
       "app/chat/page.tsx",
@@ -723,7 +977,10 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 81,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 12,
+    "dependencyCount": 2,
+    "exportCount": 8
   },
   "hooks/useGhostBrain.ts": {
     "file": "hooks/useGhostBrain.ts",
@@ -733,6 +990,9 @@
       "lib/ghostme/ui/brainUiAdapter.ts",
       "lib/personality.ts"
     ],
+    "exports": [
+      "useGhostBrain"
+    ],
     "importedBy": [
       "app/chat/page.tsx"
     ],
@@ -741,12 +1001,18 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 87,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 1,
+    "dependencyCount": 4,
+    "exportCount": 1
   },
   "hooks/useGhostChat.ts": {
     "file": "hooks/useGhostChat.ts",
     "imports": [
       "components/ghost/types.ts"
+    ],
+    "exports": [
+      "useGhostChat"
     ],
     "importedBy": [
       "app/chat/page.tsx"
@@ -756,12 +1022,18 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 19,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 1,
+    "dependencyCount": 1,
+    "exportCount": 1
   },
   "hooks/useGhostVoice.ts": {
     "file": "hooks/useGhostVoice.ts",
     "imports": [
       "components/ghost/types.ts"
+    ],
+    "exports": [
+      "useGhostVoice"
     ],
     "importedBy": [
       "app/chat/page.tsx"
@@ -771,13 +1043,22 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 158,
-    "status": "entrypoint"
+    "status": "entrypoint",
+    "callerCount": 1,
+    "dependencyCount": 1,
+    "exportCount": 1
   },
   "lib/ghostme/actionLayer.ts": {
     "file": "lib/ghostme/actionLayer.ts",
     "imports": [
       "lib/ghostme/goals/goalsActionsLifecycle.ts",
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "cleanupOldActionIntents",
+      "detectAndCompleteActionIntent",
+      "detectAndSaveActionIntent",
+      "getActionIntentContext"
     ],
     "importedBy": [
       "lib/ghostme/chat/chatPostProcessing.ts",
@@ -794,12 +1075,18 @@
     ],
     "tablesDeleted": [],
     "lines": 305,
-    "status": "active"
+    "status": "active",
+    "callerCount": 2,
+    "dependencyCount": 2,
+    "exportCount": 4
   },
   "lib/ghostme/agenda/agendaEngine.ts": {
     "file": "lib/ghostme/agenda/agendaEngine.ts",
     "imports": [
       "lib/ghostme/situation/situationEngine.ts"
+    ],
+    "exports": [
+      "buildAgendaMessage"
     ],
     "importedBy": [
       "lib/ghostme/calendar/calendarService.ts",
@@ -810,24 +1097,37 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 41,
-    "status": "active"
+    "status": "active",
+    "callerCount": 2,
+    "dependencyCount": 1,
+    "exportCount": 1
   },
   "lib/ghostme/agenda/appointmentReminderNotification.ts": {
     "file": "lib/ghostme/agenda/appointmentReminderNotification.ts",
     "imports": [],
+    "exports": [
+      "sendAppointmentReminderNotification"
+    ],
     "importedBy": [],
     "tablesRead": [],
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 50,
-    "status": "orphan_candidate"
+    "status": "orphan_candidate",
+    "callerCount": 0,
+    "dependencyCount": 0,
+    "exportCount": 1
   },
   "lib/ghostme/agenda/reminderEngine.ts": {
     "file": "lib/ghostme/agenda/reminderEngine.ts",
     "imports": [
       "lib/ghostme/proactive/proactiveMessageService.ts",
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "refreshActiveReminderUsers",
+      "refreshReminderMessage"
     ],
     "importedBy": [
       "app/api/worker/reminder/route.ts",
@@ -844,12 +1144,18 @@
     ],
     "tablesDeleted": [],
     "lines": 145,
-    "status": "active"
+    "status": "active",
+    "callerCount": 3,
+    "dependencyCount": 2,
+    "exportCount": 2
   },
   "lib/ghostme/auth/clientAuthHeaders.ts": {
     "file": "lib/ghostme/auth/clientAuthHeaders.ts",
     "imports": [
       "lib/supabase.ts"
+    ],
+    "exports": [
+      "getAuthenticatedJsonHeaders"
     ],
     "importedBy": [
       "app/chat/page.tsx",
@@ -862,12 +1168,23 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 12,
-    "status": "active"
+    "status": "active",
+    "callerCount": 4,
+    "dependencyCount": 1,
+    "exportCount": 1
   },
   "lib/ghostme/auth/serverAuth.ts": {
     "file": "lib/ghostme/auth/serverAuth.ts",
     "imports": [
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "UserContextAuthError",
+      "getAuthenticatedUserId",
+      "hasValidWorkerOverride",
+      "isDevelopmentEnvironment",
+      "requireDevelopmentOrWorker",
+      "requireWorkerRequest"
     ],
     "importedBy": [
       "app/api/actions/update-status/route.ts",
@@ -902,12 +1219,21 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 152,
-    "status": "active"
+    "status": "active",
+    "callerCount": 26,
+    "dependencyCount": 1,
+    "exportCount": 6
   },
   "lib/ghostme/behavior/behaviorRulesEngine.ts": {
     "file": "lib/ghostme/behavior/behaviorRulesEngine.ts",
     "imports": [
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "buildBehaviorPrompt",
+      "detectAndSaveBehaviorRule",
+      "getActiveBehaviorRules",
+      "saveBehaviorRule"
     ],
     "importedBy": [
       "lib/ghostme/chat/chatContextBuilder.ts",
@@ -926,12 +1252,18 @@
     ],
     "tablesDeleted": [],
     "lines": 225,
-    "status": "active"
+    "status": "active",
+    "callerCount": 4,
+    "dependencyCount": 1,
+    "exportCount": 4
   },
   "lib/ghostme/butler/butlerEngine.ts": {
     "file": "lib/ghostme/butler/butlerEngine.ts",
     "imports": [
       "lib/ghostme/context/contextBuilder.ts"
+    ],
+    "exports": [
+      "generateButlerMessage"
     ],
     "importedBy": [
       "lib/ghostme/proactive/proactiveCandidateBuilder.ts"
@@ -941,11 +1273,18 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 67,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 1,
+    "exportCount": 1
   },
   "lib/ghostme/calendar/calendarIntent.ts": {
     "file": "lib/ghostme/calendar/calendarIntent.ts",
     "imports": [],
+    "exports": [
+      "ParsedCalendarIntent",
+      "parseCalendarIntent"
+    ],
     "importedBy": [
       "lib/ghostme/chat/chatCalendarFlow.ts"
     ],
@@ -954,7 +1293,10 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 117,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 0,
+    "exportCount": 2
   },
   "lib/ghostme/calendar/calendarService.ts": {
     "file": "lib/ghostme/calendar/calendarService.ts",
@@ -963,6 +1305,17 @@
       "lib/ghostme/agenda/reminderEngine.ts",
       "lib/ghostme/proactive/proactiveMessageService.ts",
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "CalendarContractError",
+      "GhostCalendarEventType",
+      "cancelCalendarEvent",
+      "cleanupExpiredEvents",
+      "createCalendarEvent",
+      "getUpcomingCalendarEvents",
+      "refreshAgendaMessage",
+      "refreshCalendarMessages",
+      "updateCalendarEvent"
     ],
     "importedBy": [
       "app/api/calendar-events/route.ts",
@@ -985,13 +1338,19 @@
     ],
     "tablesDeleted": [],
     "lines": 370,
-    "status": "active"
+    "status": "active",
+    "callerCount": 6,
+    "dependencyCount": 4,
+    "exportCount": 9
   },
   "lib/ghostme/chat/chatCalendarFlow.ts": {
     "file": "lib/ghostme/chat/chatCalendarFlow.ts",
     "imports": [
       "lib/ghostme/calendar/calendarIntent.ts",
       "lib/ghostme/calendar/calendarService.ts"
+    ],
+    "exports": [
+      "handleChatCalendarFlow"
     ],
     "importedBy": [
       "lib/ghostme/chat/ghostChatOrchestrator.ts"
@@ -1001,7 +1360,10 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 101,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 2,
+    "exportCount": 1
   },
   "lib/ghostme/chat/chatContextBuilder.ts": {
     "file": "lib/ghostme/chat/chatContextBuilder.ts",
@@ -1015,6 +1377,11 @@
       "lib/ghostme/location/locationStateFreshness.ts",
       "lib/ghostme/retrieval.ts"
     ],
+    "exports": [
+      "ChatContext",
+      "buildChatContext",
+      "createEmptyChatContext"
+    ],
     "importedBy": [
       "lib/ghostme/chat/ghostChatOrchestrator.ts"
     ],
@@ -1023,7 +1390,10 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 424,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 8,
+    "exportCount": 3
   },
   "lib/ghostme/chat/chatExternalServices.ts": {
     "file": "lib/ghostme/chat/chatExternalServices.ts",
@@ -1031,6 +1401,9 @@
       "lib/ghostme/services/serviceRouter.ts",
       "lib/ghostme/services/weatherService.ts",
       "lib/ghostme/services/webSearchService.ts"
+    ],
+    "exports": [
+      "resolveChatExternalService"
     ],
     "importedBy": [
       "lib/ghostme/chat/ghostChatOrchestrator.ts"
@@ -1040,7 +1413,10 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 85,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 3,
+    "exportCount": 1
   },
   "lib/ghostme/chat/chatMessageAnalyzer.ts": {
     "file": "lib/ghostme/chat/chatMessageAnalyzer.ts",
@@ -1051,6 +1427,9 @@
       "lib/ghostme/relationshipResolver.ts",
       "lib/ghostme/topicDetector.ts"
     ],
+    "exports": [
+      "analyzeChatMessage"
+    ],
     "importedBy": [
       "lib/ghostme/chat/ghostChatOrchestrator.ts"
     ],
@@ -1059,7 +1438,10 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 58,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 5,
+    "exportCount": 1
   },
   "lib/ghostme/chat/chatPostProcessing.ts": {
     "file": "lib/ghostme/chat/chatPostProcessing.ts",
@@ -1078,6 +1460,9 @@
       "lib/ghostme/topicDetector.ts",
       "lib/ghostme/topicLinks.ts",
       "lib/supabase.ts"
+    ],
+    "exports": [
+      "runChatPostProcessing"
     ],
     "importedBy": [
       "app/api/chat/route.ts"
@@ -1098,11 +1483,18 @@
     ],
     "tablesDeleted": [],
     "lines": 517,
-    "status": "god_file_candidate"
+    "status": "god_file_candidate",
+    "callerCount": 1,
+    "dependencyCount": 14,
+    "exportCount": 1
   },
   "lib/ghostme/chat/chatPromptBuilder.ts": {
     "file": "lib/ghostme/chat/chatPromptBuilder.ts",
     "imports": [],
+    "exports": [
+      "buildSystemPrompt",
+      "trimBlock"
+    ],
     "importedBy": [
       "lib/ghostme/chat/chatContextBuilder.ts",
       "lib/ghostme/chat/ghostChatOrchestrator.ts"
@@ -1112,11 +1504,18 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 257,
-    "status": "active"
+    "status": "active",
+    "callerCount": 2,
+    "dependencyCount": 0,
+    "exportCount": 2
   },
   "lib/ghostme/chat/chatRecallPolicy.ts": {
     "file": "lib/ghostme/chat/chatRecallPolicy.ts",
     "imports": [],
+    "exports": [
+      "RecallTopic",
+      "isDeepRecallRequest"
+    ],
     "importedBy": [
       "lib/ghostme/chat/chatContextBuilder.ts"
     ],
@@ -1125,11 +1524,17 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 58,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 0,
+    "exportCount": 2
   },
   "lib/ghostme/chat/chatResponseSanitizer.ts": {
     "file": "lib/ghostme/chat/chatResponseSanitizer.ts",
     "imports": [],
+    "exports": [
+      "createGhostReplySanitizer"
+    ],
     "importedBy": [
       "lib/ghostme/chat/ghostChatOrchestrator.ts"
     ],
@@ -1138,11 +1543,22 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 45,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 0,
+    "exportCount": 1
   },
   "lib/ghostme/chat/chatTypes.ts": {
     "file": "lib/ghostme/chat/chatTypes.ts",
     "imports": [],
+    "exports": [
+      "AnalyzeChatMessageResult",
+      "ChatPostProcessingPayload",
+      "DetectedTopicLike",
+      "GhostChatFlowResult",
+      "ImmediateTextResult",
+      "StreamResult"
+    ],
     "importedBy": [
       "lib/ghostme/chat/chatContextBuilder.ts",
       "lib/ghostme/chat/chatMessageAnalyzer.ts",
@@ -1154,7 +1570,10 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 41,
-    "status": "active"
+    "status": "active",
+    "callerCount": 4,
+    "dependencyCount": 0,
+    "exportCount": 6
   },
   "lib/ghostme/chat/ghostChatOrchestrator.ts": {
     "file": "lib/ghostme/chat/ghostChatOrchestrator.ts",
@@ -1170,6 +1589,9 @@
       "lib/ghostme/memoryDecay.ts",
       "lib/ghostme/relationshipResolver.ts"
     ],
+    "exports": [
+      "runGhostChatFlow"
+    ],
     "importedBy": [
       "app/api/chat/route.ts"
     ],
@@ -1178,7 +1600,10 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 162,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 10,
+    "exportCount": 1
   },
   "lib/ghostme/context/contextBuilder.ts": {
     "file": "lib/ghostme/context/contextBuilder.ts",
@@ -1189,6 +1614,10 @@
       "lib/ghostme/homeAssistant/homeReasoningBuilder.ts",
       "lib/ghostme/situation/situationEngine.ts",
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "GhostCurrentContext",
+      "buildCurrentContext"
     ],
     "importedBy": [
       "lib/ghostme/butler/butlerEngine.ts",
@@ -1203,12 +1632,21 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 296,
-    "status": "active"
+    "status": "active",
+    "callerCount": 4,
+    "dependencyCount": 6,
+    "exportCount": 2
   },
   "lib/ghostme/context/contextSignals.ts": {
     "file": "lib/ghostme/context/contextSignals.ts",
     "imports": [
       "lib/ghostme/situation/situationEngine.ts"
+    ],
+    "exports": [
+      "ContextSignal",
+      "GhostBrainSimpleSignals",
+      "buildContextSignals",
+      "buildGhostBrainSimpleSignals"
     ],
     "importedBy": [
       "lib/ghostme/context/contextBuilder.ts",
@@ -1220,12 +1658,19 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 396,
-    "status": "active"
+    "status": "active",
+    "callerCount": 3,
+    "dependencyCount": 1,
+    "exportCount": 4
   },
   "lib/ghostme/context/decisionSnapshot.ts": {
     "file": "lib/ghostme/context/decisionSnapshot.ts",
     "imports": [
       "lib/ghostme/context/reasoningService.ts"
+    ],
+    "exports": [
+      "DecisionSnapshot",
+      "buildDecisionSnapshot"
     ],
     "importedBy": [
       "app/api/debug-reasoning/route.ts",
@@ -1240,7 +1685,10 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 701,
-    "status": "god_file_candidate"
+    "status": "god_file_candidate",
+    "callerCount": 6,
+    "dependencyCount": 1,
+    "exportCount": 2
   },
   "lib/ghostme/context/reasoningService.ts": {
     "file": "lib/ghostme/context/reasoningService.ts",
@@ -1267,6 +1715,12 @@
       "lib/ghostme/projects/projectMemorySnapshot.ts",
       "lib/ghostme/situation/situationEngine.ts"
     ],
+    "exports": [
+      "GhostBrainSnapshot",
+      "GhostBrainSnapshotCore",
+      "buildGhostBrainSnapshot",
+      "buildReasoningSnapshot"
+    ],
     "importedBy": [
       "app/api/debug-reasoning/route.ts",
       "app/api/ghostme/brain/route.ts",
@@ -1283,11 +1737,24 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 879,
-    "status": "god_file_candidate"
+    "status": "god_file_candidate",
+    "callerCount": 9,
+    "dependencyCount": 21,
+    "exportCount": 4
   },
   "lib/ghostme/context/temporalPriority.ts": {
     "file": "lib/ghostme/context/temporalPriority.ts",
     "imports": [],
+    "exports": [
+      "annotateHistoricalRows",
+      "buildRecentPastEvidence",
+      "filterActiveGoals",
+      "filterFutureCalendar",
+      "filterOpenActions",
+      "isLikelyTestData",
+      "prepareChatHistory",
+      "temporalMemoryLabel"
+    ],
     "importedBy": [
       "lib/ghostme/chat/chatContextBuilder.ts",
       "lib/ghostme/chat/ghostChatOrchestrator.ts",
@@ -1307,7 +1774,10 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 188,
-    "status": "active"
+    "status": "active",
+    "callerCount": 12,
+    "dependencyCount": 0,
+    "exportCount": 8
   },
   "lib/ghostme/context/userContextGraph.ts": {
     "file": "lib/ghostme/context/userContextGraph.ts",
@@ -1315,6 +1785,9 @@
       "lib/ghostme/context/temporalPriority.ts",
       "lib/ghostme/location/locationStateFreshness.ts",
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "loadUserContextGraph"
     ],
     "importedBy": [
       "lib/ghostme/context/reasoningService.ts"
@@ -1341,12 +1814,18 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 295,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 3,
+    "exportCount": 1
   },
   "lib/ghostme/contradictions.ts": {
     "file": "lib/ghostme/contradictions.ts",
     "imports": [
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "detectAndSaveContradictions"
     ],
     "importedBy": [
       "lib/ghostme/chat/chatPostProcessing.ts"
@@ -1362,12 +1841,18 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 168,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 1,
+    "exportCount": 1
   },
   "lib/ghostme/conversationSummary.ts": {
     "file": "lib/ghostme/conversationSummary.ts",
     "imports": [
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "generateDailyConversationSummary"
     ],
     "importedBy": [
       "app/api/conversation-summary/route.ts",
@@ -1385,11 +1870,18 @@
     ],
     "tablesDeleted": [],
     "lines": 174,
-    "status": "active"
+    "status": "active",
+    "callerCount": 2,
+    "dependencyCount": 1,
+    "exportCount": 1
   },
   "lib/ghostme/core/messageClassifier.ts": {
     "file": "lib/ghostme/core/messageClassifier.ts",
     "imports": [],
+    "exports": [
+      "GhostMessageClass",
+      "classifyGhostMessage"
+    ],
     "importedBy": [
       "lib/ghostme/chat/chatMessageAnalyzer.ts"
     ],
@@ -1398,13 +1890,19 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 61,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 0,
+    "exportCount": 2
   },
   "lib/ghostme/curiosity/curiosityEngine.ts": {
     "file": "lib/ghostme/curiosity/curiosityEngine.ts",
     "imports": [
       "lib/ghostme/situation/situationEngine.ts",
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "generateCuriosityMessage"
     ],
     "importedBy": [],
     "tablesRead": [
@@ -1420,7 +1918,10 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 230,
-    "status": "orphan_db_user"
+    "status": "orphan_db_user",
+    "callerCount": 0,
+    "dependencyCount": 2,
+    "exportCount": 1
   },
   "lib/ghostme/curiosity/curiositySnapshot.ts": {
     "file": "lib/ghostme/curiosity/curiositySnapshot.ts",
@@ -1437,6 +1938,13 @@
       "lib/ghostme/projects/projectAdvisorSnapshot.ts",
       "lib/ghostme/projects/projectMemorySnapshot.ts"
     ],
+    "exports": [
+      "CuriosityItem",
+      "CuriositySnapshot",
+      "CuriosityType",
+      "HIGH_VALUE_CURIOSITY_TYPES",
+      "buildCuriositySnapshot"
+    ],
     "importedBy": [
       "lib/ghostme/context/reasoningService.ts",
       "lib/ghostme/proactive/curiosityCardWriter.ts"
@@ -1446,12 +1954,19 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 775,
-    "status": "god_file_candidate"
+    "status": "god_file_candidate",
+    "callerCount": 2,
+    "dependencyCount": 11,
+    "exportCount": 5
   },
   "lib/ghostme/dynamicSelfProfile.ts": {
     "file": "lib/ghostme/dynamicSelfProfile.ts",
     "imports": [
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "getDynamicSelfProfileContext",
+      "updateDynamicSelfProfile"
     ],
     "importedBy": [
       "lib/ghostme/chat/chatPostProcessing.ts"
@@ -1467,12 +1982,19 @@
     ],
     "tablesDeleted": [],
     "lines": 142,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 1,
+    "exportCount": 2
   },
   "lib/ghostme/entityExtractor.ts": {
     "file": "lib/ghostme/entityExtractor.ts",
     "imports": [
       "lib/ghostme/topicDetector.ts"
+    ],
+    "exports": [
+      "ExtractedEntity",
+      "extractEntitiesWithAI"
     ],
     "importedBy": [
       "lib/ghostme/chat/chatMessageAnalyzer.ts"
@@ -1482,12 +2004,21 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 243,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 1,
+    "exportCount": 2
   },
   "lib/ghostme/goals/goalsActionsLifecycle.ts": {
     "file": "lib/ghostme/goals/goalsActionsLifecycle.ts",
     "imports": [
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "clearGoalReviewForOpenAction",
+      "completeActionIntentById",
+      "findGoalIdForAction",
+      "linkOpenOrphanActionsToGoal"
     ],
     "importedBy": [
       "app/api/actions/update-status/route.ts",
@@ -1505,13 +2036,20 @@
     ],
     "tablesDeleted": [],
     "lines": 298,
-    "status": "active"
+    "status": "active",
+    "callerCount": 3,
+    "dependencyCount": 1,
+    "exportCount": 4
   },
   "lib/ghostme/goals/goalsSnapshot.ts": {
     "file": "lib/ghostme/goals/goalsSnapshot.ts",
     "imports": [
       "lib/ghostme/context/temporalPriority.ts",
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "GoalsSnapshot",
+      "buildGoalsSnapshot"
     ],
     "importedBy": [
       "lib/ghostme/context/reasoningService.ts",
@@ -1528,12 +2066,19 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 107,
-    "status": "active"
+    "status": "active",
+    "callerCount": 5,
+    "dependencyCount": 2,
+    "exportCount": 2
   },
   "lib/ghostme/goalsDesires.ts": {
     "file": "lib/ghostme/goalsDesires.ts",
     "imports": [
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "detectAndSaveGoalsDesires",
+      "getGoalsDesiresContext"
     ],
     "importedBy": [
       "lib/ghostme/chat/chatPostProcessing.ts"
@@ -1549,7 +2094,10 @@
     ],
     "tablesDeleted": [],
     "lines": 283,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 1,
+    "exportCount": 2
   },
   "lib/ghostme/home/homeComfortRiskSnapshot.ts": {
     "file": "lib/ghostme/home/homeComfortRiskSnapshot.ts",
@@ -1557,6 +2105,10 @@
       "lib/ghostme/home/houseRouteSnapshot.ts",
       "lib/ghostme/home/houseStateSnapshot.ts",
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "HomeComfortRiskSnapshot",
+      "buildHomeComfortRiskSnapshot"
     ],
     "importedBy": [
       "lib/ghostme/context/reasoningService.ts",
@@ -1569,12 +2121,19 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 309,
-    "status": "active"
+    "status": "active",
+    "callerCount": 2,
+    "dependencyCount": 3,
+    "exportCount": 2
   },
   "lib/ghostme/home/homeLocationConsistency.ts": {
     "file": "lib/ghostme/home/homeLocationConsistency.ts",
     "imports": [
       "lib/ghostme/home/houseStateSnapshot.ts"
+    ],
+    "exports": [
+      "HomeLocationConsistency",
+      "buildHomeLocationConsistency"
     ],
     "importedBy": [
       "lib/ghostme/context/reasoningService.ts"
@@ -1584,13 +2143,20 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 117,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 1,
+    "exportCount": 2
   },
   "lib/ghostme/home/houseRouteSnapshot.ts": {
     "file": "lib/ghostme/home/houseRouteSnapshot.ts",
     "imports": [
       "lib/ghostme/home/houseStateSnapshot.ts",
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "HouseRouteSnapshot",
+      "buildHouseRouteSnapshot"
     ],
     "importedBy": [
       "lib/ghostme/context/reasoningService.ts",
@@ -1605,7 +2171,10 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 275,
-    "status": "active"
+    "status": "active",
+    "callerCount": 3,
+    "dependencyCount": 2,
+    "exportCount": 2
   },
   "lib/ghostme/home/houseStateSnapshot.ts": {
     "file": "lib/ghostme/home/houseStateSnapshot.ts",
@@ -1614,6 +2183,11 @@
       "lib/ghostme/homeAssistant/homeAssistantAccess.ts",
       "lib/ghostme/homeAssistant/homeEntityMapper.ts",
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "HouseStateSnapshot",
+      "buildHouseStateSnapshot",
+      "formatHouseStateContext"
     ],
     "importedBy": [
       "lib/ghostme/context/reasoningService.ts",
@@ -1632,12 +2206,18 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 448,
-    "status": "active"
+    "status": "active",
+    "callerCount": 6,
+    "dependencyCount": 4,
+    "exportCount": 3
   },
   "lib/ghostme/home/houseSuggestionResponseFlow.ts": {
     "file": "lib/ghostme/home/houseSuggestionResponseFlow.ts",
     "imports": [
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "houseSuggestionResponseFlow"
     ],
     "importedBy": [
       "app/api/house-suggestion-response/route.ts"
@@ -1659,7 +2239,10 @@
     ],
     "tablesDeleted": [],
     "lines": 229,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 1,
+    "exportCount": 1
   },
   "lib/ghostme/home/houseWorkerFlow.ts": {
     "file": "lib/ghostme/home/houseWorkerFlow.ts",
@@ -1677,6 +2260,9 @@
       "lib/ghostme/location/haLocationBridgeFlow.ts",
       "lib/supabaseAdmin.ts"
     ],
+    "exports": [
+      "houseWorkerFlow"
+    ],
     "importedBy": [
       "app/api/worker/house/route.ts"
     ],
@@ -1689,12 +2275,18 @@
     ],
     "tablesDeleted": [],
     "lines": 236,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 12,
+    "exportCount": 1
   },
   "lib/ghostme/homeAssistant/cognitiveHouseBuilder.ts": {
     "file": "lib/ghostme/homeAssistant/cognitiveHouseBuilder.ts",
     "imports": [
       "lib/ghostme/homeAssistant/haClient.ts"
+    ],
+    "exports": [
+      "buildCognitiveHouse"
     ],
     "importedBy": [
       "lib/ghostme/homeAssistant/houseSuggestionEngine.ts"
@@ -1704,11 +2296,17 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 180,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 1,
+    "exportCount": 1
   },
   "lib/ghostme/homeAssistant/haClient.ts": {
     "file": "lib/ghostme/homeAssistant/haClient.ts",
     "imports": [],
+    "exports": [
+      "getHAStates"
+    ],
     "importedBy": [
       "app/api/debug-ha-entities/route.ts",
       "app/api/debug-house-logger/route.ts",
@@ -1726,11 +2324,20 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 38,
-    "status": "active"
+    "status": "active",
+    "callerCount": 10,
+    "dependencyCount": 0,
+    "exportCount": 1
   },
   "lib/ghostme/homeAssistant/homeAssistantAccess.ts": {
     "file": "lib/ghostme/homeAssistant/homeAssistantAccess.ts",
     "imports": [],
+    "exports": [
+      "canAccessHomeAssistant",
+      "getDefaultHomeAssistantUserId",
+      "getHomeAssistantPersonForUser",
+      "getHomeAssistantUserIds"
+    ],
     "importedBy": [
       "app/api/home-assistant/event/route.ts",
       "lib/ghostme/context/reasoningService.ts",
@@ -1744,12 +2351,18 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 42,
-    "status": "active"
+    "status": "active",
+    "callerCount": 6,
+    "dependencyCount": 0,
+    "exportCount": 4
   },
   "lib/ghostme/homeAssistant/homeContextBuilder.ts": {
     "file": "lib/ghostme/homeAssistant/homeContextBuilder.ts",
     "imports": [
       "lib/ghostme/homeAssistant/haClient.ts"
+    ],
+    "exports": [
+      "buildHomeContext"
     ],
     "importedBy": [
       "app/api/test-home-context/route.ts"
@@ -1759,11 +2372,19 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 171,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 1,
+    "exportCount": 1
   },
   "lib/ghostme/homeAssistant/homeEntityMapper.ts": {
     "file": "lib/ghostme/homeAssistant/homeEntityMapper.ts",
     "imports": [],
+    "exports": [
+      "EntityInfo",
+      "HouseRoom",
+      "getEntityInfo"
+    ],
     "importedBy": [
       "app/api/debug-house-logger/route.ts",
       "app/api/home-assistant/event/route.ts",
@@ -1777,7 +2398,10 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 200,
-    "status": "active"
+    "status": "active",
+    "callerCount": 6,
+    "dependencyCount": 0,
+    "exportCount": 3
   },
   "lib/ghostme/homeAssistant/homeEventLogger.ts": {
     "file": "lib/ghostme/homeAssistant/homeEventLogger.ts",
@@ -1786,6 +2410,11 @@
       "lib/ghostme/homeAssistant/homeEntityMapper.ts",
       "lib/ghostme/homeAssistant/homeEventSignificance.ts",
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "SignificantHomeEventInput",
+      "logHomeAssistantSnapshot",
+      "logSignificantHomeEvent"
     ],
     "importedBy": [
       "app/api/home-assistant/event/route.ts"
@@ -1801,11 +2430,20 @@
     ],
     "tablesDeleted": [],
     "lines": 473,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 4,
+    "exportCount": 3
   },
   "lib/ghostme/homeAssistant/homeEventSignificance.ts": {
     "file": "lib/ghostme/homeAssistant/homeEventSignificance.ts",
     "imports": [],
+    "exports": [
+      "HOME_EVENT_THRESHOLDS",
+      "HomeEventSignificance",
+      "HomeEventSignificanceInput",
+      "classifyHomeEventSignificance"
+    ],
     "importedBy": [
       "app/api/home-assistant/event/route.ts",
       "lib/ghostme/homeAssistant/homeEventLogger.ts"
@@ -1815,13 +2453,19 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 271,
-    "status": "active"
+    "status": "active",
+    "callerCount": 2,
+    "dependencyCount": 0,
+    "exportCount": 4
   },
   "lib/ghostme/homeAssistant/homeReasoningBuilder.ts": {
     "file": "lib/ghostme/homeAssistant/homeReasoningBuilder.ts",
     "imports": [
       "lib/ghostme/home/houseStateSnapshot.ts",
       "lib/ghostme/homeAssistant/homeAssistantAccess.ts"
+    ],
+    "exports": [
+      "buildHomeReasoning"
     ],
     "importedBy": [
       "app/api/test-home-reasoning/route.ts",
@@ -1833,12 +2477,18 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 15,
-    "status": "active"
+    "status": "active",
+    "callerCount": 3,
+    "dependencyCount": 2,
+    "exportCount": 1
   },
   "lib/ghostme/homeAssistant/houseAutomationContext.ts": {
     "file": "lib/ghostme/homeAssistant/houseAutomationContext.ts",
     "imports": [
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "buildHouseAutomationContext"
     ],
     "importedBy": [],
     "tablesRead": [
@@ -1848,7 +2498,10 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 45,
-    "status": "orphan_db_user"
+    "status": "orphan_db_user",
+    "callerCount": 0,
+    "dependencyCount": 1,
+    "exportCount": 1
   },
   "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts": {
     "file": "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
@@ -1856,6 +2509,9 @@
       "lib/ghostme/home/houseStateSnapshot.ts",
       "lib/ghostme/proactive/proactiveMessageService.ts",
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "planHouseAutomationControls"
     ],
     "importedBy": [
       "lib/ghostme/home/houseWorkerFlow.ts"
@@ -1875,7 +2531,10 @@
     ],
     "tablesDeleted": [],
     "lines": 329,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 3,
+    "exportCount": 1
   },
   "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts": {
     "file": "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
@@ -1883,8 +2542,12 @@
       "lib/ghostme/proactive/proactiveMessageService.ts",
       "lib/supabaseAdmin.ts"
     ],
+    "exports": [
+      "generateHouseAutomationSuggestions"
+    ],
     "importedBy": [
-      "lib/ghostme/home/houseWorkerFlow.ts"
+      "lib/ghostme/home/houseWorkerFlow.ts",
+      "lib/ghostme/proactive/proactiveUserFlow.ts"
     ],
     "tablesRead": [
       "house_events",
@@ -1896,7 +2559,10 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 190,
-    "status": "active"
+    "status": "active",
+    "callerCount": 2,
+    "dependencyCount": 2,
+    "exportCount": 1
   },
   "lib/ghostme/homeAssistant/houseEntityRegistry.ts": {
     "file": "lib/ghostme/homeAssistant/houseEntityRegistry.ts",
@@ -1904,6 +2570,9 @@
       "lib/ghostme/homeAssistant/haClient.ts",
       "lib/ghostme/homeAssistant/homeEntityMapper.ts",
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "syncHouseEntities"
     ],
     "importedBy": [
       "lib/ghostme/home/houseWorkerFlow.ts"
@@ -1915,12 +2584,18 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 69,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 3,
+    "exportCount": 1
   },
   "lib/ghostme/homeAssistant/houseLearnedRulesContext.ts": {
     "file": "lib/ghostme/homeAssistant/houseLearnedRulesContext.ts",
     "imports": [
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "buildHouseLearnedRulesContext"
     ],
     "importedBy": [],
     "tablesRead": [
@@ -1930,7 +2605,10 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 39,
-    "status": "orphan_db_user"
+    "status": "orphan_db_user",
+    "callerCount": 0,
+    "dependencyCount": 1,
+    "exportCount": 1
   },
   "lib/ghostme/homeAssistant/houseLightLearningFlow.ts": {
     "file": "lib/ghostme/homeAssistant/houseLightLearningFlow.ts",
@@ -1938,6 +2616,10 @@
       "lib/ghostme/homeAssistant/housePatternEngine.ts",
       "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts",
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "runHouseLightLearning",
+      "shouldRunHouseLightLearning"
     ],
     "importedBy": [
       "app/api/home-assistant/event/route.ts"
@@ -1951,12 +2633,18 @@
     ],
     "tablesDeleted": [],
     "lines": 150,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 3,
+    "exportCount": 2
   },
   "lib/ghostme/homeAssistant/housePatternEngine.ts": {
     "file": "lib/ghostme/homeAssistant/housePatternEngine.ts",
     "imports": [
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "analyzeHousePatterns"
     ],
     "importedBy": [
       "lib/ghostme/home/houseWorkerFlow.ts",
@@ -1975,12 +2663,18 @@
     ],
     "tablesDeleted": [],
     "lines": 403,
-    "status": "active"
+    "status": "active",
+    "callerCount": 3,
+    "dependencyCount": 1,
+    "exportCount": 1
   },
   "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts": {
     "file": "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts",
     "imports": [
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "learnHouseRoutes"
     ],
     "importedBy": [
       "lib/ghostme/home/houseWorkerFlow.ts",
@@ -1998,7 +2692,10 @@
     ],
     "tablesDeleted": [],
     "lines": 153,
-    "status": "active"
+    "status": "active",
+    "callerCount": 2,
+    "dependencyCount": 1,
+    "exportCount": 1
   },
   "lib/ghostme/homeAssistant/houseSuggestionEngine.ts": {
     "file": "lib/ghostme/homeAssistant/houseSuggestionEngine.ts",
@@ -2008,8 +2705,12 @@
       "lib/ghostme/proactive/proactiveMessageService.ts",
       "lib/supabaseAdmin.ts"
     ],
+    "exports": [
+      "generateHouseSuggestions"
+    ],
     "importedBy": [
-      "lib/ghostme/home/houseWorkerFlow.ts"
+      "lib/ghostme/home/houseWorkerFlow.ts",
+      "lib/ghostme/proactive/proactiveUserFlow.ts"
     ],
     "tablesRead": [
       "house_suggestions"
@@ -2020,7 +2721,10 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 194,
-    "status": "active"
+    "status": "active",
+    "callerCount": 2,
+    "dependencyCount": 4,
+    "exportCount": 1
   },
   "lib/ghostme/location/haLocationBridgeFlow.ts": {
     "file": "lib/ghostme/location/haLocationBridgeFlow.ts",
@@ -2029,6 +2733,10 @@
       "lib/ghostme/homeAssistant/homeAssistantAccess.ts",
       "lib/ghostme/location/locationStateFreshness.ts",
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "HaLocationBridgeResult",
+      "bridgeHomeAssistantLocationFlow"
     ],
     "importedBy": [
       "lib/ghostme/home/houseWorkerFlow.ts"
@@ -2042,13 +2750,19 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 143,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 4,
+    "exportCount": 2
   },
   "lib/ghostme/location/locationCurrentStateFlow.ts": {
     "file": "lib/ghostme/location/locationCurrentStateFlow.ts",
     "imports": [
       "lib/ghostme/location/locationStateFreshness.ts",
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "getLocationCurrentStateFlow"
     ],
     "importedBy": [
       "app/api/location/current-state/route.ts"
@@ -2060,12 +2774,18 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 13,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 2,
+    "exportCount": 1
   },
   "lib/ghostme/location/locationDeletePlaceFlow.ts": {
     "file": "lib/ghostme/location/locationDeletePlaceFlow.ts",
     "imports": [
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "deleteLocationPlaceFlow"
     ],
     "importedBy": [
       "app/api/location/delete-place/route.ts"
@@ -2077,18 +2797,29 @@
       "significant_places"
     ],
     "lines": 10,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 1,
+    "exportCount": 1
   },
   "lib/ghostme/location/locationEngine.ts": {
     "file": "lib/ghostme/location/locationEngine.ts",
     "imports": [],
+    "exports": [
+      "RawLocationSignal",
+      "SignificantPlace",
+      "classifyLocationSignal"
+    ],
     "importedBy": [],
     "tablesRead": [],
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 53,
-    "status": "orphan_candidate"
+    "status": "orphan_candidate",
+    "callerCount": 0,
+    "dependencyCount": 0,
+    "exportCount": 3
   },
   "lib/ghostme/location/locationLearningFlow.ts": {
     "file": "lib/ghostme/location/locationLearningFlow.ts",
@@ -2098,6 +2829,13 @@
       "lib/ghostme/observation/observationEngine.ts",
       "lib/ghostme/proactive/proactiveMessageService.ts",
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "LOCATION_CARD_PREFIX",
+      "completeLocationCandidate",
+      "getLocationCandidateDetails",
+      "isLocationCandidateLogicalKey",
+      "writeLocationCandidateCard"
     ],
     "importedBy": [
       "app/api/location/candidate/route.ts",
@@ -2116,12 +2854,18 @@
     ],
     "tablesDeleted": [],
     "lines": 261,
-    "status": "active"
+    "status": "active",
+    "callerCount": 2,
+    "dependencyCount": 5,
+    "exportCount": 5
   },
   "lib/ghostme/location/locationSavePlaceFlow.ts": {
     "file": "lib/ghostme/location/locationSavePlaceFlow.ts",
     "imports": [
       "lib/ghostme/location/placeService.ts"
+    ],
+    "exports": [
+      "saveLocationPlaceFlow"
     ],
     "importedBy": [
       "app/api/location/save-place/route.ts"
@@ -2131,11 +2875,25 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 45,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 1,
+    "exportCount": 1
   },
   "lib/ghostme/location/locationStateFreshness.ts": {
     "file": "lib/ghostme/location/locationStateFreshness.ts",
     "imports": [],
+    "exports": [
+      "GPS_LOCATION_FRESHNESS_WINDOW_MS",
+      "HA_HOME_FRESHNESS_WINDOW_MS",
+      "LOCATION_FRESHNESS_WINDOW_MS",
+      "LocationStateStatus",
+      "classifyLocationState",
+      "getLocationFreshnessWindowMs",
+      "getLocationStateObservedAt",
+      "isFreshLocationState",
+      "toPublicLocationState"
+    ],
     "importedBy": [
       "app/api/ghostme/brain/route.ts",
       "app/api/location/current-state/route.ts",
@@ -2152,7 +2910,10 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 79,
-    "status": "active"
+    "status": "active",
+    "callerCount": 9,
+    "dependencyCount": 0,
+    "exportCount": 9
   },
   "lib/ghostme/location/locationUpdateFlow.ts": {
     "file": "lib/ghostme/location/locationUpdateFlow.ts",
@@ -2162,6 +2923,9 @@
       "lib/ghostme/observation/observationEngine.ts",
       "lib/ghostme/proactive/proactiveTrigger.ts",
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "updateCurrentLocationFlow"
     ],
     "importedBy": [
       "app/api/location/update-current/route.ts"
@@ -2175,12 +2939,28 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 212,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 5,
+    "exportCount": 1
   },
   "lib/ghostme/location/placeService.ts": {
     "file": "lib/ghostme/location/placeService.ts",
     "imports": [
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "SaveSignificantPlaceInput",
+      "detectCurrentPlace",
+      "distanceMeters",
+      "findSignificantPlaceNear",
+      "getCurrentLocationState",
+      "getLastKnownPlace",
+      "getSignificantPlaces",
+      "markSignificantPlaceSeen",
+      "saveSignificantPlace",
+      "toPublicSignificantPlace",
+      "updateSignificantPlace"
     ],
     "importedBy": [
       "app/api/location/candidate/route.ts",
@@ -2204,12 +2984,18 @@
     ],
     "tablesDeleted": [],
     "lines": 246,
-    "status": "active"
+    "status": "active",
+    "callerCount": 8,
+    "dependencyCount": 1,
+    "exportCount": 11
   },
   "lib/ghostme/maintenance/retentionEngine.ts": {
     "file": "lib/ghostme/maintenance/retentionEngine.ts",
     "imports": [
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "runRetentionCleanup"
     ],
     "importedBy": [
       "lib/ghostme/proactive/proactiveMaintenanceFlow.ts"
@@ -2225,13 +3011,19 @@
       "chat_messages"
     ],
     "lines": 53,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 1,
+    "exportCount": 1
   },
   "lib/ghostme/memory/memorySearchFlow.ts": {
     "file": "lib/ghostme/memory/memorySearchFlow.ts",
     "imports": [
       "lib/ghostme/context/temporalPriority.ts",
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "memorySearchFlow"
     ],
     "importedBy": [
       "app/api/memory/search/route.ts"
@@ -2250,13 +3042,20 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 113,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 2,
+    "exportCount": 1
   },
   "lib/ghostme/memory/memorySnapshot.ts": {
     "file": "lib/ghostme/memory/memorySnapshot.ts",
     "imports": [
       "lib/ghostme/context/temporalPriority.ts",
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "MemorySnapshot",
+      "buildMemorySnapshot"
     ],
     "importedBy": [
       "lib/ghostme/context/reasoningService.ts",
@@ -2276,12 +3075,18 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 115,
-    "status": "active"
+    "status": "active",
+    "callerCount": 4,
+    "dependencyCount": 2,
+    "exportCount": 2
   },
   "lib/ghostme/memoryDecay.ts": {
     "file": "lib/ghostme/memoryDecay.ts",
     "imports": [
       "lib/supabase.ts"
+    ],
+    "exports": [
+      "applyMemoryDecay"
     ],
     "importedBy": [
       "lib/ghostme/chat/ghostChatOrchestrator.ts"
@@ -2295,12 +3100,18 @@
     ],
     "tablesDeleted": [],
     "lines": 93,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 1,
+    "exportCount": 1
   },
   "lib/ghostme/mentalState.ts": {
     "file": "lib/ghostme/mentalState.ts",
     "imports": [
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "updateMentalState"
     ],
     "importedBy": [
       "lib/ghostme/chat/chatPostProcessing.ts"
@@ -2316,13 +3127,22 @@
     ],
     "tablesDeleted": [],
     "lines": 212,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 1,
+    "exportCount": 1
   },
   "lib/ghostme/observation/observationEngine.ts": {
     "file": "lib/ghostme/observation/observationEngine.ts",
     "imports": [
       "lib/ghostme/observation/observationPolicy.ts",
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "ObservationEventType",
+      "UnknownPlaceCandidate",
+      "analyzeLocationPatterns",
+      "recordObservation"
     ],
     "importedBy": [
       "lib/ghostme/location/locationLearningFlow.ts",
@@ -2344,13 +3164,19 @@
     ],
     "tablesDeleted": [],
     "lines": 712,
-    "status": "god_file_candidate"
+    "status": "god_file_candidate",
+    "callerCount": 2,
+    "dependencyCount": 2,
+    "exportCount": 4
   },
   "lib/ghostme/observation/observationInsightEngine.ts": {
     "file": "lib/ghostme/observation/observationInsightEngine.ts",
     "imports": [
       "lib/ghostme/situation/situationEngine.ts",
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "generateObservationInsight"
     ],
     "importedBy": [
       "lib/ghostme/proactive/proactiveCandidateBuilder.ts"
@@ -2362,11 +3188,21 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 113,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 2,
+    "exportCount": 1
   },
   "lib/ghostme/observation/observationPolicy.ts": {
     "file": "lib/ghostme/observation/observationPolicy.ts",
     "imports": [],
+    "exports": [
+      "CURRENT_OBSERVATION_WINDOW_MS",
+      "MAX_CURRENT_OBSERVATIONS",
+      "cleanObservations",
+      "isUsableObservation",
+      "observationIdentity"
+    ],
     "importedBy": [
       "lib/ghostme/observation/observationEngine.ts",
       "lib/ghostme/situation/situationEngine.ts"
@@ -2376,12 +3212,18 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 110,
-    "status": "active"
+    "status": "active",
+    "callerCount": 2,
+    "dependencyCount": 0,
+    "exportCount": 5
   },
   "lib/ghostme/patterns/patternDecay.ts": {
     "file": "lib/ghostme/patterns/patternDecay.ts",
     "imports": [
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "applyPatternDecay"
     ],
     "importedBy": [
       "lib/ghostme/proactive/proactiveCandidateBuilder.ts"
@@ -2395,12 +3237,18 @@
     ],
     "tablesDeleted": [],
     "lines": 51,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 1,
+    "exportCount": 1
   },
   "lib/ghostme/patterns/patternInsightEngine.ts": {
     "file": "lib/ghostme/patterns/patternInsightEngine.ts",
     "imports": [
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "generatePatternInsight"
     ],
     "importedBy": [
       "lib/ghostme/proactive/proactiveCandidateBuilder.ts"
@@ -2413,12 +3261,27 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 78,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 1,
+    "exportCount": 1
   },
   "lib/ghostme/people/peopleGraphLinkService.ts": {
     "file": "lib/ghostme/people/peopleGraphLinkService.ts",
     "imports": [
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "PEOPLE_GRAPH_TARGET_TYPES",
+      "PeopleGraphEvidence",
+      "PeopleGraphEvidencePolarity",
+      "PeopleGraphLink",
+      "PeopleGraphTargetType",
+      "decayPeopleGraphLinks",
+      "getPeopleGraphLinksForPeople",
+      "getPersonGraphNeighborhood",
+      "syncPeopleGraphLinks",
+      "upsertPeopleGraphLink"
     ],
     "importedBy": [
       "lib/ghostme/chat/chatPostProcessing.ts",
@@ -2442,7 +3305,10 @@
     ],
     "tablesDeleted": [],
     "lines": 487,
-    "status": "active"
+    "status": "active",
+    "callerCount": 5,
+    "dependencyCount": 1,
+    "exportCount": 10
   },
   "lib/ghostme/people/peopleGraphService.ts": {
     "file": "lib/ghostme/people/peopleGraphService.ts",
@@ -2450,6 +3316,11 @@
       "lib/ghostme/people/peopleGraphLinkService.ts",
       "lib/ghostme/people/peopleSnapshot.ts",
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "getPeopleGraphContext",
+      "syncPeopleGraphFromTopics",
+      "upsertPersonFromTopic"
     ],
     "importedBy": [
       "lib/ghostme/chat/chatPostProcessing.ts",
@@ -2469,13 +3340,25 @@
     ],
     "tablesDeleted": [],
     "lines": 439,
-    "status": "active"
+    "status": "active",
+    "callerCount": 3,
+    "dependencyCount": 3,
+    "exportCount": 3
   },
   "lib/ghostme/people/peopleSnapshot.ts": {
     "file": "lib/ghostme/people/peopleSnapshot.ts",
     "imports": [
       "lib/ghostme/people/peopleGraphLinkService.ts",
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "PeopleSnapshot",
+      "buildPeopleSnapshot",
+      "extractMemoryPersonNames",
+      "isLikelyRealPerson",
+      "isPersonMemory",
+      "isPersonTopic",
+      "normalizePersonName"
     ],
     "importedBy": [
       "lib/ghostme/context/reasoningService.ts",
@@ -2494,7 +3377,10 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 474,
-    "status": "active"
+    "status": "active",
+    "callerCount": 6,
+    "dependencyCount": 2,
+    "exportCount": 7
   },
   "lib/ghostme/people/relationshipMemorySnapshot.ts": {
     "file": "lib/ghostme/people/relationshipMemorySnapshot.ts",
@@ -2502,6 +3388,10 @@
       "lib/ghostme/memory/memorySnapshot.ts",
       "lib/ghostme/people/peopleGraphLinkService.ts",
       "lib/ghostme/people/peopleSnapshot.ts"
+    ],
+    "exports": [
+      "RelationshipMemorySnapshot",
+      "buildRelationshipMemorySnapshot"
     ],
     "importedBy": [
       "lib/ghostme/context/reasoningService.ts",
@@ -2514,13 +3404,22 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 349,
-    "status": "active"
+    "status": "active",
+    "callerCount": 4,
+    "dependencyCount": 3,
+    "exportCount": 2
   },
   "lib/ghostme/people/socialSuggestionSnapshot.ts": {
     "file": "lib/ghostme/people/socialSuggestionSnapshot.ts",
     "imports": [
       "lib/ghostme/people/peopleSnapshot.ts",
       "lib/ghostme/people/relationshipMemorySnapshot.ts"
+    ],
+    "exports": [
+      "SocialRelationshipAttention",
+      "SocialSuggestion",
+      "SocialSuggestionSnapshot",
+      "buildSocialSuggestionSnapshot"
     ],
     "importedBy": [
       "lib/ghostme/context/reasoningService.ts",
@@ -2531,7 +3430,10 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 228,
-    "status": "active"
+    "status": "active",
+    "callerCount": 2,
+    "dependencyCount": 2,
+    "exportCount": 4
   },
   "lib/ghostme/proactive/curiosityCardWriter.ts": {
     "file": "lib/ghostme/proactive/curiosityCardWriter.ts",
@@ -2540,6 +3442,11 @@
       "lib/ghostme/proactive/proactiveMessageDedupe.ts",
       "lib/ghostme/proactive/proactiveMessageService.ts",
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "buildCuriosityCardLogicalKey",
+      "selectImportantCuriosities",
+      "writeCuriositySnapshotCards"
     ],
     "importedBy": [
       "lib/ghostme/proactive/proactiveUserFlow.ts",
@@ -2552,11 +3459,17 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 154,
-    "status": "active"
+    "status": "active",
+    "callerCount": 2,
+    "dependencyCount": 4,
+    "exportCount": 3
   },
   "lib/ghostme/proactive/dailyBriefingBuilder.ts": {
     "file": "lib/ghostme/proactive/dailyBriefingBuilder.ts",
     "imports": [],
+    "exports": [
+      "buildDailyBriefingMessage"
+    ],
     "importedBy": [
       "lib/ghostme/proactive/proactiveUserFlow.ts"
     ],
@@ -2564,8 +3477,11 @@
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 98,
-    "status": "active"
+    "lines": 130,
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 0,
+    "exportCount": 1
   },
   "lib/ghostme/proactive/dailyBriefingRepository.ts": {
     "file": "lib/ghostme/proactive/dailyBriefingRepository.ts",
@@ -2573,24 +3489,35 @@
       "lib/ghostme/context/temporalPriority.ts",
       "lib/supabaseAdmin.ts"
     ],
+    "exports": [
+      "loadDailyBriefingContext"
+    ],
     "importedBy": [
       "lib/ghostme/proactive/proactiveUserFlow.ts"
     ],
     "tablesRead": [
       "action_intents",
       "autobiographical_timeline",
+      "behavior_patterns",
       "calendar_events",
       "conversation_summaries",
       "episodic_memories",
       "goals_desires",
+      "house_events",
+      "house_patterns",
+      "house_suggestions",
       "life_topics",
-      "mental_states"
+      "mental_states",
+      "significant_places"
     ],
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 122,
-    "status": "active"
+    "lines": 173,
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 2,
+    "exportCount": 1
   },
   "lib/ghostme/proactive/proactiveCandidateBuilder.ts": {
     "file": "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
@@ -2605,6 +3532,9 @@
       "lib/ghostme/patterns/patternInsightEngine.ts",
       "lib/ghostme/proactive/proactiveDecisionEngine.ts"
     ],
+    "exports": [
+      "buildProactiveCandidatesForUser"
+    ],
     "importedBy": [
       "lib/ghostme/proactive/proactiveUserFlow.ts"
     ],
@@ -2613,12 +3543,19 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 283,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 9,
+    "exportCount": 1
   },
   "lib/ghostme/proactive/proactiveCandidateRanker.ts": {
     "file": "lib/ghostme/proactive/proactiveCandidateRanker.ts",
     "imports": [
       "lib/ghostme/proactive/proactiveMessageDedupe.ts"
+    ],
+    "exports": [
+      "buildProactiveCandidateLogicalKey",
+      "pickBestProactiveCandidate"
     ],
     "importedBy": [
       "lib/ghostme/proactive/proactiveUserFlow.ts"
@@ -2628,11 +3565,21 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 17,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 1,
+    "exportCount": 2
   },
   "lib/ghostme/proactive/proactiveCardLifecycle.ts": {
     "file": "lib/ghostme/proactive/proactiveCardLifecycle.ts",
     "imports": [],
+    "exports": [
+      "ALL_PROACTIVE_STATUSES",
+      "HIDDEN_PROACTIVE_STATUSES",
+      "USER_PROACTIVE_TRANSITIONS",
+      "VISIBLE_PROACTIVE_CATEGORIES",
+      "VISIBLE_PROACTIVE_STATUSES"
+    ],
     "importedBy": [
       "app/api/ghostme/proactive/read/route.ts",
       "lib/ghostme/proactive/proactiveMessageService.ts",
@@ -2644,12 +3591,19 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 28,
-    "status": "active"
+    "status": "active",
+    "callerCount": 4,
+    "dependencyCount": 0,
+    "exportCount": 5
   },
   "lib/ghostme/proactive/proactiveDecisionEngine.ts": {
     "file": "lib/ghostme/proactive/proactiveDecisionEngine.ts",
     "imports": [
       "lib/ghostme/context/contextBuilder.ts"
+    ],
+    "exports": [
+      "ProactiveDecision",
+      "decideProactiveMessage"
     ],
     "importedBy": [
       "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
@@ -2660,7 +3614,10 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 152,
-    "status": "active"
+    "status": "active",
+    "callerCount": 2,
+    "dependencyCount": 1,
+    "exportCount": 2
   },
   "lib/ghostme/proactive/proactiveMaintenanceFlow.ts": {
     "file": "lib/ghostme/proactive/proactiveMaintenanceFlow.ts",
@@ -2673,6 +3630,9 @@
       "lib/ghostme/people/peopleGraphLinkService.ts",
       "lib/ghostme/people/peopleGraphService.ts"
     ],
+    "exports": [
+      "runProactiveMaintenanceFlow"
+    ],
     "importedBy": [
       "lib/ghostme/proactive/proactiveUserFlow.ts"
     ],
@@ -2681,11 +3641,20 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 22,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 7,
+    "exportCount": 1
   },
   "lib/ghostme/proactive/proactiveMessageDedupe.ts": {
     "file": "lib/ghostme/proactive/proactiveMessageDedupe.ts",
     "imports": [],
+    "exports": [
+      "ProactiveMessageIdentityInput",
+      "dedupeProactiveMessages",
+      "normalizeProactiveText",
+      "proactiveMessageIdentity"
+    ],
     "importedBy": [
       "lib/ghostme/proactive/curiosityCardWriter.ts",
       "lib/ghostme/proactive/proactiveCandidateRanker.ts",
@@ -2698,7 +3667,10 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 45,
-    "status": "active"
+    "status": "active",
+    "callerCount": 5,
+    "dependencyCount": 0,
+    "exportCount": 4
   },
   "lib/ghostme/proactive/proactiveMessageService.ts": {
     "file": "lib/ghostme/proactive/proactiveMessageService.ts",
@@ -2706,6 +3678,10 @@
       "lib/ghostme/proactive/proactiveCardLifecycle.ts",
       "lib/ghostme/proactive/proactiveMessageDedupe.ts",
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "buildDailyProactiveLogicalKey",
+      "upsertProactiveMessage"
     ],
     "importedBy": [
       "lib/ghostme/agenda/reminderEngine.ts",
@@ -2730,8 +3706,11 @@
       "ghost_proactive_messages"
     ],
     "tablesDeleted": [],
-    "lines": 199,
-    "status": "active"
+    "lines": 201,
+    "status": "active",
+    "callerCount": 11,
+    "dependencyCount": 3,
+    "exportCount": 2
   },
   "lib/ghostme/proactive/proactiveTrigger.ts": {
     "file": "lib/ghostme/proactive/proactiveTrigger.ts",
@@ -2741,6 +3720,9 @@
       "lib/ghostme/proactive/proactiveDecisionEngine.ts",
       "lib/ghostme/proactive/proactiveMessageService.ts",
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "runProactiveTrigger"
     ],
     "importedBy": [
       "lib/ghostme/location/locationUpdateFlow.ts"
@@ -2752,12 +3734,17 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 82,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 5,
+    "exportCount": 1
   },
   "lib/ghostme/proactive/proactiveUserFlow.ts": {
     "file": "lib/ghostme/proactive/proactiveUserFlow.ts",
     "imports": [
       "lib/ghostme/context/reasoningService.ts",
+      "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
+      "lib/ghostme/homeAssistant/houseSuggestionEngine.ts",
       "lib/ghostme/proactive/curiosityCardWriter.ts",
       "lib/ghostme/proactive/dailyBriefingBuilder.ts",
       "lib/ghostme/proactive/dailyBriefingRepository.ts",
@@ -2765,17 +3752,28 @@
       "lib/ghostme/proactive/proactiveCandidateRanker.ts",
       "lib/ghostme/proactive/proactiveMaintenanceFlow.ts",
       "lib/ghostme/proactive/proactiveMessageService.ts",
-      "lib/ghostme/proactive/trueProactiveCardWriter.ts"
+      "lib/ghostme/proactive/trueProactiveCardWriter.ts",
+      "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "runAppOpenProactiveLifecycle",
+      "runProactiveFlowForUser"
     ],
     "importedBy": [
+      "app/api/ghostme/brain/route.ts",
       "app/api/worker/proactive/route.ts"
     ],
-    "tablesRead": [],
+    "tablesRead": [
+      "ghost_proactive_messages"
+    ],
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 102,
-    "status": "active"
+    "lines": 229,
+    "status": "active",
+    "callerCount": 2,
+    "dependencyCount": 12,
+    "exportCount": 2
   },
   "lib/ghostme/proactive/trueProactiveCardWriter.ts": {
     "file": "lib/ghostme/proactive/trueProactiveCardWriter.ts",
@@ -2787,6 +3785,12 @@
       "lib/ghostme/proactive/trueProactiveSnapshot.ts",
       "lib/supabaseAdmin.ts"
     ],
+    "exports": [
+      "TrueProactiveCardCategory",
+      "buildTrueProactiveLogicalKey",
+      "mapTrueProactiveCategory",
+      "writeTrueProactiveCards"
+    ],
     "importedBy": [
       "lib/ghostme/proactive/proactiveUserFlow.ts"
     ],
@@ -2797,13 +3801,22 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 96,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 6,
+    "exportCount": 4
   },
   "lib/ghostme/proactive/trueProactiveSnapshot.ts": {
     "file": "lib/ghostme/proactive/trueProactiveSnapshot.ts",
     "imports": [
       "lib/ghostme/context/decisionSnapshot.ts",
       "lib/ghostme/context/reasoningService.ts"
+    ],
+    "exports": [
+      "SuppressedTrueProactiveCandidate",
+      "TrueProactiveCandidate",
+      "TrueProactiveSnapshot",
+      "buildTrueProactiveSnapshot"
     ],
     "importedBy": [
       "lib/ghostme/context/reasoningService.ts",
@@ -2814,7 +3827,10 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 595,
-    "status": "god_file_candidate"
+    "status": "god_file_candidate",
+    "callerCount": 2,
+    "dependencyCount": 2,
+    "exportCount": 4
   },
   "lib/ghostme/proactive/visibleProactiveMessages.ts": {
     "file": "lib/ghostme/proactive/visibleProactiveMessages.ts",
@@ -2823,6 +3839,9 @@
       "lib/ghostme/proactive/proactiveMessageDedupe.ts",
       "lib/ghostme/proactive/proactiveMessageService.ts",
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "loadVisibleProactiveMessages"
     ],
     "importedBy": [
       "app/api/ghostme/brain/route.ts",
@@ -2838,12 +3857,18 @@
     ],
     "tablesDeleted": [],
     "lines": 174,
-    "status": "active"
+    "status": "active",
+    "callerCount": 2,
+    "dependencyCount": 4,
+    "exportCount": 1
   },
   "lib/ghostme/profile/profileBehaviorSeed.ts": {
     "file": "lib/ghostme/profile/profileBehaviorSeed.ts",
     "imports": [
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "seedBehaviorFromProfile"
     ],
     "importedBy": [
       "app/setup/page.tsx"
@@ -2863,13 +3888,21 @@
     ],
     "tablesDeleted": [],
     "lines": 224,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 1,
+    "exportCount": 1
   },
   "lib/ghostme/projects/goalProjectConsistencySnapshot.ts": {
     "file": "lib/ghostme/projects/goalProjectConsistencySnapshot.ts",
     "imports": [
       "lib/ghostme/goals/goalsSnapshot.ts",
       "lib/ghostme/projects/projectMemorySnapshot.ts"
+    ],
+    "exports": [
+      "GoalProjectConsistencyIssue",
+      "GoalProjectConsistencySnapshot",
+      "buildGoalProjectConsistencySnapshot"
     ],
     "importedBy": [
       "lib/ghostme/context/reasoningService.ts",
@@ -2881,7 +3914,10 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 214,
-    "status": "active"
+    "status": "active",
+    "callerCount": 3,
+    "dependencyCount": 2,
+    "exportCount": 3
   },
   "lib/ghostme/projects/projectAdvisorSnapshot.ts": {
     "file": "lib/ghostme/projects/projectAdvisorSnapshot.ts",
@@ -2890,6 +3926,12 @@
       "lib/ghostme/people/relationshipMemorySnapshot.ts",
       "lib/ghostme/projects/goalProjectConsistencySnapshot.ts",
       "lib/ghostme/projects/projectMemorySnapshot.ts"
+    ],
+    "exports": [
+      "ProjectAdvisorArea",
+      "ProjectAdvisorFocus",
+      "ProjectAdvisorSnapshot",
+      "buildProjectAdvisorSnapshot"
     ],
     "importedBy": [
       "lib/ghostme/context/reasoningService.ts",
@@ -2900,7 +3942,10 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 336,
-    "status": "active"
+    "status": "active",
+    "callerCount": 2,
+    "dependencyCount": 4,
+    "exportCount": 4
   },
   "lib/ghostme/projects/projectMemorySnapshot.ts": {
     "file": "lib/ghostme/projects/projectMemorySnapshot.ts",
@@ -2909,6 +3954,11 @@
       "lib/ghostme/goals/goalsSnapshot.ts",
       "lib/ghostme/memory/memorySnapshot.ts",
       "lib/ghostme/people/peopleSnapshot.ts"
+    ],
+    "exports": [
+      "ProjectMemoryItem",
+      "ProjectMemorySnapshot",
+      "buildProjectMemorySnapshot"
     ],
     "importedBy": [
       "lib/ghostme/context/reasoningService.ts",
@@ -2921,12 +3971,19 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 317,
-    "status": "active"
+    "status": "active",
+    "callerCount": 4,
+    "dependencyCount": 4,
+    "exportCount": 3
   },
   "lib/ghostme/relationshipResolver.ts": {
     "file": "lib/ghostme/relationshipResolver.ts",
     "imports": [
       "lib/supabase.ts"
+    ],
+    "exports": [
+      "removeGenericRelationshipTopics",
+      "resolveNamedRelationship"
     ],
     "importedBy": [
       "lib/ghostme/chat/chatMessageAnalyzer.ts",
@@ -2949,7 +4006,10 @@
       "memories_active"
     ],
     "lines": 208,
-    "status": "active"
+    "status": "active",
+    "callerCount": 2,
+    "dependencyCount": 1,
+    "exportCount": 2
   },
   "lib/ghostme/retrieval.ts": {
     "file": "lib/ghostme/retrieval.ts",
@@ -2958,6 +4018,9 @@
       "lib/ghostme/topicLinks.ts",
       "lib/supabase.ts",
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "buildContextualMemory"
     ],
     "importedBy": [
       "lib/ghostme/chat/chatContextBuilder.ts"
@@ -2974,11 +4037,19 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 415,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 4,
+    "exportCount": 1
   },
   "lib/ghostme/services/serviceRouter.ts": {
     "file": "lib/ghostme/services/serviceRouter.ts",
     "imports": [],
+    "exports": [
+      "GhostServiceDecision",
+      "GhostServiceType",
+      "decideGhostService"
+    ],
     "importedBy": [
       "lib/ghostme/chat/chatExternalServices.ts"
     ],
@@ -2987,23 +4058,35 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 80,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 0,
+    "exportCount": 3
   },
   "lib/ghostme/services/timeService.ts": {
     "file": "lib/ghostme/services/timeService.ts",
     "imports": [],
+    "exports": [
+      "getLocalTimeContext"
+    ],
     "importedBy": [],
     "tablesRead": [],
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 13,
-    "status": "orphan_candidate"
+    "status": "orphan_candidate",
+    "callerCount": 0,
+    "dependencyCount": 0,
+    "exportCount": 1
   },
   "lib/ghostme/services/weatherService.ts": {
     "file": "lib/ghostme/services/weatherService.ts",
     "imports": [
       "lib/ghostme/services/webSearchService.ts"
+    ],
+    "exports": [
+      "runWeatherSearch"
     ],
     "importedBy": [
       "lib/ghostme/chat/chatExternalServices.ts"
@@ -3013,11 +4096,18 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 26,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 1,
+    "exportCount": 1
   },
   "lib/ghostme/services/webSearchService.ts": {
     "file": "lib/ghostme/services/webSearchService.ts",
     "imports": [],
+    "exports": [
+      "WebSearchResult",
+      "runWebSearch"
+    ],
     "importedBy": [
       "lib/ghostme/chat/chatExternalServices.ts",
       "lib/ghostme/services/weatherService.ts"
@@ -3027,7 +4117,10 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 33,
-    "status": "active"
+    "status": "active",
+    "callerCount": 2,
+    "dependencyCount": 0,
+    "exportCount": 2
   },
   "lib/ghostme/situation/situationEngine.ts": {
     "file": "lib/ghostme/situation/situationEngine.ts",
@@ -3038,6 +4131,10 @@
       "lib/ghostme/observation/observationPolicy.ts",
       "lib/ghostme/people/peopleGraphService.ts",
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "GhostSituation",
+      "buildGhostSituation"
     ],
     "importedBy": [
       "lib/ghostme/agenda/agendaEngine.ts",
@@ -3068,12 +4165,19 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 570,
-    "status": "god_file_candidate"
+    "status": "god_file_candidate",
+    "callerCount": 6,
+    "dependencyCount": 6,
+    "exportCount": 2
   },
   "lib/ghostme/timeline.ts": {
     "file": "lib/ghostme/timeline.ts",
     "imports": [
       "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "detectAndSaveTimelineEvent",
+      "getTimelineContext"
     ],
     "importedBy": [
       "lib/ghostme/chat/chatPostProcessing.ts"
@@ -3087,11 +4191,23 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 124,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 1,
+    "exportCount": 2
   },
   "lib/ghostme/topicDetector.ts": {
     "file": "lib/ghostme/topicDetector.ts",
     "imports": [],
+    "exports": [
+      "DetectedTopic",
+      "detectEmotionalTone",
+      "detectImportanceLevel",
+      "detectMemoryCategory",
+      "detectTopicsFromMessage",
+      "isPossibleEpisode",
+      "shouldSaveActiveMemory"
+    ],
     "importedBy": [
       "lib/ghostme/chat/chatMessageAnalyzer.ts",
       "lib/ghostme/chat/chatPostProcessing.ts",
@@ -3102,12 +4218,19 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 453,
-    "status": "active"
+    "status": "active",
+    "callerCount": 3,
+    "dependencyCount": 0,
+    "exportCount": 7
   },
   "lib/ghostme/topicLinks.ts": {
     "file": "lib/ghostme/topicLinks.ts",
     "imports": [
       "lib/supabase.ts"
+    ],
+    "exports": [
+      "getRelatedTopicContext",
+      "saveTopicLinks"
     ],
     "importedBy": [
       "lib/ghostme/chat/chatPostProcessing.ts",
@@ -3125,7 +4248,10 @@
     ],
     "tablesDeleted": [],
     "lines": 291,
-    "status": "active"
+    "status": "active",
+    "callerCount": 2,
+    "dependencyCount": 1,
+    "exportCount": 2
   },
   "lib/ghostme/ui/brainUiAdapter.ts": {
     "file": "lib/ghostme/ui/brainUiAdapter.ts",
@@ -3133,6 +4259,9 @@
       "components/ghost/types.ts",
       "lib/ghostme/context/decisionSnapshot.ts",
       "lib/ghostme/context/reasoningService.ts"
+    ],
+    "exports": [
+      "adaptBrainApiResponse"
     ],
     "importedBy": [
       "hooks/useGhostBrain.ts"
@@ -3142,11 +4271,18 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 146,
-    "status": "active"
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 3,
+    "exportCount": 1
   },
   "lib/personality.ts": {
     "file": "lib/personality.ts",
     "imports": [],
+    "exports": [
+      "buildGhostMeMessage",
+      "buildPersonalitySummary"
+    ],
     "importedBy": [
       "app/chat/page.tsx",
       "app/setup/page.tsx",
@@ -3157,11 +4293,17 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 184,
-    "status": "active"
+    "status": "active",
+    "callerCount": 3,
+    "dependencyCount": 0,
+    "exportCount": 2
   },
   "lib/supabase.ts": {
     "file": "lib/supabase.ts",
     "imports": [],
+    "exports": [
+      "supabase"
+    ],
     "importedBy": [
       "app/api/memory/route.ts",
       "app/chat/page.tsx",
@@ -3181,11 +4323,17 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 6,
-    "status": "active"
+    "status": "active",
+    "callerCount": 12,
+    "dependencyCount": 0,
+    "exportCount": 1
   },
   "lib/supabaseAdmin.ts": {
     "file": "lib/supabaseAdmin.ts",
     "imports": [],
+    "exports": [
+      "supabaseAdmin"
+    ],
     "importedBy": [
       "app/api/actions/update-status/route.ts",
       "app/api/ghostme/proactive/read/route.ts",
@@ -3242,6 +4390,7 @@
       "lib/ghostme/proactive/dailyBriefingRepository.ts",
       "lib/ghostme/proactive/proactiveMessageService.ts",
       "lib/ghostme/proactive/proactiveTrigger.ts",
+      "lib/ghostme/proactive/proactiveUserFlow.ts",
       "lib/ghostme/proactive/trueProactiveCardWriter.ts",
       "lib/ghostme/proactive/visibleProactiveMessages.ts",
       "lib/ghostme/profile/profileBehaviorSeed.ts",
@@ -3254,6 +4403,9 @@
     "tablesUpdated": [],
     "tablesDeleted": [],
     "lines": 6,
-    "status": "active"
+    "status": "active",
+    "callerCount": 62,
+    "dependencyCount": 0,
+    "exportCount": 1
   }
 }

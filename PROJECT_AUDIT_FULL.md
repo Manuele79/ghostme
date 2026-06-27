@@ -1,10 +1,10 @@
 # PROJECT AUDIT FULL
 
-Generato: 2026-06-26T23:29:16.776Z
+Generato: 2026-06-27T01:10:46.348Z
 
 # 1. RIASSUNTO
 
-- File analizzati: 173
+- File analizzati: 174
 - Cartelle: 64
 - API routes: 28
 - Tabelle Supabase usate: 31
@@ -380,6 +380,7 @@ Generato: 2026-06-26T23:29:16.776Z
 - scripts/file-usage-map.mjs
 - scripts/generate-graphs.mjs
 - scripts/project-audit.mjs
+- scripts/system-docs.mjs
 
 ---
 
@@ -501,11 +502,6 @@ Chiamata da:
 Chiamata da:
 - components/ghost/GhostDrawers.tsx
 
-## /api/worker/proactive
-
-Chiamata da:
-- app/chat/page.tsx
-
 ---
 
 # 5. TABELLE SUPABASE
@@ -587,6 +583,7 @@ Chiamata da:
 - lib/ghostme/observation/observationEngine.ts
 - lib/ghostme/patterns/patternDecay.ts
 - lib/ghostme/patterns/patternInsightEngine.ts
+- lib/ghostme/proactive/dailyBriefingRepository.ts
 - lib/ghostme/situation/situationEngine.ts
 
 ### Insert
@@ -773,6 +770,7 @@ Chiamata da:
 - lib/ghostme/proactive/curiosityCardWriter.ts
 - lib/ghostme/proactive/proactiveMessageService.ts
 - lib/ghostme/proactive/proactiveTrigger.ts
+- lib/ghostme/proactive/proactiveUserFlow.ts
 - lib/ghostme/proactive/trueProactiveCardWriter.ts
 - lib/ghostme/proactive/visibleProactiveMessages.ts
 
@@ -878,6 +876,7 @@ Chiamata da:
 - lib/ghostme/homeAssistant/houseLightLearningFlow.ts
 - lib/ghostme/homeAssistant/housePatternEngine.ts
 - lib/ghostme/homeAssistant/houseRouteLearningEngine.ts
+- lib/ghostme/proactive/dailyBriefingRepository.ts
 
 ### Insert
 - lib/ghostme/homeAssistant/homeEventLogger.ts
@@ -923,6 +922,7 @@ Chiamata da:
 - lib/ghostme/context/userContextGraph.ts
 - lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts
 - lib/ghostme/homeAssistant/housePatternEngine.ts
+- lib/ghostme/proactive/dailyBriefingRepository.ts
 
 ### Insert
 - lib/ghostme/homeAssistant/housePatternEngine.ts
@@ -942,6 +942,7 @@ Chiamata da:
 - lib/ghostme/home/houseSuggestionResponseFlow.ts
 - lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts
 - lib/ghostme/homeAssistant/houseSuggestionEngine.ts
+- lib/ghostme/proactive/dailyBriefingRepository.ts
 
 ### Insert
 - lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts
@@ -1103,6 +1104,7 @@ Chiamata da:
 - lib/ghostme/context/userContextGraph.ts
 - lib/ghostme/location/placeService.ts
 - lib/ghostme/observation/observationEngine.ts
+- lib/ghostme/proactive/dailyBriefingRepository.ts
 
 ### Insert
 - lib/ghostme/location/placeService.ts
@@ -1471,13 +1473,14 @@ Righe: 36
 
 ## app/api/ghostme/brain/route.ts
 
-Righe: 61
+Righe: 67
 
 ### Importa
 - next/server
 - lib/ghostme/context/reasoningService.ts
 - lib/ghostme/auth/serverAuth.ts
 - lib/ghostme/proactive/visibleProactiveMessages.ts
+- lib/ghostme/proactive/proactiveUserFlow.ts
 - lib/ghostme/context/decisionSnapshot.ts
 - lib/ghostme/location/locationStateFreshness.ts
 - lib/ghostme/calendar/calendarService.ts
@@ -3519,6 +3522,7 @@ Righe: 190
 
 ### Importato da
 - lib/ghostme/home/houseWorkerFlow.ts
+- lib/ghostme/proactive/proactiveUserFlow.ts
 
 ### API chiamate
 - nessuno
@@ -3647,6 +3651,7 @@ Righe: 194
 
 ### Importato da
 - lib/ghostme/home/houseWorkerFlow.ts
+- lib/ghostme/proactive/proactiveUserFlow.ts
 
 ### API chiamate
 - nessuno
@@ -4269,7 +4274,7 @@ Righe: 154
 
 ## lib/ghostme/proactive/dailyBriefingBuilder.ts
 
-Righe: 98
+Righe: 130
 
 ### Importa
 - openai
@@ -4288,7 +4293,7 @@ Righe: 98
 
 ## lib/ghostme/proactive/dailyBriefingRepository.ts
 
-Righe: 122
+Righe: 173
 
 ### Importa
 - lib/supabaseAdmin.ts
@@ -4312,6 +4317,11 @@ Righe: 122
 - life_topics: select
 - episodic_memories: select
 - conversation_summaries: select
+- significant_places: select
+- behavior_patterns: select
+- house_events: select
+- house_patterns: select
+- house_suggestions: select
 
 ## lib/ghostme/proactive/proactiveCandidateBuilder.ts
 
@@ -4459,7 +4469,7 @@ Righe: 45
 
 ## lib/ghostme/proactive/proactiveMessageService.ts
 
-Righe: 199
+Righe: 201
 
 ### Importa
 - lib/supabaseAdmin.ts
@@ -4514,10 +4524,11 @@ Righe: 82
 
 ## lib/ghostme/proactive/proactiveUserFlow.ts
 
-Righe: 102
+Righe: 229
 
 ### Importa
 - lib/ghostme/proactive/proactiveMessageService.ts
+- lib/supabaseAdmin.ts
 - lib/ghostme/proactive/proactiveCandidateRanker.ts
 - lib/ghostme/proactive/proactiveMaintenanceFlow.ts
 - lib/ghostme/proactive/proactiveCandidateBuilder.ts
@@ -4526,8 +4537,11 @@ Righe: 102
 - lib/ghostme/proactive/trueProactiveCardWriter.ts
 - lib/ghostme/proactive/curiosityCardWriter.ts
 - lib/ghostme/context/reasoningService.ts
+- lib/ghostme/homeAssistant/houseSuggestionEngine.ts
+- lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts
 
 ### Importato da
+- app/api/ghostme/brain/route.ts
 - app/api/worker/proactive/route.ts
 
 ### API chiamate
@@ -4535,9 +4549,10 @@ Righe: 102
 
 ### Export
 - runProactiveFlowForUser
+- runAppOpenProactiveLifecycle
 
 ### Tabelle
-- nessuna
+- ghost_proactive_messages: select
 
 ## lib/ghostme/proactive/trueProactiveCardWriter.ts
 
