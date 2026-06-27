@@ -19,6 +19,11 @@ export async function loadDailyBriefingContext(userId: string) {
     summariesRes,
     completedCalendarRes,
     completedActionsRes,
+    placesRes,
+    behaviorPatternsRes,
+    houseEventsRes,
+    housePatternsRes,
+    houseSuggestionsRes,
   ] = await Promise.all([
     supabaseAdmin
       .from("calendar_events")
@@ -100,6 +105,46 @@ export async function loadDailyBriefingContext(userId: string) {
       .eq("status", "completed")
       .order("completed_at", { ascending: false, nullsFirst: false })
       .limit(10),
+
+    supabaseAdmin
+      .from("significant_places")
+      .select("label, category, address, confidence, visit_count, last_seen_at, updated_at")
+      .eq("user_id", userId)
+      .neq("status", "archived")
+      .order("last_seen_at", { ascending: false, nullsFirst: false })
+      .limit(8),
+
+    supabaseAdmin
+      .from("behavior_patterns")
+      .select("pattern_type, title, description, confidence, status, last_seen_at, updated_at")
+      .eq("user_id", userId)
+      .in("status", ["active", "learning"])
+      .order("confidence", { ascending: false })
+      .limit(8),
+
+    supabaseAdmin
+      .from("house_events")
+      .select("entity_name, entity_type, room_key, event_type, new_state, occurred_at")
+      .eq("user_id", userId)
+      .gte("occurred_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+      .order("occurred_at", { ascending: false })
+      .limit(12),
+
+    supabaseAdmin
+      .from("house_patterns")
+      .select("pattern_type, title, description, room_key, confidence, status, last_seen_at, updated_at")
+      .eq("user_id", userId)
+      .in("status", ["active", "learning"])
+      .order("confidence", { ascending: false })
+      .limit(8),
+
+    supabaseAdmin
+      .from("house_suggestions")
+      .select("title, message, suggestion_type, room_key, confidence, status, created_at, updated_at")
+      .eq("user_id", userId)
+      .in("status", ["pending", "learning", "active"])
+      .order("created_at", { ascending: false })
+      .limit(8),
   ]);
 
   const pastEvidence = buildRecentPastEvidence({
@@ -117,5 +162,11 @@ export async function loadDailyBriefingContext(userId: string) {
     mental: mentalRes.data || null,
     timeline: annotateHistoricalRows(pastEvidence),
     topics: topicsRes.data || [],
+    summaries: summariesRes.data || [],
+    places: placesRes.data || [],
+    behaviorPatterns: behaviorPatternsRes.data || [],
+    houseEvents: houseEventsRes.data || [],
+    housePatterns: housePatternsRes.data || [],
+    houseSuggestions: houseSuggestionsRes.data || [],
   };
 }

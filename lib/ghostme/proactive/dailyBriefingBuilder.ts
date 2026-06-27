@@ -12,6 +12,12 @@ export async function buildDailyBriefingMessage({
   mental,
   timeline,
   topics,
+  summaries = [],
+  places = [],
+  behaviorPatterns = [],
+  houseEvents = [],
+  housePatterns = [],
+  houseSuggestions = [],
 }: {
   user: any;
   calendar: any[];
@@ -20,6 +26,12 @@ export async function buildDailyBriefingMessage({
   mental: any;
   timeline: any[];
   topics: any[];
+  summaries?: unknown[];
+  places?: unknown[];
+  behaviorPatterns?: unknown[];
+  houseEvents?: unknown[];
+  housePatterns?: unknown[];
+  houseSuggestions?: unknown[];
 }) {
   const systemPrompt = `
 Sei GhostMe.
@@ -28,11 +40,13 @@ Devi creare un briefing proattivo personale per l'utente.
 Massimo 130 parole.
 Solo cose operative: appuntamenti, promemoria, azioni concrete, anomalie utili.
 CALENDARIO FUTURO VERIFICATO e AZIONI ATTUALI APERTE sono le fonti operative prioritarie.
+Usa casa, luoghi, pattern e riassunti solo se producono una conseguenza pratica oggi.
 TIMELINE STORICA descrive fatti passati e non può creare o cancellare un impegno futuro presente nel calendario active.
 Se un elemento compare soltanto nella timeline o nella memoria, non presentarlo come appuntamento futuro o cosa da fare.
 Non citare elementi completed, archived, dismissed, cancelled o expired.
+Non proporre domande: il briefing deve orientare, non interrogare.
 Niente motivazione finta, niente coaching, niente poesia.
-Se non c'ÃƒÂ¨ nulla di concreto, fai un briefing molto breve.
+Se non c'e nulla di concreto, fai un briefing molto breve.
       `;
 
   const calendarForPrompt = (calendar || []).map((event) => ({
@@ -77,6 +91,24 @@ ${JSON.stringify(timeline || [], null, 2)}
 
 TOPIC IMPORTANTI:
 ${JSON.stringify(topics || [], null, 2)}
+
+RIASSUNTI CONVERSAZIONE:
+${JSON.stringify(summaries || [], null, 2)}
+
+LUOGHI SIGNIFICATIVI:
+${JSON.stringify(places || [], null, 2)}
+
+PATTERN COMPORTAMENTALI:
+${JSON.stringify(behaviorPatterns || [], null, 2)}
+
+EVENTI CASA RECENTI:
+${JSON.stringify(houseEvents || [], null, 2)}
+
+PATTERN CASA:
+${JSON.stringify(housePatterns || [], null, 2)}
+
+SUGGERIMENTI CASA APERTI:
+${JSON.stringify(houseSuggestions || [], null, 2)}
       `;
 
   const completion = await openai.chat.completions.create({

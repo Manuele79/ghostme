@@ -2,6 +2,7 @@ import {
   buildDailyProactiveLogicalKey,
   upsertProactiveMessage,
 } from "@/lib/ghostme/proactive/proactiveMessageService";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import {
   buildProactiveCandidateLogicalKey,
   pickBestProactiveCandidate,
@@ -16,8 +17,82 @@ import {
 } from "@/lib/ghostme/proactive/trueProactiveCardWriter";
 import { writeCuriositySnapshotCards } from "@/lib/ghostme/proactive/curiosityCardWriter";
 import { buildGhostBrainSnapshot } from "@/lib/ghostme/context/reasoningService";
+import type { GhostBrainSnapshot } from "@/lib/ghostme/context/reasoningService";
+import { generateHouseSuggestions } from "@/lib/ghostme/homeAssistant/houseSuggestionEngine";
+import { generateHouseAutomationSuggestions } from "@/lib/ghostme/homeAssistant/houseAutomationSuggestionEngine";
 
-export async function runProactiveFlowForUser(user: any): Promise<{
+type ProactiveUser = Record<string, unknown> & {
+  user_id: string;
+  full_name?: string;
+};
+
+function countWrite(result: Awaited<ReturnType<typeof upsertProactiveMessage>>) {
+  return result?.action === "inserted" || result?.action === "updated" ? 1 : 0;
+}
+
+async function hasTodayDailyBriefing(userId: string) {
+  const todayIso = new Date();
+  todayIso.setHours(0, 0, 0, 0);
+
+  const { data, error } = await supabaseAdmin
+    .from("ghost_proactive_messages")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("logical_key", buildDailyProactiveLogicalKey("daily_briefing"))
+    .in("status", ["unread", "read", "dismissed", "answered", "expired", "archived"])
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    const message = String(error.message || error.details || "").toLowerCase();
+    if (!message.includes("logical_key")) throw error;
+
+    const { data: legacyData, error: legacyError } = await supabaseAdmin
+      .from("ghost_proactive_messages")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("category", "daily_briefing")
+      .in("status", ["unread", "read", "dismissed", "answered", "expired", "archived"])
+      .gte("created_at", todayIso.toISOString())
+      .limit(1)
+      .maybeSingle();
+    if (legacyError) throw legacyError;
+    return Boolean(legacyData?.id);
+  }
+
+  return Boolean(data?.id);
+}
+
+async function writeDailyBriefingForUser(user: ProactiveUser) {
+  const userId = user.user_id;
+  const dailyContext = await loadDailyBriefingContext(userId);
+  const { dailyMessage } = await buildDailyBriefingMessage({
+    user,
+    calendar: dailyContext.calendar,
+    goals: dailyContext.goals,
+    actions: dailyContext.actions,
+    mental: dailyContext.mental,
+    timeline: dailyContext.timeline,
+    topics: dailyContext.topics,
+    summaries: dailyContext.summaries,
+    places: dailyContext.places,
+    behaviorPatterns: dailyContext.behaviorPatterns,
+    houseEvents: dailyContext.houseEvents,
+    housePatterns: dailyContext.housePatterns,
+    houseSuggestions: dailyContext.houseSuggestions,
+  });
+
+  return upsertProactiveMessage({
+    userId,
+    title: "Daily Briefing",
+    message: dailyMessage,
+    category: "daily_briefing",
+    priority: 1,
+    logicalKey: buildDailyProactiveLogicalKey("daily_briefing"),
+  });
+}
+
+export async function runProactiveFlowForUser(user: ProactiveUser): Promise<{
   created: number;
   errors?: string[];
 }> {
@@ -25,6 +100,9 @@ export async function runProactiveFlowForUser(user: any): Promise<{
   const userId = user.user_id;
 
   await runProactiveMaintenanceFlow(userId);
+  const houseSuggestions = await generateHouseSuggestions(userId);
+  const houseAutomationSuggestions = await generateHouseAutomationSuggestions(userId);
+  created += houseSuggestions.length + houseAutomationSuggestions.length;
 
   const snapshot = await buildGhostBrainSnapshot(userId);
   const curiositySnapshot = snapshot.curiosity;
@@ -54,48 +132,97 @@ export async function runProactiveFlowForUser(user: any): Promise<{
   const bestCandidate = pickBestProactiveCandidate(legacyCandidates);
 
   if (bestCandidate) {
-    await upsertProactiveMessage({
+    created += countWrite(await upsertProactiveMessage({
       userId,
       title: bestCandidate.title,
       message: bestCandidate.message,
       category: bestCandidate.category,
       priority: bestCandidate.priority,
       logicalKey: buildProactiveCandidateLogicalKey(bestCandidate),
-    });
-
-    created++;
+    }));
+  } else {
+    console.log("PROACTIVE FLOW: no proactive candidates", userId);
   }
 
   if (agendaMessage) {
-    await upsertProactiveMessage({
+    created += countWrite(await upsertProactiveMessage({
       userId,
       title: "Agenda di oggi",
       message: agendaMessage,
       category: "agenda",
       priority: 5,
       logicalKey: buildDailyProactiveLogicalKey("agenda"),
-    });
+    }));
   }
 
-  const dailyContext = await loadDailyBriefingContext(userId);
-  const { dailyMessage } = await buildDailyBriefingMessage({
-    user,
-    calendar: dailyContext.calendar,
-    goals: dailyContext.goals,
-    actions: dailyContext.actions,
-    mental: dailyContext.mental,
-    timeline: dailyContext.timeline,
-    topics: dailyContext.topics,
-  });
-
-  await upsertProactiveMessage({
-    userId,
-    title: "Daily Briefing",
-    message: dailyMessage,
-    category: "daily_briefing",
-    priority: 1,
-    logicalKey: buildDailyProactiveLogicalKey("daily_briefing"),
-  });
+  created += countWrite(await writeDailyBriefingForUser(user));
 
   return { created };
+}
+
+export async function runAppOpenProactiveLifecycle({
+  user,
+  snapshot,
+}: {
+  user: ProactiveUser;
+  snapshot?: GhostBrainSnapshot;
+}): Promise<{ created: number; skipped: boolean; reason?: string }> {
+  const userId = user.user_id;
+  if (!userId) return { created: 0, skipped: true, reason: "missing_user" };
+
+  if (await hasTodayDailyBriefing(userId)) {
+    return { created: 0, skipped: true, reason: "daily_briefing_exists" };
+  }
+
+  let created = 0;
+  const currentSnapshot = snapshot || (await buildGhostBrainSnapshot(userId));
+  const curiosityResult = await writeCuriositySnapshotCards({
+    userId,
+    snapshot: currentSnapshot.curiosity,
+    preferredLogicalKeys: currentSnapshot.trueProactive.selected
+      .filter((candidate) => candidate.type === "high_confidence_curiosity")
+      .map(buildTrueProactiveLogicalKey),
+  });
+  created += curiosityResult.processed;
+
+  const trueProactiveResult = await writeTrueProactiveCards({
+    userId,
+    selected: currentSnapshot.trueProactive.selected,
+  });
+  created += trueProactiveResult.processed;
+
+  const { proactiveCandidates, agendaMessage } =
+    await buildProactiveCandidatesForUser(user, currentSnapshot);
+  const legacyCandidates = curiosityResult.processed
+    ? proactiveCandidates.filter((candidate) => candidate.source !== "curiosity")
+    : proactiveCandidates;
+  const bestCandidate = pickBestProactiveCandidate(legacyCandidates);
+
+  if (bestCandidate) {
+    created += countWrite(await upsertProactiveMessage({
+      userId,
+      title: bestCandidate.title,
+      message: bestCandidate.message,
+      category: bestCandidate.category,
+      priority: bestCandidate.priority,
+      logicalKey: buildProactiveCandidateLogicalKey(bestCandidate),
+    }));
+  } else {
+    console.log("APP OPEN PROACTIVE: no proactive candidates", userId);
+  }
+
+  if (agendaMessage) {
+    created += countWrite(await upsertProactiveMessage({
+      userId,
+      title: "Agenda di oggi",
+      message: agendaMessage,
+      category: "agenda",
+      priority: 5,
+      logicalKey: buildDailyProactiveLogicalKey("agenda"),
+    }));
+  }
+
+  created += countWrite(await writeDailyBriefingForUser(user));
+
+  return { created, skipped: false };
 }

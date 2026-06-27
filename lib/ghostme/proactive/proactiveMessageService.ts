@@ -49,7 +49,7 @@ export async function upsertProactiveMessage({
   logicalKey?: string | null;
   reactivateHiddenOnChange?: boolean;
 }) {
-  if (!userId || !message?.trim()) return;
+  if (!userId || !message?.trim()) return { action: "skipped" as const };
 
   const todayIso = startOfTodayIso();
   const shouldKeepOnePerDay = ONE_PER_DAY_CATEGORIES.has(category);
@@ -104,10 +104,10 @@ export async function upsertProactiveMessage({
       HIDDEN_PROACTIVE_STATUSES.includes(existing.status) &&
       (!reactivateHiddenOnChange || !contentChanged)
     ) {
-      return;
+      return { action: "hidden" as const, id: existing.id };
     }
 
-    if (!contentChanged) return;
+    if (!contentChanged) return { action: "unchanged" as const, id: existing.id };
 
     const updatePayload: any = {
       title,
@@ -137,7 +137,7 @@ export async function upsertProactiveMessage({
         .eq("id", existing.id);
     }
 
-    return;
+    return { action: "updated" as const, id: existing.id };
   }
 
   const priorityLimit =
@@ -159,7 +159,7 @@ export async function upsertProactiveMessage({
       .gte("priority", priorityLimit.minimum)
       .lte("priority", priorityLimit.maximum);
     if (priorityError) throw priorityError;
-    if ((count || 0) >= priorityLimit.limit) return;
+    if ((count || 0) >= priorityLimit.limit) return { action: "skipped" as const };
   }
 
   if (category === "curiosity") {
@@ -170,7 +170,7 @@ export async function upsertProactiveMessage({
       .eq("category", "curiosity")
       .gte("created_at", todayIso);
     if (countError) throw countError;
-    if ((count || 0) >= 4) return;
+    if ((count || 0) >= 4) return { action: "skipped" as const };
   }
 
   const insertPayload: any = {
@@ -195,4 +195,6 @@ export async function upsertProactiveMessage({
     delete insertPayload.logical_key;
     await supabaseAdmin.from("ghost_proactive_messages").insert(insertPayload);
   }
+
+  return { action: "inserted" as const };
 }
