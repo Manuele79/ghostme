@@ -7,6 +7,8 @@ export function pickBestProactiveCandidate(candidates: any[]) {
 }
 
 export function buildProactiveCandidateLogicalKey(candidate: any) {
+  if (candidate?.logicalKey) return candidate.logicalKey;
+
   const identity = normalizeProactiveText(
     `${candidate?.source || "legacy"} ${candidate?.category || "observation"} ${candidate?.title || "card"}`
   )

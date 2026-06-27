@@ -12,6 +12,7 @@ import { generateObservationInsight } from "@/lib/ghostme/observation/observatio
 import { generatePatternInsight } from "@/lib/ghostme/patterns/patternInsightEngine";
 import { applyPatternDecay } from "@/lib/ghostme/patterns/patternDecay";
 import { generateButlerMessage } from "@/lib/ghostme/butler/butlerEngine";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 function formatMentalState(mentalState: any) {
   return mentalState
@@ -48,6 +49,247 @@ function buildSituationFromSnapshot(snapshot: GhostBrainSnapshot) {
   return {
     calendarToday: snapshot.calendar.today || [],
     upcomingEvents: snapshot.calendar.upcoming || [],
+  };
+}
+
+function normalize(value: any) {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+}
+
+function compactText(row: any) {
+  return normalize(
+    [
+      row?.title,
+      row?.summary,
+      row?.description,
+      row?.content,
+      row?.intent_type,
+      Array.isArray(row?.topics) ? row.topics.join(" ") : "",
+      Array.isArray(row?.related_topics) ? row.related_topics.join(" ") : "",
+    ].filter(Boolean).join(" ")
+  );
+}
+
+function timestampFor(row: any) {
+  const value =
+    row?.start_at ||
+    row?.remind_at ||
+    row?.event_date ||
+    row?.updated_at ||
+    row?.created_at ||
+    row?.completed_at;
+  const time = new Date(value || 0).getTime();
+  return Number.isFinite(time) ? time : 0;
+}
+
+function hoursSinceValue(value: any) {
+  const time = new Date(value || 0).getTime();
+  if (!Number.isFinite(time)) return null;
+  return (Date.now() - time) / (60 * 60 * 1000);
+}
+
+function dayKey(value: any) {
+  const date = new Date(value || Date.now());
+  return new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Europe/Rome",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
+
+function titleFor(row: any) {
+  return String(row?.title || row?.summary || row?.description || "").trim();
+}
+
+function detectOpenLoopKind(text: string) {
+  const checks = [
+    {
+      kind: "grigliata",
+      aliases: ["grigliata", "barbecue", "bbq"],
+      question: "Com'e andata la grigliata?",
+      placeQuestion:
+        "Se era in quel posto nuovo, vuoi che lo salvi come luogo legato agli amici?",
+      title: "Com'e andata la grigliata?",
+      priority: 9,
+    },
+    {
+      kind: "vespa",
+      aliases: ["vespa", "giro in vespa"],
+      question: "Com'e andato il giro in Vespa?",
+      placeQuestion: "Quel posto nuovo era collegato al giro?",
+      title: "Giro in Vespa",
+      priority: 8,
+    },
+    {
+      kind: "amici",
+      aliases: ["amici", "poldo", "compagnia", "uscita"],
+      question: "Com'e andata l'uscita con gli amici?",
+      placeQuestion: "Il posto nuovo vale la pena salvarlo per le uscite con gli amici?",
+      title: "Uscita con amici",
+      priority: 8,
+    },
+    {
+      kind: "home_assistant",
+      aliases: ["home assistant", "collegamento", "automazione", "sensore"],
+      question: "Hai completato il collegamento Home Assistant che volevi sistemare?",
+      placeQuestion: "",
+      title: "Home Assistant",
+      priority: 7,
+    },
+    {
+      kind: "cliente",
+      aliases: ["cliente", "appuntamento", "incontro"],
+      question: "Com'e andato l'incontro?",
+      placeQuestion: "Quel posto nuovo era legato all'incontro?",
+      title: "Incontro",
+      priority: 7,
+    },
+    {
+      kind: "ristorante",
+      aliases: ["ristorante", "locale", "posto nuovo"],
+      question: "Com'era il posto nuovo?",
+      placeQuestion: "Vuoi salvarlo tra i luoghi importanti?",
+      title: "Posto nuovo",
+      priority: 8,
+    },
+  ];
+
+  return checks.find((check) =>
+    check.aliases.some((alias) => text.includes(alias))
+  );
+}
+
+function collectOpenLoopSources(snapshot: GhostBrainSnapshot) {
+  return [
+    ...(snapshot.actions || []).map((row) => ({ row, source: "action" })),
+    ...(snapshot.calendar.completed || []).map((row) => ({
+      row,
+      source: "calendar_completed",
+    })),
+    ...(snapshot.memory.timeline || []).map((row) => ({ row, source: "timeline" })),
+    ...(snapshot.memory.episodicMemories || []).map((row) => ({
+      row,
+      source: "episodic_memory",
+    })),
+    ...(snapshot.memory.summaries || []).map((row) => ({
+      row,
+      source: "conversation_summary",
+    })),
+  ];
+}
+
+async function loadRecentLocationObservations(userId: string) {
+  const since = new Date(Date.now() - 14 * 60 * 60 * 1000).toISOString();
+  const { data, error } = await supabaseAdmin
+    .from("observation_events")
+    .select("event_type, place_label, value, context, occurred_at")
+    .eq("user_id", userId)
+    .in("event_type", [
+      "home_arrived",
+      "home_left",
+      "location_enter",
+      "location_exit",
+      "place_unknown_detected",
+    ])
+    .gte("occurred_at", since)
+    .order("occurred_at", { ascending: false })
+    .limit(30);
+
+  if (error) {
+    console.log("CONTINUITY OBSERVATIONS ERROR:", error);
+    return [];
+  }
+
+  return data || [];
+}
+
+function buildMomentAwareness(observations: any[], snapshot: GhostBrainSnapshot) {
+  const currentPlace = normalize(snapshot.location.situation.currentPlace);
+  const isAtHome = currentPlace === "casa" || currentPlace === "home";
+  const recentHomeArrival = observations.find(
+    (event) =>
+      event.event_type === "home_arrived" &&
+      (hoursSinceValue(event.occurred_at) ?? Infinity) <= 8
+  );
+  const unknownBeforeHome = observations.find((event) => {
+    if (event.event_type !== "place_unknown_detected") return false;
+    if (!recentHomeArrival?.occurred_at) return true;
+    return (
+      new Date(event.occurred_at || 0).getTime() <=
+      new Date(recentHomeArrival.occurred_at || 0).getTime()
+    );
+  });
+
+  return {
+    isAtHome,
+    recentHomeArrival: Boolean(recentHomeArrival),
+    unknownBeforeHome: Boolean(unknownBeforeHome),
+    homeSignals: snapshot.home.presence.signals || [],
+  };
+}
+
+async function buildContinuityCandidate(userId: string, snapshot: GhostBrainSnapshot) {
+  const observations = await loadRecentLocationObservations(userId);
+  const moment = buildMomentAwareness(observations, snapshot);
+  if (!moment.isAtHome) return null;
+
+  const candidates = collectOpenLoopSources(snapshot)
+    .map(({ row, source }) => {
+      const text = compactText(row);
+      const kind = detectOpenLoopKind(text);
+      const ageHours = hoursSinceValue(timestampFor(row));
+      return {
+        row,
+        source,
+        text,
+        kind,
+        ageHours,
+        title: titleFor(row),
+      };
+    })
+    .filter(
+      (item) =>
+        item.kind &&
+        item.ageHours !== null &&
+        item.ageHours >= -12 &&
+        item.ageHours <= 72
+    )
+    .sort((left, right) => {
+      const leftMomentBoost = moment.recentHomeArrival ? 2 : 0;
+      const rightMomentBoost = moment.recentHomeArrival ? 2 : 0;
+      return (
+        (right.kind?.priority || 0) + rightMomentBoost - 
+        ((left.kind?.priority || 0) + leftMomentBoost)
+      );
+    });
+
+  const openLoop = candidates[0];
+  if (!openLoop?.kind) return null;
+
+  const messageParts = [openLoop.kind.question];
+  if (moment.unknownBeforeHome && openLoop.kind.placeQuestion) {
+    messageParts.push(openLoop.kind.placeQuestion);
+  }
+
+  const priority = Math.min(
+    10,
+    openLoop.kind.priority +
+      (moment.recentHomeArrival ? 1 : 0) +
+      (moment.unknownBeforeHome ? 1 : 0)
+  );
+
+  return {
+    title: openLoop.kind.title,
+    message: messageParts.join(" "),
+    category: "observation",
+    priority,
+    source: "continuity",
+    logicalKey: `continuity_${openLoop.kind.kind}_${dayKey(timestampFor(openLoop.row))}`,
   };
 }
 
@@ -208,6 +450,7 @@ export async function buildProactiveCandidatesForUser(
 
   const observationInsight = await generateObservationInsight(userId);
   const patternInsight = await generatePatternInsight(userId);
+  const continuityCandidate = await buildContinuityCandidate(userId, snapshot);
   // Curiosity cards come exclusively from the structured snapshot writer.
   const curiosityMessage: string | null = null;
 
@@ -231,6 +474,8 @@ export async function buildProactiveCandidatesForUser(
   });
 
   const proactiveCandidates = [
+    continuityCandidate,
+
     proactiveDecision.shouldSpeak && proactiveDecision.message
       ? {
           title: proactiveDecision.title || "Osservazione GhostMe",

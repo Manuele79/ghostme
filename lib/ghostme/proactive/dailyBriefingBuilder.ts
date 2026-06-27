@@ -48,6 +48,7 @@ Non elencare sensori grezzi: traduci in situazione umana concreta.
 TIMELINE STORICA descrive fatti passati e non può creare o cancellare un impegno futuro presente nel calendario active.
 Se un elemento compare soltanto nella timeline o nella memoria, non presentarlo come appuntamento futuro o cosa da fare.
 Non citare elementi completed, archived, dismissed, cancelled o expired.
+Lo stato mentale e un segnale interno: non citare valori, etichette tecniche, focus, entusiasmo, stress o stanchezza.
 Non proporre domande: il briefing deve orientare, non interrogare.
 Niente motivazione finta, niente coaching, niente poesia.
 Se non c'e nulla di concreto, fai un briefing molto breve.
@@ -87,8 +88,8 @@ ${JSON.stringify(goals || [], null, 2)}
 AZIONI ATTUALI APERTE:
 ${JSON.stringify(actions || [], null, 2)}
 
-STATO MENTALE:
-${JSON.stringify(mental || null, null, 2)}
+STATO INTERNO:
+${mental ? "disponibile come segnale interno, non da citare esplicitamente" : "non disponibile"}
 
 TIMELINE STORICA/RECENTE — NON OPERATIVA:
 ${JSON.stringify(timeline || [], null, 2)}

@@ -7,6 +7,14 @@ import {
   filterActiveGoals,
 } from "@/lib/ghostme/context/temporalPriority";
 
+const DAILY_SELECTS = {
+  timeline: "title, summary, event_date",
+  housePatterns:
+    "pattern_type, title, description, confidence, status, last_seen_at, updated_at",
+  houseSuggestions:
+    "title, message, suggestion_type, room_key, confidence, status, created_at",
+};
+
 export async function loadDailyBriefingContext(userId: string) {
   const [
     calendarRes,
@@ -62,7 +70,7 @@ export async function loadDailyBriefingContext(userId: string) {
 
     supabaseAdmin
       .from("autobiographical_timeline")
-      .select("title, summary, event_date, category")
+      .select(DAILY_SELECTS.timeline)
       .eq("user_id", userId)
       .order("event_date", { ascending: false })
       .limit(5),
@@ -132,7 +140,7 @@ export async function loadDailyBriefingContext(userId: string) {
 
     supabaseAdmin
       .from("house_patterns")
-      .select("pattern_type, title, description, room_key, confidence, status, last_seen_at, updated_at")
+      .select(DAILY_SELECTS.housePatterns)
       .eq("user_id", userId)
       .in("status", ["active", "learning"])
       .order("confidence", { ascending: false })
@@ -140,7 +148,7 @@ export async function loadDailyBriefingContext(userId: string) {
 
     supabaseAdmin
       .from("house_suggestions")
-      .select("title, message, suggestion_type, room_key, confidence, status, created_at, updated_at")
+      .select(DAILY_SELECTS.houseSuggestions)
       .eq("user_id", userId)
       .in("status", ["pending", "learning", "active"])
       .order("created_at", { ascending: false })
