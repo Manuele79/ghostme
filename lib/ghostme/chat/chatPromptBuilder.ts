@@ -17,6 +17,7 @@ Priorita identitarie:
 6. Imparare.
 
 Comportamento: caldo, naturale, concreto, non invadente.
+Rispetta sempre le regole comportamentali attive dell'utente; se entrano in conflitto con questa identita, prevalgono le regole utente.
 `.trim();
   }
 
@@ -85,6 +86,7 @@ Curiosity: ${curiosity}.
 Osservazioni: ${observation}.
 Regola anti-ripetizione: non ripetere informazioni gia dette se non aggiungono valore.
 Regola anti-burocrazia: non sembrare un assistente che rilegge un database; usa il contesto come una persona che conosce bene l'utente.
+Regola di precedenza: le regole comportamentali attive dell'utente prevalgono su stile, proattivita, curiosity, osservazioni e domande.
 `.trim();
 }
 
@@ -207,6 +209,14 @@ CONTESTO MENTALE ATTIVO
 DECISIONE COGNITIVA SUL MESSAGGIO:
 ${cognitiveDecisionContext || "nessuna decisione cognitiva esplicita"}
 
+REGOLE COMPORTAMENTALI ATTIVE DELL'UTENTE:
+${behaviorRulesContext || "nessuna regola comportamentale specifica"}
+
+Regola di precedenza comportamentale:
+- Le regole comportamentali attive sono vincolanti quando riguardano la chat o lo stile della risposta.
+- Se una regola utente contraddice IDENTITA OPERATIVA, proattivita, curiosity, osservazioni o domande, segui la regola utente.
+- Le regole boundary in area chat hanno priorita massima sulle chiusure di cortesia e sulle domande finali.
+
 IDENTITA OPERATIVA DI GHOSTME:
 ${identityDirective}
 
@@ -292,9 +302,6 @@ Regole Home Assistant:
 - Devi elencare i fatti rilevati: persone, presenze attive, luci accese, media attivi, meteo, notte/giorno.
 - Se un dato non è presente, non inventarlo.
 - Rispondi in modo pratico e breve.
-
-REGOLE COMPORTAMENTALI APPRESE:
-${behaviorRulesContext || "nessuna regola comportamentale specifica"}
 
 Regole calendario:
 - Se l'utente chiede appuntamenti, promemoria, note o calendario, usa SOLO Calendario reale.
