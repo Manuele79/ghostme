@@ -1,6 +1,6 @@
 # COGNITIVE ROUTING MAP
 
-Generato automaticamente: 2026-06-27T01:11:06.088Z
+Generato automaticamente: 2026-06-27T01:14:30.848Z
 
 ## Tipi di informazione ricevuta
 
