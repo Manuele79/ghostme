@@ -1,6 +1,6 @@
 # PROJECT AUDIT FULL
 
-Generato: 2026-06-27T02:01:26.040Z
+Generato: 2026-06-27T02:12:18.610Z
 
 # 1. RIASSUNTO
 
@@ -2956,7 +2956,7 @@ Righe: 174
 
 ## lib/ghostme/core/messageClassifier.ts
 
-Righe: 301
+Righe: 353
 
 ### Importa
 - lib/ghostme/chat/chatTypes.ts

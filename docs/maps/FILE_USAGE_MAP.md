@@ -80,7 +80,7 @@ Mappa statica generata dal codice locale.
 | lib/ghostme/context/userContextGraph.ts | active | 1 | 3 | 1 | 16 | 0 | 295 |
 | lib/ghostme/contradictions.ts | active | 1 | 1 | 1 | 3 | 1 | 168 |
 | lib/ghostme/conversationSummary.ts | active | 2 | 1 | 1 | 2 | 2 | 174 |
-| lib/ghostme/core/messageClassifier.ts | active | 1 | 1 | 4 | 0 | 0 | 301 |
+| lib/ghostme/core/messageClassifier.ts | active | 1 | 1 | 4 | 0 | 0 | 353 |
 | lib/ghostme/curiosity/curiosityEngine.ts | orphan_db_user | 0 | 2 | 1 | 7 | 0 | 230 |
 | lib/ghostme/curiosity/curiositySnapshot.ts | god_file_candidate | 2 | 11 | 5 | 0 | 0 | 775 |
 | lib/ghostme/dynamicSelfProfile.ts | active | 1 | 1 | 2 | 1 | 2 | 142 |

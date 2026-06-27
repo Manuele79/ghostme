@@ -23,6 +23,49 @@ function uniqueActions(actions: CognitiveRequestedAction[]) {
   return unique.length ? unique : (["none"] as CognitiveRequestedAction[]);
 }
 
+function hasExplicitUserCalendarIntent(text: string) {
+  const explicitCalendarPhrases = [
+    "aggiungi al calendario",
+    "metti in calendario",
+    "segna in calendario",
+    "crea un appuntamento",
+    "salva un appuntamento",
+    "ho un appuntamento",
+    "appuntamento con",
+    "appuntamento per",
+    "crea un promemoria",
+    "metti un promemoria",
+    "salva un promemoria",
+    "imposta un promemoria",
+    "ricordamelo",
+    "ricordami di",
+    "reminder per",
+    "promemoria per",
+  ];
+  const hasExplicitPhrase = includesAny(text, explicitCalendarPhrases);
+  const hasTimeAnchor = includesAny(text, [
+    " alle ",
+    " domani",
+    " dopodomani",
+    " stasera",
+    " stamattina",
+    " lunedi",
+    " lunedì",
+    " martedi",
+    " martedì",
+    " mercoledi",
+    " mercoledì",
+    " giovedi",
+    " giovedì",
+    " venerdi",
+    " venerdì",
+    " sabato",
+    " domenica",
+  ]);
+
+  return hasExplicitPhrase || (includesAny(text, ["promemoria", "appuntamento"]) && hasTimeAnchor);
+}
+
 export function classifyGhostMessage(message: string): GhostMessageClass {
   const text = (message || "").trim().toLowerCase();
 
@@ -123,6 +166,7 @@ export function buildBaseCognitiveDecision(
     "stasera",
     "oggi",
   ]);
+  const hasUserCalendarIntent = hasExplicitUserCalendarIntent(text);
   const isBehaviorChange = includesAny(text, [
     "da oggi",
     "d'ora in poi",
@@ -166,7 +210,8 @@ export function buildBaseCognitiveDecision(
   const isObservation = includesAny(text, ["ho notato", "succede", "capita", "pattern"]);
 
   let messageType: CognitiveMessageType = "conversation";
-  if (isCommandToGhost) messageType = "command_to_ghost";
+  if (hasUserCalendarIntent) messageType = "personal_reminder";
+  else if (isCommandToGhost) messageType = "command_to_ghost";
   else if (isQuestion) messageType = "question";
   else if (isReminder) messageType = "personal_reminder";
   else if (isCorrection) messageType = "correction";
@@ -190,7 +235,7 @@ export function buildBaseCognitiveDecision(
 
   const actions: CognitiveRequestedAction[] = [];
   if (messageClass.type !== "micro") actions.push("response");
-  if (isReminder) actions.push("calendar", "proactive");
+  if (hasUserCalendarIntent) actions.push("calendar");
   if (isBehaviorChange) actions.push("behavior");
   if (isPreference) actions.push("memory", "behavior");
   if (isCorrection) actions.push("memory", "behavior");
@@ -198,7 +243,10 @@ export function buildBaseCognitiveDecision(
   if (isGoal) actions.push("goals", "memory");
   if (isRelationship) actions.push("people_graph", "memory");
   if (isPlace) actions.push("memory", "observation");
-  if (isObservation) actions.push("observation", "proactive");
+  if (isObservation) {
+    actions.push("observation");
+    if (!isCommandToGhost) actions.push("proactive");
+  }
   if (messageType === "event" || messageType === "memory") {
     actions.push("memory", "timeline");
   }
@@ -231,7 +279,11 @@ export function buildBaseCognitiveDecision(
 
   if (messageClass.type === "micro") reasons.push("messaggio breve o conferma");
   if (isCommandToGhost) reasons.push("comando rivolto a GhostMe");
-  if (isReminder) reasons.push("segnale calendario/promemoria");
+  if (hasUserCalendarIntent) {
+    reasons.push("intenzione esplicita calendario/promemoria utente");
+  } else if (isReminder) {
+    reasons.push("segnale reminder non persistente per comando a GhostMe");
+  }
   if (isBehaviorChange) reasons.push("preferenza o regola duratura");
   if (isRelationship) reasons.push("possibile informazione relazionale");
   if (memoryDepth === "deep_recall") reasons.push("richiesta di recall profondo");

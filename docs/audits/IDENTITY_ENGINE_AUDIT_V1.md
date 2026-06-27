@@ -101,12 +101,14 @@ Il prompt contiene una regola esplicita:
 Cognitive Core:
 
 - addressee: `ghostme`
-- requestedActions: `calendar`, `proactive`
+- messageType: `command_to_ghost`
+- requestedActions: `response`
 
 Identity:
 
 - tratta la frase come istruzione rivolta a GhostMe;
 - non la trasforma in dovere dell'utente;
+- non crea calendar/proactive senza intenzione esplicita di promemoria;
 - risponde in modo breve e operativo.
 
 ### "Da oggi rispondimi piu sintetico"

@@ -83,9 +83,17 @@ Le funzioni esistenti restano operative per evitare regressioni.
 
 - Tipo: `command_to_ghost`
 - Destinatario: `ghostme`
-- Azioni: `response`, `calendar`, `proactive`
+- Azioni: `response`
 - Persistenza: `temporary`
-- Nota: non viene interpretato come promemoria rivolto all'utente stesso.
+- Nota: non viene interpretato come promemoria rivolto all'utente e non crea calendar/proactive senza intenzione esplicita.
+
+### "Ricordamelo domani alle 9"
+
+- Tipo: `personal_reminder`
+- Destinatario: `ghostme`
+- Azioni: `response`, `calendar`
+- Persistenza: `temporary`
+- Nota: crea un promemoria per l'utente perche l'intenzione calendario e esplicita.
 
 ### "Da oggi rispondimi piu sintetico"
 

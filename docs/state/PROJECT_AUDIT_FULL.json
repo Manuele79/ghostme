@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-27T02:01:26.040Z",
+  "generatedAt": "2026-06-27T02:12:18.610Z",
   "folders": {
     ".": [
       ".dependency-cruiser.js",
@@ -3513,6 +3513,7 @@
         "includes",
         "uniqueActions",
         "Set",
+        "hasExplicitUserCalendarIntent",
         "classifyGhostMessage",
         "trim",
         "toLowerCase",
@@ -3522,7 +3523,7 @@
         "refineCognitiveDecision",
         "max"
       ],
-      "lines": 301
+      "lines": 353
     },
     "lib/ghostme/curiosity/curiosityEngine.ts": {
       "folder": "lib/ghostme/curiosity",
@@ -17374,6 +17375,12 @@
       ]
     },
     "uniqueActions": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/core/messageClassifier.ts"
+      ]
+    },
+    "hasExplicitUserCalendarIntent": {
       "exportedBy": [],
       "calledBy": [
         "lib/ghostme/core/messageClassifier.ts"
