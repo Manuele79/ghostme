@@ -28,12 +28,13 @@ function buildRuntimeBehaviorProfile({
   behaviorRulesContext: string;
   cognitiveDecision?: CognitiveDecision;
 }) {
-  const stress = numberFromContext(mentalStateContext, "stress");
+  const operationalLoad = numberFromContext(mentalStateContext, "stress");
   const frustration = numberFromContext(mentalStateContext, "frustrazione");
   const fatigue = numberFromContext(mentalStateContext, "stanchezza");
   const focus = numberFromContext(mentalStateContext, "focus");
   const enthusiasm = numberFromContext(mentalStateContext, "entusiasmo");
   const control = numberFromContext(mentalStateContext, "controllo");
+  const mentalContextLower = mentalStateContext.toLowerCase();
   const actions = new Set(cognitiveDecision?.requestedActions || []);
   const noAutomaticClosing = hasBehaviorRule(behaviorRulesContext, [
     "non chiudere",
@@ -65,7 +66,14 @@ function buildRuntimeBehaviorProfile({
     (cognitiveDecision.persistence === "permanent" ||
       actions.has("behavior") ||
       actions.has("memory"));
-  const highTension = stress >= 7 || frustration >= 7 || fatigue >= 7;
+  const developmentMode =
+    cognitiveDecision?.tone === "technical" ||
+    cognitiveDecision?.messageType === "project" ||
+    mentalContextLower.includes("modalita=sviluppo_intenso");
+  const highTension =
+    frustration >= 8 ||
+    fatigue >= 8 ||
+    (operationalLoad >= 8 && (frustration >= 7 || fatigue >= 6));
   const highFocus = focus >= 7 || control >= 7;
 
   const tone =
@@ -73,6 +81,8 @@ function buildRuntimeBehaviorProfile({
       ? "concreto, sobrio, senza motivazione artificiale"
       : highTension
         ? "calmo, asciutto, concreto, senza entusiasmo finto"
+        : developmentMode
+          ? "tecnico, preciso, da architect pratico"
         : cognitiveDecision?.tone === "emotional"
           ? "caldo ma contenuto, presente, senza psicologizzare"
           : cognitiveDecision?.tone === "technical"
@@ -83,6 +93,8 @@ function buildRuntimeBehaviorProfile({
   const length =
     wantsConcise || highTension
       ? "breve: rispondi solo con cio che serve"
+      : developmentMode
+        ? "compatto-operativo: abbastanza contesto per agire, senza divagare"
       : cognitiveDecision?.memoryDepth === "deep_recall"
         ? "medio: abbastanza contesto, ma senza enciclopedia"
         : "compatto: spiega il necessario";
@@ -93,6 +105,8 @@ function buildRuntimeBehaviorProfile({
       : "adeguato alla richiesta, non tecnico se non serve";
   const emotionalLevel = highTension
     ? "basso ma presente: niente entusiasmo finto, niente psicologia, solo aiuto concreto"
+    : developmentMode
+      ? "molto basso: resta sul problema operativo e non attribuire emozioni"
     : cognitiveDecision?.tone === "emotional"
       ? "medio: riconosci il tono senza farne una seduta"
       : "leggero: non aggiungere emozioni non espresse";
@@ -111,7 +125,7 @@ function buildRuntimeBehaviorProfile({
       : "evitale se non aggiungono valore";
   const explanationStyle = wantsCodeShape
     ? "per codice/progetto: problema, causa, modifica, verifica; evita micro-patch inutili"
-    : highFocus
+    : developmentMode || highFocus
       ? "ordinato e operativo: checklist breve quando aiuta"
       : "naturale: non elencare se una frase basta";
   const correctionStyle = correctionMode
@@ -127,7 +141,7 @@ Non e una nuova personalita: e l'adattamento runtime dell'identita stabile.
 Priorita operative:
 1. Regole comportamentali attive dell'utente, soprattutto boundary/chat.
 2. Decisione Cognitiva sul messaggio.
-3. Stato mentale recente come influenza di tono, senza inventare emozioni.
+3. Stato mentale recente come contesto operativo debole, senza inventare emozioni o diagnosi.
 4. Profilo utente e profilo dinamico come contesto leggero.
 5. Identity operativa generale.
 
@@ -144,7 +158,7 @@ Scelte runtime:
 Fattori che hanno influenzato il comportamento:
 - Behavior rules: ${behaviorRulesContext ? "presenti e prioritarie" : "nessuna regola attiva specifica"}.
 - CognitiveDecision: tono ${cognitiveDecision?.tone || "non specificato"}, follow-up ${cognitiveDecision?.followUpNeed || "non specificato"}, profondita ${cognitiveDecision?.memoryDepth || "non specificata"}.
-- Mental state: stress ${stress}, frustrazione ${frustration}, stanchezza ${fatigue}, focus ${focus}, controllo ${control}.
+- Mental state operativo: carico ${operationalLoad}, frustrazione temporanea ${frustration}, stanchezza ${fatigue}, focus ${focus}, controllo ${control}.
 - Profilo dinamico: ${dynamicSelfProfileContext ? "disponibile, usalo solo se non contraddice regole esplicite" : "non disponibile"}.
 - Profilo utente: ${profileContext ? "disponibile come contesto di stile leggero" : "non disponibile"}.
 
@@ -152,6 +166,8 @@ Vincoli:
 - Non creare azioni persistenti da solo.
 - Non cambiare personalita in modo casuale.
 - Non usare entusiasmo artificiale.
+- Non dire all'utente che e stressato, triste o arrabbiato: usa questi segnali solo per modulare tono e lunghezza.
+- Una sessione tecnica intensa indica prima focus/problem solving, non stress emotivo.
 - Non chiudere con formule automatiche se le regole utente lo vietano.
 `.trim();
 }
@@ -488,7 +504,7 @@ Regole cognitive:
 - Se la decisione richiede approfondimento "ask", fai una sola domanda utile e concreta; se indica "observe" o "wait", non forzare domande.
 - L'IDENTITA OPERATIVA decide solo il comportamento della risposta; non usarla per cambiare il tipo del messaggio.
 - Usa le relazioni tra topic per fare collegamenti naturali, senza meta-commenti.
-- Adatta il tono allo stato mentale recente (senza citare numeri).
+- Adatta il tono al contesto operativo recente (senza citare numeri o attribuire emozioni come fatti).
 - Non eseguire azioni; eventualmente accennale come possibilità.
 - Se nel contesto è presente un "Luogo attuale", puoi usarlo normalmente.
 - Se l'utente chiede "Dove sono?", "Sono a casa?", "Che luogo hai rilevato?" o domande simili, rispondi usando il Luogo attuale presente nel contesto.

@@ -21,6 +21,110 @@ function clamp(value: number) {
   return Math.max(0, Math.min(10, Math.round(value)));
 }
 
+function clean(value: string) {
+  return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+function detectOperationalMode(message: string) {
+  const text = clean(message);
+
+  if (
+    [
+      "codice",
+      "typescript",
+      "build",
+      "bug",
+      "debug",
+      "repo",
+      "commit",
+      "patch",
+      "test",
+      "api",
+      "backend",
+      "frontend",
+      "cognitive core",
+      "prompt",
+    ].some((token) => text.includes(token))
+  ) {
+    return "sviluppo_intenso";
+  }
+
+  if (["piano", "roadmap", "architettura", "strategia"].some((token) => text.includes(token))) {
+    return "pianificazione";
+  }
+
+  if (["relax", "pausa", "tranquillo", "casa", "serata"].some((token) => text.includes(token))) {
+    return "relax";
+  }
+
+  return "conversazione";
+}
+
+function hasExplicitPressure(message: string) {
+  const text = clean(message);
+  return [
+    "stress",
+    "ansia",
+    "panico",
+    "pressione",
+    "non ce la faccio",
+    "sono a pezzi",
+    "sto male",
+    "deadline",
+    "scadenza",
+  ].some((token) => text.includes(token));
+}
+
+function normalizePatchForOperationalContext(
+  patch: MentalStatePatch,
+  message: string
+) {
+  const mode = detectOperationalMode(message);
+  const explicitPressure = hasExplicitPressure(message);
+  const next = { ...patch };
+
+  if (mode === "sviluppo_intenso" && !explicitPressure) {
+    next.stress = Math.min(next.stress ?? 0, 4);
+    next.focus = Math.max(next.focus ?? 0, 7);
+    next.controllo = Math.max(next.controllo ?? 0, 6);
+    if (typeof next.frustrazione === "number") {
+      next.frustrazione = Math.min(next.frustrazione, 6);
+    }
+    next.notes = [
+      `modalita=${mode}`,
+      next.notes ||
+        "sessione tecnica intensa: focus/problem solving, non stress emotivo",
+    ].join("; ");
+  } else {
+    next.notes = [`modalita=${mode}`, next.notes || ""].filter(Boolean).join("; ");
+  }
+
+  return next;
+}
+
+function blendMetric({
+  baseValue,
+  patchValue,
+  maxStep = 2,
+  weight = 0.45,
+}: {
+  baseValue: number;
+  patchValue?: number;
+  maxStep?: number;
+  weight?: number;
+}) {
+  if (typeof patchValue !== "number") return clamp(baseValue || 0);
+
+  const base = clamp(baseValue || 0);
+  const target = clamp(patchValue);
+  if (maxStep >= 10 && base === 0) return target;
+
+  const blended = base + (target - base) * weight;
+  const delta = Math.max(-maxStep, Math.min(maxStep, blended - base));
+
+  return clamp(base + delta);
+}
+
 export async function updateMentalState({
   userId,
   message,
@@ -69,11 +173,17 @@ Regole:
 - Non fare diagnosi.
 - Non usare parole mediche.
 - Devi leggere il tono pratico, non psicologizzare.
+- Interpreta "stress" come carico operativo/cognitivo interno, non come diagnosi emotiva.
+- Una sessione lunga di sviluppo, debug o pianificazione tecnica indica prima focus, controllo e problem solving.
+- Non alzare stress solo per parole come codice, bug, build, test, prompt, repo o patch.
+- Alza stress solo se l'utente esprime pressione esplicita, impossibilita a reggere, ansia, panico, scadenze o sovraccarico dichiarato.
+- La frustrazione tecnica temporanea e diversa dallo stress: se emerge un problema tecnico, preferisci frustrazione moderata e focus alto.
 
 Esempi:
 "sono stanco morto" -> stanchezza alta
 "sono gasato per il progetto" -> entusiasmo e focus alti
-"devo sistemare tutto, non mi torna niente" -> controllo e stress alti
+"devo sistemare tutto, non mi torna niente" -> controllo alto, focus alto, frustrazione moderata
+"la build non passa, analizza il repo e sistema il bug" -> modalita tecnica: focus alto, controllo alto, stress basso
 "mi manca quel periodo" -> nostalgia alta
 "mi sono rotto le palle" -> frustrazione alta
 "oggi ho visto amici" -> socialita media
@@ -129,6 +239,8 @@ ${message}
     return null;
   }
 
+  patch = normalizePatchForOperationalContext(patch, message);
+
   const base = currentState || {
     stress: 0,
     entusiasmo: 0,
@@ -139,44 +251,49 @@ ${message}
     focus: 0,
     socialita: 0,
   };
+  const maxStep = currentState?.id ? 2 : 10;
 
   const nextState = {
-    stress: clamp(
-      typeof patch.stress === "number" ? patch.stress : base.stress || 0
-    ),
-    entusiasmo: clamp(
-      typeof patch.entusiasmo === "number"
-        ? patch.entusiasmo
-        : base.entusiasmo || 0
-    ),
-    stanchezza: clamp(
-      typeof patch.stanchezza === "number"
-        ? patch.stanchezza
-        : base.stanchezza || 0
-    ),
-    controllo: clamp(
-      typeof patch.controllo === "number"
-        ? patch.controllo
-        : base.controllo || 0
-    ),
-    nostalgia: clamp(
-      typeof patch.nostalgia === "number"
-        ? patch.nostalgia
-        : base.nostalgia || 0
-    ),
-    frustrazione: clamp(
-      typeof patch.frustrazione === "number"
-        ? patch.frustrazione
-        : base.frustrazione || 0
-    ),
-    focus: clamp(
-      typeof patch.focus === "number" ? patch.focus : base.focus || 0
-    ),
-    socialita: clamp(
-      typeof patch.socialita === "number"
-        ? patch.socialita
-        : base.socialita || 0
-    ),
+    stress: blendMetric({
+      baseValue: base.stress || 0,
+      patchValue: patch.stress,
+      maxStep,
+    }),
+    entusiasmo: blendMetric({
+      baseValue: base.entusiasmo || 0,
+      patchValue: patch.entusiasmo,
+      maxStep,
+    }),
+    stanchezza: blendMetric({
+      baseValue: base.stanchezza || 0,
+      patchValue: patch.stanchezza,
+      maxStep,
+    }),
+    controllo: blendMetric({
+      baseValue: base.controllo || 0,
+      patchValue: patch.controllo,
+      maxStep,
+    }),
+    nostalgia: blendMetric({
+      baseValue: base.nostalgia || 0,
+      patchValue: patch.nostalgia,
+      maxStep,
+    }),
+    frustrazione: blendMetric({
+      baseValue: base.frustrazione || 0,
+      patchValue: patch.frustrazione,
+      maxStep,
+    }),
+    focus: blendMetric({
+      baseValue: base.focus || 0,
+      patchValue: patch.focus,
+      maxStep,
+    }),
+    socialita: blendMetric({
+      baseValue: base.socialita || 0,
+      patchValue: patch.socialita,
+      maxStep,
+    }),
     last_trigger: message,
     notes: patch.notes || base.notes || "",
     updated_at: new Date().toISOString(),

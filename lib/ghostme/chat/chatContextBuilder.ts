@@ -93,7 +93,8 @@ function buildMentalStateContext(data: any) {
   if (!data) return "";
 
   return `
-stress: ${data.stress ?? 0}
+semantica: segnali operativi interni; non sono diagnosi e non vanno dichiarati come fatti sull'utente
+stress: ${data.stress ?? 0} (carico operativo/cognitivo, non stress emotivo diagnosticato)
 entusiasmo: ${data.entusiasmo ?? 0}
 stanchezza: ${data.stanchezza ?? 0}
 controllo: ${data.controllo ?? 0}

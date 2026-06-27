@@ -90,7 +90,7 @@ export function buildGhostBrainSimpleSignals({
     graph?.goals?.length || situation?.activeGoals?.length || 0;
   const upcomingEventsCount =
     graph?.calendarUpcoming?.length || situation?.upcomingEvents?.length || 0;
-  const stress =
+  const operationalLoad =
     typeof mentalState?.stress === "number" ? mentalState.stress : 0;
   const tiredness =
     typeof mentalState?.stanchezza === "number" ? mentalState.stanchezza : 0;
@@ -103,7 +103,7 @@ export function buildGhostBrainSimpleSignals({
     pendingActionsCount >= 6 ||
     activeGoalsCount >= 4 ||
     upcomingEventsCount >= 4 ||
-    stress >= 7 ||
+    (operationalLoad >= 8 && (pendingActionsCount >= 3 || activeGoalsCount >= 2)) ||
     tiredness >= 7;
   const hasImportantPeople =
     Boolean(importantPeople?.length) || Boolean(graph?.people?.length);
