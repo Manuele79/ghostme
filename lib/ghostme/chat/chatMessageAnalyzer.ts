@@ -1,4 +1,8 @@
-import { classifyGhostMessage } from "@/lib/ghostme/core/messageClassifier";
+import {
+  buildBaseCognitiveDecision,
+  classifyGhostMessage,
+  refineCognitiveDecision,
+} from "@/lib/ghostme/core/messageClassifier";
 import {
   detectTopicsFromMessage,
   detectImportanceLevel,
@@ -29,6 +33,7 @@ export async function analyzeChatMessage({
   message: string;
 }): Promise<AnalyzeChatMessageResult> {
   const messageClass = classifyGhostMessage(message);
+  const baseCognitiveDecision = buildBaseCognitiveDecision(message, messageClass);
 
   // Detection di base
   const ruleBasedTopics = messageClass.shouldRunHeavyEngines
@@ -48,9 +53,15 @@ export async function analyzeChatMessage({
   );
 
   const importanceLevel = detectImportanceLevel(message);
+  const cognitiveDecision = refineCognitiveDecision({
+    decision: baseCognitiveDecision,
+    detectedTopics,
+    importanceLevel,
+  });
 
   return {
     messageClass,
+    cognitiveDecision,
     detectedTopics,
     importanceLevel,
   };

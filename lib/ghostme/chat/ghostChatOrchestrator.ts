@@ -25,7 +25,7 @@ export async function runGhostChatFlow({
   messages: any[];
   userId?: string;
 }): Promise<GhostChatFlowResult> {
-  const { messageClass, detectedTopics, importanceLevel } =
+  const { messageClass, cognitiveDecision, detectedTopics, importanceLevel } =
     await analyzeChatMessage({ message });
 
   if (userId) {
@@ -33,7 +33,12 @@ export async function runGhostChatFlow({
     await resolveNamedRelationship({ userId, message });
   }
 
-  const chatContext = await buildChatContext({ userId, detectedTopics, message });
+  const chatContext = await buildChatContext({
+    userId,
+    detectedTopics,
+    message,
+    cognitiveDecision,
+  });
   const {
     profileContext,
     memoryContext,
@@ -59,6 +64,7 @@ export async function runGhostChatFlow({
     relationshipContext,
     placesContext,
     deepRecallRequested,
+    cognitiveDecisionContext,
   } = chatContext;
   const serviceContext = await resolveChatExternalService({
     message,
@@ -69,6 +75,7 @@ export async function runGhostChatFlow({
     userId,
     message,
     userLocation,
+    cognitiveDecision,
   });
   if (calendarCreatedText) {
     return {
@@ -102,6 +109,7 @@ export async function runGhostChatFlow({
     relationshipContext,
     placesContext,
     deepRecallRequested,
+    cognitiveDecisionContext,
   });
 
   // Streaming della risposta
@@ -155,6 +163,7 @@ export async function runGhostChatFlow({
           importanceLevel,
           loadedLifeTopics,
           shouldRunHeavyEngines: messageClass.shouldRunHeavyEngines,
+          cognitiveDecision,
         }
       : null,
   };

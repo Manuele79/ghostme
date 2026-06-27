@@ -1,5 +1,6 @@
 import { parseCalendarIntent } from "@/lib/ghostme/calendar/calendarIntent";
 import { createCalendarEvent } from "@/lib/ghostme/calendar/calendarService";
+import type { CognitiveDecision } from "@/lib/ghostme/chat/chatTypes";
 
 const GENERIC_CALENDAR_TITLES = new Set(["appuntamento", "promemoria", "nota"]);
 
@@ -43,12 +44,15 @@ export async function handleChatCalendarFlow({
   userId,
   message,
   userLocation,
+  cognitiveDecision,
 }: {
   userId?: string;
   message: string;
   userLocation: string;
+  cognitiveDecision?: CognitiveDecision;
 }) {
   let calendarCreatedText = "";
+  void cognitiveDecision;
   if (userId) {
     try {
       const calendarIntent = await parseCalendarIntent({

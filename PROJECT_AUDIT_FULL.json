@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-27T01:14:13.147Z",
+  "generatedAt": "2026-06-27T01:45:09.419Z",
   "folders": {
     ".": [
       ".dependency-cruiser.js",
@@ -2515,7 +2515,8 @@
       "folder": "lib/ghostme/chat",
       "imports": [
         "lib/ghostme/calendar/calendarIntent.ts",
-        "lib/ghostme/calendar/calendarService.ts"
+        "lib/ghostme/calendar/calendarService.ts",
+        "lib/ghostme/chat/chatTypes.ts"
       ],
       "importedBy": [
         "lib/ghostme/chat/ghostChatOrchestrator.ts"
@@ -2542,7 +2543,7 @@
         "createCalendarEvent",
         "log"
       ],
-      "lines": 101
+      "lines": 105
     },
     "lib/ghostme/chat/chatContextBuilder.ts": {
       "folder": "lib/ghostme/chat",
@@ -2589,13 +2590,13 @@
         "buildChatContext",
         "buildGhostBrainSnapshot",
         "isDeepRecallRequest",
+        "trimBlock",
         "buildContextualMemory",
         "isFreshLocationState",
-        "trimBlock",
         "log",
         "buildBehaviorPrompt"
       ],
-      "lines": 424
+      "lines": 450
     },
     "lib/ghostme/chat/chatExternalServices.ts": {
       "folder": "lib/ghostme/chat",
@@ -2649,12 +2650,14 @@
         "slice",
         "analyzeChatMessage",
         "classifyGhostMessage",
+        "buildBaseCognitiveDecision",
         "detectTopicsFromMessage",
         "extractEntitiesWithAI",
         "removeGenericRelationshipTopics",
-        "detectImportanceLevel"
+        "detectImportanceLevel",
+        "refineCognitiveDecision"
       ],
-      "lines": 58
+      "lines": 69
     },
     "lib/ghostme/chat/chatPostProcessing.ts": {
       "folder": "lib/ghostme/chat",
@@ -2737,6 +2740,7 @@
         "detectEmotionalTone",
         "shouldSaveActiveMemory",
         "detectMemoryCategory",
+        "has",
         "push",
         "detectAndSaveContradictions",
         "updateMentalState",
@@ -2753,7 +2757,7 @@
         "syncPeopleGraphFromTopics",
         "syncPeopleGraphLinks"
       ],
-      "lines": 517
+      "lines": 531
     },
     "lib/ghostme/chat/chatPromptBuilder.ts": {
       "folder": "lib/ghostme/chat",
@@ -2775,7 +2779,7 @@
         "stringify",
         "recente"
       ],
-      "lines": 257
+      "lines": 265
     },
     "lib/ghostme/chat/chatRecallPolicy.ts": {
       "folder": "lib/ghostme/chat",
@@ -2827,16 +2831,18 @@
       "folder": "lib/ghostme/chat",
       "imports": [],
       "importedBy": [
+        "lib/ghostme/chat/chatCalendarFlow.ts",
         "lib/ghostme/chat/chatContextBuilder.ts",
         "lib/ghostme/chat/chatMessageAnalyzer.ts",
         "lib/ghostme/chat/chatPostProcessing.ts",
-        "lib/ghostme/chat/ghostChatOrchestrator.ts"
+        "lib/ghostme/chat/ghostChatOrchestrator.ts",
+        "lib/ghostme/core/messageClassifier.ts"
       ],
       "apiCalls": [],
       "tables": {},
       "exports": [],
       "calls": [],
-      "lines": 41
+      "lines": 98
     },
     "lib/ghostme/chat/ghostChatOrchestrator.ts": {
       "folder": "lib/ghostme/chat",
@@ -2884,7 +2890,7 @@
         "encode",
         "close"
       ],
-      "lines": 162
+      "lines": 171
     },
     "lib/ghostme/context/contextBuilder.ts": {
       "folder": "lib/ghostme/context",
@@ -3481,23 +3487,35 @@
     },
     "lib/ghostme/core/messageClassifier.ts": {
       "folder": "lib/ghostme/core",
-      "imports": [],
+      "imports": [
+        "lib/ghostme/chat/chatTypes.ts"
+      ],
       "importedBy": [
         "lib/ghostme/chat/chatMessageAnalyzer.ts"
       ],
       "apiCalls": [],
       "tables": {},
       "exports": [
-        "classifyGhostMessage"
+        "classifyGhostMessage",
+        "buildBaseCognitiveDecision",
+        "refineCognitiveDecision"
       ],
       "calls": [
+        "includesAny",
+        "some",
+        "includes",
+        "uniqueActions",
+        "Set",
         "classifyGhostMessage",
         "trim",
         "toLowerCase",
-        "includes",
-        "some"
+        "buildBaseCognitiveDecision",
+        "test",
+        "push",
+        "refineCognitiveDecision",
+        "max"
       ],
-      "lines": 61
+      "lines": 301
     },
     "lib/ghostme/curiosity/curiosityEngine.ts": {
       "folder": "lib/ghostme/curiosity",
@@ -8752,7 +8770,8 @@
     ],
     "lib/ghostme/chat/chatCalendarFlow.ts": [
       "lib/ghostme/calendar/calendarIntent.ts",
-      "lib/ghostme/calendar/calendarService.ts"
+      "lib/ghostme/calendar/calendarService.ts",
+      "lib/ghostme/chat/chatTypes.ts"
     ],
     "lib/ghostme/chat/chatContextBuilder.ts": [
       "lib/ghostme/behavior/behaviorRulesEngine.ts",
@@ -8861,7 +8880,9 @@
       "openai",
       "lib/supabaseAdmin.ts"
     ],
-    "lib/ghostme/core/messageClassifier.ts": [],
+    "lib/ghostme/core/messageClassifier.ts": [
+      "lib/ghostme/chat/chatTypes.ts"
+    ],
     "lib/ghostme/curiosity/curiosityEngine.ts": [
       "openai",
       "lib/supabaseAdmin.ts",
@@ -9715,6 +9736,14 @@
     "lib/ghostme/calendar/calendarIntent.ts": [
       "lib/ghostme/chat/chatCalendarFlow.ts"
     ],
+    "lib/ghostme/chat/chatTypes.ts": [
+      "lib/ghostme/chat/chatCalendarFlow.ts",
+      "lib/ghostme/chat/chatContextBuilder.ts",
+      "lib/ghostme/chat/chatMessageAnalyzer.ts",
+      "lib/ghostme/chat/chatPostProcessing.ts",
+      "lib/ghostme/chat/ghostChatOrchestrator.ts",
+      "lib/ghostme/core/messageClassifier.ts"
+    ],
     "lib/ghostme/behavior/behaviorRulesEngine.ts": [
       "lib/ghostme/chat/chatContextBuilder.ts",
       "lib/ghostme/chat/chatPostProcessing.ts",
@@ -9726,12 +9755,6 @@
     ],
     "lib/ghostme/chat/chatPromptBuilder.ts": [
       "lib/ghostme/chat/chatContextBuilder.ts",
-      "lib/ghostme/chat/ghostChatOrchestrator.ts"
-    ],
-    "lib/ghostme/chat/chatTypes.ts": [
-      "lib/ghostme/chat/chatContextBuilder.ts",
-      "lib/ghostme/chat/chatMessageAnalyzer.ts",
-      "lib/ghostme/chat/chatPostProcessing.ts",
       "lib/ghostme/chat/ghostChatOrchestrator.ts"
     ],
     "lib/ghostme/context/temporalPriority.ts": [
@@ -10930,7 +10953,9 @@
       "generateDailyConversationSummary"
     ],
     "lib/ghostme/core/messageClassifier.ts": [
-      "classifyGhostMessage"
+      "classifyGhostMessage",
+      "buildBaseCognitiveDecision",
+      "refineCognitiveDecision"
     ],
     "lib/ghostme/curiosity/curiosityEngine.ts": [
       "generateCuriosityMessage"
@@ -11501,6 +11526,7 @@
         "lib/ghostme/auth/serverAuth.ts",
         "lib/ghostme/chat/chatRecallPolicy.ts",
         "lib/ghostme/chat/chatResponseSanitizer.ts",
+        "lib/ghostme/core/messageClassifier.ts",
         "lib/ghostme/entityExtractor.ts",
         "lib/ghostme/home/houseWorkerFlow.ts",
         "lib/ghostme/homeAssistant/homeEventSignificance.ts",
@@ -12757,6 +12783,7 @@
         "lib/ghostme/context/decisionSnapshot.ts",
         "lib/ghostme/context/reasoningService.ts",
         "lib/ghostme/context/temporalPriority.ts",
+        "lib/ghostme/core/messageClassifier.ts",
         "lib/ghostme/curiosity/curiosityEngine.ts",
         "lib/ghostme/curiosity/curiositySnapshot.ts",
         "lib/ghostme/entityExtractor.ts",
@@ -12797,6 +12824,7 @@
         "lib/ghostme/agenda/reminderEngine.ts",
         "lib/ghostme/calendar/calendarService.ts",
         "lib/ghostme/chat/chatCalendarFlow.ts",
+        "lib/ghostme/chat/chatPostProcessing.ts",
         "lib/ghostme/context/decisionSnapshot.ts",
         "lib/ghostme/context/reasoningService.ts",
         "lib/ghostme/context/temporalPriority.ts",
@@ -13891,6 +13919,7 @@
         "lib/ghostme/context/decisionSnapshot.ts",
         "lib/ghostme/context/reasoningService.ts",
         "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/core/messageClassifier.ts",
         "lib/ghostme/curiosity/curiositySnapshot.ts",
         "lib/ghostme/home/homeComfortRiskSnapshot.ts",
         "lib/ghostme/home/houseRouteSnapshot.ts",
@@ -15695,6 +15724,7 @@
       "calledBy": [
         "lib/ghostme/actionLayer.ts",
         "lib/ghostme/behavior/behaviorRulesEngine.ts",
+        "lib/ghostme/core/messageClassifier.ts",
         "lib/ghostme/curiosity/curiositySnapshot.ts",
         "lib/ghostme/dynamicSelfProfile.ts",
         "lib/ghostme/goalsDesires.ts",
@@ -16309,6 +16339,16 @@
         "lib/ghostme/chat/chatRecallPolicy.ts"
       ]
     },
+    "trimBlock": {
+      "exportedBy": [
+        "lib/ghostme/chat/chatPromptBuilder.ts"
+      ],
+      "calledBy": [
+        "lib/ghostme/chat/chatContextBuilder.ts",
+        "lib/ghostme/chat/chatPromptBuilder.ts",
+        "lib/ghostme/retrieval.ts"
+      ]
+    },
     "buildContextualMemory": {
       "exportedBy": [
         "lib/ghostme/retrieval.ts"
@@ -16325,16 +16365,6 @@
       "calledBy": [
         "lib/ghostme/chat/chatContextBuilder.ts",
         "lib/ghostme/location/locationStateFreshness.ts"
-      ]
-    },
-    "trimBlock": {
-      "exportedBy": [
-        "lib/ghostme/chat/chatPromptBuilder.ts"
-      ],
-      "calledBy": [
-        "lib/ghostme/chat/chatContextBuilder.ts",
-        "lib/ghostme/chat/chatPromptBuilder.ts",
-        "lib/ghostme/retrieval.ts"
       ]
     },
     "resolveChatExternalService": {
@@ -16399,6 +16429,15 @@
         "lib/ghostme/core/messageClassifier.ts"
       ]
     },
+    "buildBaseCognitiveDecision": {
+      "exportedBy": [
+        "lib/ghostme/core/messageClassifier.ts"
+      ],
+      "calledBy": [
+        "lib/ghostme/chat/chatMessageAnalyzer.ts",
+        "lib/ghostme/core/messageClassifier.ts"
+      ]
+    },
     "detectTopicsFromMessage": {
       "exportedBy": [
         "lib/ghostme/topicDetector.ts"
@@ -16432,6 +16471,15 @@
       "calledBy": [
         "lib/ghostme/chat/chatMessageAnalyzer.ts",
         "lib/ghostme/topicDetector.ts"
+      ]
+    },
+    "refineCognitiveDecision": {
+      "exportedBy": [
+        "lib/ghostme/core/messageClassifier.ts"
+      ],
+      "calledBy": [
+        "lib/ghostme/chat/chatMessageAnalyzer.ts",
+        "lib/ghostme/core/messageClassifier.ts"
       ]
     },
     "saveActiveMemory": {
@@ -17297,6 +17345,19 @@
       "exportedBy": [],
       "calledBy": [
         "lib/ghostme/conversationSummary.ts"
+      ]
+    },
+    "includesAny": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/core/messageClassifier.ts",
+        "lib/ghostme/retrieval.ts"
+      ]
+    },
+    "uniqueActions": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/core/messageClassifier.ts"
       ]
     },
     "generateCuriosityMessage": {
@@ -19463,12 +19524,6 @@
       "calledBy": [
         "lib/ghostme/retrieval.ts",
         "scripts/project-audit.mjs"
-      ]
-    },
-    "includesAny": {
-      "exportedBy": [],
-      "calledBy": [
-        "lib/ghostme/retrieval.ts"
       ]
     },
     "logRetrievalError": {

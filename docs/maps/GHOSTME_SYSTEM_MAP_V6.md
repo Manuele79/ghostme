@@ -1,6 +1,6 @@
 # GHOSTME SYSTEM MAP V6
 
-Generato automaticamente: 2026-06-27T01:14:30.841Z
+Generato automaticamente: 2026-06-27T01:45:28.840Z
 
 ## Inventario
 
@@ -1614,6 +1614,7 @@ Chi lo chiama:
 Chi chiama:
 - lib/ghostme/calendar/calendarIntent.ts
 - lib/ghostme/calendar/calendarService.ts
+- lib/ghostme/chat/chatTypes.ts
 
 Tabelle usate:
 - nessuno
@@ -1828,10 +1829,12 @@ Stato: **ATTIVO**
 Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/chat. Modulo: chatTypes.
 
 Chi lo chiama:
+- lib/ghostme/chat/chatCalendarFlow.ts
 - lib/ghostme/chat/chatContextBuilder.ts
 - lib/ghostme/chat/chatMessageAnalyzer.ts
 - lib/ghostme/chat/chatPostProcessing.ts
 - lib/ghostme/chat/ghostChatOrchestrator.ts
+- lib/ghostme/core/messageClassifier.ts
 
 Chi chiama:
 - nessuno
@@ -2169,7 +2172,7 @@ Chi lo chiama:
 - lib/ghostme/chat/chatMessageAnalyzer.ts
 
 Chi chiama:
-- nessuno
+- lib/ghostme/chat/chatTypes.ts
 
 Tabelle usate:
 - nessuno

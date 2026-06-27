@@ -5,7 +5,10 @@ import {
   type GhostBrainSnapshot,
 } from "@/lib/ghostme/context/reasoningService";
 import { trimBlock } from "@/lib/ghostme/chat/chatPromptBuilder";
-import type { DetectedTopicLike } from "@/lib/ghostme/chat/chatTypes";
+import type {
+  CognitiveDecision,
+  DetectedTopicLike,
+} from "@/lib/ghostme/chat/chatTypes";
 import { isFreshLocationState } from "@/lib/ghostme/location/locationStateFreshness";
 import { temporalMemoryLabel } from "@/lib/ghostme/context/temporalPriority";
 import { isDeepRecallRequest } from "@/lib/ghostme/chat/chatRecallPolicy";
@@ -35,6 +38,7 @@ export type ChatContext = {
   relationshipContext: string;
   placesContext: string;
   deepRecallRequested: boolean;
+  cognitiveDecisionContext: string;
 };
 
 export function createEmptyChatContext(): ChatContext {
@@ -63,6 +67,7 @@ export function createEmptyChatContext(): ChatContext {
     relationshipContext: "",
     placesContext: "",
     deepRecallRequested: false,
+    cognitiveDecisionContext: "",
   };
 }
 
@@ -285,18 +290,39 @@ export async function buildChatContext({
   userId,
   detectedTopics,
   message = "",
+  cognitiveDecision,
 }: {
   userId?: string;
   detectedTopics: DetectedTopicLike[];
   message?: string;
+  cognitiveDecision?: CognitiveDecision;
 }): Promise<ChatContext> {
   const context = createEmptyChatContext();
 
   if (!userId) return context;
 
   const snapshot = await buildGhostBrainSnapshot(userId);
-  const deepRecall = isDeepRecallRequest(message, detectedTopics);
+  const deepRecall =
+    cognitiveDecision?.memoryDepth === "deep_recall" ||
+    isDeepRecallRequest(message, detectedTopics);
   context.deepRecallRequested = deepRecall;
+  if (cognitiveDecision) {
+    context.cognitiveDecisionContext = trimBlock(
+      [
+        `Tipo messaggio: ${cognitiveDecision.messageType}`,
+        `Destinatario: ${cognitiveDecision.addressee}`,
+        `Azioni richieste: ${cognitiveDecision.requestedActions.join(", ")}`,
+        `Persistenza: ${cognitiveDecision.persistence}`,
+        `Priorita: ${cognitiveDecision.priority}`,
+        `Approfondimento: ${cognitiveDecision.followUpNeed}`,
+        `Profondita memoria: ${cognitiveDecision.memoryDepth}`,
+        `Tono: ${cognitiveDecision.tone}`,
+        `Risposta richiesta: ${cognitiveDecision.shouldRespond ? "si" : "no"}`,
+        `Motivi: ${cognitiveDecision.reasons.join("; ") || "nessuno"}`,
+      ].join("\n"),
+      900
+    );
+  }
   const userProfile = snapshot.profile;
   context.profileContext = buildProfileContext(userProfile);
   context.userLocation = userProfile?.location || "";

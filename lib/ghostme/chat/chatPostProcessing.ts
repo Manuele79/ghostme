@@ -448,20 +448,22 @@ export async function runChatPostProcessing({
   importanceLevel,
   loadedLifeTopics,
   shouldRunHeavyEngines,
+  cognitiveDecision,
 }: ChatPostProcessingPayload) {
   try {
     const possibleEpisode = isPossibleEpisode(message);
     const emotionalTone = detectEmotionalTone(message);
     const shouldSaveMemoryFlag = shouldSaveActiveMemory(message);
     const memoryCategory = detectMemoryCategory(message);
+    const requestedActions = new Set(cognitiveDecision.requestedActions);
 
     const jobs: Promise<any>[] = [];
 
-    if (!shouldRunHeavyEngines) {
+    if (!shouldRunHeavyEngines && !cognitiveDecision.shouldRunHeavyEngines) {
         return;
       }
 
-    if (shouldSaveMemoryFlag)
+    if (shouldSaveMemoryFlag || requestedActions.has("memory"))
       jobs.push(saveActiveMemory({ userId, message, memoryCategory }));
 
     if (detectedTopics.length > 0)
@@ -470,37 +472,49 @@ export async function runChatPostProcessing({
     if (detectedTopics.length >= 2)
       jobs.push(saveTopicLinks({ userId, topics: detectedTopics }));
 
-    if (possibleEpisode)
+    if (possibleEpisode || requestedActions.has("timeline"))
       jobs.push(saveEpisodicMemory({ userId, message, emotionalTone, detectedTopics, loadedLifeTopics }));
 
     jobs.push(classifyClarificationIfNeeded({ userId, message, detectedTopics }));
     jobs.push(detectAndSaveContradictions({ userId, message }));
+
     jobs.push(updateMentalState({ userId, message }));
+
     jobs.push(detectAndSaveTimelineEvent({ userId, message, detectedTopics }));
+
     jobs.push(updateDynamicSelfProfile({ userId, message }));
-    jobs.push(
-      (async () => {
-        await detectAndCompleteActionIntent({ userId, message });
 
-        const savedGoals = await detectAndSaveGoalsDesires({
-          userId,
-          message,
-          detectedTopics,
-        });
-        const goal = Array.isArray(savedGoals) ? savedGoals[0] : null;
+    if (
+      cognitiveDecision.shouldRunHeavyEngines ||
+      requestedActions.has("goals") ||
+      requestedActions.has("project") ||
+      requestedActions.has("calendar") ||
+      requestedActions.has("memory")
+    ) {
+      jobs.push(
+        (async () => {
+          await detectAndCompleteActionIntent({ userId, message });
 
-        if (goal?.id) {
-          await linkOpenOrphanActionsToGoal({ userId, goal });
-        }
+          const savedGoals = await detectAndSaveGoalsDesires({
+            userId,
+            message,
+            detectedTopics,
+          });
+          const goal = Array.isArray(savedGoals) ? savedGoals[0] : null;
 
-        await detectAndSaveActionIntent({
-          userId,
-          message,
-          detectedTopics,
-          preferredGoalId: goal?.id || null,
-        });
-      })()
-    );
+          if (goal?.id) {
+            await linkOpenOrphanActionsToGoal({ userId, goal });
+          }
+
+          await detectAndSaveActionIntent({
+            userId,
+            message,
+            detectedTopics,
+            preferredGoalId: goal?.id || null,
+          });
+        })()
+      );
+    }
 
     jobs.push(detectAndSaveBehaviorRule({ userId, message }));
 

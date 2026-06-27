@@ -1,6 +1,6 @@
 # COGNITIVE ROUTING MAP
 
-Generato automaticamente: 2026-06-27T01:14:30.848Z
+Generato automaticamente: 2026-06-27T01:45:28.847Z
 
 ## Tipi di informazione ricevuta
 
@@ -93,22 +93,22 @@ Output: Request verso /api/chat e stream/risposta assistant.
 File coinvolti:
 - lib/ghostme/core/messageClassifier.ts
 
-Responsabilita: Classifica intenzione generale del messaggio.
+Responsabilita: Classifica intenzione generale e costruisce la CognitiveDecision base.
 
 Input: Messaggio utente.
 
-Output: Classe di messaggio usata dall'analyzer.
+Output: Classe di messaggio e decisione cognitiva iniziale.
 
 ### chatMessageAnalyzer
 
 File coinvolti:
 - lib/ghostme/chat/chatMessageAnalyzer.ts
 
-Responsabilita: Combina classificazione, topic, entity e relazioni.
+Responsabilita: Combina classificazione, topic, entity e relazioni, poi raffina la CognitiveDecision.
 
 Input: Messaggio utente e contesto base.
 
-Output: Analisi strutturata per orchestrator e post-processing.
+Output: Analisi strutturata e CognitiveDecision per orchestrator e post-processing.
 
 ### contextBuilder
 
@@ -119,9 +119,9 @@ File coinvolti:
 
 Responsabilita: Costruisce contesto runtime, snapshot e segnali rilevanti.
 
-Input: userId, analisi messaggio, memoria, calendario, casa, luoghi.
+Input: userId, analisi messaggio, CognitiveDecision, memoria, calendario, casa, luoghi.
 
-Output: Chat context e GhostBrainSnapshot.
+Output: Chat context, GhostBrainSnapshot e cognitiveDecisionContext.
 
 ### chatPromptBuilder
 
@@ -130,7 +130,7 @@ File coinvolti:
 
 Responsabilita: Trasforma il contesto in prompt di sistema.
 
-Input: Chat context, profilo, memoria, regole e servizi.
+Input: Chat context, CognitiveDecision, profilo, memoria, regole e servizi.
 
 Output: Prompt finale per OpenAI.
 
@@ -166,7 +166,7 @@ File coinvolti:
 
 Responsabilita: Recupera e aggiorna memorie attive, episodi, summary e topic.
 
-Input: Conversazione, analisi topic, userId.
+Input: Conversazione, analisi topic, userId e CognitiveDecision.
 
 Output: memories_active, episodic_memories, conversation_summaries.
 

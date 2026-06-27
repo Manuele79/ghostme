@@ -62,16 +62,16 @@ Mappa statica generata dal codice locale.
 | lib/ghostme/butler/butlerEngine.ts | active | 1 | 1 | 1 | 0 | 0 | 67 |
 | lib/ghostme/calendar/calendarIntent.ts | active | 1 | 0 | 2 | 0 | 0 | 117 |
 | lib/ghostme/calendar/calendarService.ts | active | 6 | 4 | 9 | 2 | 3 | 370 |
-| lib/ghostme/chat/chatCalendarFlow.ts | active | 1 | 2 | 1 | 0 | 0 | 101 |
-| lib/ghostme/chat/chatContextBuilder.ts | active | 1 | 8 | 3 | 0 | 0 | 424 |
+| lib/ghostme/chat/chatCalendarFlow.ts | active | 1 | 3 | 1 | 0 | 0 | 105 |
+| lib/ghostme/chat/chatContextBuilder.ts | active | 1 | 8 | 3 | 0 | 0 | 450 |
 | lib/ghostme/chat/chatExternalServices.ts | active | 1 | 3 | 1 | 0 | 0 | 85 |
-| lib/ghostme/chat/chatMessageAnalyzer.ts | active | 1 | 5 | 1 | 0 | 0 | 58 |
-| lib/ghostme/chat/chatPostProcessing.ts | god_file_candidate | 1 | 14 | 1 | 3 | 5 | 517 |
-| lib/ghostme/chat/chatPromptBuilder.ts | active | 2 | 0 | 2 | 0 | 0 | 257 |
+| lib/ghostme/chat/chatMessageAnalyzer.ts | active | 1 | 5 | 1 | 0 | 0 | 69 |
+| lib/ghostme/chat/chatPostProcessing.ts | god_file_candidate | 1 | 14 | 1 | 3 | 5 | 531 |
+| lib/ghostme/chat/chatPromptBuilder.ts | active | 2 | 0 | 2 | 0 | 0 | 265 |
 | lib/ghostme/chat/chatRecallPolicy.ts | active | 1 | 0 | 2 | 0 | 0 | 58 |
 | lib/ghostme/chat/chatResponseSanitizer.ts | active | 1 | 0 | 1 | 0 | 0 | 45 |
-| lib/ghostme/chat/chatTypes.ts | active | 4 | 0 | 6 | 0 | 0 | 41 |
-| lib/ghostme/chat/ghostChatOrchestrator.ts | active | 1 | 10 | 1 | 0 | 0 | 162 |
+| lib/ghostme/chat/chatTypes.ts | active | 6 | 0 | 14 | 0 | 0 | 98 |
+| lib/ghostme/chat/ghostChatOrchestrator.ts | active | 1 | 10 | 1 | 0 | 0 | 171 |
 | lib/ghostme/context/contextBuilder.ts | active | 4 | 6 | 2 | 1 | 0 | 296 |
 | lib/ghostme/context/contextSignals.ts | active | 3 | 1 | 4 | 0 | 0 | 396 |
 | lib/ghostme/context/decisionSnapshot.ts | god_file_candidate | 6 | 1 | 2 | 0 | 0 | 701 |
@@ -80,7 +80,7 @@ Mappa statica generata dal codice locale.
 | lib/ghostme/context/userContextGraph.ts | active | 1 | 3 | 1 | 16 | 0 | 295 |
 | lib/ghostme/contradictions.ts | active | 1 | 1 | 1 | 3 | 1 | 168 |
 | lib/ghostme/conversationSummary.ts | active | 2 | 1 | 1 | 2 | 2 | 174 |
-| lib/ghostme/core/messageClassifier.ts | active | 1 | 0 | 2 | 0 | 0 | 61 |
+| lib/ghostme/core/messageClassifier.ts | active | 1 | 1 | 4 | 0 | 0 | 301 |
 | lib/ghostme/curiosity/curiosityEngine.ts | orphan_db_user | 0 | 2 | 1 | 7 | 0 | 230 |
 | lib/ghostme/curiosity/curiositySnapshot.ts | god_file_candidate | 2 | 11 | 5 | 0 | 0 | 775 |
 | lib/ghostme/dynamicSelfProfile.ts | active | 1 | 1 | 2 | 1 | 2 | 142 |
@@ -186,7 +186,7 @@ Mappa statica generata dal codice locale.
 
 ## God file candidati
 
-- **lib/ghostme/chat/chatPostProcessing.ts** — 517 righe
+- **lib/ghostme/chat/chatPostProcessing.ts** — 531 righe
 - **lib/ghostme/context/decisionSnapshot.ts** — 701 righe
 - **lib/ghostme/context/reasoningService.ts** — 879 righe
 - **lib/ghostme/curiosity/curiositySnapshot.ts** — 775 righe
@@ -1478,13 +1478,13 @@ Stato: **active**
 
 Chiamato da: lib/ghostme/chat/ghostChatOrchestrator.ts
 
-Importa: lib/ghostme/calendar/calendarIntent.ts, lib/ghostme/calendar/calendarService.ts
+Importa: lib/ghostme/calendar/calendarIntent.ts, lib/ghostme/calendar/calendarService.ts, lib/ghostme/chat/chatTypes.ts
 
 Export: handleChatCalendarFlow
 
 Numero chiamanti: 1
 
-Numero dipendenze: 2
+Numero dipendenze: 3
 
 DB read: -
 
@@ -1652,13 +1652,13 @@ DB delete: -
 
 Stato: **active**
 
-Chiamato da: lib/ghostme/chat/chatContextBuilder.ts, lib/ghostme/chat/chatMessageAnalyzer.ts, lib/ghostme/chat/chatPostProcessing.ts, lib/ghostme/chat/ghostChatOrchestrator.ts
+Chiamato da: lib/ghostme/chat/chatCalendarFlow.ts, lib/ghostme/chat/chatContextBuilder.ts, lib/ghostme/chat/chatMessageAnalyzer.ts, lib/ghostme/chat/chatPostProcessing.ts, lib/ghostme/chat/ghostChatOrchestrator.ts, lib/ghostme/core/messageClassifier.ts
 
 Importa: -
 
-Export: AnalyzeChatMessageResult, ChatPostProcessingPayload, DetectedTopicLike, GhostChatFlowResult, ImmediateTextResult, StreamResult
+Export: AnalyzeChatMessageResult, ChatPostProcessingPayload, CognitiveAddressee, CognitiveDecision, CognitiveFollowUpNeed, CognitiveMemoryDepth, CognitiveMessageType, CognitivePersistence, CognitiveRequestedAction, CognitiveTone, DetectedTopicLike, GhostChatFlowResult, ImmediateTextResult, StreamResult
 
-Numero chiamanti: 4
+Numero chiamanti: 6
 
 Numero dipendenze: 0
 
@@ -1874,13 +1874,13 @@ Stato: **active**
 
 Chiamato da: lib/ghostme/chat/chatMessageAnalyzer.ts
 
-Importa: -
+Importa: lib/ghostme/chat/chatTypes.ts
 
-Export: GhostMessageClass, classifyGhostMessage
+Export: GhostMessageClass, buildBaseCognitiveDecision, classifyGhostMessage, refineCognitiveDecision
 
 Numero chiamanti: 1
 
-Numero dipendenze: 0
+Numero dipendenze: 1
 
 DB read: -
 

@@ -251,16 +251,16 @@ const routingSteps = [
   {
     name: "messageClassifier",
     files: ["lib/ghostme/core/messageClassifier.ts"],
-    responsibility: "Classifica intenzione generale del messaggio.",
+    responsibility: "Classifica intenzione generale e costruisce la CognitiveDecision base.",
     input: "Messaggio utente.",
-    output: "Classe di messaggio usata dall'analyzer.",
+    output: "Classe di messaggio e decisione cognitiva iniziale.",
   },
   {
     name: "chatMessageAnalyzer",
     files: ["lib/ghostme/chat/chatMessageAnalyzer.ts"],
-    responsibility: "Combina classificazione, topic, entity e relazioni.",
+    responsibility: "Combina classificazione, topic, entity e relazioni, poi raffina la CognitiveDecision.",
     input: "Messaggio utente e contesto base.",
-    output: "Analisi strutturata per orchestrator e post-processing.",
+    output: "Analisi strutturata e CognitiveDecision per orchestrator e post-processing.",
   },
   {
     name: "contextBuilder",
@@ -270,14 +270,14 @@ const routingSteps = [
       "lib/ghostme/context/contextBuilder.ts",
     ],
     responsibility: "Costruisce contesto runtime, snapshot e segnali rilevanti.",
-    input: "userId, analisi messaggio, memoria, calendario, casa, luoghi.",
-    output: "Chat context e GhostBrainSnapshot.",
+    input: "userId, analisi messaggio, CognitiveDecision, memoria, calendario, casa, luoghi.",
+    output: "Chat context, GhostBrainSnapshot e cognitiveDecisionContext.",
   },
   {
     name: "chatPromptBuilder",
     files: ["lib/ghostme/chat/chatPromptBuilder.ts"],
     responsibility: "Trasforma il contesto in prompt di sistema.",
-    input: "Chat context, profilo, memoria, regole e servizi.",
+    input: "Chat context, CognitiveDecision, profilo, memoria, regole e servizi.",
     output: "Prompt finale per OpenAI.",
   },
   {
@@ -302,7 +302,7 @@ const routingSteps = [
       "lib/ghostme/memory/memorySnapshot.ts",
     ],
     responsibility: "Recupera e aggiorna memorie attive, episodi, summary e topic.",
-    input: "Conversazione, analisi topic, userId.",
+    input: "Conversazione, analisi topic, userId e CognitiveDecision.",
     output: "memories_active, episodic_memories, conversation_summaries.",
   },
   {

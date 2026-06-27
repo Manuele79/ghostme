@@ -1347,7 +1347,8 @@
     "file": "lib/ghostme/chat/chatCalendarFlow.ts",
     "imports": [
       "lib/ghostme/calendar/calendarIntent.ts",
-      "lib/ghostme/calendar/calendarService.ts"
+      "lib/ghostme/calendar/calendarService.ts",
+      "lib/ghostme/chat/chatTypes.ts"
     ],
     "exports": [
       "handleChatCalendarFlow"
@@ -1359,10 +1360,10 @@
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 101,
+    "lines": 105,
     "status": "active",
     "callerCount": 1,
-    "dependencyCount": 2,
+    "dependencyCount": 3,
     "exportCount": 1
   },
   "lib/ghostme/chat/chatContextBuilder.ts": {
@@ -1389,7 +1390,7 @@
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 424,
+    "lines": 450,
     "status": "active",
     "callerCount": 1,
     "dependencyCount": 8,
@@ -1437,7 +1438,7 @@
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 58,
+    "lines": 69,
     "status": "active",
     "callerCount": 1,
     "dependencyCount": 5,
@@ -1482,7 +1483,7 @@
       "memories_active"
     ],
     "tablesDeleted": [],
-    "lines": 517,
+    "lines": 531,
     "status": "god_file_candidate",
     "callerCount": 1,
     "dependencyCount": 14,
@@ -1503,7 +1504,7 @@
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 257,
+    "lines": 265,
     "status": "active",
     "callerCount": 2,
     "dependencyCount": 0,
@@ -1554,26 +1555,36 @@
     "exports": [
       "AnalyzeChatMessageResult",
       "ChatPostProcessingPayload",
+      "CognitiveAddressee",
+      "CognitiveDecision",
+      "CognitiveFollowUpNeed",
+      "CognitiveMemoryDepth",
+      "CognitiveMessageType",
+      "CognitivePersistence",
+      "CognitiveRequestedAction",
+      "CognitiveTone",
       "DetectedTopicLike",
       "GhostChatFlowResult",
       "ImmediateTextResult",
       "StreamResult"
     ],
     "importedBy": [
+      "lib/ghostme/chat/chatCalendarFlow.ts",
       "lib/ghostme/chat/chatContextBuilder.ts",
       "lib/ghostme/chat/chatMessageAnalyzer.ts",
       "lib/ghostme/chat/chatPostProcessing.ts",
-      "lib/ghostme/chat/ghostChatOrchestrator.ts"
+      "lib/ghostme/chat/ghostChatOrchestrator.ts",
+      "lib/ghostme/core/messageClassifier.ts"
     ],
     "tablesRead": [],
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 41,
+    "lines": 98,
     "status": "active",
-    "callerCount": 4,
+    "callerCount": 6,
     "dependencyCount": 0,
-    "exportCount": 6
+    "exportCount": 14
   },
   "lib/ghostme/chat/ghostChatOrchestrator.ts": {
     "file": "lib/ghostme/chat/ghostChatOrchestrator.ts",
@@ -1599,7 +1610,7 @@
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 162,
+    "lines": 171,
     "status": "active",
     "callerCount": 1,
     "dependencyCount": 10,
@@ -1877,10 +1888,14 @@
   },
   "lib/ghostme/core/messageClassifier.ts": {
     "file": "lib/ghostme/core/messageClassifier.ts",
-    "imports": [],
+    "imports": [
+      "lib/ghostme/chat/chatTypes.ts"
+    ],
     "exports": [
       "GhostMessageClass",
-      "classifyGhostMessage"
+      "buildBaseCognitiveDecision",
+      "classifyGhostMessage",
+      "refineCognitiveDecision"
     ],
     "importedBy": [
       "lib/ghostme/chat/chatMessageAnalyzer.ts"
@@ -1889,11 +1904,11 @@
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 61,
+    "lines": 301,
     "status": "active",
     "callerCount": 1,
-    "dependencyCount": 0,
-    "exportCount": 2
+    "dependencyCount": 1,
+    "exportCount": 4
   },
   "lib/ghostme/curiosity/curiosityEngine.ts": {
     "file": "lib/ghostme/curiosity/curiosityEngine.ts",

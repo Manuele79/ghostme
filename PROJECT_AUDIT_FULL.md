@@ -1,6 +1,6 @@
 # PROJECT AUDIT FULL
 
-Generato: 2026-06-27T01:14:13.147Z
+Generato: 2026-06-27T01:45:09.419Z
 
 # 1. RIASSUNTO
 
@@ -2478,11 +2478,12 @@ Righe: 370
 
 ## lib/ghostme/chat/chatCalendarFlow.ts
 
-Righe: 101
+Righe: 105
 
 ### Importa
 - lib/ghostme/calendar/calendarIntent.ts
 - lib/ghostme/calendar/calendarService.ts
+- lib/ghostme/chat/chatTypes.ts
 
 ### Importato da
 - lib/ghostme/chat/ghostChatOrchestrator.ts
@@ -2498,7 +2499,7 @@ Righe: 101
 
 ## lib/ghostme/chat/chatContextBuilder.ts
 
-Righe: 424
+Righe: 450
 
 ### Importa
 - lib/ghostme/behavior/behaviorRulesEngine.ts
@@ -2546,7 +2547,7 @@ Righe: 85
 
 ## lib/ghostme/chat/chatMessageAnalyzer.ts
 
-Righe: 58
+Righe: 69
 
 ### Importa
 - lib/ghostme/core/messageClassifier.ts
@@ -2569,7 +2570,7 @@ Righe: 58
 
 ## lib/ghostme/chat/chatPostProcessing.ts
 
-Righe: 517
+Righe: 531
 
 ### Importa
 - openai
@@ -2604,7 +2605,7 @@ Righe: 517
 
 ## lib/ghostme/chat/chatPromptBuilder.ts
 
-Righe: 257
+Righe: 265
 
 ### Importa
 - nessuno
@@ -2663,16 +2664,18 @@ Righe: 45
 
 ## lib/ghostme/chat/chatTypes.ts
 
-Righe: 41
+Righe: 98
 
 ### Importa
 - nessuno
 
 ### Importato da
+- lib/ghostme/chat/chatCalendarFlow.ts
 - lib/ghostme/chat/chatContextBuilder.ts
 - lib/ghostme/chat/chatMessageAnalyzer.ts
 - lib/ghostme/chat/chatPostProcessing.ts
 - lib/ghostme/chat/ghostChatOrchestrator.ts
+- lib/ghostme/core/messageClassifier.ts
 
 ### API chiamate
 - nessuno
@@ -2685,7 +2688,7 @@ Righe: 41
 
 ## lib/ghostme/chat/ghostChatOrchestrator.ts
 
-Righe: 162
+Righe: 171
 
 ### Importa
 - openai
@@ -2952,10 +2955,10 @@ Righe: 174
 
 ## lib/ghostme/core/messageClassifier.ts
 
-Righe: 61
+Righe: 301
 
 ### Importa
-- nessuno
+- lib/ghostme/chat/chatTypes.ts
 
 ### Importato da
 - lib/ghostme/chat/chatMessageAnalyzer.ts
@@ -2965,6 +2968,8 @@ Righe: 61
 
 ### Export
 - classifyGhostMessage
+- buildBaseCognitiveDecision
+- refineCognitiveDecision
 
 ### Tabelle
 - nessuna

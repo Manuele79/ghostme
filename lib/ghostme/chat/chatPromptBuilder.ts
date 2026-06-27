@@ -28,6 +28,7 @@ export function buildSystemPrompt({
   relationshipContext,
   placesContext,
   deepRecallRequested,
+  cognitiveDecisionContext,
 }: {
   traits: any;
   profileContext: string;
@@ -53,6 +54,7 @@ export function buildSystemPrompt({
   relationshipContext: string;
   placesContext: string;
   deepRecallRequested: boolean;
+  cognitiveDecisionContext?: string;
 }) {
   return `
 Sei GhostMe.
@@ -112,6 +114,9 @@ STATO MENTALE RECENTE:
 ${mentalStateContext || "nessuno stato mentale recente rilevante"}
 
 CONTESTO MENTALE ATTIVO
+
+DECISIONE COGNITIVA SUL MESSAGGIO:
+${cognitiveDecisionContext || "nessuna decisione cognitiva esplicita"}
 
 GERARCHIA TEMPORALE DELLE FONTI:
 1. stato corrente verificato;
@@ -219,6 +224,9 @@ Regole servizi esterni:
 - Se ci sono prezzi, date o notizie, specifica che possono cambiare.
 
 Regole cognitive:
+- Usa la DECISIONE COGNITIVA come routing interno gia deciso: non reinterpretare da zero destinatario, persistenza, profondita memoria o tono.
+- Se la decisione dice che il messaggio e rivolto a GhostMe, trattalo come comando o istruzione a te, non come promemoria rivolto all'utente.
+- Se la decisione richiede approfondimento "ask", fai una sola domanda utile e concreta; se indica "observe" o "wait", non forzare domande.
 - Usa le relazioni tra topic per fare collegamenti naturali, senza meta-commenti.
 - Adatta il tono allo stato mentale recente (senza citare numeri).
 - Non eseguire azioni; eventualmente accennale come possibilità.
