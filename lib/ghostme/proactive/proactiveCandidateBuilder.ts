@@ -233,10 +233,16 @@ function buildMomentAwareness(observations: any[], snapshot: GhostBrainSnapshot)
   };
 }
 
-async function buildContinuityCandidate(userId: string, snapshot: GhostBrainSnapshot) {
+export async function buildContinuityCandidate(userId: string, snapshot: GhostBrainSnapshot) {
   const observations = await loadRecentLocationObservations(userId);
   const moment = buildMomentAwareness(observations, snapshot);
-  if (!moment.isAtHome) return null;
+  if (!moment.isAtHome) {
+    console.log("CONTINUITY SKIP: not_at_home", {
+      userId,
+      currentPlace: snapshot.location.situation.currentPlace,
+    });
+    return null;
+  }
 
   const candidates = collectOpenLoopSources(snapshot)
     .map(({ row, source }) => {
@@ -269,7 +275,15 @@ async function buildContinuityCandidate(userId: string, snapshot: GhostBrainSnap
     });
 
   const openLoop = candidates[0];
-  if (!openLoop?.kind) return null;
+  if (!openLoop?.kind) {
+    console.log("CONTINUITY SKIP: no_recent_open_loop", {
+      userId,
+      observations: observations.length,
+      recentHomeArrival: moment.recentHomeArrival,
+      unknownBeforeHome: moment.unknownBeforeHome,
+    });
+    return null;
+  }
 
   const messageParts = [openLoop.kind.question];
   if (moment.unknownBeforeHome && openLoop.kind.placeQuestion) {
@@ -447,18 +461,25 @@ export async function buildProactiveCandidatesForUser(
 ) {
   const userId = user.user_id;
   const snapshot = prebuiltSnapshot || (await buildGhostBrainSnapshot(userId));
+  const continuityCandidate = await buildContinuityCandidate(userId, snapshot);
+  const situation = buildSituationFromSnapshot(snapshot) as any;
+  const agendaMessage = buildAgendaMessage(situation);
+
+  if (continuityCandidate) {
+    return {
+      proactiveCandidates: [continuityCandidate],
+      agendaMessage,
+    };
+  }
 
   const observationInsight = await generateObservationInsight(userId);
   const patternInsight = await generatePatternInsight(userId);
-  const continuityCandidate = await buildContinuityCandidate(userId, snapshot);
   // Curiosity cards come exclusively from the structured snapshot writer.
   const curiosityMessage: string | null = null;
 
   await applyPatternDecay(userId);
 
   const behaviorRulesContext = await buildBehaviorPrompt(userId);
-  const situation = buildSituationFromSnapshot(snapshot) as any;
-  const agendaMessage = buildAgendaMessage(situation);
   const currentContext = buildCurrentContextFromSnapshot({
     snapshot,
     behaviorRulesContext,

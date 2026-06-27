@@ -4,6 +4,28 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+function sanitizeDailyBriefing(text: string) {
+  const forbidden = [
+    "focus",
+    "entusiasmo",
+    "stress",
+    "stanchezza",
+    "condizione mentale",
+    "stato mentale",
+    "stato interno",
+  ];
+  const sentences = String(text || "")
+    .split(/(?<=[.!?])\s+/)
+    .map((sentence) => sentence.trim())
+    .filter(Boolean)
+    .filter((sentence) => {
+      const clean = sentence.toLowerCase();
+      return !forbidden.some((word) => clean.includes(word));
+    });
+
+  return sentences.join(" ").trim();
+}
+
 export async function buildDailyBriefingMessage({
   user,
   calendar,
@@ -129,8 +151,11 @@ ${JSON.stringify(houseSuggestions || [], null, 2)}
     ],
   });
 
-  const dailyMessage =
+  const rawDailyMessage =
     completion.choices[0]?.message?.content ||
+    `Buongiorno ${user.full_name || ""}. Non ho abbastanza dati per un briefing utile oggi.`;
+  const dailyMessage =
+    sanitizeDailyBriefing(rawDailyMessage) ||
     `Buongiorno ${user.full_name || ""}. Non ho abbastanza dati per un briefing utile oggi.`;
 
   return { dailyMessage };

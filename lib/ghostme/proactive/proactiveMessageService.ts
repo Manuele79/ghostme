@@ -32,6 +32,11 @@ function isMissingLogicalKeyColumn(error: any) {
   return message.toLowerCase().includes("logical_key");
 }
 
+function isMissingSourceColumn(error: any) {
+  const message = String(error?.message || error?.details || "");
+  return message.toLowerCase().includes("source");
+}
+
 export async function upsertProactiveMessage({
   userId,
   title,
@@ -39,6 +44,8 @@ export async function upsertProactiveMessage({
   category,
   priority,
   logicalKey,
+  source,
+  bypassPriorityLimit = false,
   reactivateHiddenOnChange = false,
 }: {
   userId: string;
@@ -47,6 +54,8 @@ export async function upsertProactiveMessage({
   category: string;
   priority: number;
   logicalKey?: string | null;
+  source?: string | null;
+  bypassPriorityLimit?: boolean;
   reactivateHiddenOnChange?: boolean;
 }) {
   if (!userId || !message?.trim()) return { action: "skipped" as const };
@@ -120,6 +129,10 @@ export async function upsertProactiveMessage({
       answered_at: null,
     };
 
+    if (source) {
+      updatePayload.source = source;
+    }
+
     if (stableLogicalKey && supportsLogicalKey) {
       updatePayload.logical_key = stableLogicalKey;
     }
@@ -131,6 +144,14 @@ export async function upsertProactiveMessage({
 
     if (error && isMissingLogicalKeyColumn(error) && updatePayload.logical_key) {
       delete updatePayload.logical_key;
+      await supabaseAdmin
+        .from("ghost_proactive_messages")
+        .update(updatePayload)
+        .eq("id", existing.id);
+    }
+
+    if (error && isMissingSourceColumn(error) && updatePayload.source) {
+      delete updatePayload.source;
       await supabaseAdmin
         .from("ghost_proactive_messages")
         .update(updatePayload)
@@ -150,7 +171,7 @@ export async function upsertProactiveMessage({
         : priority >= 4
           ? { minimum: 4, maximum: 6, limit: 3 }
           : null;
-  if (priorityLimit) {
+  if (priorityLimit && !bypassPriorityLimit) {
     const { count, error: priorityError } = await supabaseAdmin
       .from("ghost_proactive_messages")
       .select("id", { count: "exact", head: true })
@@ -183,6 +204,10 @@ export async function upsertProactiveMessage({
     scheduled_for: new Date().toISOString(),
   };
 
+  if (source) {
+    insertPayload.source = source;
+  }
+
   if (stableLogicalKey && supportsLogicalKey) {
     insertPayload.logical_key = stableLogicalKey;
   }
@@ -193,6 +218,11 @@ export async function upsertProactiveMessage({
 
   if (error && isMissingLogicalKeyColumn(error) && insertPayload.logical_key) {
     delete insertPayload.logical_key;
+    await supabaseAdmin.from("ghost_proactive_messages").insert(insertPayload);
+  }
+
+  if (error && isMissingSourceColumn(error) && insertPayload.source) {
+    delete insertPayload.source;
     await supabaseAdmin.from("ghost_proactive_messages").insert(insertPayload);
   }
 

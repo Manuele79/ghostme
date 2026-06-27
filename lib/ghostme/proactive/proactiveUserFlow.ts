@@ -8,7 +8,10 @@ import {
   pickBestProactiveCandidate,
 } from "@/lib/ghostme/proactive/proactiveCandidateRanker";
 import { runProactiveMaintenanceFlow } from "@/lib/ghostme/proactive/proactiveMaintenanceFlow";
-import { buildProactiveCandidatesForUser } from "@/lib/ghostme/proactive/proactiveCandidateBuilder";
+import {
+  buildContinuityCandidate,
+  buildProactiveCandidatesForUser,
+} from "@/lib/ghostme/proactive/proactiveCandidateBuilder";
 import { buildDailyBriefingMessage } from "@/lib/ghostme/proactive/dailyBriefingBuilder";
 import { loadDailyBriefingContext } from "@/lib/ghostme/proactive/dailyBriefingRepository";
 import {
@@ -170,6 +173,8 @@ export async function runProactiveFlowForUser(user: ProactiveUser): Promise<{
       category: selectedCandidate.category,
       priority: selectedCandidate.priority,
       logicalKey: buildProactiveCandidateLogicalKey(selectedCandidate),
+      source: selectedCandidate.source || null,
+      bypassPriorityLimit: selectedCandidate.source === "continuity",
     }));
   } else {
     console.log("PROACTIVE FLOW: no proactive candidates", userId);
@@ -247,6 +252,8 @@ export async function runAppOpenProactiveLifecycle({
       category: selectedCandidate.category,
       priority: selectedCandidate.priority,
       logicalKey: buildProactiveCandidateLogicalKey(selectedCandidate),
+      source: selectedCandidate.source || null,
+      bypassPriorityLimit: selectedCandidate.source === "continuity",
     }));
   } else {
     console.log("APP OPEN PROACTIVE: no proactive candidates", userId);
@@ -268,4 +275,37 @@ export async function runAppOpenProactiveLifecycle({
   }
 
   return { created, skipped: false };
+}
+
+export async function runAppOpenContinuityLifecycle({
+  user,
+  snapshot,
+}: {
+  user: ProactiveUser;
+  snapshot: GhostBrainSnapshot;
+}): Promise<{ created: number; skipped: boolean; reason?: string }> {
+  const userId = user.user_id;
+  if (!userId) return { created: 0, skipped: true, reason: "missing_user" };
+
+  const continuityCandidate = await buildContinuityCandidate(userId, snapshot);
+  if (!continuityCandidate) {
+    return { created: 0, skipped: true, reason: "no_continuity_candidate" };
+  }
+
+  const result = await upsertProactiveMessage({
+    userId,
+    title: continuityCandidate.title,
+    message: continuityCandidate.message,
+    category: continuityCandidate.category,
+    priority: continuityCandidate.priority,
+    logicalKey: buildProactiveCandidateLogicalKey(continuityCandidate),
+    source: "continuity",
+    bypassPriorityLimit: true,
+  });
+
+  return {
+    created: countWrite(result),
+    skipped: result.action === "skipped" || result.action === "hidden",
+    reason: result.action,
+  };
 }

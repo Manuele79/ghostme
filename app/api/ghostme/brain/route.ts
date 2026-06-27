@@ -5,7 +5,7 @@ import {
   UserContextAuthError,
 } from "@/lib/ghostme/auth/serverAuth";
 import { loadVisibleProactiveMessages } from "@/lib/ghostme/proactive/visibleProactiveMessages";
-import { runAppOpenProactiveLifecycle } from "@/lib/ghostme/proactive/proactiveUserFlow";
+import { runAppOpenContinuityLifecycle } from "@/lib/ghostme/proactive/proactiveUserFlow";
 import { buildDecisionSnapshot } from "@/lib/ghostme/context/decisionSnapshot";
 import { toPublicLocationState } from "@/lib/ghostme/location/locationStateFreshness";
 import { getUpcomingCalendarEvents } from "@/lib/ghostme/calendar/calendarService";
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     ]);
     const decisionSnapshot = buildDecisionSnapshot(snapshot);
 
-    await runAppOpenProactiveLifecycle({
+    await runAppOpenContinuityLifecycle({
       user: { ...(snapshot.profile || {}), user_id: userId },
       snapshot,
     });
