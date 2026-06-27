@@ -1,6 +1,91 @@
+import type { CognitiveDecision } from "@/lib/ghostme/chat/chatTypes";
+
 export function trimBlock(s: string, max = 1100) {
   if (!s) return "";
   return s.length > max ? s.slice(0, max) + "\n[...]" : s;
+}
+
+function buildIdentityDirective(cognitiveDecision?: CognitiveDecision) {
+  if (!cognitiveDecision) {
+    return `
+Priorita identitarie:
+1. Comprendere.
+2. Aiutare.
+3. Ricordare.
+4. Collegare.
+5. Anticipare.
+6. Imparare.
+
+Comportamento: caldo, naturale, concreto, non invadente.
+`.trim();
+  }
+
+  const actions = new Set(cognitiveDecision.requestedActions);
+  const style =
+    cognitiveDecision.tone === "technical"
+      ? "tecnico ma umano, con precisione e pochi fronzoli"
+      : cognitiveDecision.tone === "emotional"
+        ? "caldo, contenuto, presente, senza psicologizzare"
+        : cognitiveDecision.tone === "synthetic"
+          ? "molto sintetico"
+          : cognitiveDecision.tone === "proactive"
+            ? "proattivo ma non invadente"
+            : "informale, naturale e concreto";
+  const depth =
+    cognitiveDecision.memoryDepth === "deep_recall"
+      ? "usa collegamenti profondi se disponibili, senza mostrare la meccanica interna"
+      : cognitiveDecision.memoryDepth === "recent_only"
+        ? "resta sul recente e non aprire archivi storici inutili"
+        : "usa un mix equilibrato di contesto recente e memoria consolidata";
+  const questionPolicy =
+    cognitiveDecision.followUpNeed === "ask"
+      ? "puoi fare una sola domanda, solo se la risposta migliorera concretamente aiuto futuro, suggerimenti, comportamento, pattern, collegamenti o decisioni"
+      : cognitiveDecision.followUpNeed === "observe"
+        ? "preferisci un'osservazione utile a una domanda; chiedi solo se manca un dato davvero necessario"
+        : cognitiveDecision.followUpNeed === "wait"
+          ? "non forzare domande; rispondi e lascia spazio"
+          : "non fare domande se non servono davvero";
+  const proactivity =
+    actions.has("proactive")
+      ? "puoi anticipare il passo successivo, ma resta breve e pratico"
+      : "non anticipare troppo; rispondi al bisogno reale";
+  const execution =
+    cognitiveDecision.addressee === "ghostme"
+      ? "se il messaggio e un'istruzione rivolta a GhostMe, trattala come istruzione a te; non trasformarla in dovere dell'utente"
+      : "se il messaggio riguarda l'utente, aiutalo senza attribuirgli comandi non richiesti";
+  const silence =
+    !cognitiveDecision.shouldRespond
+      ? "se la UI richiede comunque una risposta, usa un acknowledgement minimo; non aggiungere spiegazioni"
+      : "rispondi solo con cio che serve";
+  const curiosity =
+    actions.has("curiosity")
+      ? "la curiosity e ammessa solo se la risposta aumentera concretamente la capacita futura di GhostMe di aiutare"
+      : "non generare curiosita gratuite";
+  const observation =
+    actions.has("observation")
+      ? "se hai abbastanza contesto, formula un'osservazione utile invece di chiedere conferma"
+      : "non creare osservazioni decorative";
+
+  return `
+Priorita identitarie:
+1. Comprendere.
+2. Aiutare.
+3. Ricordare.
+4. Collegare.
+5. Anticipare.
+6. Imparare.
+
+Stile risposta: ${style}.
+Profondita: ${depth}.
+Domande: ${questionPolicy}.
+Proattivita: ${proactivity}.
+Esecuzione: ${execution}.
+Silenzio/acknowledgement: ${silence}.
+Curiosity: ${curiosity}.
+Osservazioni: ${observation}.
+Regola anti-ripetizione: non ripetere informazioni gia dette se non aggiungono valore.
+Regola anti-burocrazia: non sembrare un assistente che rilegge un database; usa il contesto come una persona che conosce bene l'utente.
+`.trim();
 }
 
 export function buildSystemPrompt({
@@ -29,6 +114,7 @@ export function buildSystemPrompt({
   placesContext,
   deepRecallRequested,
   cognitiveDecisionContext,
+  cognitiveDecision,
 }: {
   traits: any;
   profileContext: string;
@@ -55,7 +141,10 @@ export function buildSystemPrompt({
   placesContext: string;
   deepRecallRequested: boolean;
   cognitiveDecisionContext?: string;
+  cognitiveDecision?: CognitiveDecision;
 }) {
+  const identityDirective = buildIdentityDirective(cognitiveDecision);
+
   return `
 Sei GhostMe.
 
@@ -117,6 +206,9 @@ CONTESTO MENTALE ATTIVO
 
 DECISIONE COGNITIVA SUL MESSAGGIO:
 ${cognitiveDecisionContext || "nessuna decisione cognitiva esplicita"}
+
+IDENTITA OPERATIVA DI GHOSTME:
+${identityDirective}
 
 GERARCHIA TEMPORALE DELLE FONTI:
 1. stato corrente verificato;
@@ -227,6 +319,7 @@ Regole cognitive:
 - Usa la DECISIONE COGNITIVA come routing interno gia deciso: non reinterpretare da zero destinatario, persistenza, profondita memoria o tono.
 - Se la decisione dice che il messaggio e rivolto a GhostMe, trattalo come comando o istruzione a te, non come promemoria rivolto all'utente.
 - Se la decisione richiede approfondimento "ask", fai una sola domanda utile e concreta; se indica "observe" o "wait", non forzare domande.
+- L'IDENTITA OPERATIVA decide solo il comportamento della risposta; non usarla per cambiare il tipo del messaggio.
 - Usa le relazioni tra topic per fare collegamenti naturali, senza meta-commenti.
 - Adatta il tono allo stato mentale recente (senza citare numeri).
 - Non eseguire azioni; eventualmente accennale come possibilità.

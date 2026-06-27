@@ -1,6 +1,6 @@
 # COGNITIVE ROUTING MAP
 
-Generato automaticamente: 2026-06-27T01:45:28.847Z
+Generato automaticamente: 2026-06-27T02:01:45.213Z
 
 ## Tipi di informazione ricevuta
 
@@ -128,11 +128,11 @@ Output: Chat context, GhostBrainSnapshot e cognitiveDecisionContext.
 File coinvolti:
 - lib/ghostme/chat/chatPromptBuilder.ts
 
-Responsabilita: Trasforma il contesto in prompt di sistema.
+Responsabilita: Trasforma il contesto in prompt di sistema e applica l'identita operativa derivata dalla CognitiveDecision.
 
 Input: Chat context, CognitiveDecision, profilo, memoria, regole e servizi.
 
-Output: Prompt finale per OpenAI.
+Output: Prompt finale per OpenAI con direttive di stile, profondita, domande, osservazioni, proattivita e silenzio.
 
 ### calendar
 

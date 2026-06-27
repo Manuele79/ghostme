@@ -1,6 +1,6 @@
 # PROJECT AUDIT FULL
 
-Generato: 2026-06-27T01:45:09.419Z
+Generato: 2026-06-27T02:01:26.040Z
 
 # 1. RIASSUNTO
 
@@ -2605,10 +2605,10 @@ Righe: 531
 
 ## lib/ghostme/chat/chatPromptBuilder.ts
 
-Righe: 265
+Righe: 358
 
 ### Importa
-- nessuno
+- lib/ghostme/chat/chatTypes.ts
 
 ### Importato da
 - lib/ghostme/chat/chatContextBuilder.ts
@@ -2674,6 +2674,7 @@ Righe: 98
 - lib/ghostme/chat/chatContextBuilder.ts
 - lib/ghostme/chat/chatMessageAnalyzer.ts
 - lib/ghostme/chat/chatPostProcessing.ts
+- lib/ghostme/chat/chatPromptBuilder.ts
 - lib/ghostme/chat/ghostChatOrchestrator.ts
 - lib/ghostme/core/messageClassifier.ts
 
@@ -2688,7 +2689,7 @@ Righe: 98
 
 ## lib/ghostme/chat/ghostChatOrchestrator.ts
 
-Righe: 171
+Righe: 172
 
 ### Importa
 - openai

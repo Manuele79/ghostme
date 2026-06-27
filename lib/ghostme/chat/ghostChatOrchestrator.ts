@@ -110,6 +110,7 @@ export async function runGhostChatFlow({
     placesContext,
     deepRecallRequested,
     cognitiveDecisionContext,
+    cognitiveDecision,
   });
 
   // Streaming della risposta

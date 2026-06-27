@@ -67,11 +67,11 @@ Mappa statica generata dal codice locale.
 | lib/ghostme/chat/chatExternalServices.ts | active | 1 | 3 | 1 | 0 | 0 | 85 |
 | lib/ghostme/chat/chatMessageAnalyzer.ts | active | 1 | 5 | 1 | 0 | 0 | 69 |
 | lib/ghostme/chat/chatPostProcessing.ts | god_file_candidate | 1 | 14 | 1 | 3 | 5 | 531 |
-| lib/ghostme/chat/chatPromptBuilder.ts | active | 2 | 0 | 2 | 0 | 0 | 265 |
+| lib/ghostme/chat/chatPromptBuilder.ts | active | 2 | 1 | 2 | 0 | 0 | 358 |
 | lib/ghostme/chat/chatRecallPolicy.ts | active | 1 | 0 | 2 | 0 | 0 | 58 |
 | lib/ghostme/chat/chatResponseSanitizer.ts | active | 1 | 0 | 1 | 0 | 0 | 45 |
-| lib/ghostme/chat/chatTypes.ts | active | 6 | 0 | 14 | 0 | 0 | 98 |
-| lib/ghostme/chat/ghostChatOrchestrator.ts | active | 1 | 10 | 1 | 0 | 0 | 171 |
+| lib/ghostme/chat/chatTypes.ts | active | 7 | 0 | 14 | 0 | 0 | 98 |
+| lib/ghostme/chat/ghostChatOrchestrator.ts | active | 1 | 10 | 1 | 0 | 0 | 172 |
 | lib/ghostme/context/contextBuilder.ts | active | 4 | 6 | 2 | 1 | 0 | 296 |
 | lib/ghostme/context/contextSignals.ts | active | 3 | 1 | 4 | 0 | 0 | 396 |
 | lib/ghostme/context/decisionSnapshot.ts | god_file_candidate | 6 | 1 | 2 | 0 | 0 | 701 |
@@ -1588,13 +1588,13 @@ Stato: **active**
 
 Chiamato da: lib/ghostme/chat/chatContextBuilder.ts, lib/ghostme/chat/ghostChatOrchestrator.ts
 
-Importa: -
+Importa: lib/ghostme/chat/chatTypes.ts
 
 Export: buildSystemPrompt, trimBlock
 
 Numero chiamanti: 2
 
-Numero dipendenze: 0
+Numero dipendenze: 1
 
 DB read: -
 
@@ -1652,13 +1652,13 @@ DB delete: -
 
 Stato: **active**
 
-Chiamato da: lib/ghostme/chat/chatCalendarFlow.ts, lib/ghostme/chat/chatContextBuilder.ts, lib/ghostme/chat/chatMessageAnalyzer.ts, lib/ghostme/chat/chatPostProcessing.ts, lib/ghostme/chat/ghostChatOrchestrator.ts, lib/ghostme/core/messageClassifier.ts
+Chiamato da: lib/ghostme/chat/chatCalendarFlow.ts, lib/ghostme/chat/chatContextBuilder.ts, lib/ghostme/chat/chatMessageAnalyzer.ts, lib/ghostme/chat/chatPostProcessing.ts, lib/ghostme/chat/chatPromptBuilder.ts, lib/ghostme/chat/ghostChatOrchestrator.ts, lib/ghostme/core/messageClassifier.ts
 
 Importa: -
 
 Export: AnalyzeChatMessageResult, ChatPostProcessingPayload, CognitiveAddressee, CognitiveDecision, CognitiveFollowUpNeed, CognitiveMemoryDepth, CognitiveMessageType, CognitivePersistence, CognitiveRequestedAction, CognitiveTone, DetectedTopicLike, GhostChatFlowResult, ImmediateTextResult, StreamResult
 
-Numero chiamanti: 6
+Numero chiamanti: 7
 
 Numero dipendenze: 0
 

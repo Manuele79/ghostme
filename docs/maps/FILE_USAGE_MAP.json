@@ -1491,7 +1491,9 @@
   },
   "lib/ghostme/chat/chatPromptBuilder.ts": {
     "file": "lib/ghostme/chat/chatPromptBuilder.ts",
-    "imports": [],
+    "imports": [
+      "lib/ghostme/chat/chatTypes.ts"
+    ],
     "exports": [
       "buildSystemPrompt",
       "trimBlock"
@@ -1504,10 +1506,10 @@
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 265,
+    "lines": 358,
     "status": "active",
     "callerCount": 2,
-    "dependencyCount": 0,
+    "dependencyCount": 1,
     "exportCount": 2
   },
   "lib/ghostme/chat/chatRecallPolicy.ts": {
@@ -1573,6 +1575,7 @@
       "lib/ghostme/chat/chatContextBuilder.ts",
       "lib/ghostme/chat/chatMessageAnalyzer.ts",
       "lib/ghostme/chat/chatPostProcessing.ts",
+      "lib/ghostme/chat/chatPromptBuilder.ts",
       "lib/ghostme/chat/ghostChatOrchestrator.ts",
       "lib/ghostme/core/messageClassifier.ts"
     ],
@@ -1582,7 +1585,7 @@
     "tablesDeleted": [],
     "lines": 98,
     "status": "active",
-    "callerCount": 6,
+    "callerCount": 7,
     "dependencyCount": 0,
     "exportCount": 14
   },
@@ -1610,7 +1613,7 @@
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 171,
+    "lines": 172,
     "status": "active",
     "callerCount": 1,
     "dependencyCount": 10,

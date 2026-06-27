@@ -276,9 +276,9 @@ const routingSteps = [
   {
     name: "chatPromptBuilder",
     files: ["lib/ghostme/chat/chatPromptBuilder.ts"],
-    responsibility: "Trasforma il contesto in prompt di sistema.",
+    responsibility: "Trasforma il contesto in prompt di sistema e applica l'identita operativa derivata dalla CognitiveDecision.",
     input: "Chat context, CognitiveDecision, profilo, memoria, regole e servizi.",
-    output: "Prompt finale per OpenAI.",
+    output: "Prompt finale per OpenAI con direttive di stile, profondita, domande, osservazioni, proattivita e silenzio.",
   },
   {
     name: "calendar",

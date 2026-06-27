@@ -1,6 +1,6 @@
 # GHOSTME SYSTEM MAP V6
 
-Generato automaticamente: 2026-06-27T01:45:28.840Z
+Generato automaticamente: 2026-06-27T02:01:45.206Z
 
 ## Inventario
 
@@ -1763,7 +1763,7 @@ Chi lo chiama:
 - lib/ghostme/chat/ghostChatOrchestrator.ts
 
 Chi chiama:
-- nessuno
+- lib/ghostme/chat/chatTypes.ts
 
 Tabelle usate:
 - nessuno
@@ -1833,6 +1833,7 @@ Chi lo chiama:
 - lib/ghostme/chat/chatContextBuilder.ts
 - lib/ghostme/chat/chatMessageAnalyzer.ts
 - lib/ghostme/chat/chatPostProcessing.ts
+- lib/ghostme/chat/chatPromptBuilder.ts
 - lib/ghostme/chat/ghostChatOrchestrator.ts
 - lib/ghostme/core/messageClassifier.ts
 
