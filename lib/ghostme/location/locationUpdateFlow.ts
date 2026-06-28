@@ -5,6 +5,8 @@ import {
 } from "@/lib/ghostme/observation/observationEngine";
 import { runProactiveTrigger } from "@/lib/ghostme/proactive/proactiveTrigger";
 import { writeLocationCandidateCard } from "@/lib/ghostme/location/locationLearningFlow";
+import { upsertProactiveMessage } from "@/lib/ghostme/proactive/proactiveMessageService";
+import { resolvePlaceFromCoordinates } from "@/lib/ghostme/location/placeResolver";
 import {
   detectCurrentPlace,
   distanceMeters,
@@ -25,6 +27,45 @@ function validCoordinate(value: unknown, minimum: number, maximum: number) {
     : null;
 }
 
+function firstText(...values: unknown[]) {
+  for (const value of values) {
+    const text = String(value || "").trim();
+    if (text) return text;
+  }
+  return null;
+}
+
+function firstNumber(...values: unknown[]) {
+  for (const value of values) {
+    const number = Number(value);
+    if (Number.isFinite(number)) return number;
+  }
+  return null;
+}
+
+function dayKey(date = new Date()) {
+  return new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Europe/Rome",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
+
+function poiResolutionContext(resolution: any) {
+  if (!resolution) return null;
+  return {
+    status: resolution.status,
+    confidence: resolution.confidence,
+    source: resolution.source,
+    coordinate_bucket: resolution.coordinateBucket,
+    name: resolution.metadata?.name || null,
+    category: resolution.metadata?.category || null,
+    address: resolution.metadata?.address || null,
+    question: resolution.question || null,
+  };
+}
+
 export async function updateCurrentLocationFlow(body: any) {
   const latitude = validCoordinate(body.latitude, -90, 90);
   const longitude = validCoordinate(body.longitude, -180, 180);
@@ -38,13 +79,48 @@ export async function updateCurrentLocationFlow(body: any) {
     .eq("user_id", body.userId)
     .maybeSingle();
 
-  const matchedPlace = await detectCurrentPlace({
+  let matchedPlace = await detectCurrentPlace({
     userId: body.userId,
     latitude,
     longitude,
     markSeen: false,
   });
   const source = normalizeGpsSource(body.source);
+  const deviceId = firstText(body.deviceId, body.device_id, body.sourceDeviceId);
+  const placeResolution = !matchedPlace
+    ? await resolvePlaceFromCoordinates({
+        userId: body.userId,
+        latitude,
+        longitude,
+        accuracy: firstNumber(body.accuracy),
+        source,
+        deviceId,
+        externalName: firstText(
+          body.externalName,
+          body.external_name,
+          body.placeName,
+          body.place_name,
+          body.poiName,
+          body.poi_name
+        ),
+        externalCategory: firstText(
+          body.externalCategory,
+          body.external_category,
+          body.placeCategory,
+          body.place_category,
+          body.poiCategory,
+          body.poi_category
+        ),
+        address: firstText(body.address, body.formattedAddress, body.formatted_address),
+        confidence: firstNumber(body.poiConfidence, body.poi_confidence, body.confidence),
+      })
+    : null;
+
+  if (placeResolution?.place) {
+    matchedPlace = placeResolution.place;
+  }
+
+  const resolutionContext = poiResolutionContext(placeResolution);
   const previousPlace = previousState?.current_place_label || null;
   const nextPlace = matchedPlace?.label || null;
   const movedWhileUnknown =
@@ -117,6 +193,10 @@ export async function updateCurrentLocationFlow(body: any) {
           latitude,
           longitude,
           accuracy: body.accuracy ?? null,
+          device_id: deviceId,
+          source,
+          coordinate_bucket: placeResolution?.coordinateBucket || null,
+          poi_resolution: resolutionContext,
         },
       });
     }
@@ -141,6 +221,10 @@ export async function updateCurrentLocationFlow(body: any) {
           latitude,
           longitude,
           accuracy: body.accuracy ?? null,
+          device_id: deviceId,
+          source,
+          coordinate_bucket: placeResolution?.coordinateBucket || null,
+          poi_resolution: resolutionContext,
         },
       });
     }
@@ -160,6 +244,10 @@ export async function updateCurrentLocationFlow(body: any) {
           latitude,
           longitude,
           accuracy: body.accuracy ?? null,
+          device_id: deviceId,
+          source,
+          coordinate_bucket: placeResolution?.coordinateBucket || null,
+          poi_resolution: resolutionContext,
         },
       });
     }
@@ -191,7 +279,23 @@ export async function updateCurrentLocationFlow(body: any) {
           latitude,
           longitude,
           accuracy: body.accuracy ?? null,
+          device_id: deviceId,
+          source,
+          coordinate_bucket: placeResolution?.coordinateBucket || null,
+          poi_resolution: resolutionContext,
         },
+      });
+    }
+
+    if (placeResolution?.status === "needs_confirmation" && placeResolution.question) {
+      await upsertProactiveMessage({
+        userId: body.userId,
+        title: "Conferma luogo",
+        message: `${placeResolution.question} Se era legato a qualcosa, posso ricordarlo meglio la prossima volta.`,
+        category: "observation",
+        priority: 7,
+        logicalKey: `poi_confirm_${placeResolution.coordinateBucket}_${dayKey()}`,
+        source: "poi_resolution",
       });
     }
 
@@ -207,5 +311,6 @@ export async function updateCurrentLocationFlow(body: any) {
     previousPlace,
     nextPlace,
     matchedPlace,
+    placeResolution,
   };
 }

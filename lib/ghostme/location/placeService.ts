@@ -217,21 +217,35 @@ export async function updateSignificantPlace({
   label,
   category,
   externalName,
+  externalCategory,
+  address,
+  confidence,
 }: {
   userId: string;
   placeId: string;
   label: string;
   category: string;
   externalName?: string | null;
+  externalCategory?: string | null;
+  address?: string | null;
+  confidence?: number | null;
 }) {
+  const payload: Record<string, any> = {
+    label: label.trim(),
+    category,
+    external_name: externalName || label.trim(),
+    updated_at: new Date().toISOString(),
+  };
+
+  if (externalCategory) payload.external_category = externalCategory;
+  if (address) payload.address = address;
+  if (typeof confidence === "number") {
+    payload.confidence = clampConfidence(confidence);
+  }
+
   const { data, error } = await supabaseAdmin
     .from("significant_places")
-    .update({
-      label: label.trim(),
-      category,
-      external_name: externalName || label.trim(),
-      updated_at: new Date().toISOString(),
-    })
+    .update(payload)
     .eq("id", placeId)
     .eq("user_id", userId)
     .select()

@@ -65,6 +65,7 @@ export async function runGhostChatFlow({
     placesContext,
     deepRecallRequested,
     cognitiveDecisionContext,
+    situationPolicyContext,
   } = chatContext;
   const serviceContext = await resolveChatExternalService({
     message,
@@ -110,6 +111,7 @@ export async function runGhostChatFlow({
     placesContext,
     deepRecallRequested,
     cognitiveDecisionContext,
+    situationPolicyContext,
     cognitiveDecision,
   });
 

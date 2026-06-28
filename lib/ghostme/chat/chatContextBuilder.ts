@@ -39,6 +39,7 @@ export type ChatContext = {
   placesContext: string;
   deepRecallRequested: boolean;
   cognitiveDecisionContext: string;
+  situationPolicyContext: string;
 };
 
 export function createEmptyChatContext(): ChatContext {
@@ -68,6 +69,7 @@ export function createEmptyChatContext(): ChatContext {
     placesContext: "",
     deepRecallRequested: false,
     cognitiveDecisionContext: "",
+    situationPolicyContext: "",
   };
 }
 
@@ -287,6 +289,35 @@ function buildPlacesContext(snapshot: GhostBrainSnapshot) {
     .join("\n");
 }
 
+function buildSituationPolicyContext(snapshot: GhostBrainSnapshot) {
+  const policy = snapshot.situationPolicy;
+  if (!policy) return "";
+
+  return `
+Azione utile ora: ${policy.recommendedAction}
+Motivo: ${policy.interventionReason}
+Priorita intervento: ${policy.interventionPriority}
+Confidenza: ${policy.confidence}
+Sopprimi curiosity generiche: ${policy.suppressGenericCuriosity ? "si" : "no"}
+Luogo: ${policy.currentPlace || "sconosciuto"} (${policy.placeCategory || "categoria ignota"})
+Stanza/room: ${policy.currentRoom || "non rilevata"}
+Persone presenti: ${policy.peoplePresent.join(", ") || "nessuna persona rilevata"}
+Open loop recenti: ${
+    policy.recentOpenLoops
+      .map((loop) => `${loop.title} | ${loop.source} | priorita ${loop.priority}`)
+      .slice(0, 5)
+      .join("; ") || "nessuno"
+  }
+Calendario imminente: ${
+    policy.imminentCalendar
+      .map((event) => `${event.title || "evento"} ${event.start_at || event.remind_at || ""}`)
+      .slice(0, 3)
+      .join("; ") || "nessuno"
+  }
+Influenza mental state: ${policy.mentalInfluence.load} - ${policy.mentalInfluence.reason}
+`.trim();
+}
+
 export async function buildChatContext({
   userId,
   detectedTopics,
@@ -417,6 +448,10 @@ export async function buildChatContext({
     buildPlacesContext(snapshot),
     deepRecall ? 1400 : 800
   );
+  context.situationPolicyContext = trimBlock(
+    buildSituationPolicyContext(snapshot),
+    900
+  );
 
   context.calendarContext =
     calendarEvents
@@ -439,9 +474,6 @@ export async function buildChatContext({
     buildHouseLearnedRulesContext(snapshot.home.learnedRules),
     1200
   );
-  console.log("CURRENT PLACE CONTEXT:", context.currentPlaceContext);
-  console.log("LOCATION RAW:", currentLocation || lastKnownLocation);
-  console.log("LOCATION LABEL:", currentLocation?.current_place_label);
 
   context.loadedLifeTopics = snapshot.memory.topics || [];
   context.behaviorRulesContext = await buildBehaviorPrompt(userId);

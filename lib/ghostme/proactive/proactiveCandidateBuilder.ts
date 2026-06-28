@@ -106,7 +106,7 @@ function titleFor(row: any) {
   return String(row?.title || row?.summary || row?.description || "").trim();
 }
 
-function detectOpenLoopKind(text: string) {
+function detectOpenLoopKind(text: string, source?: string, row?: any) {
   const checks = [
     {
       kind: "grigliata",
@@ -161,7 +161,76 @@ function detectOpenLoopKind(text: string) {
 
   return checks.find((check) =>
     check.aliases.some((alias) => text.includes(alias))
-  );
+  ) || inferOpenLoopKind({ text, source, row });
+}
+
+function inferOpenLoopKind({
+  text,
+  source,
+  row,
+}: {
+  text: string;
+  source?: string;
+  row?: any;
+}) {
+  const title = titleFor(row) || "Punto aperto";
+  const sourceKey = String(source || "");
+  const hasPersonSignal =
+    Array.isArray(row?.people) && row.people.length ||
+    /\b(con|sentire|chiamare|scrivere|incontrare)\b/.test(text);
+  const hasActionSignal =
+    /\b(devo|fare|finire|sistemare|comprare|portare|prenotare|ricordare)\b/.test(text);
+  const hasPlaceSignal =
+    /\b(posto|locale|ristorante|bar|pizzeria|negozio|cliente|indirizzo)\b/.test(text);
+
+  if (sourceKey === "calendar_completed") {
+    return {
+      kind: "calendar_followup",
+      question: `Com'e andata ${title}?`,
+      placeQuestion: hasPlaceSignal
+        ? "Quel posto nuovo era collegato a questo evento?"
+        : "Il posto nuovo era collegato a questo evento?",
+      title,
+      priority: 8,
+    };
+  }
+
+  if (sourceKey === "action") {
+    return {
+      kind: "action_followup",
+      question: `Hai poi chiuso: ${title}?`,
+      placeQuestion: hasPlaceSignal
+        ? "Quel posto nuovo va ricordato per questa azione?"
+        : "Quel posto nuovo era collegato a questa cosa?",
+      title,
+      priority: Math.max(7, Number(row?.priority || 0)),
+    };
+  }
+
+  if (sourceKey === "relationship_open_loop" || hasPersonSignal) {
+    return {
+      kind: "person_followup",
+      question: `Vuoi riprendere il punto aperto: ${title}?`,
+      placeQuestion: "Quel posto nuovo era legato a questa persona o uscita?",
+      title,
+      priority: 8,
+    };
+  }
+
+  if (
+    ["timeline", "episodic_memory", "conversation_summary"].includes(sourceKey) &&
+    (hasActionSignal || hasPlaceSignal || hasPersonSignal)
+  ) {
+    return {
+      kind: `${sourceKey}_followup`,
+      question: `Vuoi riprendere: ${title}?`,
+      placeQuestion: "Quel posto nuovo era collegato a questo?",
+      title,
+      priority: hasActionSignal ? 7 : 6,
+    };
+  }
+
+  return null;
 }
 
 function collectOpenLoopSources(snapshot: GhostBrainSnapshot) {
@@ -179,6 +248,10 @@ function collectOpenLoopSources(snapshot: GhostBrainSnapshot) {
     ...(snapshot.memory.summaries || []).map((row) => ({
       row,
       source: "conversation_summary",
+    })),
+    ...(snapshot.people.relationshipMemory.openLoops || []).map((row) => ({
+      row,
+      source: "relationship_open_loop",
     })),
   ];
 }
@@ -229,6 +302,7 @@ function buildMomentAwareness(observations: any[], snapshot: GhostBrainSnapshot)
     isAtHome,
     recentHomeArrival: Boolean(recentHomeArrival),
     unknownBeforeHome: Boolean(unknownBeforeHome),
+    unknownObservation: unknownBeforeHome || null,
     homeSignals: snapshot.home.presence.signals || [],
   };
 }
@@ -247,7 +321,7 @@ export async function buildContinuityCandidate(userId: string, snapshot: GhostBr
   const candidates = collectOpenLoopSources(snapshot)
     .map(({ row, source }) => {
       const text = compactText(row);
-      const kind = detectOpenLoopKind(text);
+      const kind = detectOpenLoopKind(text, source, row);
       const ageHours = hoursSinceValue(timestampFor(row));
       return {
         row,
@@ -287,7 +361,8 @@ export async function buildContinuityCandidate(userId: string, snapshot: GhostBr
 
   const messageParts = [openLoop.kind.question];
   if (moment.unknownBeforeHome && openLoop.kind.placeQuestion) {
-    messageParts.push(openLoop.kind.placeQuestion);
+    const poiQuestion = moment.unknownObservation?.context?.poi_resolution?.question;
+    messageParts.push(poiQuestion || openLoop.kind.placeQuestion);
   }
 
   const priority = Math.min(

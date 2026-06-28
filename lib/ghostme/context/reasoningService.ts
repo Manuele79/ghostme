@@ -4,6 +4,7 @@ import {
   type ContextSignal,
   type GhostBrainSimpleSignals,
 } from "@/lib/ghostme/context/contextSignals";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { loadUserContextGraph } from "@/lib/ghostme/context/userContextGraph";
 import { buildHomeReasoning } from "@/lib/ghostme/homeAssistant/homeReasoningBuilder";
 import {
@@ -68,6 +69,10 @@ import {
   buildTrueProactiveSnapshot,
   type TrueProactiveSnapshot,
 } from "@/lib/ghostme/proactive/trueProactiveSnapshot";
+import {
+  buildUnifiedSituationModel,
+  type UnifiedSituationModel,
+} from "@/lib/ghostme/context/situationPolicy";
 import { canAccessHomeAssistant } from "@/lib/ghostme/homeAssistant/homeAssistantAccess";
 import {
   buildRecentPastEvidence,
@@ -145,9 +150,23 @@ export type GhostBrainSnapshotCore = {
     activeMedia: string[];
     activeRooms: string[];
     relevantPatterns: string[];
+    recentLocationEvents: Array<{
+      eventType: string;
+      placeLabel: string | null;
+      occurredAt: string | null;
+      context?: any;
+    }>;
+    recentHomeEvents: Array<{
+      eventType: string;
+      entityName: string | null;
+      roomKey: string | null;
+      occurredAt: string | null;
+      priority: number;
+    }>;
     confidence: number;
     updatedAt: string;
   };
+  situationPolicy?: UnifiedSituationModel;
   signals: {
     simple: GhostBrainSimpleSignals;
     context: ContextSignal[];
@@ -156,6 +175,7 @@ export type GhostBrainSnapshotCore = {
 };
 
 export type GhostBrainSnapshot = GhostBrainSnapshotCore & {
+  situationPolicy: UnifiedSituationModel;
   trueProactive: TrueProactiveSnapshot;
 };
 
@@ -453,6 +473,7 @@ function buildCurrentSituationSummary({
   homeConsistency,
   behaviorPatterns,
   housePatterns,
+  recentHomeEvents,
   generatedAt,
 }: {
   situation: GhostSituation;
@@ -460,6 +481,7 @@ function buildCurrentSituationSummary({
   homeConsistency: HomeLocationConsistency;
   behaviorPatterns: any[];
   housePatterns: any[];
+  recentHomeEvents: any[];
   generatedAt: string;
 }) {
   const currentPlace = situation.currentPlace || null;
@@ -513,6 +535,32 @@ function buildCurrentSituationSummary({
     activeMedia,
     activeRooms,
     relevantPatterns,
+    recentLocationEvents: (situation.recentObservations || [])
+      .filter((event) =>
+        [
+          "home_arrived",
+          "home_left",
+          "work_arrived",
+          "work_left",
+          "location_enter",
+          "location_exit",
+          "place_unknown_detected",
+        ].includes(event.event_type)
+      )
+      .slice(0, 12)
+      .map((event) => ({
+        eventType: event.event_type,
+        placeLabel: event.place_label || null,
+        occurredAt: event.occurred_at || null,
+        context: event.context || null,
+      })),
+    recentHomeEvents: (recentHomeEvents || []).map((event) => ({
+      eventType: event.event_type,
+      entityName: event.entity_name || null,
+      roomKey: event.room_key || null,
+      occurredAt: event.occurred_at || null,
+      priority: Number(event.value?.significance_priority || 0),
+    })),
     confidence: Math.max(
       Number(situation.locationConfidence || 0),
       Number(houseState.confidence || 0),
@@ -842,6 +890,21 @@ export async function buildGhostBrainSnapshot(
     };
   }
 
+  const { data: recentHomeEventsData, error: recentHomeEventsError } =
+    await supabaseAdmin
+      .from("house_events")
+      .select("entity_name, entity_type, room_key, event_type, new_state, value, occurred_at")
+      .eq("user_id", userId)
+      .gte("occurred_at", new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString())
+      .order("occurred_at", { ascending: false })
+      .limit(20);
+  if (recentHomeEventsError) {
+    console.log("GHOSTBRAIN RECENT HOME EVENTS ERROR:", recentHomeEventsError);
+  }
+  const recentHomeEvents = (recentHomeEventsData || []).filter(
+    (event: any) => Number(event.value?.significance_priority || 0) >= 5
+  );
+
   const simpleSignals = buildGhostBrainSimpleSignals({
     graph,
     situation,
@@ -856,6 +919,7 @@ export async function buildGhostBrainSnapshot(
     homeConsistency,
     behaviorPatterns: graph.behaviorPatterns || [],
     housePatterns: homeAssistantAccess ? graph.housePatterns || [] : [],
+    recentHomeEvents,
     generatedAt,
   });
   const curiosity = buildCuriositySnapshot({
@@ -962,13 +1026,18 @@ export async function buildGhostBrainSnapshot(
   };
 
   const decision = buildDecisionSnapshot(coreSnapshot);
-  const trueProactive = buildTrueProactiveSnapshot({
+  const situationPolicy = buildUnifiedSituationModel({
     snapshot: coreSnapshot,
+    decision,
+  });
+  const trueProactive = buildTrueProactiveSnapshot({
+    snapshot: { ...coreSnapshot, situationPolicy },
     decision,
   });
 
   return {
     ...coreSnapshot,
+    situationPolicy,
     trueProactive,
   };
 }

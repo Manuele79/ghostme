@@ -135,8 +135,11 @@ export async function runProactiveFlowForUser(user: ProactiveUser): Promise<{
   const bestCandidate = pickBestProactiveCandidate(proactiveCandidates);
   const continuityCandidate =
     bestCandidate?.source === "continuity" ? bestCandidate : null;
+  const suppressGenericCuriosity = Boolean(
+    continuityCandidate || snapshot.situationPolicy?.suppressGenericCuriosity
+  );
 
-  const curiosityResult = continuityCandidate
+  const curiosityResult = suppressGenericCuriosity
     ? { processed: 0 }
     : await writeCuriositySnapshotCards({
         userId,
@@ -214,8 +217,11 @@ export async function runAppOpenProactiveLifecycle({
   const bestCandidate = pickBestProactiveCandidate(proactiveCandidates);
   const continuityCandidate =
     bestCandidate?.source === "continuity" ? bestCandidate : null;
+  const suppressGenericCuriosity = Boolean(
+    continuityCandidate || currentSnapshot.situationPolicy?.suppressGenericCuriosity
+  );
 
-  const curiosityResult = continuityCandidate
+  const curiosityResult = suppressGenericCuriosity
     ? { processed: 0 }
     : await writeCuriositySnapshotCards({
         userId,

@@ -8,17 +8,17 @@ import { loadVisibleProactiveMessages } from "@/lib/ghostme/proactive/visiblePro
 import { runAppOpenContinuityLifecycle } from "@/lib/ghostme/proactive/proactiveUserFlow";
 import { buildDecisionSnapshot } from "@/lib/ghostme/context/decisionSnapshot";
 import { toPublicLocationState } from "@/lib/ghostme/location/locationStateFreshness";
-import { getUpcomingCalendarEvents } from "@/lib/ghostme/calendar/calendarService";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     const userId = await getAuthenticatedUserId(req, body.userId);
 
-    const [snapshot, calendarEvents] = await Promise.all([
-      buildGhostBrainSnapshot(userId),
-      getUpcomingCalendarEvents(userId),
-    ]);
+    const snapshot = await buildGhostBrainSnapshot(userId);
+    const calendarEvents = [
+      ...(snapshot.calendar.today || []),
+      ...(snapshot.calendar.upcoming || []),
+    ];
     const decisionSnapshot = buildDecisionSnapshot(snapshot);
 
     await runAppOpenContinuityLifecycle({

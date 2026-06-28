@@ -283,6 +283,7 @@ export function buildSystemPrompt({
   placesContext,
   deepRecallRequested,
   cognitiveDecisionContext,
+  situationPolicyContext,
   cognitiveDecision,
 }: {
   traits: any;
@@ -310,6 +311,7 @@ export function buildSystemPrompt({
   placesContext: string;
   deepRecallRequested: boolean;
   cognitiveDecisionContext?: string;
+  situationPolicyContext?: string;
   cognitiveDecision?: CognitiveDecision;
 }) {
   const identityDirective = buildIdentityDirective(cognitiveDecision);
@@ -382,6 +384,9 @@ CONTESTO MENTALE ATTIVO
 
 DECISIONE COGNITIVA SUL MESSAGGIO:
 ${cognitiveDecisionContext || "nessuna decisione cognitiva esplicita"}
+
+POLICY SITUAZIONALE ATTUALE:
+${situationPolicyContext || "nessuna policy situazionale disponibile"}
 
 REGOLE COMPORTAMENTALI ATTIVE DELL'UTENTE:
 ${behaviorRulesContext || "nessuna regola comportamentale specifica"}
@@ -500,6 +505,7 @@ Regole servizi esterni:
 
 Regole cognitive:
 - Usa la DECISIONE COGNITIVA come routing interno gia deciso: non reinterpretare da zero destinatario, persistenza, profondita memoria o tono.
+- Usa la POLICY SITUAZIONALE come priorita runtime: se dice say_nothing o wait, non aggiungere proattivita gratuita; se indica remind, ask_followup, create_card o suggest_action, dai priorita a quel bisogno solo se coerente con la domanda dell'utente.
 - Se la decisione dice che il messaggio e rivolto a GhostMe, trattalo come comando o istruzione a te, non come promemoria rivolto all'utente.
 - Se la decisione richiede approfondimento "ask", fai una sola domanda utile e concreta; se indica "observe" o "wait", non forzare domande.
 - L'IDENTITA OPERATIVA decide solo il comportamento della risposta; non usarla per cambiare il tipo del messaggio.
