@@ -1,9 +1,19 @@
 {
-  "generatedAt": "2026-06-27T23:45:26.143Z",
-  "note": "Generated from code usage. This map detects Supabase table/RPC usage and selected columns from source files.",
+  "generatedAt": "2026-06-28T00:20:00.654Z",
+  "version": "3",
+  "note": "Generated from source code and partial known real schema. Maps Supabase table/RPC usage, selected/written columns, missing columns, and data flow hints.",
+  "knownSchemaTables": [
+    "autobiographical_timeline",
+    "ghost_proactive_messages",
+    "house_patterns",
+    "house_suggestions",
+    "observation_events",
+    "user_location_state"
+  ],
   "tables": [
     {
       "table": "action_intents",
+      "realColumns": [],
       "readers": [
         "app/api/actions/update-status/route.ts",
         "app/api/goals/update-status/route.ts",
@@ -24,40 +34,387 @@
       ],
       "deleters": [],
       "selectedColumns": [
-        "\"Il goal ha ancora action aperte\" }",
-        "\"exact\"",
         "*",
-        "409 }\n        );\n      }\n    }\n\n    const { data",
-        "[\"detected\"",
-        "actionsError.message }",
         "completed_at",
         "created_at",
         "description",
-        "error } = await supabaseAdmin\n      .from",
-        "false",
-        "goalError } = await supabaseAdmin\n    .from",
-        "goalId)\n        .in",
-        "goalId)\n    .in",
         "goal_id",
         "id",
-        "id\"",
         "intent_type",
         "priority",
         "related_topics",
         "source_message",
         "status",
         "title",
-        "true })\n        .eq",
-        "true })\n    .eq",
-        "updated_at",
-        "userId)\n        .eq",
-        "userId)\n    .eq"
+        "updated_at"
       ],
-      "writtenColumns": [],
-      "obsoleteColumnCandidates": []
+      "writtenColumns": [
+        "completed_at",
+        "description",
+        "goal_id",
+        "intent_type",
+        "needs_review",
+        "priority",
+        "related_topics",
+        "review_requested_at",
+        "source_message",
+        "status",
+        "updated_at",
+        "user_id"
+      ],
+      "missingColumns": [],
+      "unusedRealColumns": [],
+      "neverWrittenRealColumns": [],
+      "operations": [
+        {
+          "file": "app/api/actions/update-status/route.ts",
+          "operation": "select",
+          "columns": [
+            "completed_at",
+            "goal_id",
+            "id",
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "app/api/actions/update-status/route.ts",
+          "operation": "write",
+          "columns": [
+            "updated_at"
+          ]
+        },
+        {
+          "file": "app/api/actions/update-status/route.ts",
+          "operation": "select",
+          "columns": [
+            "completed_at",
+            "goal_id",
+            "id",
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "app/api/actions/update-status/route.ts",
+          "operation": "write",
+          "columns": [
+            "updated_at"
+          ]
+        },
+        {
+          "file": "app/api/goals/update-status/route.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "app/api/goals/update-status/route.ts",
+          "operation": "write",
+          "columns": [
+            "completed_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/actionLayer.ts",
+          "operation": "select",
+          "columns": [
+            "description",
+            "intent_type",
+            "priority",
+            "related_topics",
+            "status",
+            "title",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/actionLayer.ts",
+          "operation": "write",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/actionLayer.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/actionLayer.ts",
+          "operation": "write",
+          "columns": [
+            "goal_id",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/actionLayer.ts",
+          "operation": "select",
+          "columns": [
+            "description",
+            "goal_id",
+            "id",
+            "intent_type",
+            "priority",
+            "source_message",
+            "title",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/actionLayer.ts",
+          "operation": "write",
+          "columns": [
+            "goal_id",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/actionLayer.ts",
+          "operation": "select",
+          "columns": [
+            "description",
+            "goal_id",
+            "id",
+            "intent_type",
+            "priority",
+            "source_message",
+            "title",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/actionLayer.ts",
+          "operation": "write",
+          "columns": [
+            "description",
+            "goal_id",
+            "intent_type",
+            "priority",
+            "related_topics",
+            "source_message",
+            "status",
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/actionLayer.ts",
+          "operation": "select",
+          "columns": [
+            "description",
+            "goal_id",
+            "id",
+            "intent_type",
+            "priority",
+            "source_message",
+            "title",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/actionLayer.ts",
+          "operation": "write",
+          "columns": [
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/actionLayer.ts",
+          "operation": "select",
+          "columns": [
+            "description",
+            "goal_id",
+            "id",
+            "intent_type",
+            "priority",
+            "source_message",
+            "title",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/context/userContextGraph.ts",
+          "operation": "select",
+          "columns": [
+            "description",
+            "id",
+            "intent_type",
+            "priority",
+            "status",
+            "title",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/goals/goalsActionsLifecycle.ts",
+          "operation": "select",
+          "columns": [
+            "description",
+            "id",
+            "related_topics",
+            "source_message",
+            "title"
+          ]
+        },
+        {
+          "file": "lib/ghostme/goals/goalsActionsLifecycle.ts",
+          "operation": "write",
+          "columns": [
+            "goal_id",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/goals/goalsActionsLifecycle.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/goals/goalsActionsLifecycle.ts",
+          "operation": "write",
+          "columns": [
+            "goal_id",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/goals/goalsActionsLifecycle.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/goals/goalsActionsLifecycle.ts",
+          "operation": "write",
+          "columns": [
+            "needs_review",
+            "review_requested_at",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/goals/goalsActionsLifecycle.ts",
+          "operation": "select",
+          "columns": [
+            "completed_at",
+            "goal_id",
+            "id",
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/goals/goalsActionsLifecycle.ts",
+          "operation": "write",
+          "columns": [
+            "completed_at",
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/goals/goalsActionsLifecycle.ts",
+          "operation": "select",
+          "columns": [
+            "completed_at",
+            "goal_id",
+            "id",
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/goals/goalsActionsLifecycle.ts",
+          "operation": "write",
+          "columns": [
+            "completed_at",
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/goals/goalsSnapshot.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/memory/memorySearchFlow.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/people/peopleGraphLinkService.ts",
+          "operation": "select",
+          "columns": [
+            "created_at",
+            "description",
+            "goal_id",
+            "id",
+            "priority",
+            "related_topics",
+            "source_message",
+            "status",
+            "title",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/proactive/dailyBriefingRepository.ts",
+          "operation": "select",
+          "columns": [
+            "description",
+            "id",
+            "intent_type",
+            "priority",
+            "status",
+            "title",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/proactive/dailyBriefingRepository.ts",
+          "operation": "select",
+          "columns": [
+            "completed_at",
+            "description",
+            "id",
+            "intent_type",
+            "status",
+            "title",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/situation/situationEngine.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/situation/situationEngine.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        }
+      ],
+      "readOnly": false,
+      "writeOnly": false
     },
     {
       "table": "answers",
+      "realColumns": [],
       "readers": [
         "app/setup/page.tsx"
       ],
@@ -70,11 +427,112 @@
       "selectedColumns": [
         "*"
       ],
-      "writtenColumns": [],
-      "obsoleteColumnCandidates": []
+      "writtenColumns": [
+        "ansia",
+        "bisogno_affetto",
+        "controllo",
+        "email",
+        "empatia",
+        "evitamento",
+        "fiducia",
+        "gelosia",
+        "id",
+        "impulsivita",
+        "name",
+        "onConflict",
+        "orgoglio",
+        "paura_abbandono",
+        "rabbia",
+        "sarcasmo",
+        "sensibilita_critiche",
+        "sincerita",
+        "socialita",
+        "user_id",
+        "vulnerabilita"
+      ],
+      "missingColumns": [],
+      "unusedRealColumns": [],
+      "neverWrittenRealColumns": [],
+      "operations": [
+        {
+          "file": "app/setup/page.tsx",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "app/setup/page.tsx",
+          "operation": "write",
+          "columns": [
+            "email",
+            "id",
+            "name",
+            "onConflict"
+          ]
+        },
+        {
+          "file": "app/setup/page.tsx",
+          "operation": "delete",
+          "columns": []
+        },
+        {
+          "file": "app/setup/page.tsx",
+          "operation": "write",
+          "columns": [
+            "ansia",
+            "bisogno_affetto",
+            "controllo",
+            "empatia",
+            "evitamento",
+            "fiducia",
+            "gelosia",
+            "impulsivita",
+            "orgoglio",
+            "paura_abbandono",
+            "rabbia",
+            "sarcasmo",
+            "sensibilita_critiche",
+            "sincerita",
+            "socialita",
+            "user_id",
+            "vulnerabilita"
+          ]
+        },
+        {
+          "file": "app/setup/page.tsx",
+          "operation": "delete",
+          "columns": []
+        },
+        {
+          "file": "app/setup/page.tsx",
+          "operation": "write",
+          "columns": []
+        }
+      ],
+      "readOnly": false,
+      "writeOnly": false
     },
     {
       "table": "autobiographical_timeline",
+      "realColumns": [
+        "id",
+        "user_id",
+        "title",
+        "summary",
+        "description",
+        "event_type",
+        "event_date",
+        "period_label",
+        "topic",
+        "entity_type",
+        "emotional_tone",
+        "importance",
+        "weight",
+        "mention_count",
+        "last_mentioned_at",
+        "related_topics"
+      ],
       "readers": [
         "lib/ghostme/curiosity/curiosityEngine.ts",
         "lib/ghostme/memory/memorySearchFlow.ts",
@@ -106,11 +564,145 @@
         "topic",
         "weight"
       ],
-      "writtenColumns": [],
-      "obsoleteColumnCandidates": []
+      "writtenColumns": [
+        "emotional_tone",
+        "event_date",
+        "event_type",
+        "importance",
+        "period_label",
+        "related_topics",
+        "source_message",
+        "summary",
+        "title",
+        "user_id"
+      ],
+      "missingColumns": [
+        "category"
+      ],
+      "unusedRealColumns": [],
+      "neverWrittenRealColumns": [
+        "id",
+        "description",
+        "topic",
+        "entity_type",
+        "weight",
+        "mention_count",
+        "last_mentioned_at"
+      ],
+      "operations": [
+        {
+          "file": "lib/ghostme/curiosity/curiosityEngine.ts",
+          "operation": "select",
+          "columns": [
+            "emotional_tone",
+            "event_date",
+            "importance",
+            "related_topics",
+            "summary",
+            "title"
+          ]
+        },
+        {
+          "file": "lib/ghostme/memory/memorySearchFlow.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/memory/memorySnapshot.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/proactive/dailyBriefingRepository.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "description",
+            "entity_type",
+            "last_mentioned_at",
+            "mention_count",
+            "topic",
+            "weight"
+          ]
+        },
+        {
+          "file": "lib/ghostme/retrieval.ts",
+          "operation": "select",
+          "columns": [
+            "emotional_tone",
+            "event_date",
+            "event_type",
+            "importance",
+            "period_label",
+            "related_topics",
+            "summary",
+            "title"
+          ]
+        },
+        {
+          "file": "lib/ghostme/situation/situationEngine.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/timeline.ts",
+          "operation": "select",
+          "columns": [
+            "emotional_tone",
+            "event_date",
+            "event_type",
+            "importance",
+            "period_label",
+            "related_topics",
+            "summary",
+            "title"
+          ]
+        },
+        {
+          "file": "lib/ghostme/timeline.ts",
+          "operation": "write",
+          "columns": [
+            "emotional_tone",
+            "event_date",
+            "event_type",
+            "importance",
+            "period_label",
+            "related_topics",
+            "source_message",
+            "summary",
+            "title",
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/timeline.ts",
+          "operation": "write",
+          "columns": [
+            "emotional_tone",
+            "event_date",
+            "event_type",
+            "importance",
+            "period_label",
+            "related_topics",
+            "source_message",
+            "summary",
+            "title",
+            "user_id"
+          ]
+        }
+      ],
+      "readOnly": false,
+      "writeOnly": false
     },
     {
       "table": "behavior_patterns",
+      "realColumns": [],
       "readers": [
         "lib/ghostme/context/userContextGraph.ts",
         "lib/ghostme/location/locationLearningFlow.ts",
@@ -144,11 +736,216 @@
         "trigger_conditions",
         "updated_at"
       ],
-      "writtenColumns": [],
-      "obsoleteColumnCandidates": []
+      "writtenColumns": [
+        "place_id",
+        "place_label",
+        "status",
+        "updated_at",
+        "user_id"
+      ],
+      "missingColumns": [],
+      "unusedRealColumns": [],
+      "neverWrittenRealColumns": [],
+      "operations": [
+        {
+          "file": "lib/ghostme/context/userContextGraph.ts",
+          "operation": "select",
+          "columns": [
+            "confidence",
+            "description",
+            "id",
+            "last_seen_at",
+            "occurrences",
+            "pattern_type",
+            "status",
+            "title"
+          ]
+        },
+        {
+          "file": "lib/ghostme/location/locationLearningFlow.ts",
+          "operation": "select",
+          "columns": [
+            "confidence",
+            "first_seen_at",
+            "id",
+            "last_seen_at",
+            "learned_from",
+            "occurrences",
+            "status",
+            "trigger_conditions"
+          ]
+        },
+        {
+          "file": "lib/ghostme/location/locationLearningFlow.ts",
+          "operation": "write",
+          "columns": [
+            "place_id",
+            "place_label",
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/location/locationLearningFlow.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/location/locationLearningFlow.ts",
+          "operation": "write",
+          "columns": [
+            "place_id",
+            "place_label",
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/observation/observationEngine.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/observation/observationEngine.ts",
+          "operation": "write",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/observation/observationEngine.ts",
+          "operation": "select",
+          "columns": [
+            "latitude",
+            "longitude",
+            "radius_meters"
+          ]
+        },
+        {
+          "file": "lib/ghostme/observation/observationEngine.ts",
+          "operation": "write",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/observation/observationEngine.ts",
+          "operation": "select",
+          "columns": [
+            "latitude",
+            "longitude",
+            "radius_meters"
+          ]
+        },
+        {
+          "file": "lib/ghostme/observation/observationEngine.ts",
+          "operation": "write",
+          "columns": [
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/observation/observationEngine.ts",
+          "operation": "select",
+          "columns": [
+            "id",
+            "trigger_conditions"
+          ]
+        },
+        {
+          "file": "lib/ghostme/observation/observationEngine.ts",
+          "operation": "write",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/observation/observationEngine.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/observation/observationEngine.ts",
+          "operation": "write",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/observation/observationEngine.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/observation/observationEngine.ts",
+          "operation": "write",
+          "columns": [
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/observation/observationEngine.ts",
+          "operation": "write",
+          "columns": [
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/patterns/patternDecay.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/patterns/patternDecay.ts",
+          "operation": "write",
+          "columns": [
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/patterns/patternDecay.ts",
+          "operation": "write",
+          "columns": [
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/patterns/patternInsightEngine.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/proactive/dailyBriefingRepository.ts",
+          "operation": "select",
+          "columns": [
+            "confidence",
+            "description",
+            "last_seen_at",
+            "pattern_type",
+            "status",
+            "title",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/situation/situationEngine.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        }
+      ],
+      "readOnly": false,
+      "writeOnly": false
     },
     {
       "table": "calendar_events",
+      "realColumns": [],
       "readers": [
         "app/api/ghostme/proactive/read/route.ts",
         "lib/ghostme/agenda/reminderEngine.ts",
@@ -161,8 +958,10 @@
       ],
       "writers": [
         "app/api/ghostme/proactive/read/route.ts",
+        "lib/ghostme/agenda/reminderEngine.ts",
         "lib/ghostme/calendar/calendarService.ts",
-        "lib/ghostme/maintenance/retentionEngine.ts"
+        "lib/ghostme/maintenance/retentionEngine.ts",
+        "lib/ghostme/proactive/visibleProactiveMessages.ts"
       ],
       "deleters": [],
       "selectedColumns": [
@@ -179,17 +978,294 @@
         "updated_at",
         "user_id"
       ],
-      "writtenColumns": [],
-      "obsoleteColumnCandidates": []
+      "writtenColumns": [
+        "status",
+        "updated_at",
+        "user_id"
+      ],
+      "missingColumns": [],
+      "unusedRealColumns": [],
+      "neverWrittenRealColumns": [],
+      "operations": [
+        {
+          "file": "app/api/ghostme/proactive/read/route.ts",
+          "operation": "select",
+          "columns": [
+            "id",
+            "status"
+          ]
+        },
+        {
+          "file": "app/api/ghostme/proactive/read/route.ts",
+          "operation": "write",
+          "columns": [
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "app/api/ghostme/proactive/read/route.ts",
+          "operation": "select",
+          "columns": [
+            "id",
+            "status"
+          ]
+        },
+        {
+          "file": "app/api/ghostme/proactive/read/route.ts",
+          "operation": "write",
+          "columns": [
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/agenda/reminderEngine.ts",
+          "operation": "select",
+          "columns": [
+            "id",
+            "remind_at",
+            "title"
+          ]
+        },
+        {
+          "file": "lib/ghostme/agenda/reminderEngine.ts",
+          "operation": "write",
+          "columns": [
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/agenda/reminderEngine.ts",
+          "operation": "select",
+          "columns": [
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/calendar/calendarService.ts",
+          "operation": "select",
+          "columns": [
+            "description",
+            "end_at",
+            "id",
+            "remind_at",
+            "start_at",
+            "status",
+            "title",
+            "type"
+          ]
+        },
+        {
+          "file": "lib/ghostme/calendar/calendarService.ts",
+          "operation": "write",
+          "columns": [
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/calendar/calendarService.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/calendar/calendarService.ts",
+          "operation": "write",
+          "columns": [
+            "status",
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/calendar/calendarService.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/calendar/calendarService.ts",
+          "operation": "write",
+          "columns": [
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/calendar/calendarService.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/calendar/calendarService.ts",
+          "operation": "write",
+          "columns": [
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/calendar/calendarService.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/calendar/calendarService.ts",
+          "operation": "write",
+          "columns": [
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/calendar/calendarService.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/calendar/calendarService.ts",
+          "operation": "write",
+          "columns": [
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/calendar/calendarService.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/calendar/calendarService.ts",
+          "operation": "write",
+          "columns": [
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/context/userContextGraph.ts",
+          "operation": "select",
+          "columns": [
+            "description",
+            "id",
+            "remind_at",
+            "start_at",
+            "status",
+            "title",
+            "type"
+          ]
+        },
+        {
+          "file": "lib/ghostme/maintenance/retentionEngine.ts",
+          "operation": "write",
+          "columns": [
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/people/peopleGraphLinkService.ts",
+          "operation": "select",
+          "columns": [
+            "created_at",
+            "description",
+            "id",
+            "start_at",
+            "status",
+            "title",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/proactive/dailyBriefingRepository.ts",
+          "operation": "select",
+          "columns": [
+            "description",
+            "id",
+            "remind_at",
+            "start_at",
+            "status",
+            "title",
+            "type",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/proactive/dailyBriefingRepository.ts",
+          "operation": "select",
+          "columns": [
+            "description",
+            "id",
+            "remind_at",
+            "start_at",
+            "status",
+            "title",
+            "type",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/proactive/visibleProactiveMessages.ts",
+          "operation": "select",
+          "columns": [
+            "id",
+            "remind_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/proactive/visibleProactiveMessages.ts",
+          "operation": "write",
+          "columns": [
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/situation/situationEngine.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/situation/situationEngine.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/situation/situationEngine.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        }
+      ],
+      "readOnly": false,
+      "writeOnly": false
     },
     {
       "table": "chat_messages",
+      "realColumns": [],
       "readers": [
         "app/chat/page.tsx",
         "lib/ghostme/conversationSummary.ts"
       ],
       "writers": [
         "app/chat/page.tsx",
+        "lib/ghostme/conversationSummary.ts",
         "lib/ghostme/maintenance/retentionEngine.ts"
       ],
       "deleters": [
@@ -202,13 +1278,90 @@
         "message_order",
         "role"
       ],
-      "writtenColumns": [],
-      "obsoleteColumnCandidates": []
+      "writtenColumns": [
+        "content",
+        "emotional_tone",
+        "message_order",
+        "messages_count",
+        "period_end",
+        "period_start",
+        "role",
+        "status",
+        "summary",
+        "title",
+        "topics",
+        "updated_at",
+        "user_id"
+      ],
+      "missingColumns": [],
+      "unusedRealColumns": [],
+      "neverWrittenRealColumns": [],
+      "operations": [
+        {
+          "file": "app/chat/page.tsx",
+          "operation": "write",
+          "columns": [
+            "content",
+            "message_order",
+            "role",
+            "user_id"
+          ]
+        },
+        {
+          "file": "app/chat/page.tsx",
+          "operation": "select",
+          "columns": [
+            "content",
+            "created_at",
+            "id",
+            "message_order",
+            "role"
+          ]
+        },
+        {
+          "file": "lib/ghostme/conversationSummary.ts",
+          "operation": "select",
+          "columns": [
+            "content",
+            "created_at",
+            "role"
+          ]
+        },
+        {
+          "file": "lib/ghostme/conversationSummary.ts",
+          "operation": "write",
+          "columns": [
+            "emotional_tone",
+            "messages_count",
+            "period_end",
+            "period_start",
+            "summary",
+            "title",
+            "topics",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/maintenance/retentionEngine.ts",
+          "operation": "write",
+          "columns": [
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/maintenance/retentionEngine.ts",
+          "operation": "delete",
+          "columns": []
+        }
+      ],
+      "readOnly": false,
+      "writeOnly": false
     },
     {
       "table": "contradictions",
+      "realColumns": [],
       "readers": [
-        "lib/ghostme/contradictions.ts",
         "lib/ghostme/curiosity/curiosityEngine.ts",
         "lib/ghostme/situation/situationEngine.ts"
       ],
@@ -227,11 +1380,64 @@
         "topic",
         "updated_at"
       ],
-      "writtenColumns": [],
-      "obsoleteColumnCandidates": []
+      "writtenColumns": [
+        "descrizione",
+        "new_statement",
+        "old_statement",
+        "source_message",
+        "status",
+        "tema",
+        "topic",
+        "updated_at",
+        "user_id"
+      ],
+      "missingColumns": [],
+      "unusedRealColumns": [],
+      "neverWrittenRealColumns": [],
+      "operations": [
+        {
+          "file": "lib/ghostme/contradictions.ts",
+          "operation": "write",
+          "columns": [
+            "descrizione",
+            "new_statement",
+            "old_statement",
+            "source_message",
+            "status",
+            "tema",
+            "topic",
+            "updated_at",
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/curiosity/curiosityEngine.ts",
+          "operation": "select",
+          "columns": [
+            "confidence",
+            "descrizione",
+            "new_statement",
+            "old_statement",
+            "status",
+            "tema",
+            "topic",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/situation/situationEngine.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        }
+      ],
+      "readOnly": false,
+      "writeOnly": false
     },
     {
       "table": "conversation_summaries",
+      "realColumns": [],
       "readers": [
         "lib/ghostme/context/userContextGraph.ts",
         "lib/ghostme/conversationSummary.ts",
@@ -257,11 +1463,149 @@
         "topics",
         "updated_at"
       ],
-      "writtenColumns": [],
-      "obsoleteColumnCandidates": []
+      "writtenColumns": [
+        "emotional_tone",
+        "messages_count",
+        "period_end",
+        "period_start",
+        "summary",
+        "title",
+        "topics",
+        "updated_at",
+        "user_id"
+      ],
+      "missingColumns": [],
+      "unusedRealColumns": [],
+      "neverWrittenRealColumns": [],
+      "operations": [
+        {
+          "file": "lib/ghostme/context/userContextGraph.ts",
+          "operation": "select",
+          "columns": [
+            "emotional_tone",
+            "summary",
+            "title",
+            "topics",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/conversationSummary.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/conversationSummary.ts",
+          "operation": "write",
+          "columns": [
+            "emotional_tone",
+            "messages_count",
+            "period_end",
+            "period_start",
+            "summary",
+            "title",
+            "topics",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/conversationSummary.ts",
+          "operation": "write",
+          "columns": [
+            "emotional_tone",
+            "messages_count",
+            "period_end",
+            "period_start",
+            "summary",
+            "title",
+            "topics",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/conversationSummary.ts",
+          "operation": "write",
+          "columns": [
+            "emotional_tone",
+            "messages_count",
+            "period_end",
+            "period_start",
+            "summary",
+            "title",
+            "topics",
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/curiosity/curiosityEngine.ts",
+          "operation": "select",
+          "columns": [
+            "emotional_tone",
+            "period_end",
+            "period_start",
+            "summary",
+            "title",
+            "topics",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/memory/memorySearchFlow.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/memory/memorySnapshot.ts",
+          "operation": "select",
+          "columns": [
+            "emotional_tone",
+            "summary",
+            "title",
+            "topics",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/proactive/dailyBriefingRepository.ts",
+          "operation": "select",
+          "columns": [
+            "summary",
+            "title",
+            "topics",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/retrieval.ts",
+          "operation": "select",
+          "columns": [
+            "emotional_tone",
+            "period_end",
+            "period_start",
+            "summary",
+            "title",
+            "topics",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/situation/situationEngine.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        }
+      ],
+      "readOnly": false,
+      "writeOnly": false
     },
     {
       "table": "dynamic_self_profile",
+      "realColumns": [],
       "readers": [
         "lib/ghostme/curiosity/curiosityEngine.ts",
         "lib/ghostme/dynamicSelfProfile.ts",
@@ -283,11 +1627,153 @@
         "trait",
         "updated_at"
       ],
-      "writtenColumns": [],
-      "obsoleteColumnCandidates": []
+      "writtenColumns": [
+        "confidence",
+        "description",
+        "last_evidence",
+        "source",
+        "updated_at",
+        "user_id"
+      ],
+      "missingColumns": [],
+      "unusedRealColumns": [],
+      "neverWrittenRealColumns": [],
+      "operations": [
+        {
+          "file": "lib/ghostme/curiosity/curiosityEngine.ts",
+          "operation": "select",
+          "columns": [
+            "confidence",
+            "description",
+            "last_evidence",
+            "trait",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/dynamicSelfProfile.ts",
+          "operation": "select",
+          "columns": [
+            "confidence",
+            "description",
+            "last_evidence",
+            "source",
+            "trait",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/dynamicSelfProfile.ts",
+          "operation": "write",
+          "columns": [
+            "confidence",
+            "description",
+            "last_evidence",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/dynamicSelfProfile.ts",
+          "operation": "select",
+          "columns": [
+            "confidence",
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/dynamicSelfProfile.ts",
+          "operation": "write",
+          "columns": [
+            "confidence",
+            "description",
+            "last_evidence",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/dynamicSelfProfile.ts",
+          "operation": "write",
+          "columns": [
+            "confidence",
+            "description",
+            "last_evidence",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/dynamicSelfProfile.ts",
+          "operation": "write",
+          "columns": [
+            "confidence",
+            "description",
+            "last_evidence",
+            "source",
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/profile/profileBehaviorSeed.ts",
+          "operation": "select",
+          "columns": [
+            "confidence",
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/profile/profileBehaviorSeed.ts",
+          "operation": "write",
+          "columns": [
+            "confidence",
+            "source",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/profile/profileBehaviorSeed.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/profile/profileBehaviorSeed.ts",
+          "operation": "write",
+          "columns": [
+            "confidence",
+            "source",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/profile/profileBehaviorSeed.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/profile/profileBehaviorSeed.ts",
+          "operation": "write",
+          "columns": [
+            "last_evidence",
+            "source",
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/situation/situationEngine.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        }
+      ],
+      "readOnly": false,
+      "writeOnly": false
     },
     {
       "table": "episodic_memories",
+      "realColumns": [],
       "readers": [
         "lib/ghostme/chat/chatPostProcessing.ts",
         "lib/ghostme/context/userContextGraph.ts",
@@ -312,11 +1798,111 @@
         "summary",
         "updated_at"
       ],
-      "writtenColumns": [],
-      "obsoleteColumnCandidates": []
+      "writtenColumns": [
+        "emotional_tone",
+        "importance",
+        "related_topics",
+        "summary",
+        "user_id"
+      ],
+      "missingColumns": [],
+      "unusedRealColumns": [],
+      "neverWrittenRealColumns": [],
+      "operations": [
+        {
+          "file": "lib/ghostme/chat/chatPostProcessing.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/chat/chatPostProcessing.ts",
+          "operation": "write",
+          "columns": [
+            "emotional_tone",
+            "importance",
+            "related_topics",
+            "summary",
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/context/userContextGraph.ts",
+          "operation": "select",
+          "columns": [
+            "created_at",
+            "emotional_tone",
+            "importance",
+            "related_topics",
+            "summary"
+          ]
+        },
+        {
+          "file": "lib/ghostme/memory/memorySearchFlow.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/memory/memorySnapshot.ts",
+          "operation": "select",
+          "columns": [
+            "created_at",
+            "emotional_tone",
+            "importance",
+            "related_topics",
+            "summary"
+          ]
+        },
+        {
+          "file": "lib/ghostme/people/peopleGraphLinkService.ts",
+          "operation": "select",
+          "columns": [
+            "created_at",
+            "emotional_tone",
+            "id",
+            "importance",
+            "related_topics",
+            "summary",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/proactive/dailyBriefingRepository.ts",
+          "operation": "select",
+          "columns": [
+            "created_at",
+            "related_topics",
+            "summary"
+          ]
+        },
+        {
+          "file": "lib/ghostme/retrieval.ts",
+          "operation": "select",
+          "columns": [
+            "created_at",
+            "emotional_tone",
+            "importance",
+            "related_topics",
+            "summary"
+          ]
+        },
+        {
+          "file": "lib/ghostme/situation/situationEngine.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        }
+      ],
+      "readOnly": false,
+      "writeOnly": false
     },
     {
       "table": "ghost_behavior_rules",
+      "realColumns": [],
       "readers": [
         "lib/ghostme/behavior/behaviorRulesEngine.ts",
         "lib/ghostme/profile/profileBehaviorSeed.ts",
@@ -333,11 +1919,167 @@
         "id",
         "priority"
       ],
-      "writtenColumns": [],
-      "obsoleteColumnCandidates": []
+      "writtenColumns": [
+        "confidence",
+        "context",
+        "last_applied_at",
+        "priority",
+        "rule_text",
+        "rule_type",
+        "source_message",
+        "status",
+        "target_area",
+        "trigger_hint",
+        "updated_at",
+        "user_id"
+      ],
+      "missingColumns": [],
+      "unusedRealColumns": [],
+      "neverWrittenRealColumns": [],
+      "operations": [
+        {
+          "file": "lib/ghostme/behavior/behaviorRulesEngine.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/behavior/behaviorRulesEngine.ts",
+          "operation": "write",
+          "columns": [
+            "confidence",
+            "priority",
+            "rule_type",
+            "target_area",
+            "trigger_hint",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/behavior/behaviorRulesEngine.ts",
+          "operation": "select",
+          "columns": [
+            "confidence",
+            "id",
+            "priority"
+          ]
+        },
+        {
+          "file": "lib/ghostme/behavior/behaviorRulesEngine.ts",
+          "operation": "write",
+          "columns": [
+            "confidence",
+            "priority",
+            "rule_type",
+            "target_area",
+            "trigger_hint",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/behavior/behaviorRulesEngine.ts",
+          "operation": "write",
+          "columns": [
+            "confidence",
+            "priority",
+            "rule_type",
+            "target_area",
+            "trigger_hint",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/behavior/behaviorRulesEngine.ts",
+          "operation": "write",
+          "columns": [
+            "confidence",
+            "context",
+            "priority",
+            "rule_text",
+            "rule_type",
+            "source_message",
+            "status",
+            "target_area",
+            "trigger_hint",
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/behavior/behaviorRulesEngine.ts",
+          "operation": "write",
+          "columns": [
+            "last_applied_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/profile/profileBehaviorSeed.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/profile/profileBehaviorSeed.ts",
+          "operation": "write",
+          "columns": [
+            "confidence",
+            "rule_text",
+            "rule_type",
+            "source_message",
+            "status",
+            "target_area",
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/profile/profileBehaviorSeed.ts",
+          "operation": "select",
+          "columns": [
+            "confidence",
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/profile/profileBehaviorSeed.ts",
+          "operation": "write",
+          "columns": [
+            "confidence",
+            "rule_text",
+            "rule_type",
+            "source_message",
+            "status",
+            "target_area",
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/situation/situationEngine.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        }
+      ],
+      "readOnly": false,
+      "writeOnly": false
     },
     {
       "table": "ghost_proactive_messages",
+      "realColumns": [
+        "id",
+        "user_id",
+        "category",
+        "source",
+        "logical_key",
+        "priority",
+        "status",
+        "title",
+        "message",
+        "scheduled_for",
+        "created_at",
+        "updated_at"
+      ],
       "readers": [
         "app/api/ghostme/proactive/read/route.ts",
         "lib/ghostme/agenda/reminderEngine.ts",
@@ -368,33 +2110,521 @@
       ],
       "deleters": [],
       "selectedColumns": [
-        "\"curiosity",
-        "\"exact\"",
-        "\"skipped\" as const };\n  }\n\n  if",
         "*",
-        "VISIBLE_PROACTIVE_STATUSES)\n      .gte",
         "category",
         "created_at",
+        "curiosity",
         "id",
-        "id\"",
         "logical_key",
         "message",
         "priority",
-        "priorityLimit.minimum)\n      .lte",
         "scheduled_for",
         "status",
         "title",
-        "true })\n      .eq",
         "updated_at",
-        "userId)\n      .eq",
-        "userId)\n      .in",
         "user_id"
       ],
-      "writtenColumns": [],
-      "obsoleteColumnCandidates": []
+      "writtenColumns": [
+        "answered_at",
+        "expires_at",
+        "last_action",
+        "last_reason",
+        "read_at",
+        "status",
+        "updated_at",
+        "utente"
+      ],
+      "missingColumns": [
+        "curiosity"
+      ],
+      "unusedRealColumns": [],
+      "neverWrittenRealColumns": [
+        "id",
+        "user_id",
+        "category",
+        "source",
+        "logical_key",
+        "priority",
+        "title",
+        "message",
+        "scheduled_for",
+        "created_at"
+      ],
+      "operations": [
+        {
+          "file": "app/api/ghostme/proactive/read/route.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "id",
+            "logical_key",
+            "status"
+          ]
+        },
+        {
+          "file": "app/api/ghostme/proactive/read/route.ts",
+          "operation": "write",
+          "columns": [
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "app/api/ghostme/proactive/read/route.ts",
+          "operation": "select",
+          "columns": [
+            "id",
+            "status"
+          ]
+        },
+        {
+          "file": "app/api/ghostme/proactive/read/route.ts",
+          "operation": "write",
+          "columns": []
+        },
+        {
+          "file": "app/api/ghostme/proactive/read/route.ts",
+          "operation": "select",
+          "columns": [
+            "status"
+          ]
+        },
+        {
+          "file": "lib/ghostme/agenda/reminderEngine.ts",
+          "operation": "select",
+          "columns": [
+            "created_at",
+            "id",
+            "logical_key",
+            "status"
+          ]
+        },
+        {
+          "file": "lib/ghostme/agenda/reminderEngine.ts",
+          "operation": "write",
+          "columns": [
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/agenda/reminderEngine.ts",
+          "operation": "select",
+          "columns": [
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/agenda/reminderEngine.ts",
+          "operation": "write",
+          "columns": [
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/agenda/reminderEngine.ts",
+          "operation": "select",
+          "columns": [
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/calendar/calendarService.ts",
+          "operation": "select",
+          "columns": [
+            "created_at",
+            "id",
+            "logical_key"
+          ]
+        },
+        {
+          "file": "lib/ghostme/calendar/calendarService.ts",
+          "operation": "write",
+          "columns": [
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/calendar/calendarService.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/calendar/calendarService.ts",
+          "operation": "write",
+          "columns": [
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/context/contextBuilder.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "created_at",
+            "message",
+            "title"
+          ]
+        },
+        {
+          "file": "lib/ghostme/context/userContextGraph.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "created_at",
+            "id",
+            "message",
+            "priority",
+            "status",
+            "title"
+          ]
+        },
+        {
+          "file": "lib/ghostme/context/userContextGraph.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "created_at",
+            "id",
+            "message",
+            "priority",
+            "status",
+            "title"
+          ]
+        },
+        {
+          "file": "lib/ghostme/curiosity/curiosityEngine.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/home/houseSuggestionResponseFlow.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/home/houseSuggestionResponseFlow.ts",
+          "operation": "write",
+          "columns": [
+            "expires_at",
+            "last_action",
+            "last_reason",
+            "status",
+            "updated_at",
+            "utente"
+          ]
+        },
+        {
+          "file": "lib/ghostme/home/houseSuggestionResponseFlow.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/home/houseSuggestionResponseFlow.ts",
+          "operation": "write",
+          "columns": [
+            "answered_at",
+            "read_at",
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/home/houseSuggestionResponseFlow.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/home/houseSuggestionResponseFlow.ts",
+          "operation": "write",
+          "columns": [
+            "read_at",
+            "status"
+          ]
+        },
+        {
+          "file": "lib/ghostme/location/locationLearningFlow.ts",
+          "operation": "select",
+          "columns": [
+            "id",
+            "logical_key",
+            "message",
+            "status"
+          ]
+        },
+        {
+          "file": "lib/ghostme/location/locationLearningFlow.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/location/locationLearningFlow.ts",
+          "operation": "write",
+          "columns": [
+            "answered_at",
+            "read_at",
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/maintenance/retentionEngine.ts",
+          "operation": "write",
+          "columns": [
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/maintenance/retentionEngine.ts",
+          "operation": "write",
+          "columns": [
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/observation/observationInsightEngine.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/observation/observationInsightEngine.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "created_at",
+            "message",
+            "title"
+          ]
+        },
+        {
+          "file": "lib/ghostme/patterns/patternInsightEngine.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/proactive/curiosityCardWriter.ts",
+          "operation": "select",
+          "columns": [
+            "created_at",
+            "id",
+            "logical_key"
+          ]
+        },
+        {
+          "file": "lib/ghostme/proactive/proactiveMessageService.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "id",
+            "logical_key",
+            "message",
+            "status",
+            "title"
+          ]
+        },
+        {
+          "file": "lib/ghostme/proactive/proactiveMessageService.ts",
+          "operation": "write",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/proactive/proactiveMessageService.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "id",
+            "message",
+            "status",
+            "title"
+          ]
+        },
+        {
+          "file": "lib/ghostme/proactive/proactiveMessageService.ts",
+          "operation": "write",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/proactive/proactiveMessageService.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/proactive/proactiveMessageService.ts",
+          "operation": "write",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/proactive/proactiveMessageService.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/proactive/proactiveMessageService.ts",
+          "operation": "write",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/proactive/proactiveMessageService.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/proactive/proactiveMessageService.ts",
+          "operation": "write",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/proactive/proactiveMessageService.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/proactive/proactiveMessageService.ts",
+          "operation": "write",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/proactive/proactiveMessageService.ts",
+          "operation": "select",
+          "columns": [
+            "curiosity",
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/proactive/proactiveMessageService.ts",
+          "operation": "write",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/proactive/proactiveMessageService.ts",
+          "operation": "write",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/proactive/proactiveMessageService.ts",
+          "operation": "write",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/proactive/proactiveMessageService.ts",
+          "operation": "write",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/proactive/proactiveTrigger.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/proactive/proactiveUserFlow.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/proactive/proactiveUserFlow.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/proactive/trueProactiveCardWriter.ts",
+          "operation": "select",
+          "columns": [
+            "priority"
+          ]
+        },
+        {
+          "file": "lib/ghostme/proactive/visibleProactiveMessages.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "created_at",
+            "id",
+            "logical_key",
+            "scheduled_for",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/proactive/visibleProactiveMessages.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/proactive/visibleProactiveMessages.ts",
+          "operation": "write",
+          "columns": [
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/proactive/visibleProactiveMessages.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/proactive/visibleProactiveMessages.ts",
+          "operation": "write",
+          "columns": [
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/proactive/visibleProactiveMessages.ts",
+          "operation": "write",
+          "columns": [
+            "status",
+            "updated_at"
+          ]
+        }
+      ],
+      "readOnly": false,
+      "writeOnly": false
     },
     {
       "table": "goals_desires",
+      "realColumns": [],
       "readers": [
         "app/api/goals/update-status/route.ts",
         "lib/ghostme/context/userContextGraph.ts",
@@ -431,11 +2661,308 @@
         "title",
         "updated_at"
       ],
-      "writtenColumns": [],
-      "obsoleteColumnCandidates": []
+      "writtenColumns": [
+        "category",
+        "completed_at",
+        "description",
+        "emotional_tone",
+        "importance",
+        "needs_review",
+        "related_topics",
+        "review_requested_at",
+        "source_message",
+        "status",
+        "updated_at",
+        "user_id"
+      ],
+      "missingColumns": [],
+      "unusedRealColumns": [],
+      "neverWrittenRealColumns": [],
+      "operations": [
+        {
+          "file": "app/api/goals/update-status/route.ts",
+          "operation": "select",
+          "columns": [
+            "completed_at",
+            "id",
+            "needs_review",
+            "review_requested_at",
+            "status"
+          ]
+        },
+        {
+          "file": "app/api/goals/update-status/route.ts",
+          "operation": "write",
+          "columns": [
+            "needs_review",
+            "review_requested_at",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "app/api/goals/update-status/route.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "app/api/goals/update-status/route.ts",
+          "operation": "write",
+          "columns": [
+            "needs_review",
+            "review_requested_at",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "app/api/goals/update-status/route.ts",
+          "operation": "select",
+          "columns": [
+            "completed_at",
+            "id",
+            "needs_review",
+            "review_requested_at",
+            "status"
+          ]
+        },
+        {
+          "file": "app/api/goals/update-status/route.ts",
+          "operation": "write",
+          "columns": [
+            "completed_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/context/userContextGraph.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "description",
+            "id",
+            "importance",
+            "status",
+            "title",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/curiosity/curiosityEngine.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "description",
+            "emotional_tone",
+            "importance",
+            "related_topics",
+            "status",
+            "title",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/goals/goalsActionsLifecycle.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/goals/goalsActionsLifecycle.ts",
+          "operation": "write",
+          "columns": [
+            "needs_review",
+            "review_requested_at",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/goals/goalsActionsLifecycle.ts",
+          "operation": "select",
+          "columns": [
+            "description",
+            "id",
+            "related_topics",
+            "source_message",
+            "title"
+          ]
+        },
+        {
+          "file": "lib/ghostme/goals/goalsActionsLifecycle.ts",
+          "operation": "write",
+          "columns": [
+            "needs_review",
+            "review_requested_at",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/goals/goalsActionsLifecycle.ts",
+          "operation": "select",
+          "columns": [
+            "description",
+            "id",
+            "related_topics",
+            "source_message",
+            "title"
+          ]
+        },
+        {
+          "file": "lib/ghostme/goals/goalsActionsLifecycle.ts",
+          "operation": "write",
+          "columns": [
+            "needs_review",
+            "review_requested_at",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/goals/goalsActionsLifecycle.ts",
+          "operation": "select",
+          "columns": [
+            "completed_at",
+            "goal_id",
+            "id",
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/goals/goalsActionsLifecycle.ts",
+          "operation": "write",
+          "columns": [
+            "needs_review",
+            "review_requested_at",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/goals/goalsSnapshot.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/goals/goalsSnapshot.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/goalsDesires.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "description",
+            "emotional_tone",
+            "importance",
+            "related_topics",
+            "status",
+            "title",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/goalsDesires.ts",
+          "operation": "select",
+          "columns": [
+            "id",
+            "importance",
+            "status"
+          ]
+        },
+        {
+          "file": "lib/ghostme/goalsDesires.ts",
+          "operation": "write",
+          "columns": [
+            "category",
+            "description",
+            "emotional_tone",
+            "importance",
+            "related_topics",
+            "source_message",
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/goalsDesires.ts",
+          "operation": "write",
+          "columns": [
+            "category",
+            "description",
+            "emotional_tone",
+            "importance",
+            "related_topics",
+            "source_message",
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/goalsDesires.ts",
+          "operation": "write",
+          "columns": [
+            "category",
+            "description",
+            "emotional_tone",
+            "importance",
+            "related_topics",
+            "source_message",
+            "status",
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/memory/memorySearchFlow.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/people/peopleGraphLinkService.ts",
+          "operation": "select",
+          "columns": [
+            "created_at",
+            "description",
+            "id",
+            "importance",
+            "related_topics",
+            "source_message",
+            "status",
+            "title",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/proactive/dailyBriefingRepository.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "description",
+            "importance",
+            "status",
+            "title",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/situation/situationEngine.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        }
+      ],
+      "readOnly": false,
+      "writeOnly": false
     },
     {
       "table": "house_automation_controls",
+      "realColumns": [],
       "readers": [
         "lib/ghostme/context/userContextGraph.ts",
         "lib/ghostme/home/houseSuggestionResponseFlow.ts",
@@ -459,11 +2986,124 @@
         "status",
         "updated_at"
       ],
-      "writtenColumns": [],
-      "obsoleteColumnCandidates": []
+      "writtenColumns": [
+        "expires_at",
+        "last_action",
+        "last_reason",
+        "onConflict",
+        "status",
+        "updated_at",
+        "utente"
+      ],
+      "missingColumns": [],
+      "unusedRealColumns": [],
+      "neverWrittenRealColumns": [],
+      "operations": [
+        {
+          "file": "lib/ghostme/context/userContextGraph.ts",
+          "operation": "select",
+          "columns": [
+            "automation_key",
+            "automation_name",
+            "control_type",
+            "expires_at",
+            "id",
+            "last_action",
+            "last_reason",
+            "room_key",
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/home/houseSuggestionResponseFlow.ts",
+          "operation": "select",
+          "columns": [
+            "automation_key",
+            "control_type",
+            "id",
+            "last_reason",
+            "status"
+          ]
+        },
+        {
+          "file": "lib/ghostme/home/houseSuggestionResponseFlow.ts",
+          "operation": "write",
+          "columns": [
+            "expires_at",
+            "last_action",
+            "last_reason",
+            "status",
+            "updated_at",
+            "utente"
+          ]
+        },
+        {
+          "file": "lib/ghostme/home/houseSuggestionResponseFlow.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/home/houseSuggestionResponseFlow.ts",
+          "operation": "write",
+          "columns": [
+            "expires_at",
+            "last_action",
+            "last_reason",
+            "status",
+            "updated_at",
+            "utente"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
+          "operation": "select",
+          "columns": [
+            "id",
+            "status"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
+          "operation": "write",
+          "columns": [
+            "onConflict"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
+          "operation": "write",
+          "columns": [
+            "onConflict"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
+          "operation": "write",
+          "columns": [
+            "expires_at",
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
+          "operation": "write",
+          "columns": [
+            "expires_at",
+            "status",
+            "updated_at"
+          ]
+        }
+      ],
+      "readOnly": false,
+      "writeOnly": false
     },
     {
       "table": "house_entities",
+      "realColumns": [],
       "readers": [
         "lib/ghostme/home/houseStateSnapshot.ts",
         "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts"
@@ -482,11 +3122,73 @@
         "room_key",
         "updated_at"
       ],
-      "writtenColumns": [],
-      "obsoleteColumnCandidates": []
+      "writtenColumns": [
+        "can_trigger_event",
+        "entity_id",
+        "entity_name",
+        "entity_type",
+        "is_useful",
+        "onConflict",
+        "room_key",
+        "updated_at",
+        "user_id"
+      ],
+      "missingColumns": [],
+      "unusedRealColumns": [],
+      "neverWrittenRealColumns": [],
+      "operations": [
+        {
+          "file": "app/api/home-assistant/event/route.ts",
+          "operation": "write",
+          "columns": [
+            "can_trigger_event",
+            "entity_id",
+            "entity_name",
+            "entity_type",
+            "is_useful",
+            "room_key",
+            "updated_at",
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/home/houseStateSnapshot.ts",
+          "operation": "select",
+          "columns": [
+            "entity_id",
+            "entity_name",
+            "entity_type",
+            "room_key",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
+          "operation": "select",
+          "columns": [
+            "can_trigger_event",
+            "entity_id",
+            "entity_name",
+            "entity_type",
+            "is_useful",
+            "room_key",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/houseEntityRegistry.ts",
+          "operation": "write",
+          "columns": [
+            "onConflict"
+          ]
+        }
+      ],
+      "readOnly": false,
+      "writeOnly": false
     },
     {
       "table": "house_events",
+      "realColumns": [],
       "readers": [
         "app/api/home-assistant/event/route.ts",
         "lib/ghostme/home/homeComfortRiskSnapshot.ts",
@@ -506,7 +3208,8 @@
         "app/api/home-assistant/event/route.ts",
         "lib/ghostme/home/houseWorkerFlow.ts",
         "lib/ghostme/homeAssistant/homeEventLogger.ts",
-        "lib/ghostme/homeAssistant/houseLightLearningFlow.ts"
+        "lib/ghostme/homeAssistant/houseLightLearningFlow.ts",
+        "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts"
       ],
       "deleters": [],
       "selectedColumns": [
@@ -522,11 +3225,353 @@
         "room_key",
         "value"
       ],
-      "writtenColumns": [],
-      "obsoleteColumnCandidates": []
+      "writtenColumns": [
+        "can_trigger_event",
+        "entity_id",
+        "entity_name",
+        "entity_type",
+        "event_type",
+        "is_useful",
+        "new_state",
+        "observed_results",
+        "occurred_at",
+        "old_state",
+        "people_home_count",
+        "room_key",
+        "source",
+        "target_user",
+        "updated_at",
+        "user_id",
+        "value"
+      ],
+      "missingColumns": [],
+      "unusedRealColumns": [],
+      "neverWrittenRealColumns": [],
+      "operations": [
+        {
+          "file": "app/api/home-assistant/event/route.ts",
+          "operation": "select",
+          "columns": [
+            "event_type",
+            "id",
+            "new_state",
+            "occurred_at"
+          ]
+        },
+        {
+          "file": "app/api/home-assistant/event/route.ts",
+          "operation": "write",
+          "columns": [
+            "can_trigger_event",
+            "entity_id",
+            "entity_name",
+            "entity_type",
+            "is_useful",
+            "room_key",
+            "updated_at",
+            "user_id"
+          ]
+        },
+        {
+          "file": "app/api/home-assistant/event/route.ts",
+          "operation": "select",
+          "columns": [
+            "entity_id",
+            "occurred_at",
+            "room_key"
+          ]
+        },
+        {
+          "file": "app/api/home-assistant/event/route.ts",
+          "operation": "write",
+          "columns": [
+            "can_trigger_event",
+            "entity_id",
+            "entity_name",
+            "entity_type",
+            "is_useful",
+            "room_key",
+            "updated_at",
+            "user_id"
+          ]
+        },
+        {
+          "file": "app/api/home-assistant/event/route.ts",
+          "operation": "select",
+          "columns": [
+            "occurred_at"
+          ]
+        },
+        {
+          "file": "app/api/home-assistant/event/route.ts",
+          "operation": "write",
+          "columns": [
+            "can_trigger_event",
+            "entity_id",
+            "entity_name",
+            "entity_type",
+            "is_useful",
+            "room_key",
+            "updated_at",
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/home/homeComfortRiskSnapshot.ts",
+          "operation": "select",
+          "columns": [
+            "entity_id",
+            "entity_name",
+            "entity_type",
+            "event_type",
+            "new_state",
+            "occurred_at",
+            "room_key",
+            "value"
+          ]
+        },
+        {
+          "file": "lib/ghostme/home/houseRouteSnapshot.ts",
+          "operation": "select",
+          "columns": [
+            "event_type",
+            "occurred_at",
+            "room_key"
+          ]
+        },
+        {
+          "file": "lib/ghostme/home/houseStateSnapshot.ts",
+          "operation": "select",
+          "columns": [
+            "entity_id",
+            "entity_name",
+            "entity_type",
+            "event_type",
+            "new_state",
+            "occurred_at",
+            "room_key",
+            "value"
+          ]
+        },
+        {
+          "file": "lib/ghostme/home/houseWorkerFlow.ts",
+          "operation": "select",
+          "columns": [
+            "entity_id",
+            "event_type",
+            "id",
+            "occurred_at",
+            "value"
+          ]
+        },
+        {
+          "file": "lib/ghostme/home/houseWorkerFlow.ts",
+          "operation": "write",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/home/houseWorkerFlow.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/home/houseWorkerFlow.ts",
+          "operation": "write",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/home/houseWorkerFlow.ts",
+          "operation": "write",
+          "columns": [
+            "people_home_count"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/homeEventLogger.ts",
+          "operation": "select",
+          "columns": [
+            "entity_name",
+            "id",
+            "value"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/homeEventLogger.ts",
+          "operation": "write",
+          "columns": [
+            "observed_results",
+            "value"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/homeEventLogger.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/homeEventLogger.ts",
+          "operation": "write",
+          "columns": [
+            "observed_results",
+            "value"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/homeEventLogger.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/homeEventLogger.ts",
+          "operation": "write",
+          "columns": [
+            "entity_id",
+            "entity_name",
+            "entity_type",
+            "event_type",
+            "new_state",
+            "occurred_at",
+            "old_state",
+            "people_home_count",
+            "room_key",
+            "source",
+            "target_user",
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/homeEventLogger.ts",
+          "operation": "select",
+          "columns": [
+            "event_type",
+            "id",
+            "new_state",
+            "occurred_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/homeEventLogger.ts",
+          "operation": "write",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/houseAutomationContext.ts",
+          "operation": "select",
+          "columns": [
+            "entity_id",
+            "entity_name",
+            "room_key"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
+          "operation": "select",
+          "columns": [
+            "entity_id",
+            "entity_name",
+            "entity_type",
+            "event_type",
+            "new_state",
+            "occurred_at",
+            "people_home_count",
+            "room_key"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
+          "operation": "select",
+          "columns": [
+            "entity_id",
+            "entity_name",
+            "entity_type",
+            "event_type",
+            "new_state",
+            "occurred_at",
+            "room_key"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/houseLightLearningFlow.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/houseLightLearningFlow.ts",
+          "operation": "write",
+          "columns": [
+            "source"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/houseLightLearningFlow.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/houseLightLearningFlow.ts",
+          "operation": "write",
+          "columns": [
+            "source"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/houseLightLearningFlow.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/housePatternEngine.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts",
+          "operation": "select",
+          "columns": [
+            "event_type",
+            "occurred_at",
+            "people_home_count",
+            "room_key"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts",
+          "operation": "write",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/proactive/dailyBriefingRepository.ts",
+          "operation": "select",
+          "columns": [
+            "entity_name",
+            "entity_type",
+            "event_type",
+            "new_state",
+            "occurred_at",
+            "room_key"
+          ]
+        }
+      ],
+      "readOnly": false,
+      "writeOnly": false
     },
     {
       "table": "house_learned_rules",
+      "realColumns": [],
       "readers": [
         "lib/ghostme/context/userContextGraph.ts",
         "lib/ghostme/home/houseRouteSnapshot.ts",
@@ -554,16 +3599,179 @@
         "trigger_conditions",
         "updated_at"
       ],
-      "writtenColumns": [],
-      "obsoleteColumnCandidates": []
+      "writtenColumns": [
+        "confidence",
+        "confirmations_no",
+        "confirmations_yes",
+        "description",
+        "rule_key",
+        "status",
+        "suggested_action",
+        "title",
+        "trigger_conditions",
+        "updated_at",
+        "user_id"
+      ],
+      "missingColumns": [],
+      "unusedRealColumns": [],
+      "neverWrittenRealColumns": [],
+      "operations": [
+        {
+          "file": "lib/ghostme/context/userContextGraph.ts",
+          "operation": "select",
+          "columns": [
+            "confidence",
+            "description",
+            "id",
+            "rule_key",
+            "status",
+            "title",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/home/houseRouteSnapshot.ts",
+          "operation": "select",
+          "columns": [
+            "confidence",
+            "rule_key",
+            "status",
+            "title",
+            "trigger_conditions",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/home/houseSuggestionResponseFlow.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/home/houseSuggestionResponseFlow.ts",
+          "operation": "write",
+          "columns": [
+            "confidence",
+            "confirmations_no",
+            "confirmations_yes",
+            "description",
+            "status",
+            "suggested_action",
+            "title",
+            "trigger_conditions",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/home/houseSuggestionResponseFlow.ts",
+          "operation": "write",
+          "columns": [
+            "confidence",
+            "confirmations_no",
+            "confirmations_yes",
+            "description",
+            "status",
+            "suggested_action",
+            "title",
+            "trigger_conditions",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/home/houseSuggestionResponseFlow.ts",
+          "operation": "write",
+          "columns": [
+            "confidence",
+            "confirmations_no",
+            "confirmations_yes",
+            "description",
+            "rule_key",
+            "status",
+            "suggested_action",
+            "title",
+            "trigger_conditions",
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
+          "operation": "select",
+          "columns": [
+            "confidence",
+            "rule_key",
+            "status",
+            "title",
+            "trigger_conditions",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/houseLearnedRulesContext.ts",
+          "operation": "select",
+          "columns": [
+            "confidence",
+            "confirmations_no",
+            "confirmations_yes",
+            "description",
+            "rule_key",
+            "status",
+            "suggested_action",
+            "title",
+            "trigger_conditions",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts",
+          "operation": "select",
+          "columns": [
+            "confirmations_no",
+            "confirmations_yes",
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts",
+          "operation": "write",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts",
+          "operation": "write",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts",
+          "operation": "write",
+          "columns": [
+            "confirmations_no",
+            "confirmations_yes"
+          ]
+        }
+      ],
+      "readOnly": false,
+      "writeOnly": false
     },
     {
       "table": "house_patterns",
+      "realColumns": [
+        "id",
+        "user_id",
+        "pattern_type",
+        "title",
+        "description",
+        "confidence",
+        "status",
+        "occurrences",
+        "first_seen_at",
+        "last_seen_at",
+        "updated_at"
+      ],
       "readers": [
         "lib/ghostme/context/userContextGraph.ts",
         "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
-        "lib/ghostme/homeAssistant/housePatternEngine.ts",
-        "lib/ghostme/proactive/dailyBriefingRepository.ts"
+        "lib/ghostme/homeAssistant/housePatternEngine.ts"
       ],
       "writers": [
         "lib/ghostme/homeAssistant/housePatternEngine.ts"
@@ -582,16 +3790,113 @@
         "title",
         "updated_at"
       ],
-      "writtenColumns": [],
-      "obsoleteColumnCandidates": []
+      "writtenColumns": [
+        "first_seen_at",
+        "user_id"
+      ],
+      "missingColumns": [],
+      "unusedRealColumns": [],
+      "neverWrittenRealColumns": [
+        "id",
+        "pattern_type",
+        "title",
+        "description",
+        "confidence",
+        "status",
+        "occurrences",
+        "last_seen_at",
+        "updated_at"
+      ],
+      "operations": [
+        {
+          "file": "lib/ghostme/context/userContextGraph.ts",
+          "operation": "select",
+          "columns": [
+            "confidence",
+            "description",
+            "id",
+            "last_seen_at",
+            "occurrences",
+            "pattern_type",
+            "status",
+            "title",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
+          "operation": "select",
+          "columns": [
+            "confidence",
+            "description",
+            "last_seen_at",
+            "occurrences",
+            "pattern_type",
+            "status",
+            "title"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/housePatternEngine.ts",
+          "operation": "select",
+          "columns": [
+            "first_seen_at",
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/housePatternEngine.ts",
+          "operation": "write",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/housePatternEngine.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/housePatternEngine.ts",
+          "operation": "write",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/housePatternEngine.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/housePatternEngine.ts",
+          "operation": "write",
+          "columns": [
+            "first_seen_at",
+            "user_id"
+          ]
+        }
+      ],
+      "readOnly": false,
+      "writeOnly": false
     },
     {
       "table": "house_suggestions",
+      "realColumns": [
+        "id",
+        "user_id",
+        "title",
+        "message",
+        "suggestion_type",
+        "room_key",
+        "confidence",
+        "status",
+        "created_at"
+      ],
       "readers": [
         "lib/ghostme/home/houseSuggestionResponseFlow.ts",
         "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
-        "lib/ghostme/homeAssistant/houseSuggestionEngine.ts",
-        "lib/ghostme/proactive/dailyBriefingRepository.ts"
+        "lib/ghostme/homeAssistant/houseSuggestionEngine.ts"
       ],
       "writers": [
         "lib/ghostme/home/houseSuggestionResponseFlow.ts",
@@ -610,11 +3915,171 @@
         "occurred_at",
         "room_key"
       ],
-      "writtenColumns": [],
-      "obsoleteColumnCandidates": []
+      "writtenColumns": [
+        "response_at",
+        "room_key",
+        "status",
+        "suggestion_type",
+        "user_id",
+        "user_response"
+      ],
+      "missingColumns": [
+        "entity_id",
+        "entity_name",
+        "entity_type",
+        "event_type",
+        "new_state",
+        "occurred_at"
+      ],
+      "unusedRealColumns": [],
+      "neverWrittenRealColumns": [
+        "id",
+        "title",
+        "message",
+        "confidence",
+        "created_at"
+      ],
+      "operations": [
+        {
+          "file": "lib/ghostme/home/houseSuggestionResponseFlow.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/home/houseSuggestionResponseFlow.ts",
+          "operation": "write",
+          "columns": [
+            "response_at",
+            "status",
+            "user_response"
+          ]
+        },
+        {
+          "file": "lib/ghostme/home/houseSuggestionResponseFlow.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/home/houseSuggestionResponseFlow.ts",
+          "operation": "write",
+          "columns": [
+            "response_at",
+            "status",
+            "user_response"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
+          "operation": "write",
+          "columns": [
+            "room_key",
+            "status",
+            "suggestion_type",
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
+          "operation": "write",
+          "columns": [
+            "room_key",
+            "status",
+            "suggestion_type",
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
+          "operation": "select",
+          "columns": [
+            "entity_id",
+            "entity_name",
+            "entity_type",
+            "event_type",
+            "new_state",
+            "occurred_at",
+            "room_key"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
+          "operation": "write",
+          "columns": [
+            "room_key",
+            "status",
+            "suggestion_type",
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/houseSuggestionEngine.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/houseSuggestionEngine.ts",
+          "operation": "write",
+          "columns": [
+            "room_key",
+            "status",
+            "suggestion_type",
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/houseSuggestionEngine.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/houseSuggestionEngine.ts",
+          "operation": "write",
+          "columns": [
+            "room_key",
+            "status",
+            "suggestion_type",
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/homeAssistant/houseSuggestionEngine.ts",
+          "operation": "write",
+          "columns": [
+            "room_key",
+            "status",
+            "suggestion_type",
+            "user_id"
+          ]
+        }
+      ],
+      "readOnly": false,
+      "writeOnly": false
     },
     {
       "table": "life_topics",
+      "realColumns": [],
       "readers": [
         "lib/ghostme/chat/chatPostProcessing.ts",
         "lib/ghostme/context/userContextGraph.ts",
@@ -633,6 +4098,7 @@
       ],
       "writers": [
         "lib/ghostme/chat/chatPostProcessing.ts",
+        "lib/ghostme/contradictions.ts",
         "lib/ghostme/memoryDecay.ts",
         "lib/ghostme/relationshipResolver.ts"
       ],
@@ -654,13 +4120,456 @@
         "updated_at",
         "weight"
       ],
-      "writtenColumns": [],
-      "obsoleteColumnCandidates": []
+      "writtenColumns": [
+        "category",
+        "clarification_asked",
+        "description",
+        "entity_type",
+        "last_emotional_tone",
+        "last_mentioned_at",
+        "mention_count",
+        "needs_clarification",
+        "negative_count",
+        "neutral_count",
+        "notes",
+        "positive_count",
+        "relationship_strength",
+        "status",
+        "topic",
+        "true",
+        "updated_at",
+        "user_id",
+        "weight"
+      ],
+      "missingColumns": [],
+      "unusedRealColumns": [],
+      "neverWrittenRealColumns": [],
+      "operations": [
+        {
+          "file": "lib/ghostme/chat/chatPostProcessing.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/chat/chatPostProcessing.ts",
+          "operation": "write",
+          "columns": [
+            "category",
+            "clarification_asked",
+            "description",
+            "entity_type",
+            "last_mentioned_at",
+            "mention_count",
+            "needs_clarification",
+            "relationship_strength",
+            "status",
+            "true",
+            "weight"
+          ]
+        },
+        {
+          "file": "lib/ghostme/chat/chatPostProcessing.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/chat/chatPostProcessing.ts",
+          "operation": "write",
+          "columns": [
+            "category",
+            "clarification_asked",
+            "description",
+            "entity_type",
+            "last_mentioned_at",
+            "mention_count",
+            "needs_clarification",
+            "relationship_strength",
+            "status",
+            "true",
+            "weight"
+          ]
+        },
+        {
+          "file": "lib/ghostme/chat/chatPostProcessing.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/chat/chatPostProcessing.ts",
+          "operation": "write",
+          "columns": [
+            "category",
+            "clarification_asked",
+            "description",
+            "entity_type",
+            "last_mentioned_at",
+            "mention_count",
+            "needs_clarification",
+            "notes",
+            "relationship_strength",
+            "status",
+            "topic",
+            "user_id",
+            "weight"
+          ]
+        },
+        {
+          "file": "lib/ghostme/chat/chatPostProcessing.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/chat/chatPostProcessing.ts",
+          "operation": "write",
+          "columns": [
+            "last_emotional_tone",
+            "negative_count",
+            "neutral_count",
+            "positive_count",
+            "relationship_strength",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/chat/chatPostProcessing.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/chat/chatPostProcessing.ts",
+          "operation": "write",
+          "columns": [
+            "last_emotional_tone",
+            "negative_count",
+            "neutral_count",
+            "positive_count",
+            "relationship_strength",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/chat/chatPostProcessing.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/chat/chatPostProcessing.ts",
+          "operation": "write",
+          "columns": [
+            "category",
+            "clarification_asked",
+            "description",
+            "entity_type",
+            "needs_clarification",
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/chat/chatPostProcessing.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/chat/chatPostProcessing.ts",
+          "operation": "write",
+          "columns": [
+            "category",
+            "clarification_asked",
+            "description",
+            "entity_type",
+            "needs_clarification",
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/context/userContextGraph.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "description",
+            "entity_type",
+            "mention_count",
+            "relationship_strength",
+            "topic",
+            "weight"
+          ]
+        },
+        {
+          "file": "lib/ghostme/contradictions.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "description",
+            "entity_type",
+            "topic"
+          ]
+        },
+        {
+          "file": "lib/ghostme/contradictions.ts",
+          "operation": "write",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/curiosity/curiosityEngine.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "description",
+            "entity_type",
+            "last_mentioned_at",
+            "mention_count",
+            "relationship_strength",
+            "status",
+            "topic",
+            "weight"
+          ]
+        },
+        {
+          "file": "lib/ghostme/memory/memorySearchFlow.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/memory/memorySnapshot.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "description",
+            "entity_type",
+            "last_mentioned_at",
+            "mention_count",
+            "relationship_strength",
+            "status",
+            "topic",
+            "updated_at",
+            "weight"
+          ]
+        },
+        {
+          "file": "lib/ghostme/memoryDecay.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/memoryDecay.ts",
+          "operation": "write",
+          "columns": [
+            "relationship_strength",
+            "status",
+            "updated_at",
+            "weight"
+          ]
+        },
+        {
+          "file": "lib/ghostme/memoryDecay.ts",
+          "operation": "write",
+          "columns": [
+            "relationship_strength",
+            "status",
+            "updated_at",
+            "weight"
+          ]
+        },
+        {
+          "file": "lib/ghostme/people/peopleGraphService.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "description",
+            "entity_type",
+            "id",
+            "last_mentioned_at",
+            "mention_count",
+            "notes",
+            "relationship_strength",
+            "topic",
+            "updated_at",
+            "weight"
+          ]
+        },
+        {
+          "file": "lib/ghostme/people/peopleSnapshot.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "description",
+            "entity_type",
+            "last_mentioned_at",
+            "mention_count",
+            "notes",
+            "relationship_strength",
+            "topic",
+            "updated_at",
+            "weight"
+          ]
+        },
+        {
+          "file": "lib/ghostme/proactive/dailyBriefingRepository.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "description",
+            "entity_type",
+            "last_mentioned_at",
+            "mention_count",
+            "topic",
+            "weight"
+          ]
+        },
+        {
+          "file": "lib/ghostme/relationshipResolver.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/relationshipResolver.ts",
+          "operation": "write",
+          "columns": [
+            "category",
+            "clarification_asked",
+            "entity_type",
+            "needs_clarification",
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/relationshipResolver.ts",
+          "operation": "delete",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/relationshipResolver.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/relationshipResolver.ts",
+          "operation": "write",
+          "columns": [
+            "category",
+            "clarification_asked",
+            "entity_type",
+            "needs_clarification",
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/relationshipResolver.ts",
+          "operation": "delete",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/relationshipResolver.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/relationshipResolver.ts",
+          "operation": "write",
+          "columns": [
+            "category",
+            "clarification_asked",
+            "entity_type",
+            "last_mentioned_at",
+            "mention_count",
+            "needs_clarification",
+            "relationship_strength",
+            "status",
+            "topic",
+            "user_id",
+            "weight"
+          ]
+        },
+        {
+          "file": "lib/ghostme/relationshipResolver.ts",
+          "operation": "delete",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/relationshipResolver.ts",
+          "operation": "delete",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/retrieval.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "description",
+            "entity_type",
+            "last_mentioned_at",
+            "mention_count",
+            "relationship_strength",
+            "status",
+            "topic",
+            "updated_at",
+            "weight"
+          ]
+        },
+        {
+          "file": "lib/ghostme/situation/situationEngine.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "description",
+            "entity_type",
+            "last_mentioned_at",
+            "mention_count",
+            "relationship_strength",
+            "status",
+            "topic",
+            "weight"
+          ]
+        },
+        {
+          "file": "lib/ghostme/topicLinks.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "description",
+            "entity_type",
+            "mention_count",
+            "relationship_strength",
+            "topic",
+            "weight"
+          ]
+        }
+      ],
+      "readOnly": false,
+      "writeOnly": false
     },
     {
       "table": "memories_active",
+      "realColumns": [],
       "readers": [
-        "app/api/memory/route.ts",
         "app/memory/page.tsx",
         "lib/ghostme/chat/chatPostProcessing.ts",
         "lib/ghostme/context/userContextGraph.ts",
@@ -694,11 +4603,328 @@
         "title",
         "updated_at"
       ],
-      "writtenColumns": [],
-      "obsoleteColumnCandidates": []
+      "writtenColumns": [
+        "category",
+        "content",
+        "importance",
+        "pinned",
+        "title",
+        "updated_at",
+        "user_id"
+      ],
+      "missingColumns": [],
+      "unusedRealColumns": [],
+      "neverWrittenRealColumns": [],
+      "operations": [
+        {
+          "file": "app/api/memory/route.ts",
+          "operation": "write",
+          "columns": []
+        },
+        {
+          "file": "app/memory/page.tsx",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "app/memory/page.tsx",
+          "operation": "write",
+          "columns": [
+            "pinned",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "app/memory/page.tsx",
+          "operation": "delete",
+          "columns": []
+        },
+        {
+          "file": "app/memory/page.tsx",
+          "operation": "write",
+          "columns": [
+            "pinned",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "app/memory/page.tsx",
+          "operation": "delete",
+          "columns": []
+        },
+        {
+          "file": "app/memory/page.tsx",
+          "operation": "write",
+          "columns": [
+            "pinned",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "app/memory/page.tsx",
+          "operation": "write",
+          "columns": [
+            "importance",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "app/memory/page.tsx",
+          "operation": "write",
+          "columns": [
+            "category",
+            "content",
+            "importance",
+            "title",
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/chat/chatPostProcessing.ts",
+          "operation": "select",
+          "columns": [
+            "content",
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/chat/chatPostProcessing.ts",
+          "operation": "write",
+          "columns": [
+            "importance",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/chat/chatPostProcessing.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/chat/chatPostProcessing.ts",
+          "operation": "write",
+          "columns": [
+            "importance",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/chat/chatPostProcessing.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/chat/chatPostProcessing.ts",
+          "operation": "write",
+          "columns": [
+            "category",
+            "content",
+            "importance",
+            "title",
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/chat/chatPostProcessing.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/chat/chatPostProcessing.ts",
+          "operation": "write",
+          "columns": [
+            "category",
+            "content",
+            "importance",
+            "pinned",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/chat/chatPostProcessing.ts",
+          "operation": "write",
+          "columns": [
+            "category",
+            "content",
+            "importance",
+            "pinned",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/chat/chatPostProcessing.ts",
+          "operation": "write",
+          "columns": [
+            "category",
+            "content",
+            "importance",
+            "pinned",
+            "title",
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/context/userContextGraph.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "content",
+            "importance",
+            "pinned",
+            "title",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/contradictions.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "content",
+            "title"
+          ]
+        },
+        {
+          "file": "lib/ghostme/memory/memorySearchFlow.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/memory/memorySnapshot.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "content",
+            "importance",
+            "pinned",
+            "title",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/people/peopleGraphLinkService.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "content",
+            "created_at",
+            "id",
+            "importance",
+            "pinned",
+            "title",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/people/peopleGraphService.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "content",
+            "id",
+            "importance",
+            "pinned",
+            "title",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/people/peopleSnapshot.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "content",
+            "importance",
+            "pinned",
+            "title",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/relationshipResolver.ts",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/relationshipResolver.ts",
+          "operation": "write",
+          "columns": [
+            "category",
+            "content",
+            "importance",
+            "pinned",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/relationshipResolver.ts",
+          "operation": "delete",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/relationshipResolver.ts",
+          "operation": "write",
+          "columns": [
+            "category",
+            "content",
+            "importance",
+            "pinned",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/relationshipResolver.ts",
+          "operation": "delete",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/relationshipResolver.ts",
+          "operation": "write",
+          "columns": [
+            "category",
+            "content",
+            "importance",
+            "pinned",
+            "title",
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/relationshipResolver.ts",
+          "operation": "delete",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/retrieval.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "content",
+            "importance",
+            "pinned",
+            "title",
+            "updated_at"
+          ]
+        }
+      ],
+      "readOnly": false,
+      "writeOnly": false
     },
     {
       "table": "mental_states",
+      "realColumns": [],
       "readers": [
         "lib/ghostme/mentalState.ts",
         "lib/ghostme/proactive/dailyBriefingRepository.ts",
@@ -711,11 +4937,64 @@
       "selectedColumns": [
         "*"
       ],
-      "writtenColumns": [],
-      "obsoleteColumnCandidates": []
+      "writtenColumns": [
+        "user_id"
+      ],
+      "missingColumns": [],
+      "unusedRealColumns": [],
+      "neverWrittenRealColumns": [],
+      "operations": [
+        {
+          "file": "lib/ghostme/mentalState.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/mentalState.ts",
+          "operation": "write",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/mentalState.ts",
+          "operation": "write",
+          "columns": [
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/proactive/dailyBriefingRepository.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/situation/situationEngine.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        }
+      ],
+      "readOnly": false,
+      "writeOnly": false
     },
     {
       "table": "observation_events",
+      "realColumns": [
+        "id",
+        "user_id",
+        "event_type",
+        "source",
+        "place_label",
+        "place_id",
+        "value",
+        "context",
+        "occurred_at",
+        "created_at"
+      ],
       "readers": [
         "lib/ghostme/observation/observationEngine.ts",
         "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
@@ -736,11 +5015,126 @@
         "place_label",
         "value"
       ],
-      "writtenColumns": [],
-      "obsoleteColumnCandidates": []
+      "writtenColumns": [
+        "candidate_place_id",
+        "context",
+        "observation_text",
+        "occurred_at",
+        "place_id",
+        "place_label"
+      ],
+      "missingColumns": [
+        "category",
+        "label"
+      ],
+      "unusedRealColumns": [],
+      "neverWrittenRealColumns": [
+        "id",
+        "user_id",
+        "event_type",
+        "source",
+        "value",
+        "created_at"
+      ],
+      "operations": [
+        {
+          "file": "lib/ghostme/observation/observationEngine.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/observation/observationEngine.ts",
+          "operation": "write",
+          "columns": [
+            "context",
+            "occurred_at",
+            "place_id",
+            "place_label"
+          ]
+        },
+        {
+          "file": "lib/ghostme/observation/observationEngine.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "id",
+            "label"
+          ]
+        },
+        {
+          "file": "lib/ghostme/observation/observationEngine.ts",
+          "operation": "write",
+          "columns": [
+            "context",
+            "occurred_at",
+            "place_id",
+            "place_label"
+          ]
+        },
+        {
+          "file": "lib/ghostme/observation/observationEngine.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "id",
+            "label"
+          ]
+        },
+        {
+          "file": "lib/ghostme/observation/observationEngine.ts",
+          "operation": "write",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/observation/observationEngine.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/observation/observationEngine.ts",
+          "operation": "write",
+          "columns": [
+            "candidate_place_id",
+            "context",
+            "observation_text"
+          ]
+        },
+        {
+          "file": "lib/ghostme/observation/observationEngine.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
+          "operation": "select",
+          "columns": [
+            "context",
+            "event_type",
+            "occurred_at",
+            "place_label",
+            "value"
+          ]
+        },
+        {
+          "file": "lib/ghostme/situation/situationEngine.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        }
+      ],
+      "readOnly": false,
+      "writeOnly": false
     },
     {
       "table": "people_graph",
+      "realColumns": [],
       "readers": [
         "lib/ghostme/context/userContextGraph.ts",
         "lib/ghostme/people/peopleGraphLinkService.ts",
@@ -772,11 +5166,129 @@
         "updated_at",
         "weight"
       ],
-      "writtenColumns": [],
-      "obsoleteColumnCandidates": []
+      "writtenColumns": [
+        "updated_at"
+      ],
+      "missingColumns": [],
+      "unusedRealColumns": [],
+      "neverWrittenRealColumns": [],
+      "operations": [
+        {
+          "file": "lib/ghostme/context/userContextGraph.ts",
+          "operation": "select",
+          "columns": [
+            "description",
+            "id",
+            "importance",
+            "mention_count",
+            "name",
+            "relationship_type"
+          ]
+        },
+        {
+          "file": "lib/ghostme/people/peopleGraphLinkService.ts",
+          "operation": "select",
+          "columns": [
+            "id",
+            "name",
+            "normalized_name"
+          ]
+        },
+        {
+          "file": "lib/ghostme/people/peopleGraphService.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "confidence",
+            "description",
+            "id",
+            "importance",
+            "last_mentioned_at",
+            "mention_count",
+            "name",
+            "normalized_name",
+            "relationship_type",
+            "source",
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/people/peopleGraphService.ts",
+          "operation": "write",
+          "columns": [
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/people/peopleGraphService.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "description",
+            "entity_type",
+            "id",
+            "last_mentioned_at",
+            "mention_count",
+            "notes",
+            "relationship_strength",
+            "topic",
+            "updated_at",
+            "weight"
+          ]
+        },
+        {
+          "file": "lib/ghostme/people/peopleGraphService.ts",
+          "operation": "write",
+          "columns": [
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/people/peopleGraphService.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "description",
+            "entity_type",
+            "id",
+            "last_mentioned_at",
+            "mention_count",
+            "notes",
+            "relationship_strength",
+            "topic",
+            "updated_at",
+            "weight"
+          ]
+        },
+        {
+          "file": "lib/ghostme/people/peopleGraphService.ts",
+          "operation": "write",
+          "columns": [
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/people/peopleGraphService.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/people/peopleSnapshot.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        }
+      ],
+      "readOnly": false,
+      "writeOnly": false
     },
     {
       "table": "people_graph_links",
+      "realColumns": [],
       "readers": [
         "lib/ghostme/people/peopleGraphLinkService.ts"
       ],
@@ -791,11 +5303,64 @@
         "normalized_name",
         "weight"
       ],
-      "writtenColumns": [],
-      "obsoleteColumnCandidates": []
+      "writtenColumns": [
+        "last_decayed_at",
+        "updated_at"
+      ],
+      "missingColumns": [],
+      "unusedRealColumns": [],
+      "neverWrittenRealColumns": [],
+      "operations": [
+        {
+          "file": "lib/ghostme/people/peopleGraphLinkService.ts",
+          "operation": "select",
+          "columns": [
+            "id",
+            "name",
+            "normalized_name"
+          ]
+        },
+        {
+          "file": "lib/ghostme/people/peopleGraphLinkService.ts",
+          "operation": "select",
+          "columns": [
+            "id",
+            "name",
+            "normalized_name"
+          ]
+        },
+        {
+          "file": "lib/ghostme/people/peopleGraphLinkService.ts",
+          "operation": "select",
+          "columns": [
+            "confidence",
+            "id",
+            "weight"
+          ]
+        },
+        {
+          "file": "lib/ghostme/people/peopleGraphLinkService.ts",
+          "operation": "write",
+          "columns": [
+            "last_decayed_at",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/people/peopleGraphLinkService.ts",
+          "operation": "write",
+          "columns": [
+            "last_decayed_at",
+            "updated_at"
+          ]
+        }
+      ],
+      "readOnly": false,
+      "writeOnly": false
     },
     {
       "table": "rpc:upsert_people_graph_link",
+      "realColumns": [],
       "readers": [],
       "writers": [
         "lib/ghostme/people/peopleGraphLinkService.ts"
@@ -803,10 +5368,22 @@
       "deleters": [],
       "selectedColumns": [],
       "writtenColumns": [],
-      "obsoleteColumnCandidates": []
+      "missingColumns": [],
+      "unusedRealColumns": [],
+      "neverWrittenRealColumns": [],
+      "operations": [
+        {
+          "file": "lib/ghostme/people/peopleGraphLinkService.ts",
+          "operation": "rpc",
+          "columns": []
+        }
+      ],
+      "readOnly": false,
+      "writeOnly": true
     },
     {
       "table": "significant_places",
+      "realColumns": [],
       "readers": [
         "lib/ghostme/context/userContextGraph.ts",
         "lib/ghostme/location/haLocationBridgeFlow.ts",
@@ -816,7 +5393,8 @@
       ],
       "writers": [
         "lib/ghostme/location/haLocationBridgeFlow.ts",
-        "lib/ghostme/location/placeService.ts"
+        "lib/ghostme/location/placeService.ts",
+        "lib/ghostme/observation/observationEngine.ts"
       ],
       "deleters": [
         "lib/ghostme/location/locationDeletePlaceFlow.ts"
@@ -835,11 +5413,198 @@
         "updated_at",
         "visit_count"
       ],
-      "writtenColumns": [],
-      "obsoleteColumnCandidates": []
+      "writtenColumns": [
+        "address",
+        "category",
+        "confidence",
+        "current_place_id",
+        "current_place_label",
+        "external_category",
+        "external_name",
+        "label",
+        "last_changed_at",
+        "last_seen_at",
+        "now",
+        "onConflict",
+        "place_category",
+        "radius_meters",
+        "source",
+        "status",
+        "updated_at",
+        "user_id",
+        "visit_count"
+      ],
+      "missingColumns": [],
+      "unusedRealColumns": [],
+      "neverWrittenRealColumns": [],
+      "operations": [
+        {
+          "file": "lib/ghostme/context/userContextGraph.ts",
+          "operation": "select",
+          "columns": [
+            "address",
+            "category",
+            "id",
+            "label",
+            "last_seen_at",
+            "visit_count"
+          ]
+        },
+        {
+          "file": "lib/ghostme/location/haLocationBridgeFlow.ts",
+          "operation": "select",
+          "columns": [
+            "address",
+            "category",
+            "id",
+            "label"
+          ]
+        },
+        {
+          "file": "lib/ghostme/location/haLocationBridgeFlow.ts",
+          "operation": "write",
+          "columns": [
+            "address",
+            "confidence",
+            "current_place_id",
+            "current_place_label",
+            "last_changed_at",
+            "now",
+            "onConflict",
+            "place_category",
+            "source",
+            "updated_at",
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/location/locationDeletePlaceFlow.ts",
+          "operation": "delete",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/location/placeService.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/location/placeService.ts",
+          "operation": "write",
+          "columns": [
+            "category",
+            "confidence",
+            "external_category",
+            "external_name",
+            "label",
+            "last_seen_at",
+            "radius_meters",
+            "status",
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/location/placeService.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/location/placeService.ts",
+          "operation": "write",
+          "columns": [
+            "last_seen_at",
+            "visit_count"
+          ]
+        },
+        {
+          "file": "lib/ghostme/location/placeService.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/location/placeService.ts",
+          "operation": "write",
+          "columns": [
+            "last_seen_at",
+            "visit_count"
+          ]
+        },
+        {
+          "file": "lib/ghostme/location/placeService.ts",
+          "operation": "write",
+          "columns": [
+            "external_name",
+            "label",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/observation/observationEngine.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "id",
+            "label"
+          ]
+        },
+        {
+          "file": "lib/ghostme/observation/observationEngine.ts",
+          "operation": "write",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/observation/observationEngine.ts",
+          "operation": "select",
+          "columns": [
+            "category",
+            "id",
+            "label"
+          ]
+        },
+        {
+          "file": "lib/ghostme/observation/observationEngine.ts",
+          "operation": "write",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/observation/observationEngine.ts",
+          "operation": "select",
+          "columns": [
+            "latitude",
+            "longitude",
+            "radius_meters"
+          ]
+        },
+        {
+          "file": "lib/ghostme/observation/observationEngine.ts",
+          "operation": "write",
+          "columns": []
+        },
+        {
+          "file": "lib/ghostme/proactive/dailyBriefingRepository.ts",
+          "operation": "select",
+          "columns": [
+            "address",
+            "category",
+            "confidence",
+            "label",
+            "last_seen_at",
+            "updated_at",
+            "visit_count"
+          ]
+        }
+      ],
+      "readOnly": false,
+      "writeOnly": false
     },
     {
       "table": "topic_links",
+      "realColumns": [],
       "readers": [
         "lib/ghostme/memory/memorySearchFlow.ts",
         "lib/ghostme/memory/memorySnapshot.ts",
@@ -855,11 +5620,108 @@
         "*",
         "updated_at"
       ],
-      "writtenColumns": [],
-      "obsoleteColumnCandidates": []
+      "writtenColumns": [
+        "link_type",
+        "source_topic",
+        "target_topic",
+        "updated_at",
+        "user_id",
+        "weight"
+      ],
+      "missingColumns": [],
+      "unusedRealColumns": [],
+      "neverWrittenRealColumns": [],
+      "operations": [
+        {
+          "file": "lib/ghostme/memory/memorySearchFlow.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/memory/memorySnapshot.ts",
+          "operation": "select",
+          "columns": [
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/retrieval.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/situation/situationEngine.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/topicLinks.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/topicLinks.ts",
+          "operation": "write",
+          "columns": [
+            "updated_at",
+            "weight"
+          ]
+        },
+        {
+          "file": "lib/ghostme/topicLinks.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/topicLinks.ts",
+          "operation": "write",
+          "columns": [
+            "updated_at",
+            "weight"
+          ]
+        },
+        {
+          "file": "lib/ghostme/topicLinks.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/topicLinks.ts",
+          "operation": "write",
+          "columns": [
+            "link_type",
+            "source_topic",
+            "target_topic",
+            "user_id",
+            "weight"
+          ]
+        },
+        {
+          "file": "lib/ghostme/topicLinks.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        }
+      ],
+      "readOnly": false,
+      "writeOnly": false
     },
     {
       "table": "traits",
+      "realColumns": [],
       "readers": [
         "app/chat/page.tsx",
         "app/login/page.tsx",
@@ -875,11 +5737,121 @@
         "*",
         "id"
       ],
-      "writtenColumns": [],
-      "obsoleteColumnCandidates": []
+      "writtenColumns": [
+        "ansia",
+        "bisogno_affetto",
+        "controllo",
+        "empatia",
+        "evitamento",
+        "fiducia",
+        "gelosia",
+        "impulsivita",
+        "orgoglio",
+        "paura_abbandono",
+        "rabbia",
+        "sarcasmo",
+        "sensibilita_critiche",
+        "sincerita",
+        "socialita",
+        "user_id",
+        "vulnerabilita"
+      ],
+      "missingColumns": [],
+      "unusedRealColumns": [],
+      "neverWrittenRealColumns": [],
+      "operations": [
+        {
+          "file": "app/chat/page.tsx",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "app/login/page.tsx",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "app/setup/page.tsx",
+          "operation": "write",
+          "columns": [
+            "ansia",
+            "bisogno_affetto",
+            "controllo",
+            "empatia",
+            "evitamento",
+            "fiducia",
+            "gelosia",
+            "impulsivita",
+            "orgoglio",
+            "paura_abbandono",
+            "rabbia",
+            "sarcasmo",
+            "sensibilita_critiche",
+            "sincerita",
+            "socialita",
+            "user_id",
+            "vulnerabilita"
+          ]
+        },
+        {
+          "file": "app/setup/page.tsx",
+          "operation": "delete",
+          "columns": []
+        },
+        {
+          "file": "app/setup/page.tsx",
+          "operation": "write",
+          "columns": [
+            "ansia",
+            "bisogno_affetto",
+            "controllo",
+            "empatia",
+            "evitamento",
+            "fiducia",
+            "gelosia",
+            "impulsivita",
+            "orgoglio",
+            "paura_abbandono",
+            "rabbia",
+            "sarcasmo",
+            "sensibilita_critiche",
+            "sincerita",
+            "socialita",
+            "user_id",
+            "vulnerabilita"
+          ]
+        },
+        {
+          "file": "lib/ghostme/profile/profileBehaviorSeed.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        }
+      ],
+      "readOnly": false,
+      "writeOnly": false
     },
     {
       "table": "user_location_state",
+      "realColumns": [
+        "user_id",
+        "current_place_id",
+        "current_place_label",
+        "latitude",
+        "longitude",
+        "source",
+        "updated_at",
+        "place_category",
+        "address",
+        "accuracy",
+        "last_changed_at",
+        "confidence"
+      ],
       "readers": [
         "lib/ghostme/context/userContextGraph.ts",
         "lib/ghostme/home/houseStateSnapshot.ts",
@@ -894,7 +5866,8 @@
         "lib/ghostme/location/haLocationBridgeFlow.ts",
         "lib/ghostme/location/locationLearningFlow.ts",
         "lib/ghostme/location/locationUpdateFlow.ts",
-        "lib/ghostme/location/placeService.ts"
+        "lib/ghostme/location/placeService.ts",
+        "lib/ghostme/observation/observationEngine.ts"
       ],
       "deleters": [],
       "selectedColumns": [
@@ -908,11 +5881,207 @@
         "updated_at",
         "user_id"
       ],
-      "writtenColumns": [],
-      "obsoleteColumnCandidates": []
+      "writtenColumns": [
+        "accuracy",
+        "address",
+        "confidence",
+        "current_place_id",
+        "current_place_label",
+        "external_name",
+        "label",
+        "last_changed_at",
+        "now",
+        "onConflict",
+        "place_category",
+        "source",
+        "updated_at",
+        "user_id"
+      ],
+      "missingColumns": [],
+      "unusedRealColumns": [],
+      "neverWrittenRealColumns": [
+        "latitude",
+        "longitude"
+      ],
+      "operations": [
+        {
+          "file": "lib/ghostme/context/userContextGraph.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/home/houseStateSnapshot.ts",
+          "operation": "select",
+          "columns": [
+            "confidence",
+            "current_place_label",
+            "last_changed_at",
+            "place_category",
+            "source",
+            "updated_at",
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/location/haLocationBridgeFlow.ts",
+          "operation": "select",
+          "columns": [
+            "current_place_id",
+            "current_place_label",
+            "last_changed_at",
+            "place_category",
+            "source",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/location/haLocationBridgeFlow.ts",
+          "operation": "write",
+          "columns": [
+            "address",
+            "confidence",
+            "current_place_id",
+            "current_place_label",
+            "last_changed_at",
+            "now",
+            "onConflict",
+            "place_category",
+            "source",
+            "updated_at",
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/location/haLocationBridgeFlow.ts",
+          "operation": "write",
+          "columns": [
+            "address",
+            "confidence",
+            "current_place_id",
+            "current_place_label",
+            "last_changed_at",
+            "now",
+            "onConflict",
+            "place_category",
+            "source",
+            "updated_at",
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/location/locationCurrentStateFlow.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/location/locationLearningFlow.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/location/locationLearningFlow.ts",
+          "operation": "write",
+          "columns": [
+            "current_place_id",
+            "current_place_label",
+            "place_category",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/location/locationLearningFlow.ts",
+          "operation": "write",
+          "columns": [
+            "current_place_id",
+            "current_place_label",
+            "place_category",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/location/locationUpdateFlow.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/location/locationUpdateFlow.ts",
+          "operation": "write",
+          "columns": [
+            "accuracy",
+            "address",
+            "confidence",
+            "current_place_id",
+            "current_place_label",
+            "last_changed_at",
+            "now",
+            "onConflict",
+            "place_category",
+            "updated_at",
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/location/locationUpdateFlow.ts",
+          "operation": "write",
+          "columns": [
+            "accuracy",
+            "address",
+            "confidence",
+            "current_place_id",
+            "current_place_label",
+            "last_changed_at",
+            "now",
+            "onConflict",
+            "place_category",
+            "updated_at",
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/location/placeService.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/location/placeService.ts",
+          "operation": "write",
+          "columns": [
+            "external_name",
+            "label",
+            "updated_at"
+          ]
+        },
+        {
+          "file": "lib/ghostme/observation/observationEngine.ts",
+          "operation": "select",
+          "columns": [
+            "current_place_id",
+            "current_place_label",
+            "place_category"
+          ]
+        },
+        {
+          "file": "lib/ghostme/observation/observationEngine.ts",
+          "operation": "write",
+          "columns": []
+        }
+      ],
+      "readOnly": false,
+      "writeOnly": false
     },
     {
       "table": "user_profiles",
+      "realColumns": [],
       "readers": [
         "app/api/worker/proactive/route.ts",
         "app/chat/page.tsx",
@@ -936,14 +6105,92 @@
         "sports",
         "user_id"
       ],
-      "writtenColumns": [],
-      "obsoleteColumnCandidates": []
+      "writtenColumns": [
+        "age",
+        "children_info",
+        "communication_style",
+        "full_name",
+        "relationship_status",
+        "short_bio",
+        "user_id"
+      ],
+      "missingColumns": [],
+      "unusedRealColumns": [],
+      "neverWrittenRealColumns": [],
+      "operations": [
+        {
+          "file": "app/api/worker/proactive/route.ts",
+          "operation": "select",
+          "columns": [
+            "full_name",
+            "hobbies",
+            "job",
+            "location",
+            "sports",
+            "user_id"
+          ]
+        },
+        {
+          "file": "app/chat/page.tsx",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "app/login/page.tsx",
+          "operation": "select",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "file": "app/setup/profile/page.tsx",
+          "operation": "write",
+          "columns": [
+            "age",
+            "children_info",
+            "communication_style",
+            "full_name",
+            "relationship_status",
+            "short_bio",
+            "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/context/userContextGraph.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/profile/profileBehaviorSeed.ts",
+          "operation": "select",
+          "columns": [
+            "*"
+          ]
+        },
+        {
+          "file": "lib/ghostme/situation/situationEngine.ts",
+          "operation": "select",
+          "columns": [
+            "full_name",
+            "hobbies",
+            "job",
+            "location",
+            "relationship_status",
+            "sports"
+          ]
+        }
+      ],
+      "readOnly": false,
+      "writeOnly": false
     },
     {
       "table": "users",
-      "readers": [
-        "app/setup/page.tsx"
-      ],
+      "realColumns": [],
+      "readers": [],
       "writers": [
         "app/setup/page.tsx"
       ],
@@ -951,21 +6198,73 @@
         "app/setup/page.tsx"
       ],
       "selectedColumns": [],
-      "writtenColumns": [],
-      "obsoleteColumnCandidates": []
+      "writtenColumns": [
+        "email",
+        "id",
+        "name",
+        "onConflict"
+      ],
+      "missingColumns": [],
+      "unusedRealColumns": [],
+      "neverWrittenRealColumns": [],
+      "operations": [
+        {
+          "file": "app/setup/page.tsx",
+          "operation": "write",
+          "columns": [
+            "email",
+            "id",
+            "name",
+            "onConflict"
+          ]
+        },
+        {
+          "file": "app/setup/page.tsx",
+          "operation": "delete",
+          "columns": []
+        }
+      ],
+      "readOnly": false,
+      "writeOnly": true
     }
   ],
-  "orphanLike": [
-    {
-      "table": "rpc:upsert_people_graph_link",
-      "readers": [],
-      "writers": [
-        "lib/ghostme/people/peopleGraphLinkService.ts"
-      ],
-      "deleters": [],
-      "selectedColumns": [],
-      "writtenColumns": [],
-      "obsoleteColumnCandidates": []
-    }
-  ]
+  "warnings": {
+    "missingColumns": [
+      {
+        "table": "autobiographical_timeline",
+        "columns": [
+          "category"
+        ]
+      },
+      {
+        "table": "ghost_proactive_messages",
+        "columns": [
+          "curiosity"
+        ]
+      },
+      {
+        "table": "house_suggestions",
+        "columns": [
+          "entity_id",
+          "entity_name",
+          "entity_type",
+          "event_type",
+          "new_state",
+          "occurred_at"
+        ]
+      },
+      {
+        "table": "observation_events",
+        "columns": [
+          "category",
+          "label"
+        ]
+      }
+    ],
+    "readOnly": [],
+    "writeOnly": [
+      "rpc:upsert_people_graph_link",
+      "users"
+    ]
+  }
 }

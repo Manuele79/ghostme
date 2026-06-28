@@ -1,6 +1,6 @@
 # DEPENDENCY TEXT MAP
 
-Generated: 2026-06-27T23:45:10.263Z
+Generated: 2026-06-28T00:19:44.762Z
 
 ## Chi chiama chi
 
@@ -483,6 +483,8 @@ scripts/generate-graphs.mjs -> path
 scripts/generate-graphs.mjs -> url
 scripts/project-audit.mjs -> fs
 scripts/project-audit.mjs -> path
+scripts/project-knowledge-base.mjs -> fs
+scripts/project-knowledge-base.mjs -> path
 scripts/supabase-schema-map.mjs -> fs
 scripts/supabase-schema-map.mjs -> path
 scripts/system-docs.mjs -> fs

@@ -1,0 +1,40 @@
+{
+  "generatedAt": "2026-06-28T00:20:00.886Z",
+  "inputs": {
+    "systemMap": {
+      "file": "docs/maps/GHOSTME_SYSTEM_MAP_V6.md",
+      "exists": true,
+      "lineCount": 3243
+    },
+    "cognitiveRouting": {
+      "file": "docs/maps/COGNITIVE_ROUTING_MAP.md",
+      "exists": true,
+      "lineCount": 147
+    },
+    "databaseUsage": {
+      "file": "docs/maps/DATABASE_USAGE_MAP.md",
+      "exists": true,
+      "lineCount": 296
+    },
+    "fileUsage": {
+      "file": "docs/maps/FILE_USAGE_MAP.md",
+      "exists": true,
+      "lineCount": 1995
+    },
+    "supabaseSchema": {
+      "file": "docs/maps/SUPABASE_SCHEMA_MAP.md",
+      "exists": true,
+      "lineCount": 1811
+    },
+    "priorityFix": {
+      "file": "docs/maps/GHOSTME_PRIORITY_FIX_LIST.md",
+      "exists": true,
+      "lineCount": 31
+    },
+    "dependencyText": {
+      "file": "docs/maps/DEPENDENCY_TEXT_MAP.txt",
+      "exists": true,
+      "lineCount": 501
+    }
+  }
+}

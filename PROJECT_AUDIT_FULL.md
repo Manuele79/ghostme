@@ -1,10 +1,10 @@
 # PROJECT AUDIT FULL
 
-Generato: 2026-06-27T23:45:07.755Z
+Generato: 2026-06-28T00:19:42.311Z
 
 # 1. RIASSUNTO
 
-- File analizzati: 175
+- File analizzati: 176
 - Cartelle: 64
 - API routes: 28
 - Tabelle Supabase usate: 31
@@ -380,6 +380,7 @@ Generato: 2026-06-27T23:45:07.755Z
 - scripts/file-usage-map.mjs
 - scripts/generate-graphs.mjs
 - scripts/project-audit.mjs
+- scripts/project-knowledge-base.mjs
 - scripts/supabase-schema-map.mjs
 - scripts/system-docs.mjs
 

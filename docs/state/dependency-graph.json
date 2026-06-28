@@ -9724,6 +9724,47 @@
       "valid": true
     },
     {
+      "source": "scripts/project-knowledge-base.mjs",
+      "dependencies": [
+        {
+          "module": "fs",
+          "moduleSystem": "es6",
+          "dynamic": false,
+          "exoticallyRequired": false,
+          "dependencyTypes": [
+            "core",
+            "import"
+          ],
+          "resolved": "fs",
+          "coreModule": true,
+          "followable": false,
+          "couldNotResolve": false,
+          "matchesDoNotFollow": false,
+          "circular": false,
+          "valid": true
+        },
+        {
+          "module": "path",
+          "moduleSystem": "es6",
+          "dynamic": false,
+          "exoticallyRequired": false,
+          "dependencyTypes": [
+            "core",
+            "import"
+          ],
+          "resolved": "path",
+          "coreModule": true,
+          "followable": false,
+          "couldNotResolve": false,
+          "matchesDoNotFollow": false,
+          "circular": false,
+          "valid": true
+        }
+      ],
+      "orphan": false,
+      "valid": true
+    },
+    {
       "source": "scripts/supabase-schema-map.mjs",
       "dependencies": [
         {
@@ -9851,8 +9892,8 @@
     "warn": 4,
     "info": 0,
     "ignore": 0,
-    "totalCruised": 185,
-    "totalDependenciesCruised": 437,
+    "totalCruised": 186,
+    "totalDependenciesCruised": 439,
     "optionsUsed": {
       "baseDir": "C:\\Users\\Manuele\\Documents\\ghostme",
       "combinedDependencies": false,

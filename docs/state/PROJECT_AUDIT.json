@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-27T23:45:07.755Z",
+  "generatedAt": "2026-06-28T00:19:42.311Z",
   "folders": {
     ".": [
       ".dependency-cruiser.js",
@@ -301,6 +301,7 @@
       "scripts/file-usage-map.mjs",
       "scripts/generate-graphs.mjs",
       "scripts/project-audit.mjs",
+      "scripts/project-knowledge-base.mjs",
       "scripts/supabase-schema-map.mjs",
       "scripts/system-docs.mjs"
     ]
@@ -8549,6 +8550,36 @@
       ],
       "lines": 504
     },
+    "scripts/project-knowledge-base.mjs": {
+      "folder": "scripts",
+      "imports": [
+        "fs",
+        "path"
+      ],
+      "importedBy": [],
+      "apiCalls": [],
+      "tables": {},
+      "exports": [],
+      "calls": [
+        "cwd",
+        "join",
+        "exists",
+        "existsSync",
+        "read",
+        "readFileSync",
+        "lines",
+        "split",
+        "fromEntries",
+        "entries",
+        "toISOString",
+        "mkdirSync",
+        "dirname",
+        "writeFileSync",
+        "stringify",
+        "log"
+      ],
+      "lines": 81
+    },
     "scripts/supabase-schema-map.mjs": {
       "folder": "scripts",
       "imports": [
@@ -8573,28 +8604,33 @@
         "unique",
         "Set",
         "sort",
-        "flatMap",
-        "ensureTable",
-        "parseColumns",
-        "split",
+        "cleanColumn",
         "trim",
-        "pop",
         "replace",
+        "split",
+        "parseSelectColumns",
+        "extractObjectKeys",
+        "exec",
+        "ensureTable",
+        "chainFrom",
+        "slice",
+        "detectSelect",
+        "match",
+        "detectWriteColumns",
+        "flatMap",
         "replaceAll",
         "readFileSync",
-        "exec",
-        "slice",
-        "match",
         "values",
         "localeCompare",
         "toISOString",
+        "keys",
         "mkdirSync",
         "dirname",
         "writeFileSync",
         "stringify",
         "log"
       ],
-      "lines": 177
+      "lines": 433
     },
     "scripts/system-docs.mjs": {
       "folder": "scripts",
@@ -9462,6 +9498,10 @@
       "fs",
       "path"
     ],
+    "scripts/project-knowledge-base.mjs": [
+      "fs",
+      "path"
+    ],
     "scripts/supabase-schema-map.mjs": [
       "fs",
       "path"
@@ -10243,10 +10283,12 @@
     ],
     "fs": [
       "scripts/project-audit.mjs",
+      "scripts/project-knowledge-base.mjs",
       "scripts/supabase-schema-map.mjs"
     ],
     "path": [
       "scripts/project-audit.mjs",
+      "scripts/project-knowledge-base.mjs",
       "scripts/supabase-schema-map.mjs"
     ]
   },
@@ -11625,6 +11667,7 @@
         "scripts/db-usage-map.mjs",
         "scripts/file-usage-map.mjs",
         "scripts/project-audit.mjs",
+        "scripts/project-knowledge-base.mjs",
         "scripts/supabase-schema-map.mjs",
         "scripts/system-docs.mjs"
       ]
@@ -11962,6 +12005,7 @@
         "lib/ghostme/topicLinks.ts",
         "scripts/generate-graphs.mjs",
         "scripts/project-audit.mjs",
+        "scripts/project-knowledge-base.mjs",
         "scripts/supabase-schema-map.mjs",
         "scripts/system-docs.mjs"
       ]
@@ -12465,6 +12509,7 @@
         "scripts/file-usage-map.mjs",
         "scripts/generate-graphs.mjs",
         "scripts/project-audit.mjs",
+        "scripts/project-knowledge-base.mjs",
         "scripts/supabase-schema-map.mjs",
         "scripts/system-docs.mjs"
       ]
@@ -14034,6 +14079,7 @@
         "scripts/db-usage-map.mjs",
         "scripts/file-usage-map.mjs",
         "scripts/project-audit.mjs",
+        "scripts/project-knowledge-base.mjs",
         "scripts/supabase-schema-map.mjs"
       ]
     },
@@ -14401,7 +14447,8 @@
       "exportedBy": [],
       "calledBy": [
         "app/chat/page.tsx",
-        "scripts/project-audit.mjs"
+        "scripts/project-audit.mjs",
+        "scripts/project-knowledge-base.mjs"
       ]
     },
     "decode": {
@@ -14811,6 +14858,7 @@
         "lib/personality.ts",
         "scripts/generate-graphs.mjs",
         "scripts/project-audit.mjs",
+        "scripts/project-knowledge-base.mjs",
         "scripts/system-docs.mjs"
       ]
     },
@@ -15480,7 +15528,8 @@
       "exportedBy": [],
       "calledBy": [
         "components/ghost/GhostDrawers.tsx",
-        "lib/ghostme/calendar/calendarService.ts"
+        "lib/ghostme/calendar/calendarService.ts",
+        "scripts/project-knowledge-base.mjs"
       ]
     },
     "eventsForDay": {
@@ -15529,6 +15578,7 @@
         "scripts/db-usage-map.mjs",
         "scripts/file-usage-map.mjs",
         "scripts/project-audit.mjs",
+        "scripts/project-knowledge-base.mjs",
         "scripts/supabase-schema-map.mjs",
         "scripts/system-docs.mjs"
       ]
@@ -15961,6 +16011,7 @@
         "scripts/file-usage-map.mjs",
         "scripts/generate-graphs.mjs",
         "scripts/project-audit.mjs",
+        "scripts/project-knowledge-base.mjs",
         "scripts/supabase-schema-map.mjs",
         "scripts/system-docs.mjs"
       ]
@@ -18958,6 +19009,7 @@
       "calledBy": [
         "lib/ghostme/mentalState.ts",
         "scripts/project-audit.mjs",
+        "scripts/supabase-schema-map.mjs",
         "scripts/system-docs.mjs"
       ]
     },
@@ -20243,6 +20295,7 @@
         "scripts/db-usage-map.mjs",
         "scripts/file-usage-map.mjs",
         "scripts/project-audit.mjs",
+        "scripts/project-knowledge-base.mjs",
         "scripts/supabase-schema-map.mjs"
       ]
     },
@@ -20293,6 +20346,7 @@
         "scripts/db-usage-map.mjs",
         "scripts/file-usage-map.mjs",
         "scripts/project-audit.mjs",
+        "scripts/project-knowledge-base.mjs",
         "scripts/supabase-schema-map.mjs",
         "scripts/system-docs.mjs"
       ]
@@ -20303,6 +20357,7 @@
         "scripts/db-usage-map.mjs",
         "scripts/file-usage-map.mjs",
         "scripts/project-audit.mjs",
+        "scripts/project-knowledge-base.mjs",
         "scripts/supabase-schema-map.mjs",
         "scripts/system-docs.mjs"
       ]
@@ -20313,6 +20368,7 @@
         "scripts/db-usage-map.mjs",
         "scripts/file-usage-map.mjs",
         "scripts/project-audit.mjs",
+        "scripts/project-knowledge-base.mjs",
         "scripts/supabase-schema-map.mjs",
         "scripts/system-docs.mjs"
       ]
@@ -20342,6 +20398,7 @@
         "scripts/file-usage-map.mjs",
         "scripts/generate-graphs.mjs",
         "scripts/project-audit.mjs",
+        "scripts/project-knowledge-base.mjs",
         "scripts/supabase-schema-map.mjs"
       ]
     },
@@ -20480,8 +20537,7 @@
     "pop": {
       "exportedBy": [],
       "calledBy": [
-        "scripts/project-audit.mjs",
-        "scripts/supabase-schema-map.mjs"
+        "scripts/project-audit.mjs"
       ]
     },
     "list": {
@@ -20528,19 +20584,61 @@
         "scripts/system-docs.mjs"
       ]
     },
-    "ensureTable": {
+    "exists": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/project-knowledge-base.mjs"
+      ]
+    },
+    "lines": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/project-knowledge-base.mjs"
+      ]
+    },
+    "cleanColumn": {
       "exportedBy": [],
       "calledBy": [
         "scripts/supabase-schema-map.mjs"
       ]
     },
-    "parseColumns": {
+    "parseSelectColumns": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/supabase-schema-map.mjs"
+      ]
+    },
+    "extractObjectKeys": {
       "exportedBy": [],
       "calledBy": [
         "scripts/supabase-schema-map.mjs"
       ]
     },
     "exec": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/supabase-schema-map.mjs"
+      ]
+    },
+    "ensureTable": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/supabase-schema-map.mjs"
+      ]
+    },
+    "chainFrom": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/supabase-schema-map.mjs"
+      ]
+    },
+    "detectSelect": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/supabase-schema-map.mjs"
+      ]
+    },
+    "detectWriteColumns": {
       "exportedBy": [],
       "calledBy": [
         "scripts/supabase-schema-map.mjs"
