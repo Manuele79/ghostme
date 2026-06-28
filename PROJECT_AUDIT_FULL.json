@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-28T00:19:42.311Z",
+  "generatedAt": "2026-06-28T00:35:40.772Z",
   "folders": {
     ".": [
       ".dependency-cruiser.js",
@@ -8563,12 +8563,20 @@
       "calls": [
         "cwd",
         "join",
-        "exists",
+        "readText",
         "existsSync",
-        "read",
         "readFileSync",
-        "lines",
+        "readJson",
+        "parse",
+        "exists",
+        "lineCount",
         "split",
+        "unique",
+        "Set",
+        "sort",
+        "tableByName",
+        "tableSummary",
+        "Boolean",
         "fromEntries",
         "entries",
         "toISOString",
@@ -8578,7 +8586,7 @@
         "stringify",
         "log"
       ],
-      "lines": 81
+      "lines": 441
     },
     "scripts/supabase-schema-map.mjs": {
       "folder": "scripts",
@@ -12830,6 +12838,7 @@
         "scripts/file-usage-map.mjs",
         "scripts/generate-graphs.mjs",
         "scripts/project-audit.mjs",
+        "scripts/project-knowledge-base.mjs",
         "scripts/supabase-schema-map.mjs",
         "scripts/system-docs.mjs"
       ]
@@ -13090,6 +13099,7 @@
         "scripts/db-usage-map.mjs",
         "scripts/file-usage-map.mjs",
         "scripts/project-audit.mjs",
+        "scripts/project-knowledge-base.mjs",
         "scripts/supabase-schema-map.mjs",
         "scripts/system-docs.mjs"
       ]
@@ -13483,7 +13493,8 @@
         "lib/ghostme/proactive/proactiveUserFlow.ts",
         "lib/ghostme/proactive/trueProactiveSnapshot.ts",
         "lib/ghostme/projects/goalProjectConsistencySnapshot.ts",
-        "lib/ghostme/ui/brainUiAdapter.ts"
+        "lib/ghostme/ui/brainUiAdapter.ts",
+        "scripts/project-knowledge-base.mjs"
       ]
     },
     "updateHouseEntity": {
@@ -14447,8 +14458,7 @@
       "exportedBy": [],
       "calledBy": [
         "app/chat/page.tsx",
-        "scripts/project-audit.mjs",
-        "scripts/project-knowledge-base.mjs"
+        "scripts/project-audit.mjs"
       ]
     },
     "decode": {
@@ -15746,6 +15756,7 @@
         "lib/ghostme/proactive/proactiveDecisionEngine.ts",
         "lib/ghostme/timeline.ts",
         "scripts/generate-graphs.mjs",
+        "scripts/project-knowledge-base.mjs",
         "scripts/system-docs.mjs"
       ]
     },
@@ -17269,6 +17280,7 @@
         "lib/ghostme/home/houseRouteSnapshot.ts",
         "lib/ghostme/home/houseStateSnapshot.ts",
         "lib/ghostme/people/socialSuggestionSnapshot.ts",
+        "scripts/project-knowledge-base.mjs",
         "scripts/supabase-schema-map.mjs"
       ]
     },
@@ -20584,13 +20596,38 @@
         "scripts/system-docs.mjs"
       ]
     },
+    "readText": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/project-knowledge-base.mjs"
+      ]
+    },
+    "readJson": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/project-knowledge-base.mjs",
+        "scripts/system-docs.mjs"
+      ]
+    },
     "exists": {
       "exportedBy": [],
       "calledBy": [
         "scripts/project-knowledge-base.mjs"
       ]
     },
-    "lines": {
+    "lineCount": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/project-knowledge-base.mjs"
+      ]
+    },
+    "tableByName": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/project-knowledge-base.mjs"
+      ]
+    },
+    "tableSummary": {
       "exportedBy": [],
       "calledBy": [
         "scripts/project-knowledge-base.mjs"
@@ -20642,12 +20679,6 @@
       "exportedBy": [],
       "calledBy": [
         "scripts/supabase-schema-map.mjs"
-      ]
-    },
-    "readJson": {
-      "exportedBy": [],
-      "calledBy": [
-        "scripts/system-docs.mjs"
       ]
     },
     "writeDoc": {

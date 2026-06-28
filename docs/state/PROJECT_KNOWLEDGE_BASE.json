@@ -1,5 +1,6 @@
 {
-  "generatedAt": "2026-06-28T00:20:00.886Z",
+  "generatedAt": "2026-06-28T00:35:59.802Z",
+  "version": "1",
   "inputs": {
     "systemMap": {
       "file": "docs/maps/GHOSTME_SYSTEM_MAP_V6.md",
@@ -21,10 +22,15 @@
       "exists": true,
       "lineCount": 1995
     },
-    "supabaseSchema": {
+    "supabaseSchemaMd": {
       "file": "docs/maps/SUPABASE_SCHEMA_MAP.md",
       "exists": true,
       "lineCount": 1811
+    },
+    "supabaseSchemaJson": {
+      "file": "docs/state/SUPABASE_SCHEMA_MAP.json",
+      "exists": true,
+      "lineCount": 6270
     },
     "priorityFix": {
       "file": "docs/maps/GHOSTME_PRIORITY_FIX_LIST.md",
@@ -35,6 +41,1853 @@
       "file": "docs/maps/DEPENDENCY_TEXT_MAP.txt",
       "exists": true,
       "lineCount": 501
+    }
+  },
+  "coreTables": [
+    {
+      "table": "chat_messages",
+      "readers": [
+        "app/chat/page.tsx",
+        "lib/ghostme/conversationSummary.ts"
+      ],
+      "writers": [
+        "app/chat/page.tsx",
+        "lib/ghostme/conversationSummary.ts",
+        "lib/ghostme/maintenance/retentionEngine.ts"
+      ],
+      "deleters": [
+        "lib/ghostme/maintenance/retentionEngine.ts"
+      ],
+      "selectedColumns": [
+        "content",
+        "created_at",
+        "id",
+        "message_order",
+        "role"
+      ],
+      "writtenColumns": [
+        "content",
+        "emotional_tone",
+        "message_order",
+        "messages_count",
+        "period_end",
+        "period_start",
+        "role",
+        "status",
+        "summary",
+        "title",
+        "topics",
+        "updated_at",
+        "user_id"
+      ],
+      "missingColumns": [],
+      "realColumns": [],
+      "readOnly": false,
+      "writeOnly": false
+    },
+    {
+      "table": "memories_active",
+      "readers": [
+        "app/memory/page.tsx",
+        "lib/ghostme/chat/chatPostProcessing.ts",
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/contradictions.ts",
+        "lib/ghostme/memory/memorySearchFlow.ts",
+        "lib/ghostme/memory/memorySnapshot.ts",
+        "lib/ghostme/people/peopleGraphLinkService.ts",
+        "lib/ghostme/people/peopleGraphService.ts",
+        "lib/ghostme/people/peopleSnapshot.ts",
+        "lib/ghostme/relationshipResolver.ts",
+        "lib/ghostme/retrieval.ts"
+      ],
+      "writers": [
+        "app/api/memory/route.ts",
+        "app/memory/page.tsx",
+        "lib/ghostme/chat/chatPostProcessing.ts",
+        "lib/ghostme/relationshipResolver.ts"
+      ],
+      "deleters": [
+        "app/memory/page.tsx",
+        "lib/ghostme/relationshipResolver.ts"
+      ],
+      "selectedColumns": [
+        "*",
+        "category",
+        "content",
+        "created_at",
+        "id",
+        "importance",
+        "pinned",
+        "title",
+        "updated_at"
+      ],
+      "writtenColumns": [
+        "category",
+        "content",
+        "importance",
+        "pinned",
+        "title",
+        "updated_at",
+        "user_id"
+      ],
+      "missingColumns": [],
+      "realColumns": [],
+      "readOnly": false,
+      "writeOnly": false
+    },
+    {
+      "table": "episodic_memories",
+      "readers": [
+        "lib/ghostme/chat/chatPostProcessing.ts",
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/memory/memorySearchFlow.ts",
+        "lib/ghostme/memory/memorySnapshot.ts",
+        "lib/ghostme/people/peopleGraphLinkService.ts",
+        "lib/ghostme/proactive/dailyBriefingRepository.ts",
+        "lib/ghostme/retrieval.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "writers": [
+        "lib/ghostme/chat/chatPostProcessing.ts"
+      ],
+      "deleters": [],
+      "selectedColumns": [
+        "*",
+        "created_at",
+        "emotional_tone",
+        "id",
+        "importance",
+        "related_topics",
+        "summary",
+        "updated_at"
+      ],
+      "writtenColumns": [
+        "emotional_tone",
+        "importance",
+        "related_topics",
+        "summary",
+        "user_id"
+      ],
+      "missingColumns": [],
+      "realColumns": [],
+      "readOnly": false,
+      "writeOnly": false
+    },
+    {
+      "table": "conversation_summaries",
+      "readers": [
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/conversationSummary.ts",
+        "lib/ghostme/curiosity/curiosityEngine.ts",
+        "lib/ghostme/memory/memorySearchFlow.ts",
+        "lib/ghostme/memory/memorySnapshot.ts",
+        "lib/ghostme/proactive/dailyBriefingRepository.ts",
+        "lib/ghostme/retrieval.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "writers": [
+        "lib/ghostme/conversationSummary.ts"
+      ],
+      "deleters": [],
+      "selectedColumns": [
+        "*",
+        "emotional_tone",
+        "id",
+        "period_end",
+        "period_start",
+        "summary",
+        "title",
+        "topics",
+        "updated_at"
+      ],
+      "writtenColumns": [
+        "emotional_tone",
+        "messages_count",
+        "period_end",
+        "period_start",
+        "summary",
+        "title",
+        "topics",
+        "updated_at",
+        "user_id"
+      ],
+      "missingColumns": [],
+      "realColumns": [],
+      "readOnly": false,
+      "writeOnly": false
+    },
+    {
+      "table": "life_topics",
+      "readers": [
+        "lib/ghostme/chat/chatPostProcessing.ts",
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/contradictions.ts",
+        "lib/ghostme/curiosity/curiosityEngine.ts",
+        "lib/ghostme/memory/memorySearchFlow.ts",
+        "lib/ghostme/memory/memorySnapshot.ts",
+        "lib/ghostme/memoryDecay.ts",
+        "lib/ghostme/people/peopleGraphService.ts",
+        "lib/ghostme/people/peopleSnapshot.ts",
+        "lib/ghostme/proactive/dailyBriefingRepository.ts",
+        "lib/ghostme/relationshipResolver.ts",
+        "lib/ghostme/retrieval.ts",
+        "lib/ghostme/situation/situationEngine.ts",
+        "lib/ghostme/topicLinks.ts"
+      ],
+      "writers": [
+        "lib/ghostme/chat/chatPostProcessing.ts",
+        "lib/ghostme/contradictions.ts",
+        "lib/ghostme/memoryDecay.ts",
+        "lib/ghostme/relationshipResolver.ts"
+      ],
+      "deleters": [
+        "lib/ghostme/relationshipResolver.ts"
+      ],
+      "selectedColumns": [
+        "*",
+        "category",
+        "description",
+        "entity_type",
+        "id",
+        "last_mentioned_at",
+        "mention_count",
+        "notes",
+        "relationship_strength",
+        "status",
+        "topic",
+        "updated_at",
+        "weight"
+      ],
+      "writtenColumns": [
+        "category",
+        "clarification_asked",
+        "description",
+        "entity_type",
+        "last_emotional_tone",
+        "last_mentioned_at",
+        "mention_count",
+        "needs_clarification",
+        "negative_count",
+        "neutral_count",
+        "notes",
+        "positive_count",
+        "relationship_strength",
+        "status",
+        "topic",
+        "true",
+        "updated_at",
+        "user_id",
+        "weight"
+      ],
+      "missingColumns": [],
+      "realColumns": [],
+      "readOnly": false,
+      "writeOnly": false
+    },
+    {
+      "table": "topic_links",
+      "readers": [
+        "lib/ghostme/memory/memorySearchFlow.ts",
+        "lib/ghostme/memory/memorySnapshot.ts",
+        "lib/ghostme/retrieval.ts",
+        "lib/ghostme/situation/situationEngine.ts",
+        "lib/ghostme/topicLinks.ts"
+      ],
+      "writers": [
+        "lib/ghostme/topicLinks.ts"
+      ],
+      "deleters": [],
+      "selectedColumns": [
+        "*",
+        "updated_at"
+      ],
+      "writtenColumns": [
+        "link_type",
+        "source_topic",
+        "target_topic",
+        "updated_at",
+        "user_id",
+        "weight"
+      ],
+      "missingColumns": [],
+      "realColumns": [],
+      "readOnly": false,
+      "writeOnly": false
+    },
+    {
+      "table": "people_graph",
+      "readers": [
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/people/peopleGraphLinkService.ts",
+        "lib/ghostme/people/peopleGraphService.ts",
+        "lib/ghostme/people/peopleSnapshot.ts"
+      ],
+      "writers": [
+        "lib/ghostme/people/peopleGraphService.ts"
+      ],
+      "deleters": [],
+      "selectedColumns": [
+        "*",
+        "category",
+        "confidence",
+        "description",
+        "entity_type",
+        "id",
+        "importance",
+        "last_mentioned_at",
+        "mention_count",
+        "name",
+        "normalized_name",
+        "notes",
+        "relationship_strength",
+        "relationship_type",
+        "source",
+        "status",
+        "topic",
+        "updated_at",
+        "weight"
+      ],
+      "writtenColumns": [
+        "updated_at"
+      ],
+      "missingColumns": [],
+      "realColumns": [],
+      "readOnly": false,
+      "writeOnly": false
+    },
+    {
+      "table": "people_graph_links",
+      "readers": [
+        "lib/ghostme/people/peopleGraphLinkService.ts"
+      ],
+      "writers": [
+        "lib/ghostme/people/peopleGraphLinkService.ts"
+      ],
+      "deleters": [],
+      "selectedColumns": [
+        "confidence",
+        "id",
+        "name",
+        "normalized_name",
+        "weight"
+      ],
+      "writtenColumns": [
+        "last_decayed_at",
+        "updated_at"
+      ],
+      "missingColumns": [],
+      "realColumns": [],
+      "readOnly": false,
+      "writeOnly": false
+    },
+    {
+      "table": "goals_desires",
+      "readers": [
+        "app/api/goals/update-status/route.ts",
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/curiosity/curiosityEngine.ts",
+        "lib/ghostme/goals/goalsActionsLifecycle.ts",
+        "lib/ghostme/goals/goalsSnapshot.ts",
+        "lib/ghostme/goalsDesires.ts",
+        "lib/ghostme/memory/memorySearchFlow.ts",
+        "lib/ghostme/people/peopleGraphLinkService.ts",
+        "lib/ghostme/proactive/dailyBriefingRepository.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "writers": [
+        "app/api/goals/update-status/route.ts",
+        "lib/ghostme/goals/goalsActionsLifecycle.ts",
+        "lib/ghostme/goalsDesires.ts"
+      ],
+      "deleters": [],
+      "selectedColumns": [
+        "*",
+        "category",
+        "completed_at",
+        "created_at",
+        "description",
+        "emotional_tone",
+        "goal_id",
+        "id",
+        "importance",
+        "needs_review",
+        "related_topics",
+        "review_requested_at",
+        "source_message",
+        "status",
+        "title",
+        "updated_at"
+      ],
+      "writtenColumns": [
+        "category",
+        "completed_at",
+        "description",
+        "emotional_tone",
+        "importance",
+        "needs_review",
+        "related_topics",
+        "review_requested_at",
+        "source_message",
+        "status",
+        "updated_at",
+        "user_id"
+      ],
+      "missingColumns": [],
+      "realColumns": [],
+      "readOnly": false,
+      "writeOnly": false
+    },
+    {
+      "table": "action_intents",
+      "readers": [
+        "app/api/actions/update-status/route.ts",
+        "app/api/goals/update-status/route.ts",
+        "lib/ghostme/actionLayer.ts",
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/goals/goalsActionsLifecycle.ts",
+        "lib/ghostme/goals/goalsSnapshot.ts",
+        "lib/ghostme/memory/memorySearchFlow.ts",
+        "lib/ghostme/people/peopleGraphLinkService.ts",
+        "lib/ghostme/proactive/dailyBriefingRepository.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "writers": [
+        "app/api/actions/update-status/route.ts",
+        "app/api/goals/update-status/route.ts",
+        "lib/ghostme/actionLayer.ts",
+        "lib/ghostme/goals/goalsActionsLifecycle.ts"
+      ],
+      "deleters": [],
+      "selectedColumns": [
+        "*",
+        "completed_at",
+        "created_at",
+        "description",
+        "goal_id",
+        "id",
+        "intent_type",
+        "priority",
+        "related_topics",
+        "source_message",
+        "status",
+        "title",
+        "updated_at"
+      ],
+      "writtenColumns": [
+        "completed_at",
+        "description",
+        "goal_id",
+        "intent_type",
+        "needs_review",
+        "priority",
+        "related_topics",
+        "review_requested_at",
+        "source_message",
+        "status",
+        "updated_at",
+        "user_id"
+      ],
+      "missingColumns": [],
+      "realColumns": [],
+      "readOnly": false,
+      "writeOnly": false
+    },
+    {
+      "table": "calendar_events",
+      "readers": [
+        "app/api/ghostme/proactive/read/route.ts",
+        "lib/ghostme/agenda/reminderEngine.ts",
+        "lib/ghostme/calendar/calendarService.ts",
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/people/peopleGraphLinkService.ts",
+        "lib/ghostme/proactive/dailyBriefingRepository.ts",
+        "lib/ghostme/proactive/visibleProactiveMessages.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "writers": [
+        "app/api/ghostme/proactive/read/route.ts",
+        "lib/ghostme/agenda/reminderEngine.ts",
+        "lib/ghostme/calendar/calendarService.ts",
+        "lib/ghostme/maintenance/retentionEngine.ts",
+        "lib/ghostme/proactive/visibleProactiveMessages.ts"
+      ],
+      "deleters": [],
+      "selectedColumns": [
+        "*",
+        "created_at",
+        "description",
+        "end_at",
+        "id",
+        "remind_at",
+        "start_at",
+        "status",
+        "title",
+        "type",
+        "updated_at",
+        "user_id"
+      ],
+      "writtenColumns": [
+        "status",
+        "updated_at",
+        "user_id"
+      ],
+      "missingColumns": [],
+      "realColumns": [],
+      "readOnly": false,
+      "writeOnly": false
+    },
+    {
+      "table": "ghost_behavior_rules",
+      "readers": [
+        "lib/ghostme/behavior/behaviorRulesEngine.ts",
+        "lib/ghostme/profile/profileBehaviorSeed.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "writers": [
+        "lib/ghostme/behavior/behaviorRulesEngine.ts",
+        "lib/ghostme/profile/profileBehaviorSeed.ts"
+      ],
+      "deleters": [],
+      "selectedColumns": [
+        "*",
+        "confidence",
+        "id",
+        "priority"
+      ],
+      "writtenColumns": [
+        "confidence",
+        "context",
+        "last_applied_at",
+        "priority",
+        "rule_text",
+        "rule_type",
+        "source_message",
+        "status",
+        "target_area",
+        "trigger_hint",
+        "updated_at",
+        "user_id"
+      ],
+      "missingColumns": [],
+      "realColumns": [],
+      "readOnly": false,
+      "writeOnly": false
+    },
+    {
+      "table": "mental_states",
+      "readers": [
+        "lib/ghostme/mentalState.ts",
+        "lib/ghostme/proactive/dailyBriefingRepository.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "writers": [
+        "lib/ghostme/mentalState.ts"
+      ],
+      "deleters": [],
+      "selectedColumns": [
+        "*"
+      ],
+      "writtenColumns": [
+        "user_id"
+      ],
+      "missingColumns": [],
+      "realColumns": [],
+      "readOnly": false,
+      "writeOnly": false
+    },
+    {
+      "table": "dynamic_self_profile",
+      "readers": [
+        "lib/ghostme/curiosity/curiosityEngine.ts",
+        "lib/ghostme/dynamicSelfProfile.ts",
+        "lib/ghostme/profile/profileBehaviorSeed.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "writers": [
+        "lib/ghostme/dynamicSelfProfile.ts",
+        "lib/ghostme/profile/profileBehaviorSeed.ts"
+      ],
+      "deleters": [],
+      "selectedColumns": [
+        "*",
+        "confidence",
+        "description",
+        "id",
+        "last_evidence",
+        "source",
+        "trait",
+        "updated_at"
+      ],
+      "writtenColumns": [
+        "confidence",
+        "description",
+        "last_evidence",
+        "source",
+        "updated_at",
+        "user_id"
+      ],
+      "missingColumns": [],
+      "realColumns": [],
+      "readOnly": false,
+      "writeOnly": false
+    },
+    {
+      "table": "user_location_state",
+      "readers": [
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/home/houseStateSnapshot.ts",
+        "lib/ghostme/location/haLocationBridgeFlow.ts",
+        "lib/ghostme/location/locationCurrentStateFlow.ts",
+        "lib/ghostme/location/locationLearningFlow.ts",
+        "lib/ghostme/location/locationUpdateFlow.ts",
+        "lib/ghostme/location/placeService.ts",
+        "lib/ghostme/observation/observationEngine.ts"
+      ],
+      "writers": [
+        "lib/ghostme/location/haLocationBridgeFlow.ts",
+        "lib/ghostme/location/locationLearningFlow.ts",
+        "lib/ghostme/location/locationUpdateFlow.ts",
+        "lib/ghostme/location/placeService.ts",
+        "lib/ghostme/observation/observationEngine.ts"
+      ],
+      "deleters": [],
+      "selectedColumns": [
+        "*",
+        "confidence",
+        "current_place_id",
+        "current_place_label",
+        "last_changed_at",
+        "place_category",
+        "source",
+        "updated_at",
+        "user_id"
+      ],
+      "writtenColumns": [
+        "accuracy",
+        "address",
+        "confidence",
+        "current_place_id",
+        "current_place_label",
+        "external_name",
+        "label",
+        "last_changed_at",
+        "now",
+        "onConflict",
+        "place_category",
+        "source",
+        "updated_at",
+        "user_id"
+      ],
+      "missingColumns": [],
+      "realColumns": [
+        "user_id",
+        "current_place_id",
+        "current_place_label",
+        "latitude",
+        "longitude",
+        "source",
+        "updated_at",
+        "place_category",
+        "address",
+        "accuracy",
+        "last_changed_at",
+        "confidence"
+      ],
+      "readOnly": false,
+      "writeOnly": false
+    },
+    {
+      "table": "significant_places",
+      "readers": [
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/location/haLocationBridgeFlow.ts",
+        "lib/ghostme/location/placeService.ts",
+        "lib/ghostme/observation/observationEngine.ts",
+        "lib/ghostme/proactive/dailyBriefingRepository.ts"
+      ],
+      "writers": [
+        "lib/ghostme/location/haLocationBridgeFlow.ts",
+        "lib/ghostme/location/placeService.ts",
+        "lib/ghostme/observation/observationEngine.ts"
+      ],
+      "deleters": [
+        "lib/ghostme/location/locationDeletePlaceFlow.ts"
+      ],
+      "selectedColumns": [
+        "*",
+        "address",
+        "category",
+        "confidence",
+        "id",
+        "label",
+        "last_seen_at",
+        "latitude",
+        "longitude",
+        "radius_meters",
+        "updated_at",
+        "visit_count"
+      ],
+      "writtenColumns": [
+        "address",
+        "category",
+        "confidence",
+        "current_place_id",
+        "current_place_label",
+        "external_category",
+        "external_name",
+        "label",
+        "last_changed_at",
+        "last_seen_at",
+        "now",
+        "onConflict",
+        "place_category",
+        "radius_meters",
+        "source",
+        "status",
+        "updated_at",
+        "user_id",
+        "visit_count"
+      ],
+      "missingColumns": [],
+      "realColumns": [],
+      "readOnly": false,
+      "writeOnly": false
+    },
+    {
+      "table": "observation_events",
+      "readers": [
+        "lib/ghostme/observation/observationEngine.ts",
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "writers": [
+        "lib/ghostme/observation/observationEngine.ts"
+      ],
+      "deleters": [],
+      "selectedColumns": [
+        "*",
+        "category",
+        "context",
+        "event_type",
+        "id",
+        "label",
+        "occurred_at",
+        "place_label",
+        "value"
+      ],
+      "writtenColumns": [
+        "candidate_place_id",
+        "context",
+        "observation_text",
+        "occurred_at",
+        "place_id",
+        "place_label"
+      ],
+      "missingColumns": [
+        "category",
+        "label"
+      ],
+      "realColumns": [
+        "id",
+        "user_id",
+        "event_type",
+        "source",
+        "place_label",
+        "place_id",
+        "value",
+        "context",
+        "occurred_at",
+        "created_at"
+      ],
+      "readOnly": false,
+      "writeOnly": false
+    },
+    {
+      "table": "behavior_patterns",
+      "readers": [
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/location/locationLearningFlow.ts",
+        "lib/ghostme/observation/observationEngine.ts",
+        "lib/ghostme/patterns/patternDecay.ts",
+        "lib/ghostme/patterns/patternInsightEngine.ts",
+        "lib/ghostme/proactive/dailyBriefingRepository.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "writers": [
+        "lib/ghostme/location/locationLearningFlow.ts",
+        "lib/ghostme/observation/observationEngine.ts",
+        "lib/ghostme/patterns/patternDecay.ts"
+      ],
+      "deleters": [],
+      "selectedColumns": [
+        "*",
+        "confidence",
+        "description",
+        "first_seen_at",
+        "id",
+        "last_seen_at",
+        "latitude",
+        "learned_from",
+        "longitude",
+        "occurrences",
+        "pattern_type",
+        "radius_meters",
+        "status",
+        "title",
+        "trigger_conditions",
+        "updated_at"
+      ],
+      "writtenColumns": [
+        "place_id",
+        "place_label",
+        "status",
+        "updated_at",
+        "user_id"
+      ],
+      "missingColumns": [],
+      "realColumns": [],
+      "readOnly": false,
+      "writeOnly": false
+    },
+    {
+      "table": "house_events",
+      "readers": [
+        "app/api/home-assistant/event/route.ts",
+        "lib/ghostme/home/homeComfortRiskSnapshot.ts",
+        "lib/ghostme/home/houseRouteSnapshot.ts",
+        "lib/ghostme/home/houseStateSnapshot.ts",
+        "lib/ghostme/home/houseWorkerFlow.ts",
+        "lib/ghostme/homeAssistant/homeEventLogger.ts",
+        "lib/ghostme/homeAssistant/houseAutomationContext.ts",
+        "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
+        "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
+        "lib/ghostme/homeAssistant/houseLightLearningFlow.ts",
+        "lib/ghostme/homeAssistant/housePatternEngine.ts",
+        "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts",
+        "lib/ghostme/proactive/dailyBriefingRepository.ts"
+      ],
+      "writers": [
+        "app/api/home-assistant/event/route.ts",
+        "lib/ghostme/home/houseWorkerFlow.ts",
+        "lib/ghostme/homeAssistant/homeEventLogger.ts",
+        "lib/ghostme/homeAssistant/houseLightLearningFlow.ts",
+        "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts"
+      ],
+      "deleters": [],
+      "selectedColumns": [
+        "*",
+        "entity_id",
+        "entity_name",
+        "entity_type",
+        "event_type",
+        "id",
+        "new_state",
+        "occurred_at",
+        "people_home_count",
+        "room_key",
+        "value"
+      ],
+      "writtenColumns": [
+        "can_trigger_event",
+        "entity_id",
+        "entity_name",
+        "entity_type",
+        "event_type",
+        "is_useful",
+        "new_state",
+        "observed_results",
+        "occurred_at",
+        "old_state",
+        "people_home_count",
+        "room_key",
+        "source",
+        "target_user",
+        "updated_at",
+        "user_id",
+        "value"
+      ],
+      "missingColumns": [],
+      "realColumns": [],
+      "readOnly": false,
+      "writeOnly": false
+    },
+    {
+      "table": "house_entities",
+      "readers": [
+        "lib/ghostme/home/houseStateSnapshot.ts",
+        "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts"
+      ],
+      "writers": [
+        "app/api/home-assistant/event/route.ts",
+        "lib/ghostme/homeAssistant/houseEntityRegistry.ts"
+      ],
+      "deleters": [],
+      "selectedColumns": [
+        "can_trigger_event",
+        "entity_id",
+        "entity_name",
+        "entity_type",
+        "is_useful",
+        "room_key",
+        "updated_at"
+      ],
+      "writtenColumns": [
+        "can_trigger_event",
+        "entity_id",
+        "entity_name",
+        "entity_type",
+        "is_useful",
+        "onConflict",
+        "room_key",
+        "updated_at",
+        "user_id"
+      ],
+      "missingColumns": [],
+      "realColumns": [],
+      "readOnly": false,
+      "writeOnly": false
+    },
+    {
+      "table": "house_patterns",
+      "readers": [
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
+        "lib/ghostme/homeAssistant/housePatternEngine.ts"
+      ],
+      "writers": [
+        "lib/ghostme/homeAssistant/housePatternEngine.ts"
+      ],
+      "deleters": [],
+      "selectedColumns": [
+        "*",
+        "confidence",
+        "description",
+        "first_seen_at",
+        "id",
+        "last_seen_at",
+        "occurrences",
+        "pattern_type",
+        "status",
+        "title",
+        "updated_at"
+      ],
+      "writtenColumns": [
+        "first_seen_at",
+        "user_id"
+      ],
+      "missingColumns": [],
+      "realColumns": [
+        "id",
+        "user_id",
+        "pattern_type",
+        "title",
+        "description",
+        "confidence",
+        "status",
+        "occurrences",
+        "first_seen_at",
+        "last_seen_at",
+        "updated_at"
+      ],
+      "readOnly": false,
+      "writeOnly": false
+    },
+    {
+      "table": "house_suggestions",
+      "readers": [
+        "lib/ghostme/home/houseSuggestionResponseFlow.ts",
+        "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
+        "lib/ghostme/homeAssistant/houseSuggestionEngine.ts"
+      ],
+      "writers": [
+        "lib/ghostme/home/houseSuggestionResponseFlow.ts",
+        "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
+        "lib/ghostme/homeAssistant/houseSuggestionEngine.ts"
+      ],
+      "deleters": [],
+      "selectedColumns": [
+        "*",
+        "entity_id",
+        "entity_name",
+        "entity_type",
+        "event_type",
+        "id",
+        "new_state",
+        "occurred_at",
+        "room_key"
+      ],
+      "writtenColumns": [
+        "response_at",
+        "room_key",
+        "status",
+        "suggestion_type",
+        "user_id",
+        "user_response"
+      ],
+      "missingColumns": [
+        "entity_id",
+        "entity_name",
+        "entity_type",
+        "event_type",
+        "new_state",
+        "occurred_at"
+      ],
+      "realColumns": [
+        "id",
+        "user_id",
+        "title",
+        "message",
+        "suggestion_type",
+        "room_key",
+        "confidence",
+        "status",
+        "created_at"
+      ],
+      "readOnly": false,
+      "writeOnly": false
+    },
+    {
+      "table": "ghost_proactive_messages",
+      "readers": [
+        "app/api/ghostme/proactive/read/route.ts",
+        "lib/ghostme/agenda/reminderEngine.ts",
+        "lib/ghostme/calendar/calendarService.ts",
+        "lib/ghostme/context/contextBuilder.ts",
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/curiosity/curiosityEngine.ts",
+        "lib/ghostme/home/houseSuggestionResponseFlow.ts",
+        "lib/ghostme/location/locationLearningFlow.ts",
+        "lib/ghostme/observation/observationInsightEngine.ts",
+        "lib/ghostme/patterns/patternInsightEngine.ts",
+        "lib/ghostme/proactive/curiosityCardWriter.ts",
+        "lib/ghostme/proactive/proactiveMessageService.ts",
+        "lib/ghostme/proactive/proactiveTrigger.ts",
+        "lib/ghostme/proactive/proactiveUserFlow.ts",
+        "lib/ghostme/proactive/trueProactiveCardWriter.ts",
+        "lib/ghostme/proactive/visibleProactiveMessages.ts"
+      ],
+      "writers": [
+        "app/api/ghostme/proactive/read/route.ts",
+        "lib/ghostme/agenda/reminderEngine.ts",
+        "lib/ghostme/calendar/calendarService.ts",
+        "lib/ghostme/home/houseSuggestionResponseFlow.ts",
+        "lib/ghostme/location/locationLearningFlow.ts",
+        "lib/ghostme/maintenance/retentionEngine.ts",
+        "lib/ghostme/proactive/proactiveMessageService.ts",
+        "lib/ghostme/proactive/visibleProactiveMessages.ts"
+      ],
+      "deleters": [],
+      "selectedColumns": [
+        "*",
+        "category",
+        "created_at",
+        "curiosity",
+        "id",
+        "logical_key",
+        "message",
+        "priority",
+        "scheduled_for",
+        "status",
+        "title",
+        "updated_at",
+        "user_id"
+      ],
+      "writtenColumns": [
+        "answered_at",
+        "expires_at",
+        "last_action",
+        "last_reason",
+        "read_at",
+        "status",
+        "updated_at",
+        "utente"
+      ],
+      "missingColumns": [
+        "curiosity"
+      ],
+      "realColumns": [
+        "id",
+        "user_id",
+        "category",
+        "source",
+        "logical_key",
+        "priority",
+        "status",
+        "title",
+        "message",
+        "scheduled_for",
+        "created_at",
+        "updated_at"
+      ],
+      "readOnly": false,
+      "writeOnly": false
+    }
+  ],
+  "flows": [
+    {
+      "name": "Chat → Cognitive Core → Risposta",
+      "goal": "Capire il messaggio, costruire contesto, rispondere e avviare post-processing.",
+      "files": [
+        "app/api/chat/route.ts",
+        "lib/ghostme/chat/ghostChatOrchestrator.ts",
+        "lib/ghostme/core/messageClassifier.ts",
+        "lib/ghostme/chat/chatMessageAnalyzer.ts",
+        "lib/ghostme/chat/chatContextBuilder.ts",
+        "lib/ghostme/chat/chatPromptBuilder.ts",
+        "lib/ghostme/chat/chatPostProcessing.ts"
+      ],
+      "tables": [
+        "chat_messages",
+        "memories_active",
+        "episodic_memories",
+        "life_topics",
+        "topic_links",
+        "goals_desires",
+        "action_intents",
+        "calendar_events",
+        "ghost_behavior_rules",
+        "mental_states"
+      ],
+      "output": "Risposta chat + aggiornamenti memoria/goal/action/behavior."
+    },
+    {
+      "name": "Memoria → Topic → People Graph",
+      "goal": "Trasformare messaggi e ricordi in persone, relazioni e collegamenti.",
+      "files": [
+        "lib/ghostme/chat/chatPostProcessing.ts",
+        "lib/ghostme/topicDetector.ts",
+        "lib/ghostme/topicLinks.ts",
+        "lib/ghostme/people/peopleGraphService.ts",
+        "lib/ghostme/people/peopleGraphLinkService.ts",
+        "lib/ghostme/people/peopleSnapshot.ts"
+      ],
+      "tables": [
+        "memories_active",
+        "episodic_memories",
+        "life_topics",
+        "topic_links",
+        "people_graph",
+        "people_graph_links"
+      ],
+      "output": "People Snapshot, relationship context, deep recall."
+    },
+    {
+      "name": "Luoghi → Observation → Pattern",
+      "goal": "Capire dove si trova Manu, cosa cambia e quali abitudini emergono.",
+      "files": [
+        "lib/ghostme/location/locationUpdateFlow.ts",
+        "lib/ghostme/location/haLocationBridgeFlow.ts",
+        "lib/ghostme/location/locationLearningFlow.ts",
+        "lib/ghostme/location/placeService.ts",
+        "lib/ghostme/observation/observationEngine.ts",
+        "lib/ghostme/patterns/patternInsightEngine.ts"
+      ],
+      "tables": [
+        "user_location_state",
+        "significant_places",
+        "observation_events",
+        "behavior_patterns"
+      ],
+      "output": "currentSituation, place events, location patterns."
+    },
+    {
+      "name": "Home Assistant → House Snapshot → Situation",
+      "goal": "Trasformare eventi casa/sensori in situazione leggibile.",
+      "files": [
+        "app/api/home-assistant/event/route.ts",
+        "lib/ghostme/homeAssistant/homeEventLogger.ts",
+        "lib/ghostme/home/houseStateSnapshot.ts",
+        "lib/ghostme/homeAssistant/housePatternEngine.ts",
+        "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
+        "lib/ghostme/context/reasoningService.ts"
+      ],
+      "tables": [
+        "house_events",
+        "house_entities",
+        "house_patterns",
+        "house_suggestions",
+        "house_automation_controls",
+        "house_learned_rules"
+      ],
+      "output": "House snapshot, room/activity signals, house suggestions."
+    },
+    {
+      "name": "Proactive → Daily → Card UI",
+      "goal": "Decidere cosa mostrare all’utente senza aspettare la chat.",
+      "files": [
+        "app/api/ghostme/brain/route.ts",
+        "lib/ghostme/proactive/proactiveUserFlow.ts",
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
+        "lib/ghostme/proactive/proactiveCandidateRanker.ts",
+        "lib/ghostme/proactive/proactiveMessageService.ts",
+        "lib/ghostme/proactive/dailyBriefingBuilder.ts",
+        "lib/ghostme/proactive/visibleProactiveMessages.ts",
+        "components/ghost/GhostDrawers.tsx"
+      ],
+      "tables": [
+        "ghost_proactive_messages",
+        "calendar_events",
+        "action_intents",
+        "goals_desires",
+        "observation_events",
+        "behavior_patterns",
+        "user_location_state",
+        "house_events"
+      ],
+      "output": "Daily briefing, curiosity, observation, continuity cards."
+    },
+    {
+      "name": "Continuity / Open Loops",
+      "goal": "Riprendere storie aperte quando il momento è giusto.",
+      "files": [
+        "lib/ghostme/proactive/proactiveUserFlow.ts",
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
+        "lib/ghostme/proactive/proactiveCandidateRanker.ts",
+        "lib/ghostme/proactive/proactiveMessageService.ts"
+      ],
+      "tables": [
+        "action_intents",
+        "calendar_events",
+        "autobiographical_timeline",
+        "episodic_memories",
+        "conversation_summaries",
+        "observation_events",
+        "user_location_state",
+        "ghost_proactive_messages"
+      ],
+      "output": "Card continuity: grigliata, rientro, luogo nuovo, evento aperto."
+    }
+  ],
+  "warnings": {
+    "missingColumnWarnings": [
+      {
+        "table": "autobiographical_timeline",
+        "columns": [
+          "category"
+        ]
+      },
+      {
+        "table": "ghost_proactive_messages",
+        "columns": [
+          "curiosity"
+        ]
+      },
+      {
+        "table": "house_suggestions",
+        "columns": [
+          "entity_id",
+          "entity_name",
+          "entity_type",
+          "event_type",
+          "new_state",
+          "occurred_at"
+        ]
+      },
+      {
+        "table": "observation_events",
+        "columns": [
+          "category",
+          "label"
+        ]
+      }
+    ],
+    "readOnlyWarnings": [],
+    "writeOnlyWarnings": [
+      "rpc:upsert_people_graph_link",
+      "users"
+    ]
+  },
+  "impactMap": {
+    "chat_messages": {
+      "ifThisChangesCheck": [
+        "app/chat/page.tsx",
+        "lib/ghostme/conversationSummary.ts",
+        "lib/ghostme/maintenance/retentionEngine.ts"
+      ],
+      "consumers": [
+        "app/chat/page.tsx",
+        "lib/ghostme/conversationSummary.ts"
+      ],
+      "producers": [
+        "app/chat/page.tsx",
+        "lib/ghostme/conversationSummary.ts",
+        "lib/ghostme/maintenance/retentionEngine.ts"
+      ],
+      "missingColumns": []
+    },
+    "memories_active": {
+      "ifThisChangesCheck": [
+        "app/api/memory/route.ts",
+        "app/memory/page.tsx",
+        "lib/ghostme/chat/chatPostProcessing.ts",
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/contradictions.ts",
+        "lib/ghostme/memory/memorySearchFlow.ts",
+        "lib/ghostme/memory/memorySnapshot.ts",
+        "lib/ghostme/people/peopleGraphLinkService.ts",
+        "lib/ghostme/people/peopleGraphService.ts",
+        "lib/ghostme/people/peopleSnapshot.ts",
+        "lib/ghostme/relationshipResolver.ts",
+        "lib/ghostme/retrieval.ts"
+      ],
+      "consumers": [
+        "app/memory/page.tsx",
+        "lib/ghostme/chat/chatPostProcessing.ts",
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/contradictions.ts",
+        "lib/ghostme/memory/memorySearchFlow.ts",
+        "lib/ghostme/memory/memorySnapshot.ts",
+        "lib/ghostme/people/peopleGraphLinkService.ts",
+        "lib/ghostme/people/peopleGraphService.ts",
+        "lib/ghostme/people/peopleSnapshot.ts",
+        "lib/ghostme/relationshipResolver.ts",
+        "lib/ghostme/retrieval.ts"
+      ],
+      "producers": [
+        "app/api/memory/route.ts",
+        "app/memory/page.tsx",
+        "lib/ghostme/chat/chatPostProcessing.ts",
+        "lib/ghostme/relationshipResolver.ts"
+      ],
+      "missingColumns": []
+    },
+    "episodic_memories": {
+      "ifThisChangesCheck": [
+        "lib/ghostme/chat/chatPostProcessing.ts",
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/memory/memorySearchFlow.ts",
+        "lib/ghostme/memory/memorySnapshot.ts",
+        "lib/ghostme/people/peopleGraphLinkService.ts",
+        "lib/ghostme/proactive/dailyBriefingRepository.ts",
+        "lib/ghostme/retrieval.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "consumers": [
+        "lib/ghostme/chat/chatPostProcessing.ts",
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/memory/memorySearchFlow.ts",
+        "lib/ghostme/memory/memorySnapshot.ts",
+        "lib/ghostme/people/peopleGraphLinkService.ts",
+        "lib/ghostme/proactive/dailyBriefingRepository.ts",
+        "lib/ghostme/retrieval.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "producers": [
+        "lib/ghostme/chat/chatPostProcessing.ts"
+      ],
+      "missingColumns": []
+    },
+    "conversation_summaries": {
+      "ifThisChangesCheck": [
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/conversationSummary.ts",
+        "lib/ghostme/curiosity/curiosityEngine.ts",
+        "lib/ghostme/memory/memorySearchFlow.ts",
+        "lib/ghostme/memory/memorySnapshot.ts",
+        "lib/ghostme/proactive/dailyBriefingRepository.ts",
+        "lib/ghostme/retrieval.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "consumers": [
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/conversationSummary.ts",
+        "lib/ghostme/curiosity/curiosityEngine.ts",
+        "lib/ghostme/memory/memorySearchFlow.ts",
+        "lib/ghostme/memory/memorySnapshot.ts",
+        "lib/ghostme/proactive/dailyBriefingRepository.ts",
+        "lib/ghostme/retrieval.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "producers": [
+        "lib/ghostme/conversationSummary.ts"
+      ],
+      "missingColumns": []
+    },
+    "life_topics": {
+      "ifThisChangesCheck": [
+        "lib/ghostme/chat/chatPostProcessing.ts",
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/contradictions.ts",
+        "lib/ghostme/curiosity/curiosityEngine.ts",
+        "lib/ghostme/memory/memorySearchFlow.ts",
+        "lib/ghostme/memory/memorySnapshot.ts",
+        "lib/ghostme/memoryDecay.ts",
+        "lib/ghostme/people/peopleGraphService.ts",
+        "lib/ghostme/people/peopleSnapshot.ts",
+        "lib/ghostme/proactive/dailyBriefingRepository.ts",
+        "lib/ghostme/relationshipResolver.ts",
+        "lib/ghostme/retrieval.ts",
+        "lib/ghostme/situation/situationEngine.ts",
+        "lib/ghostme/topicLinks.ts"
+      ],
+      "consumers": [
+        "lib/ghostme/chat/chatPostProcessing.ts",
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/contradictions.ts",
+        "lib/ghostme/curiosity/curiosityEngine.ts",
+        "lib/ghostme/memory/memorySearchFlow.ts",
+        "lib/ghostme/memory/memorySnapshot.ts",
+        "lib/ghostme/memoryDecay.ts",
+        "lib/ghostme/people/peopleGraphService.ts",
+        "lib/ghostme/people/peopleSnapshot.ts",
+        "lib/ghostme/proactive/dailyBriefingRepository.ts",
+        "lib/ghostme/relationshipResolver.ts",
+        "lib/ghostme/retrieval.ts",
+        "lib/ghostme/situation/situationEngine.ts",
+        "lib/ghostme/topicLinks.ts"
+      ],
+      "producers": [
+        "lib/ghostme/chat/chatPostProcessing.ts",
+        "lib/ghostme/contradictions.ts",
+        "lib/ghostme/memoryDecay.ts",
+        "lib/ghostme/relationshipResolver.ts"
+      ],
+      "missingColumns": []
+    },
+    "topic_links": {
+      "ifThisChangesCheck": [
+        "lib/ghostme/memory/memorySearchFlow.ts",
+        "lib/ghostme/memory/memorySnapshot.ts",
+        "lib/ghostme/retrieval.ts",
+        "lib/ghostme/situation/situationEngine.ts",
+        "lib/ghostme/topicLinks.ts"
+      ],
+      "consumers": [
+        "lib/ghostme/memory/memorySearchFlow.ts",
+        "lib/ghostme/memory/memorySnapshot.ts",
+        "lib/ghostme/retrieval.ts",
+        "lib/ghostme/situation/situationEngine.ts",
+        "lib/ghostme/topicLinks.ts"
+      ],
+      "producers": [
+        "lib/ghostme/topicLinks.ts"
+      ],
+      "missingColumns": []
+    },
+    "people_graph": {
+      "ifThisChangesCheck": [
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/people/peopleGraphLinkService.ts",
+        "lib/ghostme/people/peopleGraphService.ts",
+        "lib/ghostme/people/peopleSnapshot.ts"
+      ],
+      "consumers": [
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/people/peopleGraphLinkService.ts",
+        "lib/ghostme/people/peopleGraphService.ts",
+        "lib/ghostme/people/peopleSnapshot.ts"
+      ],
+      "producers": [
+        "lib/ghostme/people/peopleGraphService.ts"
+      ],
+      "missingColumns": []
+    },
+    "people_graph_links": {
+      "ifThisChangesCheck": [
+        "lib/ghostme/people/peopleGraphLinkService.ts"
+      ],
+      "consumers": [
+        "lib/ghostme/people/peopleGraphLinkService.ts"
+      ],
+      "producers": [
+        "lib/ghostme/people/peopleGraphLinkService.ts"
+      ],
+      "missingColumns": []
+    },
+    "goals_desires": {
+      "ifThisChangesCheck": [
+        "app/api/goals/update-status/route.ts",
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/curiosity/curiosityEngine.ts",
+        "lib/ghostme/goals/goalsActionsLifecycle.ts",
+        "lib/ghostme/goals/goalsSnapshot.ts",
+        "lib/ghostme/goalsDesires.ts",
+        "lib/ghostme/memory/memorySearchFlow.ts",
+        "lib/ghostme/people/peopleGraphLinkService.ts",
+        "lib/ghostme/proactive/dailyBriefingRepository.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "consumers": [
+        "app/api/goals/update-status/route.ts",
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/curiosity/curiosityEngine.ts",
+        "lib/ghostme/goals/goalsActionsLifecycle.ts",
+        "lib/ghostme/goals/goalsSnapshot.ts",
+        "lib/ghostme/goalsDesires.ts",
+        "lib/ghostme/memory/memorySearchFlow.ts",
+        "lib/ghostme/people/peopleGraphLinkService.ts",
+        "lib/ghostme/proactive/dailyBriefingRepository.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "producers": [
+        "app/api/goals/update-status/route.ts",
+        "lib/ghostme/goals/goalsActionsLifecycle.ts",
+        "lib/ghostme/goalsDesires.ts"
+      ],
+      "missingColumns": []
+    },
+    "action_intents": {
+      "ifThisChangesCheck": [
+        "app/api/actions/update-status/route.ts",
+        "app/api/goals/update-status/route.ts",
+        "lib/ghostme/actionLayer.ts",
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/goals/goalsActionsLifecycle.ts",
+        "lib/ghostme/goals/goalsSnapshot.ts",
+        "lib/ghostme/memory/memorySearchFlow.ts",
+        "lib/ghostme/people/peopleGraphLinkService.ts",
+        "lib/ghostme/proactive/dailyBriefingRepository.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "consumers": [
+        "app/api/actions/update-status/route.ts",
+        "app/api/goals/update-status/route.ts",
+        "lib/ghostme/actionLayer.ts",
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/goals/goalsActionsLifecycle.ts",
+        "lib/ghostme/goals/goalsSnapshot.ts",
+        "lib/ghostme/memory/memorySearchFlow.ts",
+        "lib/ghostme/people/peopleGraphLinkService.ts",
+        "lib/ghostme/proactive/dailyBriefingRepository.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "producers": [
+        "app/api/actions/update-status/route.ts",
+        "app/api/goals/update-status/route.ts",
+        "lib/ghostme/actionLayer.ts",
+        "lib/ghostme/goals/goalsActionsLifecycle.ts"
+      ],
+      "missingColumns": []
+    },
+    "calendar_events": {
+      "ifThisChangesCheck": [
+        "app/api/ghostme/proactive/read/route.ts",
+        "lib/ghostme/agenda/reminderEngine.ts",
+        "lib/ghostme/calendar/calendarService.ts",
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/maintenance/retentionEngine.ts",
+        "lib/ghostme/people/peopleGraphLinkService.ts",
+        "lib/ghostme/proactive/dailyBriefingRepository.ts",
+        "lib/ghostme/proactive/visibleProactiveMessages.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "consumers": [
+        "app/api/ghostme/proactive/read/route.ts",
+        "lib/ghostme/agenda/reminderEngine.ts",
+        "lib/ghostme/calendar/calendarService.ts",
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/people/peopleGraphLinkService.ts",
+        "lib/ghostme/proactive/dailyBriefingRepository.ts",
+        "lib/ghostme/proactive/visibleProactiveMessages.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "producers": [
+        "app/api/ghostme/proactive/read/route.ts",
+        "lib/ghostme/agenda/reminderEngine.ts",
+        "lib/ghostme/calendar/calendarService.ts",
+        "lib/ghostme/maintenance/retentionEngine.ts",
+        "lib/ghostme/proactive/visibleProactiveMessages.ts"
+      ],
+      "missingColumns": []
+    },
+    "ghost_behavior_rules": {
+      "ifThisChangesCheck": [
+        "lib/ghostme/behavior/behaviorRulesEngine.ts",
+        "lib/ghostme/profile/profileBehaviorSeed.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "consumers": [
+        "lib/ghostme/behavior/behaviorRulesEngine.ts",
+        "lib/ghostme/profile/profileBehaviorSeed.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "producers": [
+        "lib/ghostme/behavior/behaviorRulesEngine.ts",
+        "lib/ghostme/profile/profileBehaviorSeed.ts"
+      ],
+      "missingColumns": []
+    },
+    "mental_states": {
+      "ifThisChangesCheck": [
+        "lib/ghostme/mentalState.ts",
+        "lib/ghostme/proactive/dailyBriefingRepository.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "consumers": [
+        "lib/ghostme/mentalState.ts",
+        "lib/ghostme/proactive/dailyBriefingRepository.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "producers": [
+        "lib/ghostme/mentalState.ts"
+      ],
+      "missingColumns": []
+    },
+    "dynamic_self_profile": {
+      "ifThisChangesCheck": [
+        "lib/ghostme/curiosity/curiosityEngine.ts",
+        "lib/ghostme/dynamicSelfProfile.ts",
+        "lib/ghostme/profile/profileBehaviorSeed.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "consumers": [
+        "lib/ghostme/curiosity/curiosityEngine.ts",
+        "lib/ghostme/dynamicSelfProfile.ts",
+        "lib/ghostme/profile/profileBehaviorSeed.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "producers": [
+        "lib/ghostme/dynamicSelfProfile.ts",
+        "lib/ghostme/profile/profileBehaviorSeed.ts"
+      ],
+      "missingColumns": []
+    },
+    "user_location_state": {
+      "ifThisChangesCheck": [
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/home/houseStateSnapshot.ts",
+        "lib/ghostme/location/haLocationBridgeFlow.ts",
+        "lib/ghostme/location/locationCurrentStateFlow.ts",
+        "lib/ghostme/location/locationLearningFlow.ts",
+        "lib/ghostme/location/locationUpdateFlow.ts",
+        "lib/ghostme/location/placeService.ts",
+        "lib/ghostme/observation/observationEngine.ts"
+      ],
+      "consumers": [
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/home/houseStateSnapshot.ts",
+        "lib/ghostme/location/haLocationBridgeFlow.ts",
+        "lib/ghostme/location/locationCurrentStateFlow.ts",
+        "lib/ghostme/location/locationLearningFlow.ts",
+        "lib/ghostme/location/locationUpdateFlow.ts",
+        "lib/ghostme/location/placeService.ts",
+        "lib/ghostme/observation/observationEngine.ts"
+      ],
+      "producers": [
+        "lib/ghostme/location/haLocationBridgeFlow.ts",
+        "lib/ghostme/location/locationLearningFlow.ts",
+        "lib/ghostme/location/locationUpdateFlow.ts",
+        "lib/ghostme/location/placeService.ts",
+        "lib/ghostme/observation/observationEngine.ts"
+      ],
+      "missingColumns": []
+    },
+    "significant_places": {
+      "ifThisChangesCheck": [
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/location/haLocationBridgeFlow.ts",
+        "lib/ghostme/location/placeService.ts",
+        "lib/ghostme/observation/observationEngine.ts",
+        "lib/ghostme/proactive/dailyBriefingRepository.ts"
+      ],
+      "consumers": [
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/location/haLocationBridgeFlow.ts",
+        "lib/ghostme/location/placeService.ts",
+        "lib/ghostme/observation/observationEngine.ts",
+        "lib/ghostme/proactive/dailyBriefingRepository.ts"
+      ],
+      "producers": [
+        "lib/ghostme/location/haLocationBridgeFlow.ts",
+        "lib/ghostme/location/placeService.ts",
+        "lib/ghostme/observation/observationEngine.ts"
+      ],
+      "missingColumns": []
+    },
+    "observation_events": {
+      "ifThisChangesCheck": [
+        "lib/ghostme/observation/observationEngine.ts",
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "consumers": [
+        "lib/ghostme/observation/observationEngine.ts",
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "producers": [
+        "lib/ghostme/observation/observationEngine.ts"
+      ],
+      "missingColumns": [
+        "category",
+        "label"
+      ]
+    },
+    "behavior_patterns": {
+      "ifThisChangesCheck": [
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/location/locationLearningFlow.ts",
+        "lib/ghostme/observation/observationEngine.ts",
+        "lib/ghostme/patterns/patternDecay.ts",
+        "lib/ghostme/patterns/patternInsightEngine.ts",
+        "lib/ghostme/proactive/dailyBriefingRepository.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "consumers": [
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/location/locationLearningFlow.ts",
+        "lib/ghostme/observation/observationEngine.ts",
+        "lib/ghostme/patterns/patternDecay.ts",
+        "lib/ghostme/patterns/patternInsightEngine.ts",
+        "lib/ghostme/proactive/dailyBriefingRepository.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "producers": [
+        "lib/ghostme/location/locationLearningFlow.ts",
+        "lib/ghostme/observation/observationEngine.ts",
+        "lib/ghostme/patterns/patternDecay.ts"
+      ],
+      "missingColumns": []
+    },
+    "house_events": {
+      "ifThisChangesCheck": [
+        "app/api/home-assistant/event/route.ts",
+        "lib/ghostme/home/homeComfortRiskSnapshot.ts",
+        "lib/ghostme/home/houseRouteSnapshot.ts",
+        "lib/ghostme/home/houseStateSnapshot.ts",
+        "lib/ghostme/home/houseWorkerFlow.ts",
+        "lib/ghostme/homeAssistant/homeEventLogger.ts",
+        "lib/ghostme/homeAssistant/houseAutomationContext.ts",
+        "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
+        "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
+        "lib/ghostme/homeAssistant/houseLightLearningFlow.ts",
+        "lib/ghostme/homeAssistant/housePatternEngine.ts",
+        "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts",
+        "lib/ghostme/proactive/dailyBriefingRepository.ts"
+      ],
+      "consumers": [
+        "app/api/home-assistant/event/route.ts",
+        "lib/ghostme/home/homeComfortRiskSnapshot.ts",
+        "lib/ghostme/home/houseRouteSnapshot.ts",
+        "lib/ghostme/home/houseStateSnapshot.ts",
+        "lib/ghostme/home/houseWorkerFlow.ts",
+        "lib/ghostme/homeAssistant/homeEventLogger.ts",
+        "lib/ghostme/homeAssistant/houseAutomationContext.ts",
+        "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
+        "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
+        "lib/ghostme/homeAssistant/houseLightLearningFlow.ts",
+        "lib/ghostme/homeAssistant/housePatternEngine.ts",
+        "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts",
+        "lib/ghostme/proactive/dailyBriefingRepository.ts"
+      ],
+      "producers": [
+        "app/api/home-assistant/event/route.ts",
+        "lib/ghostme/home/houseWorkerFlow.ts",
+        "lib/ghostme/homeAssistant/homeEventLogger.ts",
+        "lib/ghostme/homeAssistant/houseLightLearningFlow.ts",
+        "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts"
+      ],
+      "missingColumns": []
+    },
+    "house_entities": {
+      "ifThisChangesCheck": [
+        "app/api/home-assistant/event/route.ts",
+        "lib/ghostme/home/houseStateSnapshot.ts",
+        "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
+        "lib/ghostme/homeAssistant/houseEntityRegistry.ts"
+      ],
+      "consumers": [
+        "lib/ghostme/home/houseStateSnapshot.ts",
+        "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts"
+      ],
+      "producers": [
+        "app/api/home-assistant/event/route.ts",
+        "lib/ghostme/homeAssistant/houseEntityRegistry.ts"
+      ],
+      "missingColumns": []
+    },
+    "house_patterns": {
+      "ifThisChangesCheck": [
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
+        "lib/ghostme/homeAssistant/housePatternEngine.ts"
+      ],
+      "consumers": [
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
+        "lib/ghostme/homeAssistant/housePatternEngine.ts"
+      ],
+      "producers": [
+        "lib/ghostme/homeAssistant/housePatternEngine.ts"
+      ],
+      "missingColumns": []
+    },
+    "house_suggestions": {
+      "ifThisChangesCheck": [
+        "lib/ghostme/home/houseSuggestionResponseFlow.ts",
+        "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
+        "lib/ghostme/homeAssistant/houseSuggestionEngine.ts"
+      ],
+      "consumers": [
+        "lib/ghostme/home/houseSuggestionResponseFlow.ts",
+        "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
+        "lib/ghostme/homeAssistant/houseSuggestionEngine.ts"
+      ],
+      "producers": [
+        "lib/ghostme/home/houseSuggestionResponseFlow.ts",
+        "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
+        "lib/ghostme/homeAssistant/houseSuggestionEngine.ts"
+      ],
+      "missingColumns": [
+        "entity_id",
+        "entity_name",
+        "entity_type",
+        "event_type",
+        "new_state",
+        "occurred_at"
+      ]
+    },
+    "ghost_proactive_messages": {
+      "ifThisChangesCheck": [
+        "app/api/ghostme/proactive/read/route.ts",
+        "lib/ghostme/agenda/reminderEngine.ts",
+        "lib/ghostme/calendar/calendarService.ts",
+        "lib/ghostme/context/contextBuilder.ts",
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/curiosity/curiosityEngine.ts",
+        "lib/ghostme/home/houseSuggestionResponseFlow.ts",
+        "lib/ghostme/location/locationLearningFlow.ts",
+        "lib/ghostme/maintenance/retentionEngine.ts",
+        "lib/ghostme/observation/observationInsightEngine.ts",
+        "lib/ghostme/patterns/patternInsightEngine.ts",
+        "lib/ghostme/proactive/curiosityCardWriter.ts",
+        "lib/ghostme/proactive/proactiveMessageService.ts",
+        "lib/ghostme/proactive/proactiveTrigger.ts",
+        "lib/ghostme/proactive/proactiveUserFlow.ts",
+        "lib/ghostme/proactive/trueProactiveCardWriter.ts",
+        "lib/ghostme/proactive/visibleProactiveMessages.ts"
+      ],
+      "consumers": [
+        "app/api/ghostme/proactive/read/route.ts",
+        "lib/ghostme/agenda/reminderEngine.ts",
+        "lib/ghostme/calendar/calendarService.ts",
+        "lib/ghostme/context/contextBuilder.ts",
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/curiosity/curiosityEngine.ts",
+        "lib/ghostme/home/houseSuggestionResponseFlow.ts",
+        "lib/ghostme/location/locationLearningFlow.ts",
+        "lib/ghostme/observation/observationInsightEngine.ts",
+        "lib/ghostme/patterns/patternInsightEngine.ts",
+        "lib/ghostme/proactive/curiosityCardWriter.ts",
+        "lib/ghostme/proactive/proactiveMessageService.ts",
+        "lib/ghostme/proactive/proactiveTrigger.ts",
+        "lib/ghostme/proactive/proactiveUserFlow.ts",
+        "lib/ghostme/proactive/trueProactiveCardWriter.ts",
+        "lib/ghostme/proactive/visibleProactiveMessages.ts"
+      ],
+      "producers": [
+        "app/api/ghostme/proactive/read/route.ts",
+        "lib/ghostme/agenda/reminderEngine.ts",
+        "lib/ghostme/calendar/calendarService.ts",
+        "lib/ghostme/home/houseSuggestionResponseFlow.ts",
+        "lib/ghostme/location/locationLearningFlow.ts",
+        "lib/ghostme/maintenance/retentionEngine.ts",
+        "lib/ghostme/proactive/proactiveMessageService.ts",
+        "lib/ghostme/proactive/visibleProactiveMessages.ts"
+      ],
+      "missingColumns": [
+        "curiosity"
+      ]
     }
   }
 }

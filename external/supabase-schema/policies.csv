@@ -1,0 +1,19 @@
+schemaname,tablename,policyname,permissive,roles,cmd,qual,with_check
+public,answers,Allow anon insert answers,PERMISSIVE,{anon},INSERT,null,true
+public,answers,Users can insert own answers,PERMISSIVE,{authenticated},INSERT,null,(auth.uid() = user_id)
+public,answers,Users can read own answers,PERMISSIVE,{authenticated},SELECT,(auth.uid() = user_id),null
+public,chat_messages,Users can insert own messages,PERMISSIVE,{authenticated},INSERT,null,(auth.uid() = user_id)
+public,chat_messages,Users can view own messages,PERMISSIVE,{authenticated},SELECT,(auth.uid() = user_id),null
+public,memories_active,Allow memory insert from app,PERMISSIVE,"{anon,authenticated}",INSERT,null,true
+public,memories_active,Users can view own active memories,PERMISSIVE,{authenticated},SELECT,(auth.uid() = user_id),null
+public,questions,Allow public read questions,PERMISSIVE,{anon},SELECT,true,null
+public,traits,Allow anon insert traits v1,PERMISSIVE,{anon},INSERT,null,true
+public,traits,Allow anon select traits v1,PERMISSIVE,{anon},SELECT,true,null
+public,traits,Allow anon update traits v1,PERMISSIVE,{anon},UPDATE,true,true
+public,traits,Users can insert own traits,PERMISSIVE,{authenticated},INSERT,null,(auth.uid() = user_id)
+public,traits,Users can read own traits,PERMISSIVE,{authenticated},SELECT,(auth.uid() = user_id),null
+public,user_profiles,Users can manage own profile,PERMISSIVE,{authenticated},ALL,(auth.uid() = user_id),(auth.uid() = user_id)
+public,users,Allow anon insert users,PERMISSIVE,{anon},INSERT,null,true
+public,users,Users can insert own profile,PERMISSIVE,{authenticated},INSERT,null,(auth.uid() = id)
+public,users,Users can read own profile,PERMISSIVE,{authenticated},SELECT,(auth.uid() = id),null
+public,users,Users can update own profile,PERMISSIVE,{authenticated},UPDATE,(auth.uid() = id),(auth.uid() = id)

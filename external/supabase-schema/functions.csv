@@ -1,0 +1,2 @@
+routine_schema,routine_name,routine_type,data_type
+public,upsert_people_graph_link,FUNCTION,USER-DEFINED

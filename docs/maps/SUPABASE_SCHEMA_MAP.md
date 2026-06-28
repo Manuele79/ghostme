@@ -1,6 +1,6 @@
 # SUPABASE_SCHEMA_MAP V3
 
-Generated: 2026-06-28T00:20:00.654Z
+Generated: 2026-06-28T00:35:59.559Z
 
 > Mappa generata dal codice + schema reale noto parziale. Serve per capire chi legge/scrive ogni tabella e trovare query verso colonne inesistenti.
 

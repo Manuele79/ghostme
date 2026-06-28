@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-28T00:20:00.654Z",
+  "generatedAt": "2026-06-28T00:35:59.559Z",
   "version": "3",
   "note": "Generated from source code and partial known real schema. Maps Supabase table/RPC usage, selected/written columns, missing columns, and data flow hints.",
   "knownSchemaTables": [
