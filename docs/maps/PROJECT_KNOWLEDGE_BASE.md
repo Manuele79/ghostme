@@ -1,6 +1,6 @@
 # PROJECT KNOWLEDGE BASE
 
-Generated: 2026-06-28T00:35:59.802Z
+Generated: 2026-06-28T01:30:56.860Z
 
 Questa è la mappa centrale automatica del progetto GhostMe.
 
