@@ -9683,6 +9683,47 @@
       "valid": true
     },
     {
+      "source": "scripts/generate-knowledge.mjs",
+      "dependencies": [
+        {
+          "module": "fs",
+          "moduleSystem": "es6",
+          "dynamic": false,
+          "exoticallyRequired": false,
+          "dependencyTypes": [
+            "core",
+            "import"
+          ],
+          "resolved": "fs",
+          "coreModule": true,
+          "followable": false,
+          "couldNotResolve": false,
+          "matchesDoNotFollow": false,
+          "circular": false,
+          "valid": true
+        },
+        {
+          "module": "path",
+          "moduleSystem": "es6",
+          "dynamic": false,
+          "exoticallyRequired": false,
+          "dependencyTypes": [
+            "core",
+            "import"
+          ],
+          "resolved": "path",
+          "coreModule": true,
+          "followable": false,
+          "couldNotResolve": false,
+          "matchesDoNotFollow": false,
+          "circular": false,
+          "valid": true
+        }
+      ],
+      "orphan": false,
+      "valid": true
+    },
+    {
       "source": "scripts/project-audit.mjs",
       "dependencies": [
         {
@@ -9892,8 +9933,8 @@
     "warn": 4,
     "info": 0,
     "ignore": 0,
-    "totalCruised": 186,
-    "totalDependenciesCruised": 439,
+    "totalCruised": 187,
+    "totalDependenciesCruised": 441,
     "optionsUsed": {
       "baseDir": "C:\\Users\\Manuele\\Documents\\ghostme",
       "combinedDependencies": false,

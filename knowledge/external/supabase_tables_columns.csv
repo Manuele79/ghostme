@@ -1,0 +1,435 @@
+table_schema,table_name,column_name,data_type,is_nullable,column_default,ordinal_position
+public,action_intents,id,uuid,NO,gen_random_uuid(),1
+public,action_intents,user_id,uuid,NO,null,2
+public,action_intents,intent_type,text,NO,null,3
+public,action_intents,title,text,YES,null,4
+public,action_intents,description,text,YES,null,5
+public,action_intents,status,text,YES,'detected'::text,6
+public,action_intents,priority,integer,YES,5,7
+public,action_intents,related_topics,ARRAY,YES,'{}'::text[],8
+public,action_intents,source_message,text,YES,null,9
+public,action_intents,created_at,timestamp with time zone,YES,now(),10
+public,action_intents,updated_at,timestamp with time zone,YES,now(),11
+public,action_intents,goal_id,uuid,YES,null,12
+public,action_intents,completed_at,timestamp with time zone,YES,null,13
+public,answers,id,uuid,NO,gen_random_uuid(),1
+public,answers,created_at,timestamp with time zone,YES,now(),2
+public,answers,user_id,uuid,YES,null,3
+public,answers,question_id,text,YES,null,4
+public,answers,selected_answers,jsonb,YES,null,5
+public,answers,intensita,integer,YES,1,6
+public,autobiographical_timeline,id,uuid,NO,gen_random_uuid(),1
+public,autobiographical_timeline,user_id,uuid,NO,null,2
+public,autobiographical_timeline,period_label,text,YES,null,3
+public,autobiographical_timeline,event_type,text,YES,'general'::text,4
+public,autobiographical_timeline,title,text,YES,null,5
+public,autobiographical_timeline,summary,text,NO,null,6
+public,autobiographical_timeline,emotional_tone,text,YES,'neutral'::text,7
+public,autobiographical_timeline,importance,integer,YES,5,8
+public,autobiographical_timeline,related_topics,ARRAY,YES,'{}'::text[],9
+public,autobiographical_timeline,source_message,text,YES,null,10
+public,autobiographical_timeline,event_date,timestamp with time zone,YES,now(),11
+public,autobiographical_timeline,created_at,timestamp with time zone,YES,now(),12
+public,autobiographical_timeline,updated_at,timestamp with time zone,YES,now(),13
+public,behavior_patterns,id,uuid,NO,gen_random_uuid(),1
+public,behavior_patterns,user_id,uuid,NO,null,2
+public,behavior_patterns,pattern_type,text,NO,null,3
+public,behavior_patterns,title,text,NO,null,4
+public,behavior_patterns,description,text,YES,null,5
+public,behavior_patterns,place_label,text,YES,null,6
+public,behavior_patterns,place_id,uuid,YES,null,7
+public,behavior_patterns,trigger_conditions,jsonb,YES,null,8
+public,behavior_patterns,learned_from,jsonb,YES,null,9
+public,behavior_patterns,confidence,integer,NO,1,10
+public,behavior_patterns,occurrences,integer,NO,1,11
+public,behavior_patterns,status,text,NO,'learning'::text,12
+public,behavior_patterns,first_seen_at,timestamp with time zone,NO,now(),13
+public,behavior_patterns,last_seen_at,timestamp with time zone,NO,now(),14
+public,behavior_patterns,created_at,timestamp with time zone,NO,now(),15
+public,behavior_patterns,updated_at,timestamp with time zone,NO,now(),16
+public,calendar_events,id,uuid,NO,gen_random_uuid(),1
+public,calendar_events,user_id,uuid,NO,null,2
+public,calendar_events,type,text,NO,'appointment'::text,3
+public,calendar_events,title,text,NO,null,4
+public,calendar_events,description,text,YES,null,5
+public,calendar_events,start_at,timestamp with time zone,YES,null,6
+public,calendar_events,end_at,timestamp with time zone,YES,null,7
+public,calendar_events,remind_at,timestamp with time zone,YES,null,8
+public,calendar_events,status,text,NO,'active'::text,9
+public,calendar_events,source,text,YES,'manual'::text,10
+public,calendar_events,created_at,timestamp with time zone,NO,now(),11
+public,calendar_events,updated_at,timestamp with time zone,NO,now(),12
+public,chat_messages,id,uuid,NO,gen_random_uuid(),1
+public,chat_messages,user_id,uuid,YES,null,2
+public,chat_messages,role,text,NO,null,3
+public,chat_messages,content,text,NO,null,4
+public,chat_messages,created_at,timestamp with time zone,YES,now(),5
+public,chat_messages,message_order,bigint,NO,null,6
+public,contradictions,id,uuid,NO,gen_random_uuid(),1
+public,contradictions,created_at,timestamp with time zone,YES,now(),2
+public,contradictions,user_id,uuid,YES,null,3
+public,contradictions,tema,text,YES,null,4
+public,contradictions,descrizione,text,YES,null,5
+public,contradictions,topic,text,YES,null,6
+public,contradictions,old_statement,text,YES,null,7
+public,contradictions,new_statement,text,YES,null,8
+public,contradictions,confidence,integer,YES,0,9
+public,contradictions,status,text,YES,'unresolved'::text,10
+public,contradictions,source_message,text,YES,null,11
+public,contradictions,resolution,text,YES,null,12
+public,contradictions,updated_at,timestamp with time zone,YES,now(),13
+public,conversation_summaries,id,uuid,NO,gen_random_uuid(),1
+public,conversation_summaries,user_id,uuid,NO,null,2
+public,conversation_summaries,title,text,YES,null,3
+public,conversation_summaries,summary,text,NO,null,4
+public,conversation_summaries,topics,ARRAY,YES,'{}'::text[],5
+public,conversation_summaries,emotional_tone,text,YES,'neutral'::text,6
+public,conversation_summaries,period_start,timestamp with time zone,YES,null,7
+public,conversation_summaries,period_end,timestamp with time zone,YES,null,8
+public,conversation_summaries,messages_count,integer,YES,0,9
+public,conversation_summaries,created_at,timestamp with time zone,YES,now(),10
+public,conversation_summaries,updated_at,timestamp with time zone,YES,now(),11
+public,dynamic_self_profile,id,uuid,NO,gen_random_uuid(),1
+public,dynamic_self_profile,user_id,uuid,NO,null,2
+public,dynamic_self_profile,trait,text,NO,null,3
+public,dynamic_self_profile,description,text,YES,null,4
+public,dynamic_self_profile,confidence,integer,YES,50,5
+public,dynamic_self_profile,source,text,YES,'conversation'::text,6
+public,dynamic_self_profile,last_evidence,text,YES,null,7
+public,dynamic_self_profile,created_at,timestamp with time zone,YES,now(),8
+public,dynamic_self_profile,updated_at,timestamp with time zone,YES,now(),9
+public,episodic_memories,id,uuid,NO,gen_random_uuid(),1
+public,episodic_memories,user_id,uuid,NO,null,2
+public,episodic_memories,summary,text,NO,null,3
+public,episodic_memories,emotional_tone,text,YES,'neutral'::text,4
+public,episodic_memories,importance,integer,YES,1,5
+public,episodic_memories,related_topics,ARRAY,YES,null,6
+public,episodic_memories,created_at,timestamp with time zone,YES,now(),7
+public,episodic_memories,updated_at,timestamp with time zone,YES,now(),8
+public,ghost_behavior_rules,id,uuid,NO,gen_random_uuid(),1
+public,ghost_behavior_rules,user_id,uuid,NO,null,2
+public,ghost_behavior_rules,rule_text,text,NO,null,3
+public,ghost_behavior_rules,rule_type,text,NO,'preference'::text,4
+public,ghost_behavior_rules,context,text,YES,null,5
+public,ghost_behavior_rules,trigger_hint,text,YES,null,6
+public,ghost_behavior_rules,target_area,text,YES,null,7
+public,ghost_behavior_rules,positive_examples,ARRAY,YES,'{}'::text[],8
+public,ghost_behavior_rules,negative_examples,ARRAY,YES,'{}'::text[],9
+public,ghost_behavior_rules,status,text,NO,'active'::text,10
+public,ghost_behavior_rules,confidence,integer,NO,8,11
+public,ghost_behavior_rules,priority,integer,NO,5,12
+public,ghost_behavior_rules,times_applied,integer,NO,0,13
+public,ghost_behavior_rules,last_applied_at,timestamp with time zone,YES,null,14
+public,ghost_behavior_rules,source_message,text,YES,null,15
+public,ghost_behavior_rules,created_at,timestamp with time zone,NO,now(),16
+public,ghost_behavior_rules,updated_at,timestamp with time zone,NO,now(),17
+public,ghost_proactive_messages,id,uuid,NO,gen_random_uuid(),1
+public,ghost_proactive_messages,user_id,uuid,NO,null,2
+public,ghost_proactive_messages,title,text,YES,null,3
+public,ghost_proactive_messages,message,text,NO,null,4
+public,ghost_proactive_messages,category,text,YES,'daily_briefing'::text,5
+public,ghost_proactive_messages,source,text,YES,'ghostme'::text,6
+public,ghost_proactive_messages,status,text,NO,'unread'::text,7
+public,ghost_proactive_messages,priority,integer,YES,1,8
+public,ghost_proactive_messages,scheduled_for,timestamp with time zone,YES,null,9
+public,ghost_proactive_messages,read_at,timestamp with time zone,YES,null,10
+public,ghost_proactive_messages,created_at,timestamp with time zone,NO,now(),11
+public,ghost_proactive_messages,updated_at,timestamp with time zone,NO,now(),12
+public,ghost_proactive_messages,logical_key,text,YES,null,13
+public,ghost_proactive_messages,answered_at,timestamp with time zone,YES,null,14
+public,goals_desires,id,uuid,NO,gen_random_uuid(),1
+public,goals_desires,user_id,uuid,NO,null,2
+public,goals_desires,title,text,NO,null,3
+public,goals_desires,description,text,YES,null,4
+public,goals_desires,category,text,YES,'general'::text,5
+public,goals_desires,status,text,YES,'active'::text,6
+public,goals_desires,importance,integer,YES,5,7
+public,goals_desires,emotional_tone,text,YES,'neutral'::text,8
+public,goals_desires,related_topics,ARRAY,YES,'{}'::text[],9
+public,goals_desires,source_message,text,YES,null,10
+public,goals_desires,created_at,timestamp with time zone,YES,now(),11
+public,goals_desires,updated_at,timestamp with time zone,YES,now(),12
+public,goals_desires,completed_at,timestamp with time zone,YES,null,13
+public,goals_desires,needs_review,boolean,NO,false,14
+public,goals_desires,review_requested_at,timestamp with time zone,YES,null,15
+public,house_automation_controls,id,uuid,NO,gen_random_uuid(),1
+public,house_automation_controls,user_id,uuid,NO,null,2
+public,house_automation_controls,automation_key,text,NO,null,3
+public,house_automation_controls,automation_name,text,YES,null,4
+public,house_automation_controls,room_key,text,YES,null,5
+public,house_automation_controls,control_type,text,YES,'pause'::text,6
+public,house_automation_controls,status,text,YES,'active'::text,7
+public,house_automation_controls,last_action,text,YES,null,8
+public,house_automation_controls,last_reason,text,YES,null,9
+public,house_automation_controls,expires_at,timestamp with time zone,YES,null,10
+public,house_automation_controls,created_at,timestamp with time zone,YES,now(),11
+public,house_automation_controls,updated_at,timestamp with time zone,YES,now(),12
+public,house_entities,id,uuid,NO,gen_random_uuid(),1
+public,house_entities,user_id,uuid,NO,null,2
+public,house_entities,entity_id,text,NO,null,3
+public,house_entities,entity_name,text,YES,null,4
+public,house_entities,room_key,text,YES,null,5
+public,house_entities,entity_type,text,NO,null,6
+public,house_entities,is_useful,boolean,YES,true,7
+public,house_entities,can_trigger_event,boolean,YES,true,8
+public,house_entities,created_at,timestamp with time zone,YES,now(),9
+public,house_entities,updated_at,timestamp with time zone,YES,now(),10
+public,house_events,id,uuid,NO,gen_random_uuid(),1
+public,house_events,user_id,uuid,NO,null,2
+public,house_events,entity_id,text,NO,null,3
+public,house_events,entity_name,text,YES,null,4
+public,house_events,entity_type,text,YES,null,5
+public,house_events,room_key,text,YES,null,6
+public,house_events,event_type,text,NO,null,7
+public,house_events,old_state,text,YES,null,8
+public,house_events,new_state,text,YES,null,9
+public,house_events,value,jsonb,YES,'{}'::jsonb,10
+public,house_events,people_home_count,integer,YES,null,11
+public,house_events,target_user,text,YES,null,12
+public,house_events,source,text,YES,'home_assistant'::text,13
+public,house_events,occurred_at,timestamp with time zone,YES,now(),14
+public,house_events,created_at,timestamp with time zone,YES,now(),15
+public,house_learned_rules,id,uuid,NO,gen_random_uuid(),1
+public,house_learned_rules,user_id,uuid,NO,null,2
+public,house_learned_rules,rule_key,text,NO,null,3
+public,house_learned_rules,title,text,NO,null,4
+public,house_learned_rules,description,text,YES,null,5
+public,house_learned_rules,trigger_conditions,jsonb,YES,'{}'::jsonb,6
+public,house_learned_rules,suggested_action,jsonb,YES,'{}'::jsonb,7
+public,house_learned_rules,confirmations_yes,integer,YES,0,8
+public,house_learned_rules,confirmations_no,integer,YES,0,9
+public,house_learned_rules,confidence,integer,YES,1,10
+public,house_learned_rules,status,text,YES,'learning'::text,11
+public,house_learned_rules,created_at,timestamp with time zone,YES,now(),12
+public,house_learned_rules,updated_at,timestamp with time zone,YES,now(),13
+public,house_paths,id,uuid,NO,gen_random_uuid(),1
+public,house_paths,user_id,uuid,NO,null,2
+public,house_paths,from_room,text,NO,null,3
+public,house_paths,to_room,text,NO,null,4
+public,house_paths,path_type,text,YES,'normal'::text,5
+public,house_paths,confidence,integer,YES,10,6
+public,house_paths,created_at,timestamp with time zone,YES,now(),7
+public,house_patterns,id,uuid,NO,gen_random_uuid(),1
+public,house_patterns,user_id,uuid,NO,null,2
+public,house_patterns,pattern_type,text,NO,null,3
+public,house_patterns,title,text,NO,null,4
+public,house_patterns,description,text,YES,null,5
+public,house_patterns,place_label,text,YES,null,6
+public,house_patterns,place_id,uuid,YES,null,7
+public,house_patterns,trigger_conditions,jsonb,YES,null,8
+public,house_patterns,learned_from,jsonb,YES,null,9
+public,house_patterns,confidence,integer,NO,1,10
+public,house_patterns,occurrences,integer,NO,1,11
+public,house_patterns,status,text,NO,'learning'::text,12
+public,house_patterns,first_seen_at,timestamp with time zone,NO,now(),13
+public,house_patterns,last_seen_at,timestamp with time zone,NO,now(),14
+public,house_patterns,created_at,timestamp with time zone,NO,now(),15
+public,house_patterns,updated_at,timestamp with time zone,NO,now(),16
+public,house_rooms,id,uuid,NO,gen_random_uuid(),1
+public,house_rooms,user_id,uuid,NO,null,2
+public,house_rooms,room_key,text,NO,null,3
+public,house_rooms,room_name,text,NO,null,4
+public,house_rooms,floor,text,YES,null,5
+public,house_rooms,room_type,text,YES,'room'::text,6
+public,house_rooms,is_transition,boolean,YES,false,7
+public,house_rooms,has_presence_sensor,boolean,YES,false,8
+public,house_rooms,has_motion_sensor,boolean,YES,false,9
+public,house_rooms,has_lux_sensor,boolean,YES,false,10
+public,house_rooms,created_at,timestamp with time zone,YES,now(),11
+public,house_suggestions,id,uuid,NO,gen_random_uuid(),1
+public,house_suggestions,user_id,uuid,NO,null,2
+public,house_suggestions,title,text,NO,null,3
+public,house_suggestions,message,text,NO,null,4
+public,house_suggestions,suggestion_type,text,NO,null,5
+public,house_suggestions,room_key,text,YES,null,6
+public,house_suggestions,target_user,text,YES,null,7
+public,house_suggestions,confidence,integer,YES,5,8
+public,house_suggestions,status,text,YES,'pending'::text,9
+public,house_suggestions,user_response,text,YES,null,10
+public,house_suggestions,response_at,timestamp with time zone,YES,null,11
+public,house_suggestions,created_at,timestamp with time zone,YES,now(),12
+public,life_topics,id,uuid,NO,gen_random_uuid(),1
+public,life_topics,user_id,uuid,NO,null,2
+public,life_topics,topic,text,NO,null,3
+public,life_topics,category,text,YES,'general'::text,4
+public,life_topics,weight,integer,YES,1,5
+public,life_topics,status,text,YES,'active'::text,6
+public,life_topics,mention_count,integer,YES,1,7
+public,life_topics,first_detected_at,timestamp with time zone,YES,now(),8
+public,life_topics,last_mentioned_at,timestamp with time zone,YES,now(),9
+public,life_topics,notes,text,YES,null,10
+public,life_topics,created_at,timestamp with time zone,YES,now(),11
+public,life_topics,updated_at,timestamp with time zone,YES,now(),12
+public,life_topics,entity_type,text,YES,'unknown'::text,13
+public,life_topics,description,text,YES,null,14
+public,life_topics,needs_clarification,boolean,YES,false,15
+public,life_topics,clarification_asked,boolean,YES,true,16
+public,life_topics,related_topics,ARRAY,YES,null,17
+public,life_topics,positive_count,integer,YES,0,18
+public,life_topics,negative_count,integer,YES,0,19
+public,life_topics,neutral_count,integer,YES,0,20
+public,life_topics,relationship_strength,integer,YES,1,21
+public,life_topics,last_emotional_tone,text,YES,'neutral'::text,22
+public,memories,id,uuid,NO,gen_random_uuid(),1
+public,memories,created_at,timestamp with time zone,YES,now(),2
+public,memories,user_id,uuid,YES,null,3
+public,memories,titolo,text,YES,null,4
+public,memories,tipo,text,YES,null,5
+public,memories,emozione,text,YES,null,6
+public,memories,impatto,integer,YES,0,7
+public,memories,descrizione,text,YES,null,8
+public,memories_active,id,uuid,NO,gen_random_uuid(),1
+public,memories_active,user_id,uuid,YES,null,2
+public,memories_active,title,text,YES,null,3
+public,memories_active,content,text,NO,null,4
+public,memories_active,category,text,YES,'general'::text,5
+public,memories_active,importance,integer,YES,5,6
+public,memories_active,created_at,timestamp with time zone,YES,now(),7
+public,memories_active,pinned,boolean,YES,false,8
+public,memories_active,updated_at,timestamp with time zone,YES,now(),9
+public,mental_states,id,uuid,NO,gen_random_uuid(),1
+public,mental_states,user_id,uuid,NO,null,2
+public,mental_states,stress,integer,YES,0,3
+public,mental_states,entusiasmo,integer,YES,0,4
+public,mental_states,stanchezza,integer,YES,0,5
+public,mental_states,controllo,integer,YES,0,6
+public,mental_states,nostalgia,integer,YES,0,7
+public,mental_states,frustrazione,integer,YES,0,8
+public,mental_states,focus,integer,YES,0,9
+public,mental_states,socialita,integer,YES,0,10
+public,mental_states,last_trigger,text,YES,null,11
+public,mental_states,notes,text,YES,null,12
+public,mental_states,created_at,timestamp with time zone,YES,now(),13
+public,mental_states,updated_at,timestamp with time zone,YES,now(),14
+public,observation_events,id,uuid,NO,gen_random_uuid(),1
+public,observation_events,user_id,uuid,NO,null,2
+public,observation_events,event_type,text,NO,null,3
+public,observation_events,source,text,NO,'ghostme'::text,4
+public,observation_events,place_label,text,YES,null,5
+public,observation_events,place_id,uuid,YES,null,6
+public,observation_events,value,jsonb,YES,null,7
+public,observation_events,context,jsonb,YES,null,8
+public,observation_events,occurred_at,timestamp with time zone,NO,now(),9
+public,observation_events,created_at,timestamp with time zone,NO,now(),10
+public,people_graph,id,uuid,NO,gen_random_uuid(),1
+public,people_graph,user_id,uuid,NO,null,2
+public,people_graph,name,text,NO,null,3
+public,people_graph,normalized_name,text,NO,null,4
+public,people_graph,relationship_type,text,YES,null,5
+public,people_graph,category,text,YES,'person'::text,6
+public,people_graph,importance,integer,YES,5,7
+public,people_graph,confidence,integer,YES,60,8
+public,people_graph,description,text,YES,null,9
+public,people_graph,first_mentioned_at,timestamp with time zone,YES,now(),10
+public,people_graph,last_mentioned_at,timestamp with time zone,YES,now(),11
+public,people_graph,mention_count,integer,YES,1,12
+public,people_graph,source,text,YES,'memory'::text,13
+public,people_graph,status,text,YES,'active'::text,14
+public,people_graph,created_at,timestamp with time zone,YES,now(),15
+public,people_graph,updated_at,timestamp with time zone,YES,now(),16
+public,people_graph_links,id,uuid,NO,gen_random_uuid(),1
+public,people_graph_links,user_id,uuid,NO,null,2
+public,people_graph_links,person_id,uuid,NO,null,3
+public,people_graph_links,target_type,text,NO,null,4
+public,people_graph_links,target_id,uuid,YES,null,5
+public,people_graph_links,target_label,text,YES,null,6
+public,people_graph_links,link_type,text,NO,'related_to'::text,7
+public,people_graph_links,weight,integer,YES,1,8
+public,people_graph_links,confidence,integer,YES,60,9
+public,people_graph_links,evidence,text,YES,null,10
+public,people_graph_links,created_at,timestamp with time zone,YES,now(),11
+public,people_graph_links,updated_at,timestamp with time zone,YES,now(),12
+public,people_graph_links,target_key,text,NO,null,13
+public,people_graph_links,evidences,jsonb,NO,'[]'::jsonb,14
+public,people_graph_links,status,text,NO,'active'::text,15
+public,people_graph_links,last_reinforced_at,timestamp with time zone,YES,null,16
+public,people_graph_links,last_decayed_at,timestamp with time zone,YES,null,17
+public,questions,id,text,NO,null,1
+public,questions,created_at,timestamp with time zone,YES,now(),2
+public,questions,categoria,text,YES,null,3
+public,questions,tipo,text,YES,null,4
+public,questions,domanda,text,YES,null,5
+public,questions,max_select,integer,YES,1,6
+public,significant_places,id,uuid,NO,gen_random_uuid(),1
+public,significant_places,user_id,uuid,NO,null,2
+public,significant_places,label,text,NO,null,3
+public,significant_places,category,text,NO,'unknown'::text,4
+public,significant_places,latitude,double precision,NO,null,5
+public,significant_places,longitude,double precision,NO,null,6
+public,significant_places,radius_meters,integer,NO,100,7
+public,significant_places,created_at,timestamp with time zone,YES,now(),8
+public,significant_places,updated_at,timestamp with time zone,YES,now(),9
+public,significant_places,external_name,text,YES,null,10
+public,significant_places,external_category,text,YES,null,11
+public,significant_places,address,text,YES,null,12
+public,significant_places,confidence,integer,YES,50,13
+public,significant_places,visit_count,integer,YES,0,14
+public,significant_places,last_seen_at,timestamp with time zone,YES,null,15
+public,significant_places,source,text,YES,'manual'::text,16
+public,significant_places,status,text,YES,'active'::text,17
+public,topic_links,id,uuid,NO,gen_random_uuid(),1
+public,topic_links,user_id,uuid,NO,null,2
+public,topic_links,source_topic,text,NO,null,3
+public,topic_links,target_topic,text,NO,null,4
+public,topic_links,link_type,text,YES,'related'::text,5
+public,topic_links,weight,integer,YES,1,6
+public,topic_links,created_at,timestamp with time zone,YES,now(),7
+public,topic_links,updated_at,timestamp with time zone,YES,now(),8
+public,traits,id,uuid,NO,gen_random_uuid(),1
+public,traits,created_at,timestamp with time zone,YES,now(),2
+public,traits,user_id,uuid,YES,null,3
+public,traits,sarcasmo,integer,YES,0,4
+public,traits,empatia,integer,YES,0,5
+public,traits,orgoglio,integer,YES,0,6
+public,traits,gelosia,integer,YES,0,7
+public,traits,controllo,integer,YES,0,8
+public,traits,ansia,integer,YES,0,9
+public,traits,impulsivita,integer,YES,0,10
+public,traits,socialita,integer,YES,0,11
+public,traits,sensibilita_critiche,integer,YES,0,12
+public,traits,paura_abbandono,integer,YES,0,13
+public,traits,sincerita,integer,YES,0,14
+public,traits,fiducia,integer,YES,0,15
+public,traits,rabbia,integer,YES,0,16
+public,traits,vulnerabilita,integer,YES,0,17
+public,traits,bisogno_affetto,integer,YES,0,18
+public,traits,evitamento,integer,YES,0,19
+public,triggers,id,uuid,NO,gen_random_uuid(),1
+public,triggers,created_at,timestamp with time zone,YES,now(),2
+public,triggers,user_id,uuid,YES,null,3
+public,triggers,trigger,text,YES,null,4
+public,triggers,emozione,text,YES,null,5
+public,triggers,intensita,integer,YES,0,6
+public,triggers,reazione,text,YES,null,7
+public,user_location_state,user_id,uuid,NO,null,1
+public,user_location_state,current_place_id,uuid,YES,null,2
+public,user_location_state,current_place_label,text,YES,null,3
+public,user_location_state,latitude,double precision,YES,null,4
+public,user_location_state,longitude,double precision,YES,null,5
+public,user_location_state,source,text,YES,'browser'::text,6
+public,user_location_state,updated_at,timestamp with time zone,YES,now(),7
+public,user_location_state,place_category,text,YES,null,8
+public,user_location_state,address,text,YES,null,9
+public,user_location_state,accuracy,double precision,YES,null,10
+public,user_location_state,last_changed_at,timestamp with time zone,YES,null,11
+public,user_location_state,confidence,integer,YES,50,12
+public,user_profiles,id,uuid,NO,gen_random_uuid(),1
+public,user_profiles,user_id,uuid,NO,null,2
+public,user_profiles,full_name,text,YES,null,3
+public,user_profiles,age,integer,YES,null,4
+public,user_profiles,gender,text,YES,null,5
+public,user_profiles,job,text,YES,null,6
+public,user_profiles,hobbies,text,YES,null,7
+public,user_profiles,sports,text,YES,null,8
+public,user_profiles,relationship_status,text,YES,null,9
+public,user_profiles,children_info,text,YES,null,10
+public,user_profiles,interests,text,YES,null,11
+public,user_profiles,communication_style,text,YES,null,12
+public,user_profiles,short_bio,text,YES,null,13
+public,user_profiles,created_at,timestamp with time zone,YES,now(),14
+public,user_profiles,updated_at,timestamp with time zone,YES,now(),15
+public,user_profiles,location,text,YES,''::text,16
+public,users,id,uuid,NO,null,1
+public,users,created_at,timestamp with time zone,YES,now(),2
+public,users,name,text,YES,null,3
+public,users,email,text,YES,null,4

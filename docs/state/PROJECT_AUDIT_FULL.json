@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-28T01:30:38.282Z",
+  "generatedAt": "2026-06-28T01:46:55.806Z",
   "folders": {
     ".": [
       ".dependency-cruiser.js",
@@ -300,6 +300,7 @@
       "scripts/db-usage-map.mjs",
       "scripts/file-usage-map.mjs",
       "scripts/generate-graphs.mjs",
+      "scripts/generate-knowledge.mjs",
       "scripts/project-audit.mjs",
       "scripts/project-knowledge-base.mjs",
       "scripts/supabase-schema-map.mjs",
@@ -8492,6 +8493,34 @@
       ],
       "lines": 185
     },
+    "scripts/generate-knowledge.mjs": {
+      "folder": "scripts",
+      "imports": [
+        "fs",
+        "path"
+      ],
+      "importedBy": [],
+      "apiCalls": [],
+      "tables": {},
+      "exports": [],
+      "calls": [
+        "cwd",
+        "join",
+        "read",
+        "existsSync",
+        "readFileSync",
+        "write",
+        "mkdirSync",
+        "dirname",
+        "writeFileSync",
+        "exists",
+        "toISOString",
+        "fromEntries",
+        "stringify",
+        "log"
+      ],
+      "lines": 93
+    },
     "scripts/project-audit.mjs": {
       "folder": "scripts",
       "imports": [
@@ -9502,6 +9531,10 @@
       "node:child_process",
       "node:url"
     ],
+    "scripts/generate-knowledge.mjs": [
+      "fs",
+      "path"
+    ],
     "scripts/project-audit.mjs": [
       "fs",
       "path"
@@ -10290,11 +10323,13 @@
       "scripts/generate-graphs.mjs"
     ],
     "fs": [
+      "scripts/generate-knowledge.mjs",
       "scripts/project-audit.mjs",
       "scripts/project-knowledge-base.mjs",
       "scripts/supabase-schema-map.mjs"
     ],
     "path": [
+      "scripts/generate-knowledge.mjs",
       "scripts/project-audit.mjs",
       "scripts/project-knowledge-base.mjs",
       "scripts/supabase-schema-map.mjs"
@@ -11674,6 +11709,7 @@
         ".dependency-cruiser.js",
         "scripts/db-usage-map.mjs",
         "scripts/file-usage-map.mjs",
+        "scripts/generate-knowledge.mjs",
         "scripts/project-audit.mjs",
         "scripts/project-knowledge-base.mjs",
         "scripts/supabase-schema-map.mjs",
@@ -12012,6 +12048,7 @@
         "lib/ghostme/timeline.ts",
         "lib/ghostme/topicLinks.ts",
         "scripts/generate-graphs.mjs",
+        "scripts/generate-knowledge.mjs",
         "scripts/project-audit.mjs",
         "scripts/project-knowledge-base.mjs",
         "scripts/supabase-schema-map.mjs",
@@ -12516,6 +12553,7 @@
         "scripts/db-usage-map.mjs",
         "scripts/file-usage-map.mjs",
         "scripts/generate-graphs.mjs",
+        "scripts/generate-knowledge.mjs",
         "scripts/project-audit.mjs",
         "scripts/project-knowledge-base.mjs",
         "scripts/supabase-schema-map.mjs",
@@ -14089,6 +14127,7 @@
         "lib/ghostme/proactive/dailyBriefingBuilder.ts",
         "scripts/db-usage-map.mjs",
         "scripts/file-usage-map.mjs",
+        "scripts/generate-knowledge.mjs",
         "scripts/project-audit.mjs",
         "scripts/project-knowledge-base.mjs",
         "scripts/supabase-schema-map.mjs"
@@ -14458,6 +14497,7 @@
       "exportedBy": [],
       "calledBy": [
         "app/chat/page.tsx",
+        "scripts/generate-knowledge.mjs",
         "scripts/project-audit.mjs"
       ]
     },
@@ -15539,6 +15579,7 @@
       "calledBy": [
         "components/ghost/GhostDrawers.tsx",
         "lib/ghostme/calendar/calendarService.ts",
+        "scripts/generate-knowledge.mjs",
         "scripts/project-knowledge-base.mjs"
       ]
     },
@@ -16021,6 +16062,7 @@
         "scripts/db-usage-map.mjs",
         "scripts/file-usage-map.mjs",
         "scripts/generate-graphs.mjs",
+        "scripts/generate-knowledge.mjs",
         "scripts/project-audit.mjs",
         "scripts/project-knowledge-base.mjs",
         "scripts/supabase-schema-map.mjs",
@@ -20306,6 +20348,7 @@
       "calledBy": [
         "scripts/db-usage-map.mjs",
         "scripts/file-usage-map.mjs",
+        "scripts/generate-knowledge.mjs",
         "scripts/project-audit.mjs",
         "scripts/project-knowledge-base.mjs",
         "scripts/supabase-schema-map.mjs"
@@ -20357,6 +20400,7 @@
       "calledBy": [
         "scripts/db-usage-map.mjs",
         "scripts/file-usage-map.mjs",
+        "scripts/generate-knowledge.mjs",
         "scripts/project-audit.mjs",
         "scripts/project-knowledge-base.mjs",
         "scripts/supabase-schema-map.mjs",
@@ -20368,6 +20412,7 @@
       "calledBy": [
         "scripts/db-usage-map.mjs",
         "scripts/file-usage-map.mjs",
+        "scripts/generate-knowledge.mjs",
         "scripts/project-audit.mjs",
         "scripts/project-knowledge-base.mjs",
         "scripts/supabase-schema-map.mjs",
@@ -20379,6 +20424,7 @@
       "calledBy": [
         "scripts/db-usage-map.mjs",
         "scripts/file-usage-map.mjs",
+        "scripts/generate-knowledge.mjs",
         "scripts/project-audit.mjs",
         "scripts/project-knowledge-base.mjs",
         "scripts/supabase-schema-map.mjs",
@@ -20409,6 +20455,7 @@
       "calledBy": [
         "scripts/file-usage-map.mjs",
         "scripts/generate-graphs.mjs",
+        "scripts/generate-knowledge.mjs",
         "scripts/project-audit.mjs",
         "scripts/project-knowledge-base.mjs",
         "scripts/supabase-schema-map.mjs"
@@ -20534,6 +20581,19 @@
         "scripts/generate-graphs.mjs"
       ]
     },
+    "write": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/generate-knowledge.mjs"
+      ]
+    },
+    "exists": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/generate-knowledge.mjs",
+        "scripts/project-knowledge-base.mjs"
+      ]
+    },
     "rel": {
       "exportedBy": [],
       "calledBy": [
@@ -20607,12 +20667,6 @@
       "calledBy": [
         "scripts/project-knowledge-base.mjs",
         "scripts/system-docs.mjs"
-      ]
-    },
-    "exists": {
-      "exportedBy": [],
-      "calledBy": [
-        "scripts/project-knowledge-base.mjs"
       ]
     },
     "lineCount": {

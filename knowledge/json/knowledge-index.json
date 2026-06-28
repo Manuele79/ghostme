@@ -1,0 +1,65 @@
+{
+  "generatedAt": "2026-06-28T01:47:14.629Z",
+  "sources": {
+    "00_PROJECT.md": {
+      "source": "docs/maps/PROJECT_KNOWLEDGE_BASE.md",
+      "exists": true
+    },
+    "01_ARCHITECTURE.md": {
+      "source": "docs/maps/GHOSTME_SYSTEM_MAP_V6.md",
+      "exists": true
+    },
+    "02_COGNITIVE_ROUTING.md": {
+      "source": "docs/maps/COGNITIVE_ROUTING_MAP.md",
+      "exists": true
+    },
+    "03_DATABASE_USAGE.md": {
+      "source": "docs/maps/DATABASE_USAGE_MAP.md",
+      "exists": true
+    },
+    "04_SUPABASE_SCHEMA.md": {
+      "source": "docs/maps/SUPABASE_SCHEMA_MAP.md",
+      "exists": true
+    },
+    "05_FILE_USAGE.md": {
+      "source": "docs/maps/FILE_USAGE_MAP.md",
+      "exists": true
+    },
+    "06_DEPENDENCIES.md": {
+      "source": "docs/maps/DEPENDENCY_TEXT_MAP.txt",
+      "exists": true
+    },
+    "07_PRIORITY_FIX.md": {
+      "source": "docs/maps/GHOSTME_PRIORITY_FIX_LIST.md",
+      "exists": true
+    },
+    "supabase_tables_columns.csv": {
+      "source": "external/supabase-schema/tables_columns.csv",
+      "exists": true
+    },
+    "supabase_policies.csv": {
+      "source": "external/supabase-schema/policies.csv",
+      "exists": true
+    },
+    "supabase_indexes.csv": {
+      "source": "external/supabase-schema/indexes.csv",
+      "exists": true
+    },
+    "supabase_functions.csv": {
+      "source": "external/supabase-schema/functions.csv",
+      "exists": true
+    },
+    "home_assistant_readme.md": {
+      "source": "external/home-assistant/README.md",
+      "exists": true
+    },
+    "external_readme.md": {
+      "source": "external/README.md",
+      "exists": true
+    },
+    "codex_context.md": {
+      "source": "CODEX_CONTEXT.md",
+      "exists": true
+    }
+  }
+}

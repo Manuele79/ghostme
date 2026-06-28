@@ -1,0 +1,89 @@
+schemaname,tablename,indexname,indexdef
+public,action_intents,action_intents_goal_id_idx,CREATE INDEX action_intents_goal_id_idx ON public.action_intents USING btree (goal_id)
+public,action_intents,action_intents_pkey,CREATE UNIQUE INDEX action_intents_pkey ON public.action_intents USING btree (id)
+public,action_intents,action_intents_user_goal_status_idx,"CREATE INDEX action_intents_user_goal_status_idx ON public.action_intents USING btree (user_id, goal_id, status)"
+public,answers,answers_pkey,CREATE UNIQUE INDEX answers_pkey ON public.answers USING btree (id)
+public,autobiographical_timeline,autobiographical_timeline_pkey,CREATE UNIQUE INDEX autobiographical_timeline_pkey ON public.autobiographical_timeline USING btree (id)
+public,behavior_patterns,behavior_patterns_pkey,CREATE UNIQUE INDEX behavior_patterns_pkey ON public.behavior_patterns USING btree (id)
+public,behavior_patterns,behavior_patterns_status_idx,CREATE INDEX behavior_patterns_status_idx ON public.behavior_patterns USING btree (status)
+public,behavior_patterns,behavior_patterns_type_idx,CREATE INDEX behavior_patterns_type_idx ON public.behavior_patterns USING btree (pattern_type)
+public,behavior_patterns,behavior_patterns_user_idx,CREATE INDEX behavior_patterns_user_idx ON public.behavior_patterns USING btree (user_id)
+public,calendar_events,calendar_events_pkey,CREATE UNIQUE INDEX calendar_events_pkey ON public.calendar_events USING btree (id)
+public,calendar_events,idx_calendar_events_remind,CREATE INDEX idx_calendar_events_remind ON public.calendar_events USING btree (remind_at)
+public,calendar_events,idx_calendar_events_start,CREATE INDEX idx_calendar_events_start ON public.calendar_events USING btree (start_at)
+public,calendar_events,idx_calendar_events_user,CREATE INDEX idx_calendar_events_user ON public.calendar_events USING btree (user_id)
+public,chat_messages,chat_messages_pkey,CREATE UNIQUE INDEX chat_messages_pkey ON public.chat_messages USING btree (id)
+public,contradictions,contradictions_pkey,CREATE UNIQUE INDEX contradictions_pkey ON public.contradictions USING btree (id)
+public,conversation_summaries,conversation_summaries_created_at_idx,CREATE INDEX conversation_summaries_created_at_idx ON public.conversation_summaries USING btree (created_at DESC)
+public,conversation_summaries,conversation_summaries_pkey,CREATE UNIQUE INDEX conversation_summaries_pkey ON public.conversation_summaries USING btree (id)
+public,conversation_summaries,conversation_summaries_topics_idx,CREATE INDEX conversation_summaries_topics_idx ON public.conversation_summaries USING gin (topics)
+public,conversation_summaries,conversation_summaries_user_id_idx,CREATE INDEX conversation_summaries_user_id_idx ON public.conversation_summaries USING btree (user_id)
+public,dynamic_self_profile,dynamic_self_profile_pkey,CREATE UNIQUE INDEX dynamic_self_profile_pkey ON public.dynamic_self_profile USING btree (id)
+public,episodic_memories,episodic_memories_pkey,CREATE UNIQUE INDEX episodic_memories_pkey ON public.episodic_memories USING btree (id)
+public,ghost_behavior_rules,ghost_behavior_rules_pkey,CREATE UNIQUE INDEX ghost_behavior_rules_pkey ON public.ghost_behavior_rules USING btree (id)
+public,ghost_behavior_rules,ghost_behavior_rules_status_idx,CREATE INDEX ghost_behavior_rules_status_idx ON public.ghost_behavior_rules USING btree (status)
+public,ghost_behavior_rules,ghost_behavior_rules_target_idx,CREATE INDEX ghost_behavior_rules_target_idx ON public.ghost_behavior_rules USING btree (target_area)
+public,ghost_behavior_rules,ghost_behavior_rules_user_idx,CREATE INDEX ghost_behavior_rules_user_idx ON public.ghost_behavior_rules USING btree (user_id)
+public,ghost_proactive_messages,ghost_proactive_messages_category_idx,CREATE INDEX ghost_proactive_messages_category_idx ON public.ghost_proactive_messages USING btree (category)
+public,ghost_proactive_messages,ghost_proactive_messages_logical_key_idx,CREATE INDEX ghost_proactive_messages_logical_key_idx ON public.ghost_proactive_messages USING btree (logical_key)
+public,ghost_proactive_messages,ghost_proactive_messages_pkey,CREATE UNIQUE INDEX ghost_proactive_messages_pkey ON public.ghost_proactive_messages USING btree (id)
+public,ghost_proactive_messages,ghost_proactive_messages_status_idx,CREATE INDEX ghost_proactive_messages_status_idx ON public.ghost_proactive_messages USING btree (status)
+public,ghost_proactive_messages,ghost_proactive_messages_updated_at_idx,CREATE INDEX ghost_proactive_messages_updated_at_idx ON public.ghost_proactive_messages USING btree (updated_at DESC)
+public,ghost_proactive_messages,ghost_proactive_messages_user_category_logical_key_idx,"CREATE INDEX ghost_proactive_messages_user_category_logical_key_idx ON public.ghost_proactive_messages USING btree (user_id, category, logical_key)"
+public,ghost_proactive_messages,ghost_proactive_messages_user_id_idx,CREATE INDEX ghost_proactive_messages_user_id_idx ON public.ghost_proactive_messages USING btree (user_id)
+public,ghost_proactive_messages,ghost_proactive_messages_user_status_created_at_idx,"CREATE INDEX ghost_proactive_messages_user_status_created_at_idx ON public.ghost_proactive_messages USING btree (user_id, status, created_at DESC)"
+public,ghost_proactive_messages,ghost_proactive_messages_visible_logical_key_uidx,"CREATE UNIQUE INDEX ghost_proactive_messages_visible_logical_key_uidx ON public.ghost_proactive_messages USING btree (user_id, category, logical_key) WHERE ((logical_key IS NOT NULL) AND (status = ANY (ARRAY['unread'::text, 'read'::text])))"
+public,ghost_proactive_messages,idx_ghost_proactive_scheduled,CREATE INDEX idx_ghost_proactive_scheduled ON public.ghost_proactive_messages USING btree (scheduled_for)
+public,ghost_proactive_messages,idx_ghost_proactive_status,CREATE INDEX idx_ghost_proactive_status ON public.ghost_proactive_messages USING btree (status)
+public,ghost_proactive_messages,idx_ghost_proactive_user,CREATE INDEX idx_ghost_proactive_user ON public.ghost_proactive_messages USING btree (user_id)
+public,goals_desires,goals_desires_pkey,CREATE UNIQUE INDEX goals_desires_pkey ON public.goals_desires USING btree (id)
+public,goals_desires,goals_desires_user_review_idx,"CREATE INDEX goals_desires_user_review_idx ON public.goals_desires USING btree (user_id, needs_review) WHERE (needs_review = true)"
+public,house_automation_controls,house_automation_controls_pkey,CREATE UNIQUE INDEX house_automation_controls_pkey ON public.house_automation_controls USING btree (id)
+public,house_automation_controls,house_automation_controls_user_id_automation_key_key,"CREATE UNIQUE INDEX house_automation_controls_user_id_automation_key_key ON public.house_automation_controls USING btree (user_id, automation_key)"
+public,house_entities,house_entities_pkey,CREATE UNIQUE INDEX house_entities_pkey ON public.house_entities USING btree (id)
+public,house_entities,house_entities_user_id_entity_id_key,"CREATE UNIQUE INDEX house_entities_user_id_entity_id_key ON public.house_entities USING btree (user_id, entity_id)"
+public,house_events,house_events_pkey,CREATE UNIQUE INDEX house_events_pkey ON public.house_events USING btree (id)
+public,house_learned_rules,house_learned_rules_pkey,CREATE UNIQUE INDEX house_learned_rules_pkey ON public.house_learned_rules USING btree (id)
+public,house_learned_rules,house_learned_rules_user_id_rule_key_key,"CREATE UNIQUE INDEX house_learned_rules_user_id_rule_key_key ON public.house_learned_rules USING btree (user_id, rule_key)"
+public,house_paths,house_paths_pkey,CREATE UNIQUE INDEX house_paths_pkey ON public.house_paths USING btree (id)
+public,house_paths,house_paths_user_id_from_room_to_room_key,"CREATE UNIQUE INDEX house_paths_user_id_from_room_to_room_key ON public.house_paths USING btree (user_id, from_room, to_room)"
+public,house_patterns,house_patterns_pkey,CREATE UNIQUE INDEX house_patterns_pkey ON public.house_patterns USING btree (id)
+public,house_patterns,house_patterns_status_idx,CREATE INDEX house_patterns_status_idx ON public.house_patterns USING btree (status)
+public,house_patterns,house_patterns_updated_at_idx,CREATE INDEX house_patterns_updated_at_idx ON public.house_patterns USING btree (updated_at DESC)
+public,house_patterns,house_patterns_user_id_idx,CREATE INDEX house_patterns_user_id_idx ON public.house_patterns USING btree (user_id)
+public,house_patterns,house_patterns_user_last_seen_at_idx,"CREATE INDEX house_patterns_user_last_seen_at_idx ON public.house_patterns USING btree (user_id, last_seen_at DESC)"
+public,house_patterns,house_patterns_user_pattern_type_idx,"CREATE INDEX house_patterns_user_pattern_type_idx ON public.house_patterns USING btree (user_id, pattern_type)"
+public,house_patterns,house_patterns_user_status_confidence_idx,"CREATE INDEX house_patterns_user_status_confidence_idx ON public.house_patterns USING btree (user_id, status, confidence DESC)"
+public,house_rooms,house_rooms_pkey,CREATE UNIQUE INDEX house_rooms_pkey ON public.house_rooms USING btree (id)
+public,house_rooms,house_rooms_user_id_room_key_key,"CREATE UNIQUE INDEX house_rooms_user_id_room_key_key ON public.house_rooms USING btree (user_id, room_key)"
+public,house_suggestions,house_suggestions_pkey,CREATE UNIQUE INDEX house_suggestions_pkey ON public.house_suggestions USING btree (id)
+public,life_topics,life_topics_pkey,CREATE UNIQUE INDEX life_topics_pkey ON public.life_topics USING btree (id)
+public,memories,memories_pkey,CREATE UNIQUE INDEX memories_pkey ON public.memories USING btree (id)
+public,memories_active,memories_active_pkey,CREATE UNIQUE INDEX memories_active_pkey ON public.memories_active USING btree (id)
+public,mental_states,mental_states_pkey,CREATE UNIQUE INDEX mental_states_pkey ON public.mental_states USING btree (id)
+public,observation_events,observation_events_pkey,CREATE UNIQUE INDEX observation_events_pkey ON public.observation_events USING btree (id)
+public,observation_events,observation_events_time_idx,CREATE INDEX observation_events_time_idx ON public.observation_events USING btree (occurred_at DESC)
+public,observation_events,observation_events_type_idx,CREATE INDEX observation_events_type_idx ON public.observation_events USING btree (event_type)
+public,observation_events,observation_events_user_idx,CREATE INDEX observation_events_user_idx ON public.observation_events USING btree (user_id)
+public,people_graph,people_graph_pkey,CREATE UNIQUE INDEX people_graph_pkey ON public.people_graph USING btree (id)
+public,people_graph,people_graph_user_idx,CREATE INDEX people_graph_user_idx ON public.people_graph USING btree (user_id)
+public,people_graph,people_graph_user_name_key,"CREATE UNIQUE INDEX people_graph_user_name_key ON public.people_graph USING btree (user_id, normalized_name)"
+public,people_graph,people_graph_user_status_idx,"CREATE INDEX people_graph_user_status_idx ON public.people_graph USING btree (user_id, status)"
+public,people_graph_links,people_graph_links_logical_edge_uidx,"CREATE UNIQUE INDEX people_graph_links_logical_edge_uidx ON public.people_graph_links USING btree (user_id, person_id, target_type, target_key, link_type)"
+public,people_graph_links,people_graph_links_person_active_idx,"CREATE INDEX people_graph_links_person_active_idx ON public.people_graph_links USING btree (user_id, person_id, status, weight DESC)"
+public,people_graph_links,people_graph_links_person_idx,CREATE INDEX people_graph_links_person_idx ON public.people_graph_links USING btree (person_id)
+public,people_graph_links,people_graph_links_pkey,CREATE UNIQUE INDEX people_graph_links_pkey ON public.people_graph_links USING btree (id)
+public,people_graph_links,people_graph_links_target_active_idx,"CREATE INDEX people_graph_links_target_active_idx ON public.people_graph_links USING btree (user_id, target_type, target_key, status, weight DESC)"
+public,people_graph_links,people_graph_links_updated_at_idx,CREATE INDEX people_graph_links_updated_at_idx ON public.people_graph_links USING btree (updated_at DESC)
+public,people_graph_links,people_graph_links_user_idx,CREATE INDEX people_graph_links_user_idx ON public.people_graph_links USING btree (user_id)
+public,questions,questions_pkey,CREATE UNIQUE INDEX questions_pkey ON public.questions USING btree (id)
+public,significant_places,significant_places_pkey,CREATE UNIQUE INDEX significant_places_pkey ON public.significant_places USING btree (id)
+public,significant_places,significant_places_user_category_idx,"CREATE INDEX significant_places_user_category_idx ON public.significant_places USING btree (user_id, category)"
+public,significant_places,significant_places_user_idx,CREATE INDEX significant_places_user_idx ON public.significant_places USING btree (user_id)
+public,significant_places,significant_places_user_status_idx,"CREATE INDEX significant_places_user_status_idx ON public.significant_places USING btree (user_id, status)"
+public,topic_links,topic_links_pkey,CREATE UNIQUE INDEX topic_links_pkey ON public.topic_links USING btree (id)
+public,traits,traits_pkey,CREATE UNIQUE INDEX traits_pkey ON public.traits USING btree (id)
+public,triggers,triggers_pkey,CREATE UNIQUE INDEX triggers_pkey ON public.triggers USING btree (id)
+public,user_location_state,user_location_state_pkey,CREATE UNIQUE INDEX user_location_state_pkey ON public.user_location_state USING btree (user_id)
+public,user_profiles,user_profiles_pkey,CREATE UNIQUE INDEX user_profiles_pkey ON public.user_profiles USING btree (id)
+public,users,users_pkey,CREATE UNIQUE INDEX users_pkey ON public.users USING btree (id)
