@@ -149,7 +149,7 @@ export async function loadUserContextGraph(userId: string) {
 
     supabaseAdmin
       .from("ghost_proactive_messages")
-      .select("id, category, title, message, status, priority, created_at")
+      .select("id, category, title, message, status, priority, logical_key, source, created_at, updated_at, read_at, answered_at")
       .eq("user_id", userId)
       .in("status", ["unread", "read"])
       .gte(
@@ -161,7 +161,7 @@ export async function loadUserContextGraph(userId: string) {
 
     supabaseAdmin
       .from("ghost_proactive_messages")
-      .select("id, category, title, message, status, priority, created_at")
+      .select("id, category, title, message, status, priority, logical_key, source, created_at, updated_at, read_at, answered_at")
       .eq("user_id", userId)
       .in("status", ["dismissed", "answered", "expired"])
       .order("created_at", { ascending: false })

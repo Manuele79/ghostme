@@ -53,6 +53,15 @@ export type SituationHomeAssessment = {
   signals: string[];
 };
 
+export type SituationLearningAssessment = {
+  repeatRisk: "low" | "medium" | "high";
+  disturbanceRisk: "low" | "medium" | "high";
+  confidence: number;
+  reasons: string[];
+  signals: string[];
+  penalties: string[];
+};
+
 export type UnifiedSituationModel = {
   currentPlace: string | null;
   placeCategory: string | null;
@@ -85,6 +94,7 @@ export type UnifiedSituationModel = {
   homeAssessment: SituationHomeAssessment;
   peopleAssessment: SituationPeopleAssessment;
   momentAssessment: SituationMomentAssessment;
+  learningAssessment: SituationLearningAssessment;
   mentalInfluence: {
     load: "low" | "medium" | "high";
     reason: string;
@@ -911,6 +921,59 @@ function textFor(value: any) {
   );
 }
 
+function messageAgeHours(message: any) {
+  return hoursSince(
+    message?.updated_at ||
+      message?.created_at ||
+      message?.answered_at ||
+      message?.read_at
+  );
+}
+
+function isProtectedAction(action: {
+  action: SituationPolicyAction;
+  dedupeKey: string | null;
+  sourceSignals: string[];
+}) {
+  if (action.action !== "remind") return false;
+  return Boolean(
+    action.dedupeKey?.startsWith("policy_calendar_") ||
+      action.dedupeKey === "policy_home_safety" ||
+      action.sourceSignals.includes("calendar:imminent_event") ||
+      action.sourceSignals.includes("home:risk_signal")
+  );
+}
+
+function categoryForAction(action: SituationPolicyAction) {
+  if (action === "remind") return "agenda";
+  if (action === "suggest_action") return "suggestion";
+  return "observation";
+}
+
+function messageMatchesAction({
+  message,
+  dedupeKey,
+  reason,
+}: {
+  message: any;
+  dedupeKey: string | null;
+  reason: string;
+}) {
+  const key = clean(dedupeKey);
+  const logicalKey = clean(message?.logical_key);
+  const text = textFor(message);
+  const target = clean(dedupeKey || reason);
+
+  if (key && logicalKey && key === logicalKey) return true;
+  if (!target || !text) return false;
+
+  return Boolean(
+    text.includes(target) ||
+      target.includes(text) ||
+      (logicalKey && target.includes(logicalKey))
+  );
+}
+
 function hasRecentSimilarProactive({
   snapshot,
   dedupeKey,
@@ -924,15 +987,122 @@ function hasRecentSimilarProactive({
   if (!target) return false;
 
   return [...(snapshot.proactive.recent || []), ...(snapshot.proactive.handledRecent || [])]
-    .some((message) => {
-      const text = textFor(message);
-      return Boolean(
-        text &&
-          (text.includes(target) ||
-            target.includes(clean(message?.logical_key)) ||
-            clean(message?.logical_key) === target)
-      );
-    });
+    .some((message) => messageMatchesAction({ message, dedupeKey, reason }));
+}
+
+function buildLearningAssessment({
+  snapshot,
+  action,
+}: {
+  snapshot: GhostBrainSnapshotCore;
+  action: {
+    action: SituationPolicyAction;
+    priority: number;
+    reason: string;
+    sourceSignals: string[];
+    dedupeKey: string | null;
+    suppressGenericCuriosity: boolean;
+  };
+}): SituationLearningAssessment {
+  const reasons: string[] = [];
+  const signals: string[] = [];
+  const penalties: string[] = [];
+  const recent = snapshot.proactive.recent || [];
+  const handled = snapshot.proactive.handledRecent || [];
+  const protectedAction = isProtectedAction(action);
+  const actionCategory = categoryForAction(action.action);
+  let repeat = 0;
+  let disturbance = 0;
+
+  const similarRecent = recent.filter((message) => {
+    const age = messageAgeHours(message);
+    return (
+      (age ?? Infinity) <= 48 &&
+      messageMatchesAction({
+        message,
+        dedupeKey: action.dedupeKey,
+        reason: action.reason,
+      })
+    );
+  });
+  const similarHandled = handled.filter((message) => {
+    const age = messageAgeHours(message);
+    return (
+      (age ?? Infinity) <= 14 * 24 &&
+      messageMatchesAction({
+        message,
+        dedupeKey: action.dedupeKey,
+        reason: action.reason,
+      })
+    );
+  });
+  const answeredSimilar = similarHandled.filter(
+    (message) => clean(message.status) === "answered"
+  );
+  const negativeSimilar = similarHandled.filter((message) =>
+    ["dismissed", "expired"].includes(clean(message.status))
+  );
+  const sameCategoryNegative = handled.filter((message) => {
+    const age = messageAgeHours(message);
+    return (
+      (age ?? Infinity) <= 14 * 24 &&
+      clean(message.category) === clean(actionCategory) &&
+      ["dismissed", "expired"].includes(clean(message.status))
+    );
+  });
+
+  if (similarRecent.length) {
+    repeat += protectedAction ? 2 : 5;
+    reasons.push("card simile ancora recente o visibile");
+    penalties.push("tema gia visibile di recente");
+    signals.push("learning:recent_similar_visible");
+  }
+
+  if (negativeSimilar.length) {
+    repeat += protectedAction ? 2 : 5;
+    disturbance += protectedAction ? 1 : 3;
+    reasons.push("card simile gia ignorata o scaduta");
+    penalties.push("feedback negativo recente su tema simile");
+    signals.push("learning:similar_negative_feedback");
+  }
+
+  if (answeredSimilar.length) {
+    repeat = Math.max(0, repeat - 3);
+    disturbance = Math.max(0, disturbance - 2);
+    reasons.push("tema simile ha avuto risposta utile");
+    signals.push("learning:similar_answered");
+  }
+
+  if (recent.length >= 3) {
+    disturbance += protectedAction ? 1 : 3;
+    penalties.push("molte card visibili di recente");
+    signals.push("learning:many_recent_cards");
+  } else if (recent.length >= 2) {
+    disturbance += protectedAction ? 0 : 1;
+    signals.push("learning:some_recent_cards");
+  }
+
+  if (sameCategoryNegative.length >= 2) {
+    disturbance += protectedAction ? 1 : 3;
+    penalties.push("categoria spesso ignorata di recente");
+    signals.push("learning:category_negative_feedback");
+  }
+
+  const confidence = clampScore(
+    similarRecent.length * 25 +
+      negativeSimilar.length * 25 +
+      answeredSimilar.length * 20 +
+      Math.min(30, recent.length * 8 + handled.length * 3)
+  );
+
+  return {
+    repeatRisk: riskLevel(repeat),
+    disturbanceRisk: riskLevel(disturbance),
+    confidence,
+    reasons: Array.from(new Set(reasons)).slice(0, 6),
+    signals: Array.from(new Set(signals)).slice(0, 8),
+    penalties: Array.from(new Set(penalties)).slice(0, 6),
+  };
 }
 
 function buildValueAssessment({
@@ -945,6 +1115,7 @@ function buildValueAssessment({
   momentAssessment,
   homeAssessment,
   peopleAssessment,
+  learningAssessment,
 }: {
   snapshot: GhostBrainSnapshotCore;
   decision: DecisionSnapshot;
@@ -962,6 +1133,7 @@ function buildValueAssessment({
   momentAssessment: SituationMomentAssessment;
   homeAssessment: SituationHomeAssessment;
   peopleAssessment: SituationPeopleAssessment;
+  learningAssessment: SituationLearningAssessment;
 }): SituationValueAssessment {
   const reasons: string[] = [];
   const penalties: string[] = [];
@@ -1118,24 +1290,16 @@ function buildValueAssessment({
   if (decision.doNotDisturb) disturbance += 8;
   if (decision.userSituation.mentalLoad === "high") disturbance += 4;
   if (snapshot.signals.simple.doNotDisturb) disturbance += 5;
-  if (snapshot.proactive.recent.length >= 2) disturbance += 2;
   if (action.action === "ask_followup" && decision.userSituation.mentalLoad !== "low") {
     disturbance += 2;
   }
+  if (learningAssessment.disturbanceRisk === "high") disturbance += 5;
+  else if (learningAssessment.disturbanceRisk === "medium") disturbance += 2;
 
   let repeat = 0;
-  if (hasRecentSimilarProactive({
-    snapshot,
-    dedupeKey: action.dedupeKey,
-    reason: action.reason,
-  })) {
-    repeat += 7;
-    penalties.push("tema gia proposto di recente");
-  }
-  if (snapshot.proactive.recent.length >= 3) {
-    repeat += 3;
-    penalties.push("molte card recenti");
-  }
+  if (learningAssessment.repeatRisk === "high") repeat += 7;
+  else if (learningAssessment.repeatRisk === "medium") repeat += 3;
+  penalties.push(...learningAssessment.penalties);
 
   const baseScore =
     utility * 3 +
@@ -1351,6 +1515,10 @@ function chooseAction({
     };
   }
 
+  const learningAssessment = buildLearningAssessment({
+    snapshot,
+    action,
+  });
   const valueAssessment = buildValueAssessment({
     snapshot,
     decision,
@@ -1361,6 +1529,7 @@ function chooseAction({
     momentAssessment,
     homeAssessment,
     peopleAssessment,
+    learningAssessment,
   });
   const valuedAction = applyValueAssessment({
     action,
@@ -1370,6 +1539,7 @@ function chooseAction({
 
   return {
     ...valuedAction,
+    learningAssessment,
     valueAssessment,
   };
 }
@@ -1449,6 +1619,7 @@ export function buildUnifiedSituationModel({
     homeAssessment,
     peopleAssessment,
     momentAssessment,
+    learningAssessment: action.learningAssessment,
     mentalInfluence: mental,
     confidence: Math.max(
       Number(snapshot.location.situation.confidence || 0),
