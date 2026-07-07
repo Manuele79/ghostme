@@ -37,6 +37,7 @@ export type SuppressedTrueProactiveCandidate = TrueProactiveCandidate & {
     | "weak_curiosity"
     | "low_value"
     | "do_not_disturb"
+    | "situation_policy"
     | "selection_limit";
 };
 
@@ -143,6 +144,30 @@ function candidateTextMatchesMessage(
   const title = normalize(candidate.title);
   const content = normalize(`${message?.title || ""} ${message?.message || ""}`);
   return Boolean(title && title.length >= 4 && content.includes(title));
+}
+
+type PolicyAwareSnapshot = GhostBrainSnapshotCore & {
+  situationPolicy?: {
+    recommendedAction?: string;
+    interventionReason?: string;
+    suppressGenericCuriosity?: boolean;
+  };
+};
+
+function policyRequiresSilence(snapshot: PolicyAwareSnapshot) {
+  const action = snapshot.situationPolicy?.recommendedAction;
+  return action === "wait" || action === "say_nothing";
+}
+
+function policySuppressesCandidate(
+  snapshot: PolicyAwareSnapshot,
+  candidate: TrueProactiveCandidate
+) {
+  if (policyRequiresSilence(snapshot)) return true;
+  return (
+    Boolean(snapshot.situationPolicy?.suppressGenericCuriosity) &&
+    candidate.type === "high_confidence_curiosity"
+  );
 }
 
 function buildRawCandidates({
@@ -469,7 +494,7 @@ export function buildTrueProactiveSnapshot({
   snapshot,
   decision,
 }: {
-  snapshot: GhostBrainSnapshotCore;
+  snapshot: PolicyAwareSnapshot;
   decision: DecisionSnapshot;
 }): TrueProactiveSnapshot {
   const rawCandidates = buildRawCandidates({ snapshot, decision }).sort(
@@ -504,6 +529,8 @@ export function buildTrueProactiveSnapshot({
       )
     ) {
       suppressionReason = "already_active";
+    } else if (policySuppressesCandidate(snapshot, candidate)) {
+      suppressionReason = "situation_policy";
     } else if (
       decision.doNotDisturb &&
       candidate.type !== "home_safety" &&
@@ -557,11 +584,14 @@ export function buildTrueProactiveSnapshot({
 
   const reasons = Array.from(
     new Set([
+      snapshot.situationPolicy
+        ? `policy:${snapshot.situationPolicy.recommendedAction}:${snapshot.situationPolicy.interventionReason}`
+        : null,
       ...selected.map((candidate) => `selected:${candidate.type}:${candidate.reason}`),
       ...suppressed.map(
         (candidate) => `suppressed:${candidate.type}:${candidate.suppressionReason}`
       ),
-    ])
+    ].filter(Boolean) as string[])
   );
 
   return {

@@ -58,17 +58,22 @@ function selectCandidateByPolicy(snapshot: GhostBrainSnapshot, candidates: any[]
 
 function filterTrueProactiveByPolicy(snapshot: GhostBrainSnapshot) {
   const selected = snapshot.trueProactive.selected || [];
-  if (!policyBlocksGenericCards(snapshot)) return selected;
-
-  return selected.filter(
-    (candidate) =>
-      candidate.type === "home_safety" ||
-      (candidate.type === "imminent_calendar" && candidate.priority >= 9)
-  );
+  if (policyBlocksGenericCards(snapshot)) return [];
+  return selected;
 }
 
 function shouldBypassPriorityLimit(candidate: any) {
   return candidate?.source === "continuity" || candidate?.source === "policy";
+}
+
+function shouldWriteAuxiliaryCards({
+  snapshot,
+  selectedCandidate,
+}: {
+  snapshot: GhostBrainSnapshot;
+  selectedCandidate?: any;
+}) {
+  return !policyBlocksGenericCards(snapshot) && !selectedCandidate;
 }
 
 async function hasTodayDailyBriefing(userId: string) {
@@ -192,14 +197,7 @@ export async function runProactiveFlowForUser(user: ProactiveUser): Promise<{
 
   const trueProactiveResult = await writeTrueProactiveCards({
     userId,
-    selected: continuityCandidate
-      ? trueProactiveSelected.filter(
-          (candidate) =>
-            candidate.type === "home_safety" ||
-            candidate.type === "imminent_calendar" ||
-            candidate.priority >= 9
-        )
-      : trueProactiveSelected,
+    selected: selectedByPolicy ? [] : trueProactiveSelected,
   });
   created += trueProactiveResult.processed;
 
@@ -224,7 +222,7 @@ export async function runProactiveFlowForUser(user: ProactiveUser): Promise<{
     console.log("PROACTIVE FLOW: no proactive candidates", userId);
   }
 
-  if (agendaMessage) {
+  if (agendaMessage && shouldWriteAuxiliaryCards({ snapshot, selectedCandidate })) {
     created += countWrite(await upsertProactiveMessage({
       userId,
       title: "Agenda di oggi",
@@ -235,7 +233,9 @@ export async function runProactiveFlowForUser(user: ProactiveUser): Promise<{
     }));
   }
 
-  created += countWrite(await writeDailyBriefingForUser(user, snapshot));
+  if (shouldWriteAuxiliaryCards({ snapshot, selectedCandidate })) {
+    created += countWrite(await writeDailyBriefingForUser(user, snapshot));
+  }
 
   return { created };
 }
@@ -280,14 +280,7 @@ export async function runAppOpenProactiveLifecycle({
 
   const trueProactiveResult = await writeTrueProactiveCards({
     userId,
-    selected: continuityCandidate
-      ? filterTrueProactiveByPolicy(currentSnapshot).filter(
-          (candidate) =>
-            candidate.type === "home_safety" ||
-            candidate.type === "imminent_calendar" ||
-            candidate.priority >= 9
-        )
-      : filterTrueProactiveByPolicy(currentSnapshot),
+    selected: selectedByPolicy ? [] : filterTrueProactiveByPolicy(currentSnapshot),
   });
   created += trueProactiveResult.processed;
 
@@ -312,7 +305,13 @@ export async function runAppOpenProactiveLifecycle({
     console.log("APP OPEN PROACTIVE: no proactive candidates", userId);
   }
 
-  if (agendaMessage) {
+  if (
+    agendaMessage &&
+    shouldWriteAuxiliaryCards({
+      snapshot: currentSnapshot,
+      selectedCandidate,
+    })
+  ) {
     created += countWrite(await upsertProactiveMessage({
       userId,
       title: "Agenda di oggi",
@@ -323,7 +322,13 @@ export async function runAppOpenProactiveLifecycle({
     }));
   }
 
-  if (!dailyAlreadyExists) {
+  if (
+    !dailyAlreadyExists &&
+    shouldWriteAuxiliaryCards({
+      snapshot: currentSnapshot,
+      selectedCandidate,
+    })
+  ) {
     created += countWrite(await writeDailyBriefingForUser(user, currentSnapshot));
   }
 
