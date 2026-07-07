@@ -9,6 +9,20 @@ export type SituationPolicyAction =
   | "suggest_action"
   | "wait";
 
+export type SituationValueAssessment = {
+  score: number;
+  level: "none" | "low" | "medium" | "high";
+  shouldIntervene: boolean;
+  utility: number;
+  urgency: number;
+  contextFit: number;
+  signalQuality: "low" | "medium" | "high";
+  disturbanceRisk: "low" | "medium" | "high";
+  repeatRisk: "low" | "medium" | "high";
+  reasons: string[];
+  penalties: string[];
+};
+
 export type UnifiedSituationModel = {
   currentPlace: string | null;
   placeCategory: string | null;
@@ -49,6 +63,7 @@ export type UnifiedSituationModel = {
   sourceSignals: string[];
   dedupeKey: string | null;
   suppressGenericCuriosity: boolean;
+  valueAssessment: SituationValueAssessment;
   updatedAt: string;
 };
 
@@ -73,6 +88,29 @@ function hoursSince(value?: string | null) {
 function isHomePlace(place?: string | null, category?: string | null) {
   const label = clean(place);
   return label === "casa" || label === "home" || clean(category) === "home";
+}
+
+function clampScore(value: number) {
+  return Math.min(100, Math.max(0, Math.round(value)));
+}
+
+function valueLevel(score: number): SituationValueAssessment["level"] {
+  if (score >= 75) return "high";
+  if (score >= 50) return "medium";
+  if (score >= 25) return "low";
+  return "none";
+}
+
+function riskLevel(value: number): "low" | "medium" | "high" {
+  if (value >= 7) return "high";
+  if (value >= 4) return "medium";
+  return "low";
+}
+
+function signalQualityLevel(value: number): "low" | "medium" | "high" {
+  if (value >= 7) return "high";
+  if (value >= 4) return "medium";
+  return "low";
 }
 
 function mentalInfluence(snapshot: GhostBrainSnapshotCore) {
@@ -156,16 +194,288 @@ function buildRecentOpenLoops(snapshot: GhostBrainSnapshotCore) {
     .slice(0, 8);
 }
 
+function textFor(value: any) {
+  return clean(
+    [
+      value?.title,
+      value?.message,
+      value?.description,
+      value?.reason,
+      value?.category,
+      value?.source,
+      value?.logical_key,
+    ]
+      .filter(Boolean)
+      .join(" ")
+  );
+}
+
+function hasRecentSimilarProactive({
+  snapshot,
+  dedupeKey,
+  reason,
+}: {
+  snapshot: GhostBrainSnapshotCore;
+  dedupeKey: string | null;
+  reason: string;
+}) {
+  const target = clean(dedupeKey || reason);
+  if (!target) return false;
+
+  return [...(snapshot.proactive.recent || []), ...(snapshot.proactive.handledRecent || [])]
+    .some((message) => {
+      const text = textFor(message);
+      return Boolean(
+        text &&
+          (text.includes(target) ||
+            target.includes(clean(message?.logical_key)) ||
+            clean(message?.logical_key) === target)
+      );
+    });
+}
+
+function buildValueAssessment({
+  snapshot,
+  decision,
+  action,
+  openLoops,
+  locationEvents,
+  homeEvents,
+}: {
+  snapshot: GhostBrainSnapshotCore;
+  decision: DecisionSnapshot;
+  action: {
+    action: SituationPolicyAction;
+    priority: number;
+    reason: string;
+    sourceSignals: string[];
+    dedupeKey: string | null;
+    suppressGenericCuriosity: boolean;
+  };
+  openLoops: UnifiedSituationModel["recentOpenLoops"];
+  locationEvents: UnifiedSituationModel["recentLocationEvents"];
+  homeEvents: UnifiedSituationModel["recentHomeEvents"];
+}): SituationValueAssessment {
+  const reasons: string[] = [];
+  const penalties: string[] = [];
+  const riskSignals = snapshot.home.comfortRisk.riskSignals || [];
+  const comfortSignals = snapshot.home.comfortRisk.comfortSignals || [];
+  const nextEvent = [...snapshot.calendar.today, ...snapshot.calendar.upcoming]
+    .map((event) => ({
+      event,
+      minutes: minutesUntil(event.start_at || event.remind_at),
+    }))
+    .filter((entry) => entry.minutes !== null && entry.minutes >= 0)
+    .sort((left, right) => Number(left.minutes) - Number(right.minutes))[0];
+  const highPriorityOpenLoop = openLoops.find((loop) => loop.priority >= 8);
+  const importantAction = (snapshot.actions || []).find(
+    (item) => Number(item.priority || 0) >= 8
+  );
+  const importantGoal = (snapshot.goals.activeGoals || []).find(
+    (item) => Number(item.importance || 0) >= 8
+  );
+  const recentLocationSignal = locationEvents.some(
+    (event) => (hoursSince(event.occurredAt) ?? Infinity) <= 8
+  );
+  const recentHomeSignal = homeEvents.some((event) => event.priority >= 5);
+  const knownPlace = Boolean(snapshot.location.situation.currentPlace);
+  const knownPlaceDetail = snapshot.location.significantPlaces.some(
+    (place) =>
+      clean(place.label) === clean(snapshot.location.situation.currentPlace) ||
+      clean(place.category) === clean(snapshot.location.situation.category)
+  );
+  const peopleSignal =
+    Boolean(snapshot.people.importantPeople?.length) ||
+    Boolean(snapshot.people.relationshipMemory.openLoops?.length) ||
+    Boolean(snapshot.people.relationshipMemory.sharedEvents?.length);
+  const memorySignal =
+    Boolean(snapshot.memory.activeMemories?.length) ||
+    Boolean(snapshot.memory.episodicMemories?.length) ||
+    Boolean(snapshot.memory.topics?.length);
+  const housePatternSignal =
+    Boolean(snapshot.home.patterns?.length) ||
+    Boolean(snapshot.home.routes?.recentRoute) ||
+    Boolean(snapshot.home.state.activeRooms?.length);
+
+  let utility = 0;
+  if (action.action === "remind") utility += 8;
+  if (action.action === "ask_followup") utility += 6;
+  if (action.action === "create_card") utility += 5;
+  if (action.action === "suggest_action") utility += 4;
+  if (riskSignals.length) {
+    utility += 10;
+    reasons.push("rischio casa concreto");
+  }
+  if (nextEvent?.event) {
+    utility += 6;
+    reasons.push("collegamento calendario");
+  }
+  if (importantAction) {
+    utility += 5;
+    reasons.push("azione aperta importante");
+  }
+  if (importantGoal) {
+    utility += 4;
+    reasons.push("goal importante");
+  }
+  if (highPriorityOpenLoop) {
+    utility += 5;
+    reasons.push("open loop recente");
+  }
+  if (peopleSignal) {
+    utility += 3;
+    reasons.push("segnale persone");
+  }
+  if (memorySignal) utility += 2;
+  if (comfortSignals.length) utility += 2;
+
+  let urgency = 0;
+  if (riskSignals.length) urgency += 10;
+  if (nextEvent?.minutes !== null && nextEvent?.minutes !== undefined) {
+    if (Number(nextEvent.minutes) <= 30) urgency += 10;
+    else if (Number(nextEvent.minutes) <= 90) urgency += 7;
+    else if (Number(nextEvent.minutes) <= 180) urgency += 4;
+  }
+  if (recentLocationSignal) urgency += 3;
+  if (recentHomeSignal) urgency += 3;
+  if (highPriorityOpenLoop) urgency += 2;
+
+  let contextFit = 0;
+  if (knownPlace) contextFit += 3;
+  if (knownPlaceDetail) contextFit += 2;
+  if (recentLocationSignal) contextFit += 2;
+  if (recentHomeSignal || housePatternSignal) contextFit += 3;
+  if (peopleSignal) contextFit += 2;
+  if (action.sourceSignals.length >= 3) contextFit += 2;
+  if (snapshot.signals.context.length >= 3) contextFit += 2;
+  if (!decision.missingContext.includes("no_fresh_location")) contextFit += 1;
+
+  let signalQuality = 0;
+  if (knownPlace) signalQuality += 2;
+  if (Number(snapshot.location.situation.confidence || 0) >= 70) signalQuality += 2;
+  if (Number(snapshot.home.state.confidence || 0) >= 60) signalQuality += 2;
+  if (snapshot.signals.context.length >= 2) signalQuality += 2;
+  if (peopleSignal) signalQuality += 1;
+  if (memorySignal) signalQuality += 1;
+  if (decision.missingContext.length >= 4) {
+    signalQuality -= 2;
+    penalties.push("molto contesto mancante");
+  }
+
+  let disturbance = 0;
+  if (decision.doNotDisturb) disturbance += 8;
+  if (decision.userSituation.mentalLoad === "high") disturbance += 4;
+  if (snapshot.signals.simple.doNotDisturb) disturbance += 5;
+  if (snapshot.proactive.recent.length >= 2) disturbance += 2;
+  if (action.action === "ask_followup" && decision.userSituation.mentalLoad !== "low") {
+    disturbance += 2;
+  }
+
+  let repeat = 0;
+  if (hasRecentSimilarProactive({
+    snapshot,
+    dedupeKey: action.dedupeKey,
+    reason: action.reason,
+  })) {
+    repeat += 7;
+    penalties.push("tema gia proposto di recente");
+  }
+  if (snapshot.proactive.recent.length >= 3) {
+    repeat += 3;
+    penalties.push("molte card recenti");
+  }
+
+  const baseScore =
+    utility * 3 +
+    urgency * 3 +
+    contextFit * 2 +
+    signalQuality * 2 -
+    disturbance * 4 -
+    repeat * 4;
+  const score = clampScore(baseScore);
+  const level = valueLevel(score);
+  const shouldIntervene =
+    action.action !== "wait" &&
+    action.action !== "say_nothing" &&
+    score >= 50 &&
+    !(riskLevel(disturbance) === "high" && urgency < 8 && utility < 10);
+
+  if (!shouldIntervene && action.action !== "wait" && action.action !== "say_nothing") {
+    penalties.push("valore insufficiente rispetto al disturbo");
+  }
+
+  return {
+    score,
+    level,
+    shouldIntervene,
+    utility: clampScore(utility * 10),
+    urgency: clampScore(urgency * 10),
+    contextFit: clampScore(contextFit * 10),
+    signalQuality: signalQualityLevel(signalQuality),
+    disturbanceRisk: riskLevel(disturbance),
+    repeatRisk: riskLevel(repeat),
+    reasons,
+    penalties,
+  };
+}
+
+function applyValueAssessment({
+  action,
+  value,
+  decision,
+}: {
+  action: {
+    action: SituationPolicyAction;
+    priority: number;
+    reason: string;
+    sourceSignals: string[];
+    dedupeKey: string | null;
+    suppressGenericCuriosity: boolean;
+  };
+  value: SituationValueAssessment;
+  decision: DecisionSnapshot;
+}) {
+  if (action.action === "wait" || action.action === "say_nothing") {
+    return action;
+  }
+
+  if (value.shouldIntervene) {
+    return {
+      ...action,
+      priority: Math.max(action.priority, Math.ceil(value.score / 10)),
+      reason: `${action.reason} | valore ${value.score}/100`,
+    };
+  }
+
+  const shouldStaySilent =
+    value.disturbanceRisk === "high" ||
+    decision.doNotDisturb ||
+    value.repeatRisk === "high";
+
+  return {
+    action: shouldStaySilent ? "say_nothing" as const : "wait" as const,
+    priority: 1,
+    reason: `Intervento scartato per valore basso (${value.score}/100): ${
+      value.penalties.join("; ") || "meglio tacere"
+    }`,
+    sourceSignals: [...action.sourceSignals, "value:low"],
+    dedupeKey: null,
+    suppressGenericCuriosity: true,
+  };
+}
+
 function chooseAction({
   snapshot,
   decision,
   openLoops,
   locationEvents,
+  homeEvents,
 }: {
   snapshot: GhostBrainSnapshotCore;
   decision: DecisionSnapshot;
   openLoops: UnifiedSituationModel["recentOpenLoops"];
   locationEvents: UnifiedSituationModel["recentLocationEvents"];
+  homeEvents: UnifiedSituationModel["recentHomeEvents"];
 }) {
   const riskSignals = snapshot.home.comfortRisk.riskSignals || [];
   const nextEvent = [...snapshot.calendar.today, ...snapshot.calendar.upcoming]
@@ -199,12 +509,21 @@ function chooseAction({
     riskSignals.length ? "home:risk_signal" : null,
   ].filter(Boolean) as string[];
 
+  let action: {
+    action: SituationPolicyAction;
+    priority: number;
+    reason: string;
+    sourceSignals: string[];
+    dedupeKey: string | null;
+    suppressGenericCuriosity: boolean;
+  };
+
   if (
     riskSignals.includes("possible_power_overload") ||
     riskSignals.includes("multiple_appliances_active") ||
     riskSignals.includes("appliance_conflict")
   ) {
-    return {
+    action = {
       action: "remind" as const,
       priority: 10,
       reason: "Home Assistant segnala un rischio casa concreto",
@@ -212,10 +531,8 @@ function chooseAction({
       dedupeKey: "policy_home_safety",
       suppressGenericCuriosity: true,
     };
-  }
-
-  if (nextEvent?.minutes !== null && Number(nextEvent?.minutes) <= 90) {
-    return {
+  } else if (nextEvent?.minutes !== null && Number(nextEvent?.minutes) <= 90) {
+    action = {
       action: "remind" as const,
       priority: Number(nextEvent.minutes) <= 30 ? 9 : 8,
       reason: `Evento imminente: ${nextEvent.event.title || "evento"}`,
@@ -223,10 +540,8 @@ function chooseAction({
       dedupeKey: `policy_calendar_${nextEvent.event.id || clean(nextEvent.event.title) || "event"}`,
       suppressGenericCuriosity: true,
     };
-  }
-
-  if (isAtHome && recentHomeArrival && recentUnknownPlace && openLoops.length) {
-    return {
+  } else if (isAtHome && recentHomeArrival && recentUnknownPlace && openLoops.length) {
+    action = {
       action: "ask_followup" as const,
       priority: 9,
       reason: "Rientro a casa dopo luogo sconosciuto collegato a un open loop",
@@ -234,10 +549,8 @@ function chooseAction({
       dedupeKey: "policy_continuity_return_unknown_place",
       suppressGenericCuriosity: true,
     };
-  }
-
-  if (openLoops.some((loop) => loop.priority >= 8)) {
-    return {
+  } else if (openLoops.some((loop) => loop.priority >= 8)) {
+    action = {
       action: "create_card" as const,
       priority: 8,
       reason: "C'e un open loop recente ad alta priorita",
@@ -245,10 +558,8 @@ function chooseAction({
       dedupeKey: `policy_open_loop_${clean(openLoops[0]?.source) || "recent"}`,
       suppressGenericCuriosity: true,
     };
-  }
-
-  if (decision.nextBestAction !== "no_action") {
-    return {
+  } else if (decision.nextBestAction !== "no_action") {
+    action = {
       action: "suggest_action" as const,
       priority: 6,
       reason: `Next best action: ${decision.nextBestAction}`,
@@ -256,10 +567,8 @@ function chooseAction({
       dedupeKey: `policy_next_best_${decision.nextBestAction}`,
       suppressGenericCuriosity: decision.userSituation.mentalLoad !== "low",
     };
-  }
-
-  if (decision.doNotDisturb) {
-    return {
+  } else if (decision.doNotDisturb) {
+    action = {
       action: "say_nothing" as const,
       priority: 1,
       reason: "Momento da non disturbare",
@@ -267,15 +576,34 @@ function chooseAction({
       dedupeKey: null,
       suppressGenericCuriosity: true,
     };
+  } else {
+    action = {
+      action: "wait" as const,
+      priority: 2,
+      reason: "Nessun intervento ad alto valore ora",
+      sourceSignals,
+      dedupeKey: null,
+      suppressGenericCuriosity: false,
+    };
   }
 
+  const valueAssessment = buildValueAssessment({
+    snapshot,
+    decision,
+    action,
+    openLoops,
+    locationEvents,
+    homeEvents,
+  });
+  const valuedAction = applyValueAssessment({
+    action,
+    value: valueAssessment,
+    decision,
+  });
+
   return {
-    action: "wait" as const,
-    priority: 2,
-    reason: "Nessun intervento ad alto valore ora",
-    sourceSignals,
-    dedupeKey: null,
-    suppressGenericCuriosity: false,
+    ...valuedAction,
+    valueAssessment,
   };
 }
 
@@ -295,6 +623,7 @@ export function buildUnifiedSituationModel({
     decision,
     openLoops,
     locationEvents,
+    homeEvents,
   });
   const currentRoom =
     snapshot.home.state.activeRooms[0] ||
@@ -342,6 +671,7 @@ export function buildUnifiedSituationModel({
     sourceSignals: action.sourceSignals,
     dedupeKey: action.dedupeKey,
     suppressGenericCuriosity: action.suppressGenericCuriosity,
+    valueAssessment: action.valueAssessment,
     updatedAt: snapshot.generatedAt,
   };
 }

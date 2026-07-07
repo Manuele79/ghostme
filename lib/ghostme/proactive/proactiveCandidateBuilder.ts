@@ -66,9 +66,19 @@ function policySuppressesGenericCandidates(snapshot: GhostBrainSnapshot) {
 
 function formatPolicySignals(snapshot: GhostBrainSnapshot) {
   const policy = snapshot.situationPolicy;
-  if (!policy?.sourceSignals?.length) return "";
+  const parts: string[] = [];
 
-  return `Segnali collegati: ${policy.sourceSignals.slice(0, 4).join(", ")}.`;
+  if (policy?.valueAssessment) {
+    parts.push(
+      `Valore: ${policy.valueAssessment.score}/100 (${policy.valueAssessment.level})`
+    );
+  }
+
+  if (policy?.sourceSignals?.length) {
+    parts.push(`Segnali collegati: ${policy.sourceSignals.slice(0, 4).join(", ")}`);
+  }
+
+  return parts.length ? `${parts.join(". ")}.` : "";
 }
 
 function firstPolicySubject(snapshot: GhostBrainSnapshot) {
