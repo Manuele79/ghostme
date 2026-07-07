@@ -284,6 +284,7 @@ export function buildSystemPrompt({
   deepRecallRequested,
   cognitiveDecisionContext,
   situationPolicyContext,
+  proactiveCardContext,
   cognitiveDecision,
 }: {
   traits: any;
@@ -312,6 +313,7 @@ export function buildSystemPrompt({
   deepRecallRequested: boolean;
   cognitiveDecisionContext?: string;
   situationPolicyContext?: string;
+  proactiveCardContext?: string;
   cognitiveDecision?: CognitiveDecision;
 }) {
   const identityDirective = buildIdentityDirective(cognitiveDecision);
@@ -387,6 +389,9 @@ ${cognitiveDecisionContext || "nessuna decisione cognitiva esplicita"}
 
 POLICY SITUAZIONALE ATTUALE:
 ${situationPolicyContext || "nessuna policy situazionale disponibile"}
+
+CARD PROACTIVE A CUI L'UTENTE STA RISPONDENDO:
+${proactiveCardContext || "nessuna card proactive collegata a questo messaggio"}
 
 REGOLE COMPORTAMENTALI ATTIVE DELL'UTENTE:
 ${behaviorRulesContext || "nessuna regola comportamentale specifica"}

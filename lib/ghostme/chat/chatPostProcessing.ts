@@ -23,6 +23,7 @@ import { syncPeopleGraphLinks } from "@/lib/ghostme/people/peopleGraphLinkServic
 import type {
   ChatPostProcessingPayload,
   DetectedTopicLike,
+  ProactiveCardContext,
 } from "@/lib/ghostme/chat/chatTypes";
 
 const openai = new OpenAI({
@@ -33,6 +34,58 @@ const DEBUG = process.env.NODE_ENV !== "production";
 
 function log(...args: any[]) {
   if (DEBUG) console.log(...args);
+}
+
+function isLowValueProactiveReply(
+  message: string,
+  proactiveContext?: ProactiveCardContext | null
+) {
+  if (!proactiveContext?.id) return false;
+
+  const normalized = message.trim().toLowerCase();
+  const words = normalized.split(/\s+/).filter(Boolean);
+  const genericReplies = new Set([
+    "ok",
+    "okay",
+    "si",
+    "sì",
+    "no",
+    "grazie",
+    "va bene",
+    "fatto",
+    "chiaro",
+    "capito",
+    "archivia",
+    "ignora",
+    "non ora",
+    "dopo",
+  ]);
+
+  if (genericReplies.has(normalized)) return true;
+  if (words.length <= 3 && !/[.!?].*[a-z0-9]/i.test(message)) return true;
+
+  const addsNewFact = [
+    "ricord",
+    "salva",
+    "correg",
+    " ma ",
+    "pero",
+    "però",
+    "invece",
+    "in realta",
+    "in realtà",
+    "non",
+    "non e",
+    "non è",
+    "era",
+    "sono",
+    "si chiama",
+    "devo",
+    "voglio",
+    "preferisco",
+  ].some((signal) => normalized.includes(signal));
+
+  return !addsNewFact && words.length <= 6;
 }
 
 async function saveActiveMemory({
@@ -449,11 +502,23 @@ export async function runChatPostProcessing({
   loadedLifeTopics,
   shouldRunHeavyEngines,
   cognitiveDecision,
+  proactiveContext,
 }: ChatPostProcessingPayload) {
   try {
+    const lowValueProactiveReply = isLowValueProactiveReply(
+      message,
+      proactiveContext
+    );
+
+    if (lowValueProactiveReply) {
+      log("SKIP LOW VALUE PROACTIVE REPLY:", proactiveContext?.id);
+      return;
+    }
+
     const possibleEpisode = isPossibleEpisode(message);
     const emotionalTone = detectEmotionalTone(message);
-    const shouldSaveMemoryFlag = shouldSaveActiveMemory(message);
+    const shouldSaveMemoryFlag =
+      shouldSaveActiveMemory(message) && !lowValueProactiveReply;
     const memoryCategory = detectMemoryCategory(message);
     const requestedActions = new Set(cognitiveDecision.requestedActions);
 

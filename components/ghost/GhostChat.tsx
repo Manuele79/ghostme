@@ -11,7 +11,7 @@ import {
 
 type ProactiveCard = Pick<
   ProactiveMessage,
-  "id" | "title" | "message" | "category" | "logical_key"
+  "id" | "title" | "message" | "category" | "source" | "logical_key"
 >;
 
 export default function GhostChat({

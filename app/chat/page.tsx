@@ -601,14 +601,24 @@ export default function ChatPage() {
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: await getAuthenticatedJsonHeaders(),
-      body: JSON.stringify({
-        message: userText,
-        traits,
-        messages,
-        userId: traits.user_id,
-        proactiveMessageId: pendingProactiveReplyId,
-      }),
-    });
+    body: JSON.stringify({
+      message: userText,
+      traits,
+      messages,
+      userId: traits.user_id,
+      proactiveMessageId: pendingProactiveReplyId,
+      proactiveContext: pendingProactiveReply
+        ? {
+            id: pendingProactiveReply.id,
+            title: pendingProactiveReply.title,
+            message: pendingProactiveReply.message,
+            category: pendingProactiveReply.category,
+            source: pendingProactiveReply.source,
+            logical_key: pendingProactiveReply.logical_key,
+          }
+        : null,
+    }),
+  });
 
     setLoadingChat(false);
 
@@ -686,6 +696,7 @@ export default function ChatPage() {
     meta?: {
       title?: string | null;
       category?: string | null;
+      source?: string | null;
     }
   ) {
     if (messageId && String(logicalKey || "").startsWith("location_candidate_")) {
@@ -706,6 +717,7 @@ export default function ChatPage() {
         }),
         message,
         category: meta?.category,
+        source: meta?.source,
         logical_key: logicalKey,
       });
     }
@@ -730,11 +742,13 @@ export default function ChatPage() {
     title?: string | null;
     message: string;
     category?: string | null;
+    source?: string | null;
     logical_key?: string | null;
   }) {
     replyToProactiveMessage(message.message, message.id, message.logical_key, {
       title: message.title,
       category: message.category,
+      source: message.source,
     });
   }
 

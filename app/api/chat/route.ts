@@ -15,6 +15,7 @@ export async function POST(req: Request) {
     const message = body.message as string;
     const traits = body.traits;
     const messages = body.messages || [];
+    const proactiveContext = body.proactiveContext || null;
     const userId = await getAuthenticatedUserId(
       req,
       body.userId as string | undefined
@@ -25,6 +26,7 @@ export async function POST(req: Request) {
       traits,
       messages,
       userId,
+      proactiveContext,
     });
 
     if (result.type === "immediate_text") {

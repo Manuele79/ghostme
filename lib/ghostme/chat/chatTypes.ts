@@ -73,6 +73,15 @@ export type AnalyzeChatMessageResult = {
   importanceLevel: number;
 };
 
+export type ProactiveCardContext = {
+  id: string;
+  title?: string | null;
+  message: string;
+  category?: string | null;
+  source?: string | null;
+  logical_key?: string | null;
+};
+
 export type ChatPostProcessingPayload = {
   userId: string;
   message: string;
@@ -81,6 +90,7 @@ export type ChatPostProcessingPayload = {
   loadedLifeTopics: any[];
   shouldRunHeavyEngines: boolean;
   cognitiveDecision: CognitiveDecision;
+  proactiveContext?: ProactiveCardContext | null;
 };
 
 export type ImmediateTextResult = {

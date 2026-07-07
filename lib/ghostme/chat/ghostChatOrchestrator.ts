@@ -6,7 +6,10 @@ import { buildChatContext } from "@/lib/ghostme/chat/chatContextBuilder";
 import { resolveChatExternalService } from "@/lib/ghostme/chat/chatExternalServices";
 import { handleChatCalendarFlow } from "@/lib/ghostme/chat/chatCalendarFlow";
 import { analyzeChatMessage } from "@/lib/ghostme/chat/chatMessageAnalyzer";
-import type { GhostChatFlowResult } from "@/lib/ghostme/chat/chatTypes";
+import type {
+  GhostChatFlowResult,
+  ProactiveCardContext,
+} from "@/lib/ghostme/chat/chatTypes";
 import { prepareChatHistory } from "@/lib/ghostme/context/temporalPriority";
 import { createGhostReplySanitizer } from "@/lib/ghostme/chat/chatResponseSanitizer";
 
@@ -19,11 +22,13 @@ export async function runGhostChatFlow({
   traits,
   messages,
   userId,
+  proactiveContext,
 }: {
   message: string;
   traits: any;
   messages: any[];
   userId?: string;
+  proactiveContext?: ProactiveCardContext | null;
 }): Promise<GhostChatFlowResult> {
   const { messageClass, cognitiveDecision, detectedTopics, importanceLevel } =
     await analyzeChatMessage({ message });
@@ -38,6 +43,7 @@ export async function runGhostChatFlow({
     detectedTopics,
     message,
     cognitiveDecision,
+    proactiveContext,
   });
   const {
     profileContext,
@@ -66,6 +72,7 @@ export async function runGhostChatFlow({
     deepRecallRequested,
     cognitiveDecisionContext,
     situationPolicyContext,
+    proactiveCardContext,
   } = chatContext;
   const serviceContext = await resolveChatExternalService({
     message,
@@ -112,6 +119,7 @@ export async function runGhostChatFlow({
     deepRecallRequested,
     cognitiveDecisionContext,
     situationPolicyContext,
+    proactiveCardContext,
     cognitiveDecision,
   });
 
@@ -167,6 +175,7 @@ export async function runGhostChatFlow({
           loadedLifeTopics,
           shouldRunHeavyEngines: messageClass.shouldRunHeavyEngines,
           cognitiveDecision,
+          proactiveContext,
         }
       : null,
   };

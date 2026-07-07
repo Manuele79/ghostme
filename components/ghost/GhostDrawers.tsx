@@ -185,7 +185,7 @@ export function ServicesDrawer ({
     message: string,
     messageId?: string,
     logicalKey?: string | null,
-    meta?: { title?: string | null; category?: string | null }
+    meta?: { title?: string | null; category?: string | null; source?: string | null }
   ) => void;
   pendingLocationCard?: { id: string; message: string; logical_key?: string | null } | null;
   onLocationCandidateHandled?: (messageId: string) => void;
@@ -339,7 +339,7 @@ function ServicePanelContent({
     message: string,
     messageId?: string,
     logicalKey?: string | null,
-    meta?: { title?: string | null; category?: string | null }
+    meta?: { title?: string | null; category?: string | null; source?: string | null }
   ) => void;
   pendingLocationCard?: { id: string; message: string; logical_key?: string | null } | null;
   onLocationCandidateHandled?: (messageId: string) => void;
@@ -917,6 +917,7 @@ async function saveLocationCandidate() {
                           {
                             title: item.title,
                             category: item.category,
+                            source: item.source,
                           }
                         );
                       }}

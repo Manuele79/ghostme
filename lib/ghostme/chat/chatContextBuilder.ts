@@ -8,6 +8,7 @@ import { trimBlock } from "@/lib/ghostme/chat/chatPromptBuilder";
 import type {
   CognitiveDecision,
   DetectedTopicLike,
+  ProactiveCardContext,
 } from "@/lib/ghostme/chat/chatTypes";
 import { isFreshLocationState } from "@/lib/ghostme/location/locationStateFreshness";
 import { temporalMemoryLabel } from "@/lib/ghostme/context/temporalPriority";
@@ -40,6 +41,7 @@ export type ChatContext = {
   deepRecallRequested: boolean;
   cognitiveDecisionContext: string;
   situationPolicyContext: string;
+  proactiveCardContext: string;
 };
 
 export function createEmptyChatContext(): ChatContext {
@@ -70,6 +72,7 @@ export function createEmptyChatContext(): ChatContext {
     deepRecallRequested: false,
     cognitiveDecisionContext: "",
     situationPolicyContext: "",
+    proactiveCardContext: "",
   };
 }
 
@@ -318,16 +321,39 @@ Influenza mental state: ${policy.mentalInfluence.load} - ${policy.mentalInfluenc
 `.trim();
 }
 
+function buildProactiveCardContext(card?: ProactiveCardContext | null) {
+  if (!card?.id) return "";
+  return `
+L'utente sta rispondendo a una card proactive/osservazione gia mostrata.
+Rispondi considerando la card come contesto immediato, senza trattare il messaggio dell'utente come chat isolata.
+Id card: ${card.id}
+Titolo card: ${card.title || "senza titolo"}
+Categoria card: ${card.category || "non specificata"}
+Fonte card: ${card.source || "non specificata"}
+Chiave logica card: ${card.logical_key || "non specificata"}
+Testo card:
+${card.message}
+
+Regole:
+- Se l'utente conferma, corregge o commenta la card, riconosci il punto in modo naturale.
+- Non ripetere tutta la card.
+- Non creare nuove curiosita o proattivita gratuite.
+- Se il commento aggiunge un fatto utile, trattalo come informazione collegata alla card.
+`.trim();
+}
+
 export async function buildChatContext({
   userId,
   detectedTopics,
   message = "",
   cognitiveDecision,
+  proactiveContext,
 }: {
   userId?: string;
   detectedTopics: DetectedTopicLike[];
   message?: string;
   cognitiveDecision?: CognitiveDecision;
+  proactiveContext?: ProactiveCardContext | null;
 }): Promise<ChatContext> {
   const context = createEmptyChatContext();
 
@@ -450,6 +476,10 @@ export async function buildChatContext({
   );
   context.situationPolicyContext = trimBlock(
     buildSituationPolicyContext(snapshot),
+    900
+  );
+  context.proactiveCardContext = trimBlock(
+    buildProactiveCardContext(proactiveContext),
     900
   );
 
