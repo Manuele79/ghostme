@@ -31,6 +31,117 @@ type MomentDecision = {
   sourceSignals: string[];
 };
 
+type ProactiveCandidate = {
+  title: string;
+  message: string;
+  category: string;
+  priority: number;
+  source: string;
+  logicalKey?: string;
+  decision?: {
+    action: RuntimeDecisionAction;
+    reason: string;
+    confidence: number;
+    priority: number;
+    sourceSignals: string[];
+    dedupeKey: string | null;
+  };
+};
+
+function policyAction(snapshot: GhostBrainSnapshot): RuntimeDecisionAction {
+  return snapshot.situationPolicy?.recommendedAction || "wait";
+}
+
+function policyBlocksGenericCards(snapshot: GhostBrainSnapshot) {
+  const action = policyAction(snapshot);
+  return action === "say_nothing" || action === "wait";
+}
+
+function policySuppressesGenericCandidates(snapshot: GhostBrainSnapshot) {
+  return (
+    policyBlocksGenericCards(snapshot) ||
+    Boolean(snapshot.situationPolicy?.suppressGenericCuriosity)
+  );
+}
+
+function formatPolicySignals(snapshot: GhostBrainSnapshot) {
+  const policy = snapshot.situationPolicy;
+  if (!policy?.sourceSignals?.length) return "";
+
+  return `Segnali collegati: ${policy.sourceSignals.slice(0, 4).join(", ")}.`;
+}
+
+function firstPolicySubject(snapshot: GhostBrainSnapshot) {
+  const policy = snapshot.situationPolicy;
+  return (
+    policy?.imminentCalendar?.[0]?.title ||
+    policy?.recentOpenLoops?.[0]?.title ||
+    policy?.openActions?.[0]?.title ||
+    policy?.activeGoals?.[0]?.title ||
+    null
+  );
+}
+
+function policyCandidateTitle(snapshot: GhostBrainSnapshot) {
+  const action = policyAction(snapshot);
+  const subject = firstPolicySubject(snapshot);
+
+  if (action === "remind") return subject || "Promemoria GhostMe";
+  if (action === "ask_followup") return subject || "Follow-up";
+  if (action === "suggest_action") return subject || "Prossimo passo";
+  if (action === "create_card") return subject || "Situazione attuale";
+
+  return subject || "GhostMe";
+}
+
+function policyCandidateCategory(snapshot: GhostBrainSnapshot) {
+  const action = policyAction(snapshot);
+  if (action === "remind") return "agenda";
+  if (action === "suggest_action") return "suggestion";
+  return "observation";
+}
+
+function buildPolicyCandidate(
+  snapshot: GhostBrainSnapshot,
+  source = "policy"
+): ProactiveCandidate | null {
+  const policy = snapshot.situationPolicy;
+  if (!policy) return null;
+
+  const action = policy.recommendedAction;
+  if (action === "say_nothing" || action === "wait") return null;
+
+  const signals = formatPolicySignals(snapshot);
+  const title = policyCandidateTitle(snapshot);
+  const message = [policy.interventionReason, signals].filter(Boolean).join(" ");
+  const priority = Math.max(1, Number(policy.interventionPriority || 1));
+
+  return {
+    title,
+    message,
+    category: policyCandidateCategory(snapshot),
+    priority,
+    source,
+    logicalKey: policy.dedupeKey || undefined,
+    decision: {
+      action,
+      reason: policy.interventionReason,
+      confidence: Number(policy.confidence || 0),
+      priority,
+      sourceSignals: policy.sourceSignals || [],
+      dedupeKey: policy.dedupeKey,
+    },
+  };
+}
+
+function shouldUsePolicyForContinuity(snapshot: GhostBrainSnapshot) {
+  const action = policyAction(snapshot);
+  return (
+    (action === "ask_followup" || action === "create_card") &&
+    Boolean(snapshot.situationPolicy?.recentOpenLoops?.length)
+  );
+}
+
 function formatMentalState(mentalState: any) {
   return mentalState
     ? `stress ${mentalState.stress ?? 0}, entusiasmo ${
@@ -485,8 +596,30 @@ function evaluateMoment({
 }
 
 export async function buildContinuityCandidate(userId: string, snapshot: GhostBrainSnapshot) {
-  const observations = await loadRecentLocationObservations(userId);
-  const moment = buildMomentAwareness(observations, snapshot);
+  const action = policyAction(snapshot);
+
+  if (policyBlocksGenericCards(snapshot)) {
+    console.log("CONTINUITY SKIP: situation_policy", {
+      userId,
+      action: snapshot.situationPolicy?.recommendedAction,
+      reason: snapshot.situationPolicy?.interventionReason,
+      sourceSignals: snapshot.situationPolicy?.sourceSignals || [],
+    });
+    return null;
+  }
+
+  if (action === "remind" || action === "suggest_action") {
+    return null;
+  }
+
+  if (shouldUsePolicyForContinuity(snapshot)) {
+    const candidate = buildPolicyCandidate(snapshot, "continuity");
+    if (candidate) return candidate;
+  }
+
+  const policySignals = snapshot.situationPolicy?.sourceSignals || [];
+  const policyRecentHomeArrival = policySignals.includes("moment:recent_home_arrival");
+  const policyUnknownPlace = policySignals.includes("location:recent_unknown_place");
 
   const candidates = collectOpenLoopSources(snapshot)
     .map(({ row, source }) => {
@@ -518,12 +651,12 @@ export async function buildContinuityCandidate(userId: string, snapshot: GhostBr
         return 0;
       };
       const leftMomentBoost =
-        (moment.recentHomeArrival ? 2 : 0) +
-        (moment.unknownBeforeHome ? 2 : 0) +
+        (policyRecentHomeArrival ? 2 : 0) +
+        (policyUnknownPlace ? 2 : 0) +
         sourceWeight(left.source);
       const rightMomentBoost =
-        (moment.recentHomeArrival ? 2 : 0) +
-        (moment.unknownBeforeHome ? 2 : 0) +
+        (policyRecentHomeArrival ? 2 : 0) +
+        (policyUnknownPlace ? 2 : 0) +
         sourceWeight(right.source);
       return (
         (right.kind?.priority || 0) + rightMomentBoost - 
@@ -532,6 +665,17 @@ export async function buildContinuityCandidate(userId: string, snapshot: GhostBr
     });
 
   const openLoop = candidates[0];
+  if (!openLoop?.kind) {
+    console.log("CONTINUITY SKIP: no_recent_open_loop", {
+      userId,
+      policyAction: snapshot.situationPolicy?.recommendedAction,
+      policySignals: snapshot.situationPolicy?.sourceSignals || [],
+    });
+    return null;
+  }
+
+  const observations = await loadRecentLocationObservations(userId);
+  const moment = buildMomentAwareness(observations, snapshot);
   const momentDecision = evaluateMoment({
     moment,
     snapshot,
@@ -547,17 +691,6 @@ export async function buildContinuityCandidate(userId: string, snapshot: GhostBr
       confidence: momentDecision.confidence,
       sourceSignals: momentDecision.sourceSignals,
       currentPlace: snapshot.location.situation.currentPlace,
-    });
-    return null;
-  }
-
-  if (!openLoop?.kind) {
-    console.log("CONTINUITY SKIP: no_recent_open_loop", {
-      userId,
-      observations: observations.length,
-      recentHomeArrival: moment.recentHomeArrival,
-      unknownBeforeHome: moment.unknownBeforeHome,
-      momentDecision,
     });
     return null;
   }
@@ -754,12 +887,29 @@ export async function buildProactiveCandidatesForUser(
   const userId = user.user_id;
   const snapshot = prebuiltSnapshot || (await buildGhostBrainSnapshot(userId));
   const continuityCandidate = await buildContinuityCandidate(userId, snapshot);
+  const policyCandidate = continuityCandidate || buildPolicyCandidate(snapshot);
   const situation = buildSituationFromSnapshot(snapshot) as any;
   const agendaMessage = buildAgendaMessage(situation);
 
-  if (continuityCandidate) {
+  if (policyCandidate) {
     return {
-      proactiveCandidates: [continuityCandidate],
+      proactiveCandidates: [policyCandidate],
+      agendaMessage,
+    };
+  }
+
+  if (policyBlocksGenericCards(snapshot)) {
+    return {
+      proactiveCandidates: [],
+      agendaMessage,
+    };
+  }
+
+  const suppressGenericCandidates = policySuppressesGenericCandidates(snapshot);
+  if (suppressGenericCandidates) {
+    await applyPatternDecay(userId);
+    return {
+      proactiveCandidates: [],
       agendaMessage,
     };
   }

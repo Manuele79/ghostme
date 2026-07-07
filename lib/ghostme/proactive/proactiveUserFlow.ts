@@ -33,6 +33,44 @@ function countWrite(result: Awaited<ReturnType<typeof upsertProactiveMessage>>) 
   return result?.action === "inserted" || result?.action === "updated" ? 1 : 0;
 }
 
+function policyAction(snapshot: GhostBrainSnapshot) {
+  return snapshot.situationPolicy?.recommendedAction || "wait";
+}
+
+function policyBlocksGenericCards(snapshot: GhostBrainSnapshot) {
+  const action = policyAction(snapshot);
+  return action === "say_nothing" || action === "wait";
+}
+
+function policyCandidate(candidates: any[]) {
+  return candidates.find(
+    (candidate) =>
+      candidate?.source === "policy" || candidate?.source === "continuity"
+  ) || null;
+}
+
+function selectCandidateByPolicy(snapshot: GhostBrainSnapshot, candidates: any[]) {
+  const policySelected = policyCandidate(candidates);
+  if (policySelected) return policySelected;
+  if (policyBlocksGenericCards(snapshot)) return null;
+  return pickBestProactiveCandidate(candidates);
+}
+
+function filterTrueProactiveByPolicy(snapshot: GhostBrainSnapshot) {
+  const selected = snapshot.trueProactive.selected || [];
+  if (!policyBlocksGenericCards(snapshot)) return selected;
+
+  return selected.filter(
+    (candidate) =>
+      candidate.type === "home_safety" ||
+      (candidate.type === "imminent_calendar" && candidate.priority >= 9)
+  );
+}
+
+function shouldBypassPriorityLimit(candidate: any) {
+  return candidate?.source === "continuity" || candidate?.source === "policy";
+}
+
 async function hasTodayDailyBriefing(userId: string) {
   const todayIso = new Date();
   todayIso.setHours(0, 0, 0, 0);
@@ -128,15 +166,17 @@ export async function runProactiveFlowForUser(user: ProactiveUser): Promise<{
 
   const snapshot = await buildGhostBrainSnapshot(userId);
   const curiositySnapshot = snapshot.curiosity;
-  const trueProactiveSelected = snapshot.trueProactive.selected;
+  const trueProactiveSelected = filterTrueProactiveByPolicy(snapshot);
 
   const { proactiveCandidates, agendaMessage } =
     await buildProactiveCandidatesForUser(user, snapshot);
-  const bestCandidate = pickBestProactiveCandidate(proactiveCandidates);
+  const selectedByPolicy = selectCandidateByPolicy(snapshot, proactiveCandidates);
   const continuityCandidate =
-    bestCandidate?.source === "continuity" ? bestCandidate : null;
+    selectedByPolicy?.source === "continuity" ? selectedByPolicy : null;
   const suppressGenericCuriosity = Boolean(
-    continuityCandidate || snapshot.situationPolicy?.suppressGenericCuriosity
+    policyBlocksGenericCards(snapshot) ||
+      continuityCandidate ||
+      snapshot.situationPolicy?.suppressGenericCuriosity
   );
 
   const curiosityResult = suppressGenericCuriosity
@@ -166,7 +206,8 @@ export async function runProactiveFlowForUser(user: ProactiveUser): Promise<{
   const legacyCandidates = curiosityResult.processed
     ? proactiveCandidates.filter((candidate) => candidate.source !== "curiosity")
     : proactiveCandidates;
-  const selectedCandidate = continuityCandidate || pickBestProactiveCandidate(legacyCandidates);
+  const selectedCandidate =
+    selectedByPolicy || selectCandidateByPolicy(snapshot, legacyCandidates);
 
   if (selectedCandidate) {
     created += countWrite(await upsertProactiveMessage({
@@ -177,7 +218,7 @@ export async function runProactiveFlowForUser(user: ProactiveUser): Promise<{
       priority: selectedCandidate.priority,
       logicalKey: buildProactiveCandidateLogicalKey(selectedCandidate),
       source: selectedCandidate.source || null,
-      bypassPriorityLimit: selectedCandidate.source === "continuity",
+      bypassPriorityLimit: shouldBypassPriorityLimit(selectedCandidate),
     }));
   } else {
     console.log("PROACTIVE FLOW: no proactive candidates", userId);
@@ -214,11 +255,16 @@ export async function runAppOpenProactiveLifecycle({
   const currentSnapshot = snapshot || (await buildGhostBrainSnapshot(userId));
   const { proactiveCandidates, agendaMessage } =
     await buildProactiveCandidatesForUser(user, currentSnapshot);
-  const bestCandidate = pickBestProactiveCandidate(proactiveCandidates);
+  const selectedByPolicy = selectCandidateByPolicy(
+    currentSnapshot,
+    proactiveCandidates
+  );
   const continuityCandidate =
-    bestCandidate?.source === "continuity" ? bestCandidate : null;
+    selectedByPolicy?.source === "continuity" ? selectedByPolicy : null;
   const suppressGenericCuriosity = Boolean(
-    continuityCandidate || currentSnapshot.situationPolicy?.suppressGenericCuriosity
+    policyBlocksGenericCards(currentSnapshot) ||
+      continuityCandidate ||
+      currentSnapshot.situationPolicy?.suppressGenericCuriosity
   );
 
   const curiosityResult = suppressGenericCuriosity
@@ -226,7 +272,7 @@ export async function runAppOpenProactiveLifecycle({
     : await writeCuriositySnapshotCards({
         userId,
         snapshot: currentSnapshot.curiosity,
-        preferredLogicalKeys: currentSnapshot.trueProactive.selected
+        preferredLogicalKeys: filterTrueProactiveByPolicy(currentSnapshot)
           .filter((candidate) => candidate.type === "high_confidence_curiosity")
           .map(buildTrueProactiveLogicalKey),
       });
@@ -235,20 +281,21 @@ export async function runAppOpenProactiveLifecycle({
   const trueProactiveResult = await writeTrueProactiveCards({
     userId,
     selected: continuityCandidate
-      ? currentSnapshot.trueProactive.selected.filter(
+      ? filterTrueProactiveByPolicy(currentSnapshot).filter(
           (candidate) =>
             candidate.type === "home_safety" ||
             candidate.type === "imminent_calendar" ||
             candidate.priority >= 9
         )
-      : currentSnapshot.trueProactive.selected,
+      : filterTrueProactiveByPolicy(currentSnapshot),
   });
   created += trueProactiveResult.processed;
 
   const legacyCandidates = curiosityResult.processed
     ? proactiveCandidates.filter((candidate) => candidate.source !== "curiosity")
     : proactiveCandidates;
-  const selectedCandidate = continuityCandidate || pickBestProactiveCandidate(legacyCandidates);
+  const selectedCandidate =
+    selectedByPolicy || selectCandidateByPolicy(currentSnapshot, legacyCandidates);
 
   if (selectedCandidate) {
     created += countWrite(await upsertProactiveMessage({
@@ -259,7 +306,7 @@ export async function runAppOpenProactiveLifecycle({
       priority: selectedCandidate.priority,
       logicalKey: buildProactiveCandidateLogicalKey(selectedCandidate),
       source: selectedCandidate.source || null,
-      bypassPriorityLimit: selectedCandidate.source === "continuity",
+      bypassPriorityLimit: shouldBypassPriorityLimit(selectedCandidate),
     }));
   } else {
     console.log("APP OPEN PROACTIVE: no proactive candidates", userId);
