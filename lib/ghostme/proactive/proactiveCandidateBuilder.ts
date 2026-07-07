@@ -74,6 +74,12 @@ function formatPolicySignals(snapshot: GhostBrainSnapshot) {
     );
   }
 
+  if (policy?.momentAssessment) {
+    parts.push(
+      `Momento: ${policy.momentAssessment.level} (${policy.momentAssessment.score}/100)`
+    );
+  }
+
   if (policy?.sourceSignals?.length) {
     parts.push(`Segnali collegati: ${policy.sourceSignals.slice(0, 4).join(", ")}`);
   }

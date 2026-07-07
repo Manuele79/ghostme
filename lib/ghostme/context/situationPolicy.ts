@@ -23,6 +23,14 @@ export type SituationValueAssessment = {
   penalties: string[];
 };
 
+export type SituationMomentAssessment = {
+  level: "ordinary" | "interesting" | "important" | "exceptional";
+  score: number;
+  confidence: number;
+  reasons: string[];
+  signals: string[];
+};
+
 export type UnifiedSituationModel = {
   currentPlace: string | null;
   placeCategory: string | null;
@@ -52,6 +60,7 @@ export type UnifiedSituationModel = {
     reason: string;
   }>;
   behaviorSignals: string[];
+  momentAssessment: SituationMomentAssessment;
   mentalInfluence: {
     load: "low" | "medium" | "high";
     reason: string;
@@ -111,6 +120,28 @@ function signalQualityLevel(value: number): "low" | "medium" | "high" {
   if (value >= 7) return "high";
   if (value >= 4) return "medium";
   return "low";
+}
+
+function momentLevel(score: number): SituationMomentAssessment["level"] {
+  if (score >= 85) return "exceptional";
+  if (score >= 65) return "important";
+  if (score >= 35) return "interesting";
+  return "ordinary";
+}
+
+function pushSignal({
+  reasons,
+  signals,
+  reason,
+  signal,
+}: {
+  reasons: string[];
+  signals: string[];
+  reason: string;
+  signal: string;
+}) {
+  reasons.push(reason);
+  signals.push(signal);
 }
 
 function mentalInfluence(snapshot: GhostBrainSnapshotCore) {
@@ -194,6 +225,232 @@ function buildRecentOpenLoops(snapshot: GhostBrainSnapshotCore) {
     .slice(0, 8);
 }
 
+function buildMomentAssessment({
+  snapshot,
+  decision,
+  openLoops,
+  locationEvents,
+  homeEvents,
+  behaviorSignals,
+}: {
+  snapshot: GhostBrainSnapshotCore;
+  decision: DecisionSnapshot;
+  openLoops: UnifiedSituationModel["recentOpenLoops"];
+  locationEvents: UnifiedSituationModel["recentLocationEvents"];
+  homeEvents: UnifiedSituationModel["recentHomeEvents"];
+  behaviorSignals: string[];
+}): SituationMomentAssessment {
+  const reasons: string[] = [];
+  const signals: string[] = [];
+  const riskSignals = snapshot.home.comfortRisk.riskSignals || [];
+  const nextEvent = [...snapshot.calendar.today, ...snapshot.calendar.upcoming]
+    .map((event) => ({
+      event,
+      minutes: minutesUntil(event.start_at || event.remind_at),
+    }))
+    .filter((entry) => entry.minutes !== null && entry.minutes >= 0)
+    .sort((left, right) => Number(left.minutes) - Number(right.minutes))[0];
+  const currentPlace = snapshot.location.situation.currentPlace;
+  const currentPlaceCategory = snapshot.location.situation.category;
+  const knownSignificantPlace = snapshot.location.significantPlaces.some(
+    (place) =>
+      clean(place.label) === clean(currentPlace) ||
+      clean(place.category) === clean(currentPlaceCategory)
+  );
+  const recentLocationChange = locationEvents.find(
+    (event) => (hoursSince(event.occurredAt) ?? Infinity) <= 8
+  );
+  const unknownPlace = locationEvents.find(
+    (event) =>
+      event.eventType === "place_unknown_detected" &&
+      (hoursSince(event.occurredAt) ?? Infinity) <= 14
+  );
+  const relevantHomeEvent = [...homeEvents]
+    .sort((left, right) => right.priority - left.priority)[0];
+  const highPriorityOpenLoop = openLoops.find((loop) => loop.priority >= 8);
+  const importantAction = (snapshot.actions || []).find(
+    (item) => Number(item.priority || 0) >= 8
+  );
+  const importantGoal = (snapshot.goals.activeGoals || []).find(
+    (item) => Number(item.importance || 0) >= 8
+  );
+  const peopleSignal =
+    Boolean(snapshot.people.importantPeople?.length) ||
+    Boolean(snapshot.people.relationshipMemory.sharedEvents?.length) ||
+    Boolean(snapshot.people.socialSuggestions.relationshipAttention?.length);
+  const memorySignal =
+    Boolean(snapshot.memory.activeMemories?.length) ||
+    Boolean(snapshot.memory.episodicMemories?.length) ||
+    Boolean(snapshot.memory.topics?.length);
+
+  let score = 0;
+  if (riskSignals.length) {
+    score += 35;
+    pushSignal({
+      reasons,
+      signals,
+      reason: "rischio casa rilevante",
+      signal: "home:risk",
+    });
+  }
+  if (nextEvent?.minutes !== null && nextEvent?.minutes !== undefined) {
+    if (Number(nextEvent.minutes) <= 30) score += 30;
+    else if (Number(nextEvent.minutes) <= 90) score += 22;
+    else if (Number(nextEvent.minutes) <= 180) score += 12;
+    pushSignal({
+      reasons,
+      signals,
+      reason: `evento calendario vicino: ${nextEvent.event.title || "evento"}`,
+      signal: "calendar:near",
+    });
+  }
+  if (relevantHomeEvent?.priority >= 8) {
+    score += 22;
+    pushSignal({
+      reasons,
+      signals,
+      reason: "evento casa ad alta priorita",
+      signal: "home:event_high",
+    });
+  } else if (relevantHomeEvent?.priority >= 5) {
+    score += 12;
+    pushSignal({
+      reasons,
+      signals,
+      reason: "evento casa recente",
+      signal: "home:event_recent",
+    });
+  }
+  if (recentLocationChange) {
+    score += 14;
+    pushSignal({
+      reasons,
+      signals,
+      reason: `cambio luogo recente: ${recentLocationChange.eventType}`,
+      signal: "location:recent_change",
+    });
+  }
+  if (unknownPlace) {
+    score += 16;
+    pushSignal({
+      reasons,
+      signals,
+      reason: "luogo sconosciuto recente",
+      signal: "location:unknown_recent",
+    });
+  }
+  if (highPriorityOpenLoop) {
+    score += 18;
+    pushSignal({
+      reasons,
+      signals,
+      reason: `open loop importante: ${highPriorityOpenLoop.title}`,
+      signal: "continuity:open_loop",
+    });
+  }
+  if (importantAction) {
+    score += 12;
+    pushSignal({
+      reasons,
+      signals,
+      reason: `azione importante aperta: ${importantAction.title || importantAction.description || "azione"}`,
+      signal: "action:important",
+    });
+  }
+  if (importantGoal) {
+    score += 10;
+    pushSignal({
+      reasons,
+      signals,
+      reason: `goal importante attivo: ${importantGoal.title || "goal"}`,
+      signal: "goal:important",
+    });
+  }
+  if (knownSignificantPlace) {
+    score += 8;
+    pushSignal({
+      reasons,
+      signals,
+      reason: "luogo significativo riconosciuto",
+      signal: "location:significant_place",
+    });
+  }
+  if (snapshot.home.state.activeRooms?.length || snapshot.home.state.media?.length) {
+    score += 8;
+    pushSignal({
+      reasons,
+      signals,
+      reason: "attivita casa rilevata",
+      signal: "home:activity",
+    });
+  }
+  if (snapshot.home.routes?.possibleMovement === "uncertain_movement") {
+    score += 10;
+    pushSignal({
+      reasons,
+      signals,
+      reason: "movimento casa incerto",
+      signal: "home:route_uncertain",
+    });
+  }
+  if (peopleSignal) {
+    score += 8;
+    pushSignal({
+      reasons,
+      signals,
+      reason: "persone rilevanti nel contesto",
+      signal: "people:relevant",
+    });
+  }
+  if (memorySignal && behaviorSignals.length >= 3) {
+    score += 6;
+    pushSignal({
+      reasons,
+      signals,
+      reason: "memoria e pattern danno contesto",
+      signal: "memory:contextual",
+    });
+  }
+  if (decision.userSituation.mentalLoad === "high") {
+    score += 8;
+    pushSignal({
+      reasons,
+      signals,
+      reason: "carico operativo alto",
+      signal: "mental:high_load",
+    });
+  }
+  if (snapshot.signals.context.some((signal) => signal.priority >= 9)) {
+    score += 10;
+    pushSignal({
+      reasons,
+      signals,
+      reason: "segnale operativo molto prioritario",
+      signal: "context:high_priority",
+    });
+  }
+
+  const confidenceBase =
+    (currentPlace ? 15 : 0) +
+    (Number(snapshot.location.situation.confidence || 0) >= 70 ? 15 : 0) +
+    (Number(snapshot.home.state.confidence || 0) >= 60 ? 15 : 0) +
+    (snapshot.signals.context.length ? 15 : 0) +
+    (signals.length >= 3 ? 20 : signals.length >= 2 ? 12 : signals.length ? 6 : 0) +
+    (decision.missingContext.length <= 2 ? 20 : decision.missingContext.length <= 4 ? 10 : 0);
+
+  const uniqueReasons = Array.from(new Set(reasons)).slice(0, 8);
+  const uniqueSignals = Array.from(new Set(signals)).slice(0, 12);
+  const finalScore = clampScore(score);
+
+  return {
+    level: momentLevel(finalScore),
+    score: finalScore,
+    confidence: clampScore(confidenceBase),
+    reasons: uniqueReasons.length ? uniqueReasons : ["momento ordinario"],
+    signals: uniqueSignals,
+  };
+}
+
 function textFor(value: any) {
   return clean(
     [
@@ -241,6 +498,7 @@ function buildValueAssessment({
   openLoops,
   locationEvents,
   homeEvents,
+  momentAssessment,
 }: {
   snapshot: GhostBrainSnapshotCore;
   decision: DecisionSnapshot;
@@ -255,6 +513,7 @@ function buildValueAssessment({
   openLoops: UnifiedSituationModel["recentOpenLoops"];
   locationEvents: UnifiedSituationModel["recentLocationEvents"];
   homeEvents: UnifiedSituationModel["recentHomeEvents"];
+  momentAssessment: SituationMomentAssessment;
 }): SituationValueAssessment {
   const reasons: string[] = [];
   const penalties: string[] = [];
@@ -328,6 +587,9 @@ function buildValueAssessment({
   }
   if (memorySignal) utility += 2;
   if (comfortSignals.length) utility += 2;
+  if (momentAssessment.level === "exceptional") utility += 6;
+  else if (momentAssessment.level === "important") utility += 4;
+  else if (momentAssessment.level === "interesting") utility += 2;
 
   let urgency = 0;
   if (riskSignals.length) urgency += 10;
@@ -339,6 +601,8 @@ function buildValueAssessment({
   if (recentLocationSignal) urgency += 3;
   if (recentHomeSignal) urgency += 3;
   if (highPriorityOpenLoop) urgency += 2;
+  if (momentAssessment.level === "exceptional") urgency += 4;
+  else if (momentAssessment.level === "important") urgency += 2;
 
   let contextFit = 0;
   if (knownPlace) contextFit += 3;
@@ -349,6 +613,8 @@ function buildValueAssessment({
   if (action.sourceSignals.length >= 3) contextFit += 2;
   if (snapshot.signals.context.length >= 3) contextFit += 2;
   if (!decision.missingContext.includes("no_fresh_location")) contextFit += 1;
+  if (momentAssessment.confidence >= 70) contextFit += 2;
+  if (momentAssessment.signals.length >= 3) contextFit += 2;
 
   let signalQuality = 0;
   if (knownPlace) signalQuality += 2;
@@ -361,6 +627,8 @@ function buildValueAssessment({
     signalQuality -= 2;
     penalties.push("molto contesto mancante");
   }
+  if (momentAssessment.confidence >= 70) signalQuality += 2;
+  else if (momentAssessment.confidence < 35) signalQuality -= 1;
 
   let disturbance = 0;
   if (decision.doNotDisturb) disturbance += 8;
@@ -470,12 +738,14 @@ function chooseAction({
   openLoops,
   locationEvents,
   homeEvents,
+  momentAssessment,
 }: {
   snapshot: GhostBrainSnapshotCore;
   decision: DecisionSnapshot;
   openLoops: UnifiedSituationModel["recentOpenLoops"];
   locationEvents: UnifiedSituationModel["recentLocationEvents"];
   homeEvents: UnifiedSituationModel["recentHomeEvents"];
+  momentAssessment: SituationMomentAssessment;
 }) {
   const riskSignals = snapshot.home.comfortRisk.riskSignals || [];
   const nextEvent = [...snapshot.calendar.today, ...snapshot.calendar.upcoming]
@@ -594,6 +864,7 @@ function chooseAction({
     openLoops,
     locationEvents,
     homeEvents,
+    momentAssessment,
   });
   const valuedAction = applyValueAssessment({
     action,
@@ -618,13 +889,6 @@ export function buildUnifiedSituationModel({
   const homeEvents = recentHomeEvents(snapshot);
   const openLoops = buildRecentOpenLoops(snapshot);
   const mental = mentalInfluence(snapshot);
-  const action = chooseAction({
-    snapshot,
-    decision,
-    openLoops,
-    locationEvents,
-    homeEvents,
-  });
   const currentRoom =
     snapshot.home.state.activeRooms[0] ||
     snapshot.home.routes.recentRoute?.to ||
@@ -640,6 +904,22 @@ export function buildUnifiedSituationModel({
       .map((pattern) => pattern.pattern_type || pattern.title)
       .filter(Boolean),
   ].slice(0, 16);
+  const momentAssessment = buildMomentAssessment({
+    snapshot,
+    decision,
+    openLoops,
+    locationEvents,
+    homeEvents,
+    behaviorSignals,
+  });
+  const action = chooseAction({
+    snapshot,
+    decision,
+    openLoops,
+    locationEvents,
+    homeEvents,
+    momentAssessment,
+  });
 
   return {
     currentPlace: snapshot.location.situation.currentPlace,
@@ -659,6 +939,7 @@ export function buildUnifiedSituationModel({
     activeGoals: snapshot.goals.activeGoals.slice(0, 8),
     recentOpenLoops: openLoops,
     behaviorSignals,
+    momentAssessment,
     mentalInfluence: mental,
     confidence: Math.max(
       Number(snapshot.location.situation.confidence || 0),
