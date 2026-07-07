@@ -4,7 +4,10 @@ import { getEntityInfo } from "@/lib/ghostme/homeAssistant/homeEntityMapper";
 import { classifyHomeEventSignificance } from "@/lib/ghostme/homeAssistant/homeEventSignificance";
 import { logSignificantHomeEvent } from "@/lib/ghostme/homeAssistant/homeEventLogger";
 import { isDevelopmentEnvironment } from "@/lib/ghostme/auth/serverAuth";
-import { runHouseLightLearning } from "@/lib/ghostme/homeAssistant/houseLightLearningFlow";
+import {
+  runHouseLightLearning,
+  shouldRunHouseLightLearning,
+} from "@/lib/ghostme/homeAssistant/houseLightLearningFlow";
 import {
   canAccessHomeAssistant,
   getDefaultHomeAssistantUserId,
@@ -12,6 +15,26 @@ import {
 
 function clean(value: unknown) {
   return String(value ?? "").toLowerCase().trim();
+}
+
+const WEBHOOK_THROTTLE = new Map<string, number>();
+const WEBHOOK_THROTTLE_MS = 20 * 1000;
+const NOISY_ENTITY_TYPES = new Set([
+  "temperature",
+  "humidity",
+  "pressure",
+  "co2",
+  "noise",
+  "weather",
+  "sun",
+]);
+
+function haIngestionEnabled() {
+  return process.env.GHOSTME_HA_INGESTION_ENABLED !== "false";
+}
+
+function haLightLearningEnabled() {
+  return process.env.GHOSTME_HA_LIGHT_LEARNING_ENABLED !== "false";
 }
 
 function objectValue(value: unknown): Record<string, unknown> {
@@ -109,6 +132,75 @@ function logSkippedEvent(entityId: string, reason: string) {
     entityId,
     reason,
   });
+}
+
+function shouldIgnoreBeforeDb({
+  entityType,
+  entityId,
+  oldState,
+  newState,
+  eventType,
+}: {
+  entityType: string;
+  entityId: string;
+  oldState: string;
+  newState: string;
+  eventType: string;
+}) {
+  const oldClean = clean(oldState);
+  const newClean = clean(newState);
+
+  if (["", "unknown", "unavailable", "none"].includes(newClean)) {
+    return "invalid_state";
+  }
+
+  if (
+    oldClean &&
+    oldClean === newClean &&
+    !(entityType === "automation" && eventType === "automation_on")
+  ) {
+    return "same_state_pre_db";
+  }
+
+  if (NOISY_ENTITY_TYPES.has(entityType)) {
+    return "noisy_environment_sensor_ignored";
+  }
+
+  if (
+    entityType === "phone" &&
+    !/wi[_-]?fi|wifi.*connection/i.test(entityId)
+  ) {
+    return "phone_non_presence_sensor";
+  }
+
+  return null;
+}
+
+function shouldThrottleInMemory({
+  userId,
+  entityId,
+  eventType,
+  newState,
+}: {
+  userId: string;
+  entityId: string;
+  eventType: string;
+  newState: string;
+}) {
+  const key = `${userId}|${entityId}|${eventType}|${clean(newState)}`;
+  const now = Date.now();
+  const previous = WEBHOOK_THROTTLE.get(key) || 0;
+
+  if (now - previous < WEBHOOK_THROTTLE_MS) return true;
+
+  WEBHOOK_THROTTLE.set(key, now);
+  if (WEBHOOK_THROTTLE.size > 500) {
+    for (const [entryKey, timestamp] of WEBHOOK_THROTTLE.entries()) {
+      if (now - timestamp > 5 * 60 * 1000) WEBHOOK_THROTTLE.delete(entryKey);
+    }
+  }
+
+  return false;
 }
 
 function unmappedReason(entityId: string) {
@@ -241,6 +333,15 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
+    if (!haIngestionEnabled()) {
+      return NextResponse.json({
+        received: true,
+        significant: false,
+        reason: "ha_ingestion_disabled",
+        inserted: false,
+      });
+    }
+
     if (!isAuthorized(req, body)) {
       return NextResponse.json(
         {
@@ -306,6 +407,40 @@ export async function POST(req: Request) {
       body.new_state?.last_updated ||
       body.new_state?.last_changed ||
       new Date().toISOString();
+
+    const earlySkip = shouldIgnoreBeforeDb({
+      entityType: info.type,
+      entityId,
+      oldState,
+      newState,
+      eventType,
+    });
+    if (earlySkip) {
+      logSkippedEvent(entityId, earlySkip);
+      return NextResponse.json({
+        received: true,
+        significant: false,
+        reason: earlySkip,
+        inserted: false,
+      });
+    }
+
+    if (
+      shouldThrottleInMemory({
+        userId,
+        entityId,
+        eventType,
+        newState,
+      })
+    ) {
+      logSkippedEvent(entityId, "webhook_memory_throttle");
+      return NextResponse.json({
+        received: true,
+        significant: false,
+        reason: "webhook_memory_throttle",
+        inserted: false,
+      });
+    }
 
     const hasProvidedOldState =
       body.old_state !== undefined || body.oldState !== undefined;
@@ -425,15 +560,24 @@ export async function POST(req: Request) {
       );
     }
 
-    after(async () => {
-      await runHouseLightLearning({
-        userId,
-        eventId: loggedEvent.id!,
+    if (
+      haLightLearningEnabled() &&
+      shouldRunHouseLightLearning({
         eventType,
         priority: decision.priority,
         occurredAt,
+      })
+    ) {
+      after(async () => {
+        await runHouseLightLearning({
+          userId,
+          eventId: loggedEvent.id!,
+          eventType,
+          priority: decision.priority,
+          occurredAt,
+        });
       });
-    });
+    }
 
     console.log("HOUSE EVENT ACCEPTED:", {
       entityId,

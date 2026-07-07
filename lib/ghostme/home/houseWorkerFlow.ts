@@ -55,10 +55,14 @@ function peopleHomeCount(states: HAStateLike[]) {
 function shouldWakeHouseWorker(event: PendingHouseEvent) {
   const value = jsonObject(event.value);
   if (value.significance_category === "context") return false;
-  if (Number(value.significance_priority || 0) >= 4) return true;
-  return /^(automation_|light_|tv_|climate_|contact_|person_|phone_|fan_|appliance_)/.test(
+  if (Number(value.significance_priority || 0) >= 8) return true;
+  return /^(automation_|tv_|climate_|contact_|person_|phone_|fan_|appliance_)/.test(
     event.event_type
   );
+}
+
+function houseWorkerEnabled() {
+  return process.env.GHOSTME_HOUSE_WORKER_ENABLED !== "false";
 }
 
 async function claimSignificantHouseEvents(userId: string) {
@@ -128,6 +132,18 @@ export async function houseWorkerFlow(req: Request) {
     return {
       status: err instanceof UserContextAuthError ? err.status : 401,
       body: { success: false, error: err instanceof Error ? err.message : "Unauthorized" },
+    };
+  }
+
+  if (!houseWorkerEnabled()) {
+    return {
+      status: 200,
+      body: {
+        success: true,
+        skipped: true,
+        reason: "house_worker_disabled",
+        results: [],
+      },
     };
   }
 
