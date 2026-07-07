@@ -46,6 +46,8 @@ export type UnifiedSituationModel = {
   recommendedAction: SituationPolicyAction;
   interventionReason: string;
   interventionPriority: number;
+  sourceSignals: string[];
+  dedupeKey: string | null;
   suppressGenericCuriosity: boolean;
   updatedAt: string;
 };
@@ -188,6 +190,14 @@ function chooseAction({
       event.eventType === "place_unknown_detected" &&
       (hoursSince(event.occurredAt) ?? Infinity) <= 14
   );
+  const sourceSignals = [
+    isAtHome ? "current_place:home" : "current_place:away_or_unknown",
+    recentHomeArrival ? "moment:recent_home_arrival" : null,
+    recentUnknownPlace ? "location:recent_unknown_place" : null,
+    openLoops.length ? "continuity:recent_open_loop" : null,
+    nextEvent?.event?.title ? "calendar:imminent_event" : null,
+    riskSignals.length ? "home:risk_signal" : null,
+  ].filter(Boolean) as string[];
 
   if (
     riskSignals.includes("possible_power_overload") ||
@@ -198,6 +208,8 @@ function chooseAction({
       action: "remind" as const,
       priority: 10,
       reason: "Home Assistant segnala un rischio casa concreto",
+      sourceSignals,
+      dedupeKey: "policy_home_safety",
       suppressGenericCuriosity: true,
     };
   }
@@ -207,6 +219,8 @@ function chooseAction({
       action: "remind" as const,
       priority: Number(nextEvent.minutes) <= 30 ? 9 : 8,
       reason: `Evento imminente: ${nextEvent.event.title || "evento"}`,
+      sourceSignals,
+      dedupeKey: `policy_calendar_${nextEvent.event.id || clean(nextEvent.event.title) || "event"}`,
       suppressGenericCuriosity: true,
     };
   }
@@ -216,6 +230,8 @@ function chooseAction({
       action: "ask_followup" as const,
       priority: 9,
       reason: "Rientro a casa dopo luogo sconosciuto collegato a un open loop",
+      sourceSignals,
+      dedupeKey: "policy_continuity_return_unknown_place",
       suppressGenericCuriosity: true,
     };
   }
@@ -225,6 +241,8 @@ function chooseAction({
       action: "create_card" as const,
       priority: 8,
       reason: "C'e un open loop recente ad alta priorita",
+      sourceSignals,
+      dedupeKey: `policy_open_loop_${clean(openLoops[0]?.source) || "recent"}`,
       suppressGenericCuriosity: true,
     };
   }
@@ -234,6 +252,8 @@ function chooseAction({
       action: "suggest_action" as const,
       priority: 6,
       reason: `Next best action: ${decision.nextBestAction}`,
+      sourceSignals,
+      dedupeKey: `policy_next_best_${decision.nextBestAction}`,
       suppressGenericCuriosity: decision.userSituation.mentalLoad !== "low",
     };
   }
@@ -243,6 +263,8 @@ function chooseAction({
       action: "say_nothing" as const,
       priority: 1,
       reason: "Momento da non disturbare",
+      sourceSignals: [...sourceSignals, "policy:do_not_disturb"],
+      dedupeKey: null,
       suppressGenericCuriosity: true,
     };
   }
@@ -251,6 +273,8 @@ function chooseAction({
     action: "wait" as const,
     priority: 2,
     reason: "Nessun intervento ad alto valore ora",
+    sourceSignals,
+    dedupeKey: null,
     suppressGenericCuriosity: false,
   };
 }
@@ -315,6 +339,8 @@ export function buildUnifiedSituationModel({
     recommendedAction: action.action,
     interventionReason: action.reason,
     interventionPriority: action.priority,
+    sourceSignals: action.sourceSignals,
+    dedupeKey: action.dedupeKey,
     suppressGenericCuriosity: action.suppressGenericCuriosity,
     updatedAt: snapshot.generatedAt,
   };

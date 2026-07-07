@@ -14,6 +14,23 @@ import { applyPatternDecay } from "@/lib/ghostme/patterns/patternDecay";
 import { generateButlerMessage } from "@/lib/ghostme/butler/butlerEngine";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
+type RuntimeDecisionAction =
+  | "say_nothing"
+  | "ask_followup"
+  | "create_card"
+  | "remind"
+  | "suggest_action"
+  | "wait";
+
+type MomentDecision = {
+  action: RuntimeDecisionAction;
+  goodMoment: boolean;
+  reason: string;
+  confidence: number;
+  priorityBoost: number;
+  sourceSignals: string[];
+};
+
 function formatMentalState(mentalState: any) {
   return mentalState
     ? `stress ${mentalState.stress ?? 0}, entusiasmo ${
@@ -68,8 +85,11 @@ function compactText(row: any) {
       row?.description,
       row?.content,
       row?.intent_type,
+      row?.source_message,
+      row?.relationship_type,
       Array.isArray(row?.topics) ? row.topics.join(" ") : "",
       Array.isArray(row?.related_topics) ? row.related_topics.join(" ") : "",
+      Array.isArray(row?.people) ? row.people.join(" ") : "",
     ].filter(Boolean).join(" ")
   );
 }
@@ -104,6 +124,24 @@ function dayKey(value: any) {
 
 function titleFor(row: any) {
   return String(row?.title || row?.summary || row?.description || "").trim();
+}
+
+function hasRecentTimestamp(row: any, maxPastHours: number, maxFutureHours = 12) {
+  const ageHours = hoursSinceValue(timestampFor(row));
+  return (
+    ageHours !== null &&
+    ageHours >= -maxFutureHours &&
+    ageHours <= maxPastHours
+  );
+}
+
+function isHomePlace(place?: any, category?: any) {
+  const normalizedPlace = normalize(place);
+  return (
+    normalizedPlace === "casa" ||
+    normalizedPlace === "home" ||
+    normalize(category) === "home"
+  );
 }
 
 function detectOpenLoopKind(text: string, source?: string, row?: any) {
@@ -282,41 +320,173 @@ async function loadRecentLocationObservations(userId: string) {
 }
 
 function buildMomentAwareness(observations: any[], snapshot: GhostBrainSnapshot) {
-  const currentPlace = normalize(snapshot.location.situation.currentPlace);
-  const isAtHome = currentPlace === "casa" || currentPlace === "home";
+  const currentPlace = snapshot.location.situation.currentPlace;
+  const isAtHome = isHomePlace(
+    currentPlace,
+    snapshot.location.situation.category
+  );
   const recentHomeArrival = observations.find(
     (event) =>
       event.event_type === "home_arrived" &&
       (hoursSinceValue(event.occurred_at) ?? Infinity) <= 8
   );
+  const arrivalTime = new Date(recentHomeArrival?.occurred_at || 0).getTime();
+  const recentAwayEvent = observations.find((event) => {
+    if (!["home_left", "location_enter", "location_exit"].includes(event.event_type)) {
+      return false;
+    }
+    if (!arrivalTime) return true;
+    return new Date(event.occurred_at || 0).getTime() <= arrivalTime;
+  });
   const unknownBeforeHome = observations.find((event) => {
     if (event.event_type !== "place_unknown_detected") return false;
-    if (!recentHomeArrival?.occurred_at) return true;
-    return (
-      new Date(event.occurred_at || 0).getTime() <=
-      new Date(recentHomeArrival.occurred_at || 0).getTime()
-    );
+    const eventTime = new Date(event.occurred_at || 0).getTime();
+    if (!arrivalTime) return (hoursSinceValue(event.occurred_at) ?? Infinity) <= 8;
+    return eventTime <= arrivalTime;
   });
+  const lastKnownAwayPlace =
+    observations.find(
+      (event) =>
+        ["location_enter", "location_exit", "place_unknown_detected"].includes(
+          event.event_type
+        ) && !isHomePlace(event.place_label)
+    )?.place_label || null;
 
   return {
     isAtHome,
     recentHomeArrival: Boolean(recentHomeArrival),
+    recentHomeArrivalAt: recentHomeArrival?.occurred_at || null,
+    wasAwayBeforeHome: Boolean(recentAwayEvent || unknownBeforeHome),
     unknownBeforeHome: Boolean(unknownBeforeHome),
     unknownObservation: unknownBeforeHome || null,
+    lastKnownAwayPlace,
+    timeWindow: currentTimeWindow(),
     homeSignals: snapshot.home.presence.signals || [],
+  };
+}
+
+function currentTimeWindow(date = new Date()) {
+  const hour = Number(
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Europe/Rome",
+      hour: "2-digit",
+      hour12: false,
+    }).format(date)
+  );
+  if (hour >= 5 && hour < 12) return "morning";
+  if (hour >= 12 && hour < 18) return "afternoon";
+  if (hour >= 18 && hour < 23) return "evening";
+  return "night";
+}
+
+function hasRecentCalendarLoop(snapshot: GhostBrainSnapshot) {
+  return (snapshot.calendar.completed || []).some((event) =>
+    hasRecentTimestamp(event, 36, 2)
+  );
+}
+
+function hasRecentActionLoop(snapshot: GhostBrainSnapshot) {
+  return (snapshot.actions || []).some((action) =>
+    hasRecentTimestamp(action, 72, 12)
+  );
+}
+
+function hasRecentPersonLoop(snapshot: GhostBrainSnapshot) {
+  return Boolean(
+    (snapshot.people.relationshipMemory.openLoops || []).some((loop: any) =>
+      hasRecentTimestamp(loop, 72, 12)
+    ) ||
+      (snapshot.people.importantPeople || []).some(
+        (person: any) =>
+          (hoursSinceValue(person.last_mentioned_at || person.updated_at) ??
+            Infinity) <= 72
+      )
+  );
+}
+
+function evaluateMoment({
+  moment,
+  snapshot,
+  openLoopCount,
+  bestOpenLoopPriority,
+}: {
+  moment: ReturnType<typeof buildMomentAwareness>;
+  snapshot: GhostBrainSnapshot;
+  openLoopCount: number;
+  bestOpenLoopPriority: number;
+}): MomentDecision {
+  const sourceSignals = [
+    moment.isAtHome ? "current_place:home" : "current_place:not_home",
+    moment.recentHomeArrival ? "moment:recent_home_arrival" : null,
+    moment.wasAwayBeforeHome ? "moment:was_away_before_home" : null,
+    moment.unknownBeforeHome ? "location:unknown_place_before_home" : null,
+    openLoopCount ? "continuity:recent_open_loop" : null,
+    hasRecentCalendarLoop(snapshot) ? "calendar:recent_event" : null,
+    hasRecentPersonLoop(snapshot) ? "people:recent_person_signal" : null,
+    hasRecentActionLoop(snapshot) ? "action:recent_declared_action" : null,
+    `time:${moment.timeWindow}`,
+    snapshot.home.state.occupancyStatus
+      ? `home:${snapshot.home.state.occupancyStatus}`
+      : null,
+  ].filter(Boolean) as string[];
+
+  let score = 0;
+  if (moment.isAtHome) score += 2;
+  if (moment.recentHomeArrival) score += 3;
+  if (moment.wasAwayBeforeHome) score += 2;
+  if (moment.unknownBeforeHome) score += 2;
+  if (openLoopCount) score += 2;
+  if (bestOpenLoopPriority >= 8) score += 1;
+  if (sourceSignals.includes("calendar:recent_event")) score += 1;
+  if (sourceSignals.includes("people:recent_person_signal")) score += 1;
+  if (sourceSignals.includes("action:recent_declared_action")) score += 1;
+
+  if (!moment.isAtHome) {
+    return {
+      action: "wait",
+      goodMoment: false,
+      reason: "utente non ancora rientrato a casa",
+      confidence: Math.min(65, score * 10),
+      priorityBoost: 0,
+      sourceSignals,
+    };
+  }
+
+  if (score >= 8) {
+    return {
+      action: "ask_followup",
+      goodMoment: true,
+      reason: "rientro a casa con open loop e segnali di uscita recente",
+      confidence: Math.min(95, 60 + score * 4),
+      priorityBoost: 2,
+      sourceSignals,
+    };
+  }
+
+  if (score >= 5 && bestOpenLoopPriority >= 8) {
+    return {
+      action: "create_card",
+      goodMoment: true,
+      reason: "open loop recente in un momento tranquillo a casa",
+      confidence: Math.min(85, 50 + score * 5),
+      priorityBoost: 1,
+      sourceSignals,
+    };
+  }
+
+  return {
+    action: "wait",
+    goodMoment: false,
+    reason: "segnali insufficienti per un follow-up utile",
+    confidence: Math.min(70, 35 + score * 5),
+    priorityBoost: 0,
+    sourceSignals,
   };
 }
 
 export async function buildContinuityCandidate(userId: string, snapshot: GhostBrainSnapshot) {
   const observations = await loadRecentLocationObservations(userId);
   const moment = buildMomentAwareness(observations, snapshot);
-  if (!moment.isAtHome) {
-    console.log("CONTINUITY SKIP: not_at_home", {
-      userId,
-      currentPlace: snapshot.location.situation.currentPlace,
-    });
-    return null;
-  }
 
   const candidates = collectOpenLoopSources(snapshot)
     .map(({ row, source }) => {
@@ -340,8 +510,21 @@ export async function buildContinuityCandidate(userId: string, snapshot: GhostBr
         item.ageHours <= 72
     )
     .sort((left, right) => {
-      const leftMomentBoost = moment.recentHomeArrival ? 2 : 0;
-      const rightMomentBoost = moment.recentHomeArrival ? 2 : 0;
+      const sourceWeight = (source?: string) => {
+        if (source === "calendar_completed") return 3;
+        if (source === "action") return 2;
+        if (source === "relationship_open_loop") return 2;
+        if (source === "episodic_memory") return 1;
+        return 0;
+      };
+      const leftMomentBoost =
+        (moment.recentHomeArrival ? 2 : 0) +
+        (moment.unknownBeforeHome ? 2 : 0) +
+        sourceWeight(left.source);
+      const rightMomentBoost =
+        (moment.recentHomeArrival ? 2 : 0) +
+        (moment.unknownBeforeHome ? 2 : 0) +
+        sourceWeight(right.source);
       return (
         (right.kind?.priority || 0) + rightMomentBoost - 
         ((left.kind?.priority || 0) + leftMomentBoost)
@@ -349,12 +532,32 @@ export async function buildContinuityCandidate(userId: string, snapshot: GhostBr
     });
 
   const openLoop = candidates[0];
+  const momentDecision = evaluateMoment({
+    moment,
+    snapshot,
+    openLoopCount: candidates.length,
+    bestOpenLoopPriority: Number(openLoop?.kind?.priority || 0),
+  });
+
+  if (!momentDecision.goodMoment) {
+    console.log("CONTINUITY SKIP: bad_moment", {
+      userId,
+      reason: momentDecision.reason,
+      action: momentDecision.action,
+      confidence: momentDecision.confidence,
+      sourceSignals: momentDecision.sourceSignals,
+      currentPlace: snapshot.location.situation.currentPlace,
+    });
+    return null;
+  }
+
   if (!openLoop?.kind) {
     console.log("CONTINUITY SKIP: no_recent_open_loop", {
       userId,
       observations: observations.length,
       recentHomeArrival: moment.recentHomeArrival,
       unknownBeforeHome: moment.unknownBeforeHome,
+      momentDecision,
     });
     return null;
   }
@@ -362,15 +565,21 @@ export async function buildContinuityCandidate(userId: string, snapshot: GhostBr
   const messageParts = [openLoop.kind.question];
   if (moment.unknownBeforeHome && openLoop.kind.placeQuestion) {
     const poiQuestion = moment.unknownObservation?.context?.poi_resolution?.question;
-    messageParts.push(poiQuestion || openLoop.kind.placeQuestion);
+    const placeHint = moment.lastKnownAwayPlace
+      ? `Era quel posto nuovo vicino a ${moment.lastKnownAwayPlace}?`
+      : poiQuestion || openLoop.kind.placeQuestion;
+    messageParts.push(placeHint);
   }
 
   const priority = Math.min(
     10,
     openLoop.kind.priority +
-      (moment.recentHomeArrival ? 1 : 0) +
+      momentDecision.priorityBoost +
       (moment.unknownBeforeHome ? 1 : 0)
   );
+  const logicalKey = `continuity_${openLoop.kind.kind}_${dayKey(
+    timestampFor(openLoop.row)
+  )}`;
 
   return {
     title: openLoop.kind.title,
@@ -378,7 +587,15 @@ export async function buildContinuityCandidate(userId: string, snapshot: GhostBr
     category: "observation",
     priority,
     source: "continuity",
-    logicalKey: `continuity_${openLoop.kind.kind}_${dayKey(timestampFor(openLoop.row))}`,
+    logicalKey,
+    decision: {
+      action: momentDecision.action,
+      reason: momentDecision.reason,
+      confidence: momentDecision.confidence,
+      priority,
+      sourceSignals: momentDecision.sourceSignals,
+      dedupeKey: logicalKey,
+    },
   };
 }
 
