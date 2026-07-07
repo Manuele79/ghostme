@@ -85,6 +85,12 @@ function formatPolicySignals(snapshot: GhostBrainSnapshot) {
     parts.push(`Persona: ${person.name} (${person.relevance}, ${person.score}/100)`);
   }
 
+  if (policy?.homeAssessment && policy.homeAssessment.level !== "quiet") {
+    parts.push(
+      `Casa: ${policy.homeAssessment.level} (${policy.homeAssessment.score}/100)`
+    );
+  }
+
   if (policy?.sourceSignals?.length) {
     parts.push(`Segnali collegati: ${policy.sourceSignals.slice(0, 4).join(", ")}`);
   }
