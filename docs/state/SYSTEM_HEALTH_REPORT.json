@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-07T21:01:21.303Z",
+  "generatedAt": "2026-07-07T23:08:43.850Z",
   "status": {
     "healthScore": 67,
     "healthLabel": "🟠 Da migliorare",
@@ -723,9 +723,7 @@
       ],
       "readButNeverWritten": false,
       "writtenButNeverRead": false,
-      "unusedColumns": [
-        "source"
-      ],
+      "unusedColumns": [],
       "invalidColumns": [],
       "dead": false
     },
@@ -1860,6 +1858,7 @@
         "lib/ghostme/context/situationPolicy.ts",
         "lib/ghostme/home/houseWorkerFlow.ts",
         "lib/ghostme/homeAssistant/houseSuggestionEngine.ts",
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
         "lib/ghostme/proactive/proactiveUserFlow.ts",
         "lib/ghostme/proactive/trueProactiveCardWriter.ts",
         "lib/ghostme/proactive/trueProactiveSnapshot.ts",

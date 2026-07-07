@@ -1,6 +1,6 @@
 # SUPABASE_SCHEMA_MAP V3
 
-Generated: 2026-07-07T21:01:20.504Z
+Generated: 2026-07-07T23:08:43.070Z
 
 > Mappa generata dal codice + schema reale noto parziale. Serve per capire chi legge/scrive ogni tabella e trovare query verso colonne inesistenti.
 
@@ -19,7 +19,7 @@ Generated: 2026-07-07T21:01:20.504Z
 | dynamic_self_profile | 4 | 2 | 0 | 0 | 8 | 6 | - |
 | episodic_memories | 8 | 1 | 0 | 0 | 8 | 5 | - |
 | ghost_behavior_rules | 3 | 2 | 0 | 0 | 4 | 12 | - |
-| ghost_proactive_messages | 16 | 8 | 0 | 12 | 13 | 8 | missing: curiosity |
+| ghost_proactive_messages | 16 | 8 | 0 | 12 | 16 | 8 | missing: answered_at, curiosity, read_at |
 | goals_desires | 10 | 3 | 0 | 0 | 16 | 12 | - |
 | house_automation_controls | 3 | 2 | 0 | 0 | 11 | 7 | - |
 | house_entities | 2 | 2 | 0 | 0 | 7 | 9 | - |
@@ -46,7 +46,7 @@ Generated: 2026-07-07T21:01:20.504Z
 ### Query verso colonne probabilmente inesistenti
 
 - **autobiographical_timeline**: category
-- **ghost_proactive_messages**: curiosity
+- **ghost_proactive_messages**: answered_at, curiosity, read_at
 - **house_suggestions**: entity_id, entity_name, entity_type, event_type, new_state, occurred_at
 - **observation_events**: category, label
 
@@ -869,6 +869,7 @@ Generated: 2026-07-07T21:01:20.504Z
 **Colonne lette nei select**
 
 - *
+- answered_at
 - category
 - created_at
 - curiosity
@@ -876,7 +877,9 @@ Generated: 2026-07-07T21:01:20.504Z
 - logical_key
 - message
 - priority
+- read_at
 - scheduled_for
+- source
 - status
 - title
 - updated_at
@@ -895,7 +898,9 @@ Generated: 2026-07-07T21:01:20.504Z
 
 **ERRORE: colonne richieste ma non presenti nello schema noto**
 
+- answered_at
 - curiosity
+- read_at
 
 **Colonne reali note non scritte direttamente**
 
@@ -927,8 +932,8 @@ Generated: 2026-07-07T21:01:20.504Z
 - select — lib/ghostme/calendar/calendarService.ts — colonne: *
 - write — lib/ghostme/calendar/calendarService.ts — colonne: status, updated_at
 - select — lib/ghostme/context/contextBuilder.ts — colonne: category, created_at, message, title
-- select — lib/ghostme/context/userContextGraph.ts — colonne: category, created_at, id, message, priority, status, title
-- select — lib/ghostme/context/userContextGraph.ts — colonne: category, created_at, id, message, priority, status, title
+- select — lib/ghostme/context/userContextGraph.ts — colonne: answered_at, category, created_at, id, logical_key, message, priority, read_at, source, status, title, updated_at
+- select — lib/ghostme/context/userContextGraph.ts — colonne: answered_at, category, created_at, id, logical_key, message, priority, read_at, source, status, title, updated_at
 - select — lib/ghostme/curiosity/curiosityEngine.ts — colonne: id
 - select — lib/ghostme/home/houseSuggestionResponseFlow.ts — colonne: *
 - write — lib/ghostme/home/houseSuggestionResponseFlow.ts — colonne: expires_at, last_action, last_reason, status, updated_at, utente

@@ -1,6 +1,6 @@
 # PROJECT AUDIT FULL
 
-Generato: 2026-07-07T21:01:01.686Z
+Generato: 2026-07-07T23:08:24.784Z
 
 # 1. RIASSUNTO
 
@@ -1375,7 +1375,7 @@ Righe: 104
 
 ## app/api/chat/route.ts
 
-Righe: 73
+Righe: 75
 
 ### Importa
 - next/server
@@ -1554,7 +1554,7 @@ Righe: 144
 
 ## app/api/home-assistant/event/route.ts
 
-Righe: 464
+Righe: 608
 
 ### Importa
 - next/server
@@ -2022,7 +2022,7 @@ Righe: 172
 
 ## components/ghost/GhostDrawers.tsx
 
-Righe: 2243
+Righe: 2244
 
 ### Importa
 - components/ghost/types.ts
@@ -2136,7 +2136,7 @@ Righe: 153
 
 ## components/ghost/types.ts
 
-Righe: 89
+Righe: 91
 
 ### Importa
 - lib/ghostme/context/reasoningService.ts
@@ -2508,7 +2508,7 @@ Righe: 105
 
 ## lib/ghostme/chat/chatContextBuilder.ts
 
-Righe: 483
+Righe: 513
 
 ### Importa
 - lib/ghostme/behavior/behaviorRulesEngine.ts
@@ -2579,7 +2579,7 @@ Righe: 69
 
 ## lib/ghostme/chat/chatPostProcessing.ts
 
-Righe: 531
+Righe: 596
 
 ### Importa
 - openai
@@ -2614,7 +2614,7 @@ Righe: 531
 
 ## lib/ghostme/chat/chatPromptBuilder.ts
 
-Righe: 547
+Righe: 552
 
 ### Importa
 - lib/ghostme/chat/chatTypes.ts
@@ -2673,7 +2673,7 @@ Righe: 45
 
 ## lib/ghostme/chat/chatTypes.ts
 
-Righe: 98
+Righe: 108
 
 ### Importa
 - nessuno
@@ -2698,7 +2698,7 @@ Righe: 98
 
 ## lib/ghostme/chat/ghostChatOrchestrator.ts
 
-Righe: 174
+Righe: 183
 
 ### Importa
 - openai
@@ -2852,7 +2852,7 @@ Righe: 1044
 
 ## lib/ghostme/context/situationPolicy.ts
 
-Righe: 1485
+Righe: 1639
 
 ### Importa
 - lib/ghostme/context/reasoningService.ts
@@ -3296,7 +3296,7 @@ Righe: 229
 
 ## lib/ghostme/home/houseWorkerFlow.ts
 
-Righe: 236
+Righe: 252
 
 ### Importa
 - lib/supabaseAdmin.ts
@@ -4391,7 +4391,7 @@ Righe: 181
 
 ## lib/ghostme/proactive/proactiveCandidateBuilder.ts
 
-Righe: 1027
+Righe: 1114
 
 ### Importa
 - lib/ghostme/context/reasoningService.ts

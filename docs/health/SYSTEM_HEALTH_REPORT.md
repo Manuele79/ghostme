@@ -1,6 +1,6 @@
 # SYSTEM HEALTH REPORT
 
-Generated: 2026-07-07T21:01:21.303Z
+Generated: 2026-07-07T23:08:43.850Z
 
 Health Score: **67/100** - 🟠 Da migliorare
 
@@ -46,7 +46,7 @@ Status: **ERROR**
 | dynamic_self_profile | OK | yes | yes | 0 | - |
 | episodic_memories | ERROR | yes | yes | 14 | - |
 | ghost_behavior_rules | OK | yes | yes | 0 | positive_examples, negative_examples, times_applied |
-| ghost_proactive_messages | OK | yes | yes | 0 | source |
+| ghost_proactive_messages | OK | yes | yes | 0 | - |
 | goals_desires | OK | yes | yes | 0 | - |
 | house_automation_controls | OK | yes | yes | 0 | - |
 | house_entities | ERROR | yes | yes | 10 | - |
@@ -93,7 +93,7 @@ Catena HA -> Snapshot -> Current Situation -> Situation Policy -> Decision -> Pr
 - currentSituation: OK (6 file)
 - situationPolicy: OK (8 file)
 - decision: OK (4 file)
-- proactive: OK (11 file)
+- proactive: OK (12 file)
 - ui: OK (9 file)
 
 ## 4. Location

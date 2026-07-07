@@ -1,6 +1,6 @@
 # GHOSTME DEVELOPER KNOWLEDGE BASE
 
-Generated: 2026-07-07T21:01:21.048Z
+Generated: 2026-07-07T23:08:43.564Z
 
 Questa cartella è il punto unico da leggere prima di modificare GhostMe.
 

@@ -6,7 +6,7 @@ Mappa statica generata dal codice locale.
 |---|---:|---:|---:|---:|---:|---:|---:|
 | app/api/actions/update-status/route.ts | entrypoint | 0 | 3 | 1 | 1 | 1 | 129 |
 | app/api/calendar-events/route.ts | entrypoint | 0 | 2 | 3 | 0 | 0 | 104 |
-| app/api/chat/route.ts | entrypoint | 0 | 3 | 2 | 0 | 0 | 73 |
+| app/api/chat/route.ts | entrypoint | 0 | 3 | 2 | 0 | 0 | 75 |
 | app/api/conversation-summary/route.ts | entrypoint | 0 | 1 | 1 | 0 | 0 | 29 |
 | app/api/debug-ha-entities/route.ts | entrypoint | 0 | 2 | 1 | 0 | 0 | 49 |
 | app/api/debug-house-logger/route.ts | entrypoint | 0 | 3 | 1 | 0 | 0 | 56 |
@@ -14,7 +14,7 @@ Mappa statica generata dal codice locale.
 | app/api/ghostme/brain/route.ts | entrypoint | 0 | 6 | 1 | 0 | 0 | 67 |
 | app/api/ghostme/proactive/read/route.ts | entrypoint | 0 | 4 | 1 | 2 | 2 | 185 |
 | app/api/goals/update-status/route.ts | entrypoint | 0 | 2 | 1 | 2 | 1 | 144 |
-| app/api/home-assistant/event/route.ts | entrypoint | 0 | 7 | 1 | 1 | 1 | 464 |
+| app/api/home-assistant/event/route.ts | entrypoint | 0 | 7 | 1 | 1 | 1 | 608 |
 | app/api/house-suggestion-response/route.ts | entrypoint | 0 | 2 | 1 | 0 | 0 | 27 |
 | app/api/location/candidate/route.ts | entrypoint | 0 | 3 | 2 | 0 | 0 | 53 |
 | app/api/location/current-place/route.ts | entrypoint | 0 | 2 | 1 | 0 | 0 | 36 |
@@ -32,7 +32,7 @@ Mappa statica generata dal codice locale.
 | app/api/worker/house/route.ts | entrypoint | 0 | 1 | 1 | 0 | 0 | 14 |
 | app/api/worker/proactive/route.ts | entrypoint | 0 | 3 | 1 | 1 | 0 | 49 |
 | app/api/worker/reminder/route.ts | entrypoint | 0 | 2 | 1 | 0 | 0 | 33 |
-| app/chat/page.tsx | entrypoint | 0 | 13 | 0 | 3 | 1 | 866 |
+| app/chat/page.tsx | entrypoint | 0 | 13 | 0 | 3 | 1 | 880 |
 | app/layout.tsx | entrypoint | 0 | 0 | 2 | 0 | 0 | 44 |
 | app/login/page.tsx | entrypoint | 0 | 1 | 0 | 2 | 0 | 127 |
 | app/memory/page.tsx | entrypoint | 0 | 1 | 0 | 1 | 3 | 374 |
@@ -43,12 +43,12 @@ Mappa statica generata dal codice locale.
 | components/ghost/GhostCanvasCore.tsx | entrypoint | 1 | 1 | 0 | 0 | 0 | 320 |
 | components/ghost/GhostChat.tsx | entrypoint | 1 | 2 | 0 | 0 | 0 | 389 |
 | components/ghost/GhostCore.tsx | entrypoint | 1 | 1 | 0 | 0 | 0 | 172 |
-| components/ghost/GhostDrawers.tsx | entrypoint | 1 | 2 | 3 | 0 | 0 | 2243 |
+| components/ghost/GhostDrawers.tsx | entrypoint | 1 | 2 | 3 | 0 | 0 | 2244 |
 | components/ghost/GhostGlobalStyles.tsx | entrypoint | 1 | 0 | 0 | 0 | 0 | 65 |
 | components/ghost/GhostHeader.tsx | entrypoint | 1 | 1 | 0 | 0 | 0 | 69 |
 | components/ghost/GhostLayout.tsx | entrypoint | 1 | 1 | 0 | 0 | 0 | 37 |
 | components/ghost/GhostVoiceMode.tsx | entrypoint | 1 | 3 | 0 | 0 | 0 | 153 |
-| components/ghost/types.ts | entrypoint | 12 | 2 | 9 | 0 | 0 | 89 |
+| components/ghost/types.ts | entrypoint | 12 | 2 | 9 | 0 | 0 | 91 |
 | hooks/useGhostBrain.ts | entrypoint | 1 | 4 | 1 | 0 | 0 | 87 |
 | hooks/useGhostChat.ts | entrypoint | 1 | 1 | 1 | 0 | 0 | 19 |
 | hooks/useGhostVoice.ts | entrypoint | 1 | 1 | 1 | 0 | 0 | 158 |
@@ -63,20 +63,20 @@ Mappa statica generata dal codice locale.
 | lib/ghostme/calendar/calendarIntent.ts | active | 1 | 0 | 2 | 0 | 0 | 117 |
 | lib/ghostme/calendar/calendarService.ts | active | 5 | 4 | 9 | 2 | 3 | 370 |
 | lib/ghostme/chat/chatCalendarFlow.ts | active | 1 | 3 | 1 | 0 | 0 | 105 |
-| lib/ghostme/chat/chatContextBuilder.ts | active | 1 | 8 | 3 | 0 | 0 | 483 |
+| lib/ghostme/chat/chatContextBuilder.ts | god_file_candidate | 1 | 8 | 3 | 0 | 0 | 513 |
 | lib/ghostme/chat/chatExternalServices.ts | active | 1 | 3 | 1 | 0 | 0 | 85 |
 | lib/ghostme/chat/chatMessageAnalyzer.ts | active | 1 | 5 | 1 | 0 | 0 | 69 |
-| lib/ghostme/chat/chatPostProcessing.ts | god_file_candidate | 1 | 14 | 1 | 3 | 5 | 531 |
-| lib/ghostme/chat/chatPromptBuilder.ts | god_file_candidate | 2 | 1 | 2 | 0 | 0 | 547 |
+| lib/ghostme/chat/chatPostProcessing.ts | god_file_candidate | 1 | 14 | 1 | 3 | 5 | 596 |
+| lib/ghostme/chat/chatPromptBuilder.ts | god_file_candidate | 2 | 1 | 2 | 0 | 0 | 552 |
 | lib/ghostme/chat/chatRecallPolicy.ts | active | 1 | 0 | 2 | 0 | 0 | 58 |
 | lib/ghostme/chat/chatResponseSanitizer.ts | active | 1 | 0 | 1 | 0 | 0 | 45 |
-| lib/ghostme/chat/chatTypes.ts | active | 7 | 0 | 14 | 0 | 0 | 98 |
-| lib/ghostme/chat/ghostChatOrchestrator.ts | active | 1 | 10 | 1 | 0 | 0 | 174 |
+| lib/ghostme/chat/chatTypes.ts | active | 7 | 0 | 15 | 0 | 0 | 108 |
+| lib/ghostme/chat/ghostChatOrchestrator.ts | active | 1 | 10 | 1 | 0 | 0 | 183 |
 | lib/ghostme/context/contextBuilder.ts | active | 4 | 6 | 2 | 1 | 0 | 308 |
 | lib/ghostme/context/contextSignals.ts | active | 3 | 1 | 4 | 0 | 0 | 396 |
 | lib/ghostme/context/decisionSnapshot.ts | god_file_candidate | 7 | 1 | 2 | 0 | 0 | 701 |
 | lib/ghostme/context/reasoningService.ts | god_file_candidate | 10 | 23 | 4 | 1 | 0 | 1044 |
-| lib/ghostme/context/situationPolicy.ts | god_file_candidate | 1 | 2 | 7 | 0 | 0 | 1485 |
+| lib/ghostme/context/situationPolicy.ts | god_file_candidate | 1 | 2 | 8 | 0 | 0 | 1639 |
 | lib/ghostme/context/temporalPriority.ts | active | 12 | 0 | 8 | 0 | 0 | 188 |
 | lib/ghostme/context/userContextGraph.ts | active | 1 | 3 | 1 | 16 | 0 | 295 |
 | lib/ghostme/contradictions.ts | active | 1 | 1 | 1 | 3 | 1 | 168 |
@@ -94,7 +94,7 @@ Mappa statica generata dal codice locale.
 | lib/ghostme/home/houseRouteSnapshot.ts | active | 3 | 2 | 2 | 2 | 0 | 275 |
 | lib/ghostme/home/houseStateSnapshot.ts | active | 6 | 4 | 3 | 3 | 0 | 448 |
 | lib/ghostme/home/houseSuggestionResponseFlow.ts | active | 1 | 1 | 1 | 4 | 5 | 229 |
-| lib/ghostme/home/houseWorkerFlow.ts | active | 1 | 12 | 1 | 1 | 1 | 236 |
+| lib/ghostme/home/houseWorkerFlow.ts | active | 1 | 12 | 1 | 1 | 1 | 252 |
 | lib/ghostme/homeAssistant/cognitiveHouseBuilder.ts | active | 1 | 1 | 1 | 0 | 0 | 180 |
 | lib/ghostme/homeAssistant/haClient.ts | active | 10 | 0 | 1 | 0 | 0 | 38 |
 | lib/ghostme/homeAssistant/homeAssistantAccess.ts | active | 6 | 0 | 4 | 0 | 0 | 42 |
@@ -140,7 +140,7 @@ Mappa statica generata dal codice locale.
 | lib/ghostme/proactive/curiosityCardWriter.ts | active | 2 | 4 | 3 | 1 | 0 | 154 |
 | lib/ghostme/proactive/dailyBriefingBuilder.ts | active | 1 | 0 | 1 | 0 | 0 | 163 |
 | lib/ghostme/proactive/dailyBriefingRepository.ts | active | 1 | 2 | 1 | 13 | 0 | 181 |
-| lib/ghostme/proactive/proactiveCandidateBuilder.ts | god_file_candidate | 1 | 10 | 2 | 1 | 0 | 1027 |
+| lib/ghostme/proactive/proactiveCandidateBuilder.ts | god_file_candidate | 1 | 10 | 2 | 1 | 0 | 1114 |
 | lib/ghostme/proactive/proactiveCandidateRanker.ts | active | 1 | 1 | 2 | 0 | 0 | 19 |
 | lib/ghostme/proactive/proactiveCardLifecycle.ts | active | 4 | 0 | 5 | 0 | 0 | 28 |
 | lib/ghostme/proactive/proactiveDecisionEngine.ts | active | 2 | 1 | 2 | 0 | 0 | 152 |
@@ -175,7 +175,7 @@ Mappa statica generata dal codice locale.
 
 - File: 166
 - File orfani: 6
-- God file candidati: 11
+- God file candidati: 12
 
 ## Orfani candidati
 
@@ -188,15 +188,16 @@ Mappa statica generata dal codice locale.
 
 ## God file candidati
 
-- **lib/ghostme/chat/chatPostProcessing.ts** — 531 righe
-- **lib/ghostme/chat/chatPromptBuilder.ts** — 547 righe
+- **lib/ghostme/chat/chatContextBuilder.ts** — 513 righe
+- **lib/ghostme/chat/chatPostProcessing.ts** — 596 righe
+- **lib/ghostme/chat/chatPromptBuilder.ts** — 552 righe
 - **lib/ghostme/context/decisionSnapshot.ts** — 701 righe
 - **lib/ghostme/context/reasoningService.ts** — 1044 righe
-- **lib/ghostme/context/situationPolicy.ts** — 1485 righe
+- **lib/ghostme/context/situationPolicy.ts** — 1639 righe
 - **lib/ghostme/curiosity/curiositySnapshot.ts** — 775 righe
 - **lib/ghostme/observation/observationEngine.ts** — 712 righe
 - **lib/ghostme/people/peopleGraphLinkService.ts** — 632 righe
-- **lib/ghostme/proactive/proactiveCandidateBuilder.ts** — 1027 righe
+- **lib/ghostme/proactive/proactiveCandidateBuilder.ts** — 1114 righe
 - **lib/ghostme/proactive/trueProactiveSnapshot.ts** — 625 righe
 - **lib/ghostme/situation/situationEngine.ts** — 570 righe
 
@@ -1502,7 +1503,7 @@ DB delete: -
 
 ### lib/ghostme/chat/chatContextBuilder.ts
 
-Stato: **active**
+Stato: **god_file_candidate**
 
 Chiamato da: lib/ghostme/chat/ghostChatOrchestrator.ts
 
@@ -1662,7 +1663,7 @@ Chiamato da: lib/ghostme/chat/chatCalendarFlow.ts, lib/ghostme/chat/chatContextB
 
 Importa: -
 
-Export: AnalyzeChatMessageResult, ChatPostProcessingPayload, CognitiveAddressee, CognitiveDecision, CognitiveFollowUpNeed, CognitiveMemoryDepth, CognitiveMessageType, CognitivePersistence, CognitiveRequestedAction, CognitiveTone, DetectedTopicLike, GhostChatFlowResult, ImmediateTextResult, StreamResult
+Export: AnalyzeChatMessageResult, ChatPostProcessingPayload, CognitiveAddressee, CognitiveDecision, CognitiveFollowUpNeed, CognitiveMemoryDepth, CognitiveMessageType, CognitivePersistence, CognitiveRequestedAction, CognitiveTone, DetectedTopicLike, GhostChatFlowResult, ImmediateTextResult, ProactiveCardContext, StreamResult
 
 Numero chiamanti: 7
 
@@ -1794,7 +1795,7 @@ Chiamato da: lib/ghostme/context/reasoningService.ts
 
 Importa: lib/ghostme/context/decisionSnapshot.ts, lib/ghostme/context/reasoningService.ts
 
-Export: SituationHomeAssessment, SituationMomentAssessment, SituationPeopleAssessment, SituationPolicyAction, SituationValueAssessment, UnifiedSituationModel, buildUnifiedSituationModel
+Export: SituationHomeAssessment, SituationLearningAssessment, SituationMomentAssessment, SituationPeopleAssessment, SituationPolicyAction, SituationValueAssessment, UnifiedSituationModel, buildUnifiedSituationModel
 
 Numero chiamanti: 1
 

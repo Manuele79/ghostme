@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-07T21:01:20.770Z",
+  "generatedAt": "2026-07-07T23:08:43.325Z",
   "version": "1",
   "inputs": {
     "systemMap": {
@@ -20,17 +20,17 @@
     "fileUsage": {
       "file": "docs/maps/FILE_USAGE_MAP.md",
       "exists": true,
-      "lineCount": 2020
+      "lineCount": 2021
     },
     "supabaseSchemaMd": {
       "file": "docs/maps/SUPABASE_SCHEMA_MAP.md",
       "exists": true,
-      "lineCount": 1813
+      "lineCount": 1818
     },
     "supabaseSchemaJson": {
       "file": "docs/state/SUPABASE_SCHEMA_MAP.json",
       "exists": true,
-      "lineCount": 6283
+      "lineCount": 6300
     },
     "priorityFix": {
       "file": "docs/maps/GHOSTME_PRIORITY_FIX_LIST.md",
@@ -1079,6 +1079,7 @@
       "deleters": [],
       "selectedColumns": [
         "*",
+        "answered_at",
         "category",
         "created_at",
         "curiosity",
@@ -1086,7 +1087,9 @@
         "logical_key",
         "message",
         "priority",
+        "read_at",
         "scheduled_for",
+        "source",
         "status",
         "title",
         "updated_at",
@@ -1103,7 +1106,9 @@
         "utente"
       ],
       "missingColumns": [
-        "curiosity"
+        "answered_at",
+        "curiosity",
+        "read_at"
       ],
       "realColumns": [
         "id",
@@ -1269,7 +1274,9 @@
       {
         "table": "ghost_proactive_messages",
         "columns": [
-          "curiosity"
+          "answered_at",
+          "curiosity",
+          "read_at"
         ]
       },
       {
@@ -1890,7 +1897,9 @@
         "lib/ghostme/proactive/visibleProactiveMessages.ts"
       ],
       "missingColumns": [
-        "curiosity"
+        "answered_at",
+        "curiosity",
+        "read_at"
       ]
     }
   }

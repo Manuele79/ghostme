@@ -1,6 +1,6 @@
 # PROJECT KNOWLEDGE BASE
 
-Generated: 2026-07-07T21:01:20.770Z
+Generated: 2026-07-07T23:08:43.325Z
 
 Questa è la mappa centrale automatica del progetto GhostMe.
 
@@ -11,9 +11,9 @@ Serve per capire **cosa esiste**, **chi chiama cosa**, **quali dati entrano/esco
 - **systemMap**: OK — `docs/maps/GHOSTME_SYSTEM_MAP_V6.md` (3281 righe)
 - **cognitiveRouting**: OK — `docs/maps/COGNITIVE_ROUTING_MAP.md` (147 righe)
 - **databaseUsage**: OK — `docs/maps/DATABASE_USAGE_MAP.md` (296 righe)
-- **fileUsage**: OK — `docs/maps/FILE_USAGE_MAP.md` (2020 righe)
-- **supabaseSchemaMd**: OK — `docs/maps/SUPABASE_SCHEMA_MAP.md` (1813 righe)
-- **supabaseSchemaJson**: OK — `docs/state/SUPABASE_SCHEMA_MAP.json` (6283 righe)
+- **fileUsage**: OK — `docs/maps/FILE_USAGE_MAP.md` (2021 righe)
+- **supabaseSchemaMd**: OK — `docs/maps/SUPABASE_SCHEMA_MAP.md` (1818 righe)
+- **supabaseSchemaJson**: OK — `docs/state/SUPABASE_SCHEMA_MAP.json` (6300 righe)
 - **priorityFix**: OK — `docs/maps/GHOSTME_PRIORITY_FIX_LIST.md` (31 righe)
 - **dependencyText**: OK — `docs/maps/DEPENDENCY_TEXT_MAP.txt` (512 righe)
 
@@ -230,12 +230,12 @@ Card continuity: grigliata, rientro, luogo nuovo, evento aperto.
 | house_entities | 2 | 2 | 7 | 9 | - |
 | house_patterns | 3 | 1 | 11 | 2 | - |
 | house_suggestions | 3 | 3 | 9 | 6 | entity_id, entity_name, entity_type, event_type, new_state, occurred_at |
-| ghost_proactive_messages | 16 | 8 | 13 | 8 | curiosity |
+| ghost_proactive_messages | 16 | 8 | 16 | 8 | answered_at, curiosity, read_at |
 
 ## 5. Warning schema / query obsolete
 
 - **autobiographical_timeline** richiede colonne non presenti nello schema noto: category
-- **ghost_proactive_messages** richiede colonne non presenti nello schema noto: curiosity
+- **ghost_proactive_messages** richiede colonne non presenti nello schema noto: answered_at, curiosity, read_at
 - **house_suggestions** richiede colonne non presenti nello schema noto: entity_id, entity_name, entity_type, event_type, new_state, occurred_at
 - **observation_events** richiede colonne non presenti nello schema noto: category, label
 
@@ -669,7 +669,9 @@ Se tocchi una tabella, controlla questi file.
 
 **Problemi schema noti**
 
+- answered_at
 - curiosity
+- read_at
 
 ## 9. Percorsi da usare per debug rapido
 

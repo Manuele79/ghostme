@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-07T21:01:20.504Z",
+  "generatedAt": "2026-07-07T23:08:43.070Z",
   "version": "3",
   "note": "Generated from source code and partial known real schema. Maps Supabase table/RPC usage, selected/written columns, missing columns, and data flow hints.",
   "knownSchemaTables": [
@@ -2111,6 +2111,7 @@
       "deleters": [],
       "selectedColumns": [
         "*",
+        "answered_at",
         "category",
         "created_at",
         "curiosity",
@@ -2118,7 +2119,9 @@
         "logical_key",
         "message",
         "priority",
+        "read_at",
         "scheduled_for",
+        "source",
         "status",
         "title",
         "updated_at",
@@ -2135,7 +2138,9 @@
         "utente"
       ],
       "missingColumns": [
-        "curiosity"
+        "answered_at",
+        "curiosity",
+        "read_at"
       ],
       "unusedRealColumns": [],
       "neverWrittenRealColumns": [
@@ -2275,26 +2280,36 @@
           "file": "lib/ghostme/context/userContextGraph.ts",
           "operation": "select",
           "columns": [
+            "answered_at",
             "category",
             "created_at",
             "id",
+            "logical_key",
             "message",
             "priority",
+            "read_at",
+            "source",
             "status",
-            "title"
+            "title",
+            "updated_at"
           ]
         },
         {
           "file": "lib/ghostme/context/userContextGraph.ts",
           "operation": "select",
           "columns": [
+            "answered_at",
             "category",
             "created_at",
             "id",
+            "logical_key",
             "message",
             "priority",
+            "read_at",
+            "source",
             "status",
-            "title"
+            "title",
+            "updated_at"
           ]
         },
         {
@@ -6252,7 +6267,9 @@
       {
         "table": "ghost_proactive_messages",
         "columns": [
-          "curiosity"
+          "answered_at",
+          "curiosity",
+          "read_at"
         ]
       },
       {

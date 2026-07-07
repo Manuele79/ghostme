@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-07T21:01:01.686Z",
+  "generatedAt": "2026-07-07T23:08:24.784Z",
   "folders": {
     ".": [
       ".dependency-cruiser.js",
@@ -462,7 +462,7 @@
         "NextResponse",
         "log"
       ],
-      "lines": 73
+      "lines": 75
     },
     "app/api/conversation-summary/route.ts": {
       "folder": "app/api/conversation-summary",
@@ -725,6 +725,9 @@
         "clean",
         "toLowerCase",
         "trim",
+        "Set",
+        "haIngestionEnabled",
+        "haLightLearningEnabled",
         "objectValue",
         "friendlyName",
         "getStateValue",
@@ -734,8 +737,16 @@
         "needsCooldownContext",
         "logSkippedEvent",
         "log",
-        "unmappedReason",
+        "shouldIgnoreBeforeDb",
+        "has",
         "test",
+        "shouldThrottleInMemory",
+        "now",
+        "get",
+        "set",
+        "entries",
+        "delete",
+        "unmappedReason",
         "getLastHouseEvent",
         "from",
         "select",
@@ -754,7 +765,6 @@
         "isAuthorized",
         "isDevelopmentEnvironment",
         "URL",
-        "get",
         "replace",
         "POST",
         "json",
@@ -762,11 +772,12 @@
         "canAccessHomeAssistant",
         "classifyHomeEventSignificance",
         "logSignificantHomeEvent",
+        "shouldRunHouseLightLearning",
         "after",
         "async",
         "runHouseLightLearning"
       ],
-      "lines": 464
+      "lines": 608
     },
     "app/api/house-suggestion-response/route.ts": {
       "folder": "app/api/house-suggestion-response",
@@ -1319,7 +1330,7 @@
         "startVoiceInput",
         "setHistoryOpen"
       ],
-      "lines": 866
+      "lines": 880
     },
     "app/layout.tsx": {
       "folder": "app",
@@ -1828,7 +1839,7 @@
         "EmptyBrainBox",
         "HistoryBubble"
       ],
-      "lines": 2243
+      "lines": 2244
     },
     "components/ghost/GhostGlobalStyles.tsx": {
       "folder": "components/ghost",
@@ -1935,7 +1946,7 @@
         "modeLabels"
       ],
       "calls": [],
-      "lines": 89
+      "lines": 91
     },
     "eslint.config.mjs": {
       "folder": ".",
@@ -2612,6 +2623,7 @@
         "buildPlacesContext",
         "buildSituationPolicyContext",
         "trim",
+        "buildProactiveCardContext",
         "buildChatContext",
         "buildGhostBrainSnapshot",
         "isDeepRecallRequest",
@@ -2620,7 +2632,7 @@
         "isFreshLocationState",
         "buildBehaviorPrompt"
       ],
-      "lines": 483
+      "lines": 513
     },
     "lib/ghostme/chat/chatExternalServices.ts": {
       "folder": "lib/ghostme/chat",
@@ -2735,6 +2747,15 @@
       "calls": [
         "OpenAI",
         "log",
+        "isLowValueProactiveReply",
+        "trim",
+        "toLowerCase",
+        "split",
+        "Set",
+        "has",
+        "test",
+        "some",
+        "includes",
         "saveActiveMemory",
         "from",
         "select",
@@ -2749,9 +2770,6 @@
         "maybeSingle",
         "min",
         "saveEpisodicMemory",
-        "toLowerCase",
-        "includes",
-        "Set",
         "saveTopicLinks",
         "classifyClarificationIfNeeded",
         "is",
@@ -2764,7 +2782,6 @@
         "detectEmotionalTone",
         "shouldSaveActiveMemory",
         "detectMemoryCategory",
-        "has",
         "push",
         "detectAndSaveContradictions",
         "updateMentalState",
@@ -2781,7 +2798,7 @@
         "syncPeopleGraphFromTopics",
         "syncPeopleGraphLinks"
       ],
-      "lines": 531
+      "lines": 596
     },
     "lib/ghostme/chat/chatPromptBuilder.ts": {
       "folder": "lib/ghostme/chat",
@@ -2817,7 +2834,7 @@
         "stringify",
         "recente"
       ],
-      "lines": 547
+      "lines": 552
     },
     "lib/ghostme/chat/chatRecallPolicy.ts": {
       "folder": "lib/ghostme/chat",
@@ -2881,7 +2898,7 @@
       "tables": {},
       "exports": [],
       "calls": [],
-      "lines": 98
+      "lines": 108
     },
     "lib/ghostme/chat/ghostChatOrchestrator.ts": {
       "folder": "lib/ghostme/chat",
@@ -2929,7 +2946,7 @@
         "encode",
         "close"
       ],
-      "lines": 174
+      "lines": 183
     },
     "lib/ghostme/context/contextBuilder.ts": {
       "folder": "lib/ghostme/context",
@@ -3276,7 +3293,13 @@
         "buildRecentOpenLoops",
         "buildMomentAssessment",
         "textFor",
+        "messageAgeHours",
+        "isProtectedAction",
+        "startsWith",
+        "categoryForAction",
+        "messageMatchesAction",
         "hasRecentSimilarProactive",
+        "buildLearningAssessment",
         "buildValueAssessment",
         "applyValueAssessment",
         "ceil",
@@ -3284,7 +3307,7 @@
         "chooseAction",
         "buildUnifiedSituationModel"
       ],
-      "lines": 1485
+      "lines": 1639
     },
     "lib/ghostme/context/temporalPriority.ts": {
       "folder": "lib/ghostme/context",
@@ -4434,6 +4457,7 @@
         "add",
         "shouldWakeHouseWorker",
         "test",
+        "houseWorkerEnabled",
         "claimSignificantHouseEvents",
         "now",
         "toISOString",
@@ -4464,7 +4488,7 @@
         "generateHouseAutomationSuggestions",
         "planHouseAutomationControls"
       ],
-      "lines": 236
+      "lines": 252
     },
     "lib/ghostme/homeAssistant/cognitiveHouseBuilder.ts": {
       "folder": "lib/ghostme/homeAssistant",
@@ -7009,12 +7033,22 @@
         "policyBlocksGenericCards",
         "policySuppressesGenericCandidates",
         "Boolean",
-        "formatPolicySignals",
-        "push",
-        "slice",
-        "join",
         "firstPolicySubject",
         "policyCandidateTitle",
+        "cleanPolicyReason",
+        "replace",
+        "trim",
+        "sentenceJoin",
+        "join",
+        "hasPolicySignal",
+        "includes",
+        "firstOpenLoopTitle",
+        "firstActionTitle",
+        "humanPolicyMessage",
+        "some",
+        "charAt",
+        "toUpperCase",
+        "slice",
         "policyCandidateCategory",
         "buildPolicyCandidate",
         "max",
@@ -7026,8 +7060,6 @@
         "buildSituationFromSnapshot",
         "normalize",
         "toLowerCase",
-        "replace",
-        "trim",
         "compactText",
         "isArray",
         "timestampFor",
@@ -7043,8 +7075,6 @@
         "isHomePlace",
         "detectOpenLoopKind",
         "find",
-        "some",
-        "includes",
         "inferOpenLoopKind",
         "b",
         "test",
@@ -7069,6 +7099,7 @@
         "buildContinuityCandidate",
         "sort",
         "sourceWeight",
+        "push",
         "buildCurrentContextFromSnapshot",
         "buildProactiveCandidatesForUser",
         "buildGhostBrainSnapshot",
@@ -7080,7 +7111,7 @@
         "generateButlerMessage",
         "decideProactiveMessage"
       ],
-      "lines": 1027
+      "lines": 1114
     },
     "lib/ghostme/proactive/proactiveCandidateRanker.ts": {
       "folder": "lib/ghostme/proactive",
@@ -12147,6 +12178,7 @@
         "app/api/home-assistant/event/route.ts",
         "lib/ghostme/auth/serverAuth.ts",
         "lib/ghostme/behavior/behaviorRulesEngine.ts",
+        "lib/ghostme/chat/chatPostProcessing.ts",
         "lib/ghostme/chat/chatRecallPolicy.ts",
         "lib/ghostme/chat/chatResponseSanitizer.ts",
         "lib/ghostme/core/messageClassifier.ts",
@@ -13177,6 +13209,7 @@
         "lib/ghostme/auth/serverAuth.ts",
         "lib/ghostme/context/contextBuilder.ts",
         "lib/ghostme/context/reasoningService.ts",
+        "lib/ghostme/context/situationPolicy.ts",
         "lib/ghostme/goalsDesires.ts",
         "lib/ghostme/home/houseStateSnapshot.ts",
         "lib/ghostme/home/houseSuggestionResponseFlow.ts",
@@ -13417,6 +13450,7 @@
       "exportedBy": [],
       "calledBy": [
         "app/api/ghostme/brain/route.ts",
+        "app/api/home-assistant/event/route.ts",
         "components/ghost/GhostDrawers.tsx",
         "lib/ghostme/agenda/reminderEngine.ts",
         "lib/ghostme/calendar/calendarService.ts",
@@ -13467,6 +13501,7 @@
       "exportedBy": [],
       "calledBy": [
         "app/api/ghostme/brain/route.ts",
+        "app/api/home-assistant/event/route.ts",
         "components/ghost/GhostDrawers.tsx",
         "lib/ghostme/agenda/reminderEngine.ts",
         "lib/ghostme/calendar/calendarService.ts",
@@ -13586,6 +13621,7 @@
         "lib/ghostme/chat/chatCalendarFlow.ts",
         "lib/ghostme/chat/chatContextBuilder.ts",
         "lib/ghostme/chat/chatMessageAnalyzer.ts",
+        "lib/ghostme/chat/chatPostProcessing.ts",
         "lib/ghostme/chat/chatPromptBuilder.ts",
         "lib/ghostme/chat/chatResponseSanitizer.ts",
         "lib/ghostme/context/contextBuilder.ts",
@@ -13652,6 +13688,18 @@
         "scripts/system-health-report.mjs"
       ]
     },
+    "haIngestionEnabled": {
+      "exportedBy": [],
+      "calledBy": [
+        "app/api/home-assistant/event/route.ts"
+      ]
+    },
+    "haLightLearningEnabled": {
+      "exportedBy": [],
+      "calledBy": [
+        "app/api/home-assistant/event/route.ts"
+      ]
+    },
     "objectValue": {
       "exportedBy": [],
       "calledBy": [
@@ -13698,6 +13746,122 @@
       "exportedBy": [],
       "calledBy": [
         "app/api/home-assistant/event/route.ts"
+      ]
+    },
+    "shouldIgnoreBeforeDb": {
+      "exportedBy": [],
+      "calledBy": [
+        "app/api/home-assistant/event/route.ts"
+      ]
+    },
+    "shouldThrottleInMemory": {
+      "exportedBy": [],
+      "calledBy": [
+        "app/api/home-assistant/event/route.ts"
+      ]
+    },
+    "now": {
+      "exportedBy": [],
+      "calledBy": [
+        "app/api/home-assistant/event/route.ts",
+        "app/chat/page.tsx",
+        "app/memory/page.tsx",
+        "components/ghost/GhostDrawers.tsx",
+        "lib/ghostme/agenda/reminderEngine.ts",
+        "lib/ghostme/calendar/calendarService.ts",
+        "lib/ghostme/context/contextBuilder.ts",
+        "lib/ghostme/context/contextSignals.ts",
+        "lib/ghostme/context/decisionSnapshot.ts",
+        "lib/ghostme/context/reasoningService.ts",
+        "lib/ghostme/context/situationPolicy.ts",
+        "lib/ghostme/context/temporalPriority.ts",
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/curiosity/curiosityEngine.ts",
+        "lib/ghostme/curiosity/curiositySnapshot.ts",
+        "lib/ghostme/home/homeComfortRiskSnapshot.ts",
+        "lib/ghostme/home/houseStateSnapshot.ts",
+        "lib/ghostme/home/houseWorkerFlow.ts",
+        "lib/ghostme/homeAssistant/homeEventLogger.ts",
+        "lib/ghostme/homeAssistant/homeEventSignificance.ts",
+        "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
+        "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
+        "lib/ghostme/homeAssistant/houseLightLearningFlow.ts",
+        "lib/ghostme/homeAssistant/housePatternEngine.ts",
+        "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts",
+        "lib/ghostme/homeAssistant/houseSuggestionEngine.ts",
+        "lib/ghostme/location/locationStateFreshness.ts",
+        "lib/ghostme/memoryDecay.ts",
+        "lib/ghostme/observation/observationEngine.ts",
+        "lib/ghostme/observation/observationInsightEngine.ts",
+        "lib/ghostme/observation/observationPolicy.ts",
+        "lib/ghostme/patterns/patternDecay.ts",
+        "lib/ghostme/patterns/patternInsightEngine.ts",
+        "lib/ghostme/people/peopleGraphLinkService.ts",
+        "lib/ghostme/people/relationshipMemorySnapshot.ts",
+        "lib/ghostme/people/socialSuggestionSnapshot.ts",
+        "lib/ghostme/proactive/dailyBriefingRepository.ts",
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
+        "lib/ghostme/proactive/proactiveTrigger.ts",
+        "lib/ghostme/proactive/trueProactiveSnapshot.ts",
+        "lib/ghostme/proactive/visibleProactiveMessages.ts",
+        "lib/ghostme/projects/projectAdvisorSnapshot.ts",
+        "lib/ghostme/projects/projectMemorySnapshot.ts",
+        "lib/ghostme/retrieval.ts",
+        "lib/ghostme/situation/situationEngine.ts",
+        "lib/ghostme/ui/brainUiAdapter.ts"
+      ]
+    },
+    "set": {
+      "exportedBy": [],
+      "calledBy": [
+        "app/api/home-assistant/event/route.ts",
+        "lib/ghostme/auth/serverAuth.ts",
+        "lib/ghostme/chat/chatMessageAnalyzer.ts",
+        "lib/ghostme/curiosity/curiositySnapshot.ts",
+        "lib/ghostme/home/houseStateSnapshot.ts",
+        "lib/ghostme/homeAssistant/houseAutomationContext.ts",
+        "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
+        "lib/ghostme/homeAssistant/housePatternEngine.ts",
+        "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts",
+        "lib/ghostme/observation/observationEngine.ts",
+        "lib/ghostme/observation/observationPolicy.ts",
+        "lib/ghostme/people/peopleGraphLinkService.ts",
+        "lib/ghostme/people/peopleGraphService.ts",
+        "lib/ghostme/people/peopleSnapshot.ts",
+        "lib/ghostme/topicDetector.ts",
+        "scripts/generate-graphs.mjs",
+        "scripts/system-docs.mjs"
+      ]
+    },
+    "entries": {
+      "exportedBy": [],
+      "calledBy": [
+        "app/api/home-assistant/event/route.ts",
+        "app/setup/page.tsx",
+        "components/ghost/GhostDrawers.tsx",
+        "lib/ghostme/homeAssistant/housePatternEngine.ts",
+        "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts",
+        "lib/ghostme/observation/observationEngine.ts",
+        "lib/ghostme/people/peopleGraphService.ts",
+        "lib/ghostme/people/peopleSnapshot.ts",
+        "lib/personality.ts",
+        "scripts/generate-graphs.mjs",
+        "scripts/project-audit.mjs",
+        "scripts/project-knowledge-base.mjs",
+        "scripts/system-docs.mjs",
+        "scripts/system-health-report.mjs"
+      ]
+    },
+    "delete": {
+      "exportedBy": [],
+      "calledBy": [
+        "app/api/home-assistant/event/route.ts",
+        "app/memory/page.tsx",
+        "app/setup/page.tsx",
+        "lib/ghostme/location/locationDeletePlaceFlow.ts",
+        "lib/ghostme/maintenance/retentionEngine.ts",
+        "lib/ghostme/relationshipResolver.ts",
+        "scripts/system-health-report.mjs"
       ]
     },
     "unmappedReason": {
@@ -14016,6 +14180,15 @@
       "calledBy": [
         "app/api/home-assistant/event/route.ts",
         "lib/ghostme/homeAssistant/homeEventLogger.ts"
+      ]
+    },
+    "shouldRunHouseLightLearning": {
+      "exportedBy": [
+        "lib/ghostme/homeAssistant/houseLightLearningFlow.ts"
+      ],
+      "calledBy": [
+        "app/api/home-assistant/event/route.ts",
+        "lib/ghostme/homeAssistant/houseLightLearningFlow.ts"
       ]
     },
     "runHouseLightLearning": {
@@ -14550,56 +14723,6 @@
         "lib/ghostme/auth/serverAuth.ts"
       ]
     },
-    "now": {
-      "exportedBy": [],
-      "calledBy": [
-        "app/chat/page.tsx",
-        "app/memory/page.tsx",
-        "components/ghost/GhostDrawers.tsx",
-        "lib/ghostme/agenda/reminderEngine.ts",
-        "lib/ghostme/calendar/calendarService.ts",
-        "lib/ghostme/context/contextBuilder.ts",
-        "lib/ghostme/context/contextSignals.ts",
-        "lib/ghostme/context/decisionSnapshot.ts",
-        "lib/ghostme/context/reasoningService.ts",
-        "lib/ghostme/context/situationPolicy.ts",
-        "lib/ghostme/context/temporalPriority.ts",
-        "lib/ghostme/context/userContextGraph.ts",
-        "lib/ghostme/curiosity/curiosityEngine.ts",
-        "lib/ghostme/curiosity/curiositySnapshot.ts",
-        "lib/ghostme/home/homeComfortRiskSnapshot.ts",
-        "lib/ghostme/home/houseStateSnapshot.ts",
-        "lib/ghostme/home/houseWorkerFlow.ts",
-        "lib/ghostme/homeAssistant/homeEventLogger.ts",
-        "lib/ghostme/homeAssistant/homeEventSignificance.ts",
-        "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
-        "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
-        "lib/ghostme/homeAssistant/houseLightLearningFlow.ts",
-        "lib/ghostme/homeAssistant/housePatternEngine.ts",
-        "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts",
-        "lib/ghostme/homeAssistant/houseSuggestionEngine.ts",
-        "lib/ghostme/location/locationStateFreshness.ts",
-        "lib/ghostme/memoryDecay.ts",
-        "lib/ghostme/observation/observationEngine.ts",
-        "lib/ghostme/observation/observationInsightEngine.ts",
-        "lib/ghostme/observation/observationPolicy.ts",
-        "lib/ghostme/patterns/patternDecay.ts",
-        "lib/ghostme/patterns/patternInsightEngine.ts",
-        "lib/ghostme/people/peopleGraphLinkService.ts",
-        "lib/ghostme/people/relationshipMemorySnapshot.ts",
-        "lib/ghostme/people/socialSuggestionSnapshot.ts",
-        "lib/ghostme/proactive/dailyBriefingRepository.ts",
-        "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
-        "lib/ghostme/proactive/proactiveTrigger.ts",
-        "lib/ghostme/proactive/trueProactiveSnapshot.ts",
-        "lib/ghostme/proactive/visibleProactiveMessages.ts",
-        "lib/ghostme/projects/projectAdvisorSnapshot.ts",
-        "lib/ghostme/projects/projectMemorySnapshot.ts",
-        "lib/ghostme/retrieval.ts",
-        "lib/ghostme/situation/situationEngine.ts",
-        "lib/ghostme/ui/brainUiAdapter.ts"
-      ]
-    },
     "useEffect": {
       "exportedBy": [],
       "calledBy": [
@@ -15130,17 +15253,6 @@
         "app/memory/page.tsx"
       ]
     },
-    "delete": {
-      "exportedBy": [],
-      "calledBy": [
-        "app/memory/page.tsx",
-        "app/setup/page.tsx",
-        "lib/ghostme/location/locationDeletePlaceFlow.ts",
-        "lib/ghostme/maintenance/retentionEngine.ts",
-        "lib/ghostme/relationshipResolver.ts",
-        "scripts/system-health-report.mjs"
-      ]
-    },
     "togglePinned": {
       "exportedBy": [],
       "calledBy": [
@@ -15270,24 +15382,6 @@
       "exportedBy": [],
       "calledBy": [
         "app/setup/page.tsx"
-      ]
-    },
-    "entries": {
-      "exportedBy": [],
-      "calledBy": [
-        "app/setup/page.tsx",
-        "components/ghost/GhostDrawers.tsx",
-        "lib/ghostme/homeAssistant/housePatternEngine.ts",
-        "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts",
-        "lib/ghostme/observation/observationEngine.ts",
-        "lib/ghostme/people/peopleGraphService.ts",
-        "lib/ghostme/people/peopleSnapshot.ts",
-        "lib/personality.ts",
-        "scripts/generate-graphs.mjs",
-        "scripts/project-audit.mjs",
-        "scripts/project-knowledge-base.mjs",
-        "scripts/system-docs.mjs",
-        "scripts/system-health-report.mjs"
       ]
     },
     "SetupPage": {
@@ -15845,6 +15939,7 @@
       "calledBy": [
         "components/ghost/GhostDrawers.tsx",
         "lib/ghostme/behavior/behaviorRulesEngine.ts",
+        "lib/ghostme/chat/chatPostProcessing.ts",
         "lib/ghostme/chat/chatPromptBuilder.ts",
         "lib/ghostme/chat/chatRecallPolicy.ts",
         "lib/ghostme/context/contextBuilder.ts",
@@ -15998,6 +16093,7 @@
         "lib/ghostme/agenda/appointmentReminderNotification.ts",
         "lib/ghostme/auth/serverAuth.ts",
         "lib/ghostme/chat/chatCalendarFlow.ts",
+        "lib/ghostme/chat/chatPostProcessing.ts",
         "lib/ghostme/context/contextBuilder.ts",
         "lib/ghostme/context/reasoningService.ts",
         "lib/ghostme/context/temporalPriority.ts",
@@ -16782,27 +16878,6 @@
         "scripts/system-health-report.mjs"
       ]
     },
-    "set": {
-      "exportedBy": [],
-      "calledBy": [
-        "lib/ghostme/auth/serverAuth.ts",
-        "lib/ghostme/chat/chatMessageAnalyzer.ts",
-        "lib/ghostme/curiosity/curiositySnapshot.ts",
-        "lib/ghostme/home/houseStateSnapshot.ts",
-        "lib/ghostme/homeAssistant/houseAutomationContext.ts",
-        "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
-        "lib/ghostme/homeAssistant/housePatternEngine.ts",
-        "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts",
-        "lib/ghostme/observation/observationEngine.ts",
-        "lib/ghostme/observation/observationPolicy.ts",
-        "lib/ghostme/people/peopleGraphLinkService.ts",
-        "lib/ghostme/people/peopleGraphService.ts",
-        "lib/ghostme/people/peopleSnapshot.ts",
-        "lib/ghostme/topicDetector.ts",
-        "scripts/generate-graphs.mjs",
-        "scripts/system-docs.mjs"
-      ]
-    },
     "values": {
       "exportedBy": [],
       "calledBy": [
@@ -17221,6 +17296,12 @@
         "lib/ghostme/chat/chatContextBuilder.ts"
       ]
     },
+    "buildProactiveCardContext": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/chat/chatContextBuilder.ts"
+      ]
+    },
     "isDeepRecallRequest": {
       "exportedBy": [
         "lib/ghostme/chat/chatRecallPolicy.ts"
@@ -17371,6 +17452,12 @@
       "calledBy": [
         "lib/ghostme/chat/chatMessageAnalyzer.ts",
         "lib/ghostme/core/messageClassifier.ts"
+      ]
+    },
+    "isLowValueProactiveReply": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/chat/chatPostProcessing.ts"
       ]
     },
     "saveActiveMemory": {
@@ -18314,7 +18401,37 @@
         "lib/ghostme/projects/projectMemorySnapshot.ts"
       ]
     },
+    "messageAgeHours": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/context/situationPolicy.ts"
+      ]
+    },
+    "isProtectedAction": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/context/situationPolicy.ts"
+      ]
+    },
+    "categoryForAction": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/context/situationPolicy.ts"
+      ]
+    },
+    "messageMatchesAction": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/context/situationPolicy.ts"
+      ]
+    },
     "hasRecentSimilarProactive": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/context/situationPolicy.ts"
+      ]
+    },
+    "buildLearningAssessment": {
       "exportedBy": [],
       "calledBy": [
         "lib/ghostme/context/situationPolicy.ts"
@@ -18623,6 +18740,7 @@
       "calledBy": [
         "lib/ghostme/entityExtractor.ts",
         "lib/ghostme/goalsDesires.ts",
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
         "lib/ghostme/projects/projectMemorySnapshot.ts",
         "lib/ghostme/relationshipResolver.ts",
         "lib/ghostme/topicDetector.ts",
@@ -18696,6 +18814,7 @@
       "exportedBy": [],
       "calledBy": [
         "lib/ghostme/goalsDesires.ts",
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
         "lib/ghostme/projects/projectMemorySnapshot.ts",
         "lib/ghostme/relationshipResolver.ts",
         "lib/ghostme/topicDetector.ts"
@@ -18873,6 +18992,12 @@
       ]
     },
     "shouldWakeHouseWorker": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/home/houseWorkerFlow.ts"
+      ]
+    },
+    "houseWorkerEnabled": {
       "exportedBy": [],
       "calledBy": [
         "lib/ghostme/home/houseWorkerFlow.ts"
@@ -19263,14 +19388,6 @@
       "exportedBy": [],
       "calledBy": [
         "lib/ghostme/homeAssistant/houseEntityRegistry.ts"
-      ]
-    },
-    "shouldRunHouseLightLearning": {
-      "exportedBy": [
-        "lib/ghostme/homeAssistant/houseLightLearningFlow.ts"
-      ],
-      "calledBy": [
-        "lib/ghostme/homeAssistant/houseLightLearningFlow.ts"
       ]
     },
     "isRecentEvent": {
@@ -20392,12 +20509,6 @@
         "lib/ghostme/proactive/proactiveCandidateBuilder.ts"
       ]
     },
-    "formatPolicySignals": {
-      "exportedBy": [],
-      "calledBy": [
-        "lib/ghostme/proactive/proactiveCandidateBuilder.ts"
-      ]
-    },
     "firstPolicySubject": {
       "exportedBy": [],
       "calledBy": [
@@ -20405,6 +20516,42 @@
       ]
     },
     "policyCandidateTitle": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts"
+      ]
+    },
+    "cleanPolicyReason": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts"
+      ]
+    },
+    "sentenceJoin": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts"
+      ]
+    },
+    "hasPolicySignal": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts"
+      ]
+    },
+    "firstOpenLoopTitle": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts"
+      ]
+    },
+    "firstActionTitle": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts"
+      ]
+    },
+    "humanPolicyMessage": {
       "exportedBy": [],
       "calledBy": [
         "lib/ghostme/proactive/proactiveCandidateBuilder.ts"
