@@ -64,40 +64,6 @@ function policySuppressesGenericCandidates(snapshot: GhostBrainSnapshot) {
   );
 }
 
-function formatPolicySignals(snapshot: GhostBrainSnapshot) {
-  const policy = snapshot.situationPolicy;
-  const parts: string[] = [];
-
-  if (policy?.valueAssessment) {
-    parts.push(
-      `Valore: ${policy.valueAssessment.score}/100 (${policy.valueAssessment.level})`
-    );
-  }
-
-  if (policy?.momentAssessment) {
-    parts.push(
-      `Momento: ${policy.momentAssessment.level} (${policy.momentAssessment.score}/100)`
-    );
-  }
-
-  if (policy?.peopleAssessment?.relevantPeople?.length) {
-    const person = policy.peopleAssessment.relevantPeople[0];
-    parts.push(`Persona: ${person.name} (${person.relevance}, ${person.score}/100)`);
-  }
-
-  if (policy?.homeAssessment && policy.homeAssessment.level !== "quiet") {
-    parts.push(
-      `Casa: ${policy.homeAssessment.level} (${policy.homeAssessment.score}/100)`
-    );
-  }
-
-  if (policy?.sourceSignals?.length) {
-    parts.push(`Segnali collegati: ${policy.sourceSignals.slice(0, 4).join(", ")}`);
-  }
-
-  return parts.length ? `${parts.join(". ")}.` : "";
-}
-
 function firstPolicySubject(snapshot: GhostBrainSnapshot) {
   const policy = snapshot.situationPolicy;
   return (
@@ -121,6 +87,128 @@ function policyCandidateTitle(snapshot: GhostBrainSnapshot) {
   return subject || "GhostMe";
 }
 
+function cleanPolicyReason(reason?: string | null) {
+  return String(reason || "")
+    .replace(/\s*\|\s*valore\s+\d+\/100/gi, "")
+    .replace(/^Next best action:\s*/i, "")
+    .replace(/_/g, " ")
+    .trim();
+}
+
+function sentenceJoin(parts: Array<string | null | undefined>) {
+  return parts
+    .map((part) => String(part || "").trim())
+    .filter(Boolean)
+    .join(" ");
+}
+
+function hasPolicySignal(snapshot: GhostBrainSnapshot, signal: string) {
+  return Boolean(snapshot.situationPolicy?.sourceSignals?.includes(signal));
+}
+
+function firstOpenLoopTitle(snapshot: GhostBrainSnapshot) {
+  return snapshot.situationPolicy?.recentOpenLoops?.[0]?.title || null;
+}
+
+function firstActionTitle(snapshot: GhostBrainSnapshot) {
+  const action = snapshot.situationPolicy?.openActions?.[0];
+  return action?.title || action?.description || null;
+}
+
+function humanPolicyMessage(snapshot: GhostBrainSnapshot) {
+  const policy = snapshot.situationPolicy;
+  if (!policy) return "";
+
+  const action = policy.recommendedAction;
+  const reason = cleanPolicyReason(policy.interventionReason);
+  const calendarTitle = policy.imminentCalendar?.[0]?.title || null;
+  const openLoopTitle = firstOpenLoopTitle(snapshot);
+  const actionTitle = firstActionTitle(snapshot);
+  const isHomeSafety =
+    policy.dedupeKey === "policy_home_safety" ||
+    hasPolicySignal(snapshot, "home:risk_signal");
+  const isCalendar =
+    action === "remind" &&
+    (Boolean(calendarTitle) || hasPolicySignal(snapshot, "calendar:imminent_event"));
+  const homeUseful =
+    policy.homeAssessment &&
+    ["relevant", "critical"].includes(policy.homeAssessment.level);
+  const momentUseful =
+    policy.momentAssessment &&
+    ["important", "exceptional"].includes(policy.momentAssessment.level);
+  const peopleUseful =
+    policy.peopleAssessment?.relevantPeople?.[0]?.relevance === "high" &&
+    policy.peopleAssessment.relevantPeople[0].signals.some((signal) =>
+      ["people:open_loop", "people:shared_event", "people:project_link"].includes(signal)
+    );
+
+  if (isHomeSafety) {
+    return sentenceJoin([
+      "C'è un segnale della casa che vale la pena controllare.",
+      "Sembra esserci un possibile rischio o un carico attivo da verificare con calma.",
+    ]);
+  }
+
+  if (isCalendar) {
+    return calendarTitle
+      ? `Hai ${calendarTitle} tra poco. Meglio tenerlo d'occhio adesso.`
+      : "Hai un evento vicino: meglio tenerlo d'occhio adesso.";
+  }
+
+  if (action === "ask_followup") {
+    return sentenceJoin([
+      openLoopTitle
+        ? `Potrebbe essere un buon momento per riprendere "${openLoopTitle}".`
+        : "Potrebbe essere un buon momento per riprendere un punto lasciato in sospeso.",
+      hasPolicySignal(snapshot, "moment:recent_home_arrival")
+        ? "Sei appena rientrato e il contesto sembra adatto a chiudere il filo."
+        : "Il contesto sembra abbastanza adatto per un follow-up breve.",
+    ]);
+  }
+
+  if (action === "create_card") {
+    return sentenceJoin([
+      openLoopTitle
+        ? `C'è ancora aperto "${openLoopTitle}".`
+        : "C'è un punto aperto che sembra meritare attenzione.",
+      momentUseful || homeUseful
+        ? "Il momento attuale gli dà un po' di peso in più."
+        : "Puoi riprenderlo quando hai un attimo.",
+    ]);
+  }
+
+  if (action === "suggest_action") {
+    const projectLike =
+      reason.includes("project") ||
+      reason.includes("task") ||
+      reason.includes("attiv") ||
+      reason.includes("goal");
+    return sentenceJoin([
+      actionTitle
+        ? `Potresti fare un passo pratico su "${actionTitle}".`
+        : projectLike
+          ? "Potrebbe essere un buon momento per rivedere alcune attività aperte."
+          : "Potrebbe esserci un prossimo passo utile da scegliere.",
+      homeUseful
+        ? "Sei in un contesto abbastanza stabile per farlo senza troppo rumore."
+        : momentUseful
+          ? "Il momento sembra abbastanza rilevante per dargli attenzione."
+          : "Te lo lascio come spunto leggero.",
+    ]);
+  }
+
+  if (peopleUseful) {
+    return sentenceJoin([
+      "C'è un collegamento personale che sembra utile riprendere.",
+      "Meglio farlo solo se ti torna naturale in questo momento.",
+    ]);
+  }
+
+  return reason
+    ? `${reason.charAt(0).toUpperCase()}${reason.slice(1)}.`
+    : "C'è qualcosa nel contesto attuale che potrebbe meritare attenzione.";
+}
+
 function policyCandidateCategory(snapshot: GhostBrainSnapshot) {
   const action = policyAction(snapshot);
   if (action === "remind") return "agenda";
@@ -138,9 +226,8 @@ function buildPolicyCandidate(
   const action = policy.recommendedAction;
   if (action === "say_nothing" || action === "wait") return null;
 
-  const signals = formatPolicySignals(snapshot);
   const title = policyCandidateTitle(snapshot);
-  const message = [policy.interventionReason, signals].filter(Boolean).join(" ");
+  const message = humanPolicyMessage(snapshot);
   const priority = Math.max(1, Number(policy.interventionPriority || 1));
 
   return {
