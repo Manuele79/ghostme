@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-28T02:07:21.574Z",
+  "generatedAt": "2026-07-07T01:35:28.982Z",
   "version": "3",
   "note": "Generated from source code and partial known real schema. Maps Supabase table/RPC usage, selected/written columns, missing columns, and data flow hints.",
   "knownSchemaTables": [
@@ -3191,6 +3191,7 @@
       "realColumns": [],
       "readers": [
         "app/api/home-assistant/event/route.ts",
+        "lib/ghostme/context/reasoningService.ts",
         "lib/ghostme/home/homeComfortRiskSnapshot.ts",
         "lib/ghostme/home/houseRouteSnapshot.ts",
         "lib/ghostme/home/houseStateSnapshot.ts",
@@ -3314,6 +3315,19 @@
             "room_key",
             "updated_at",
             "user_id"
+          ]
+        },
+        {
+          "file": "lib/ghostme/context/reasoningService.ts",
+          "operation": "select",
+          "columns": [
+            "entity_name",
+            "entity_type",
+            "event_type",
+            "new_state",
+            "occurred_at",
+            "room_key",
+            "value"
           ]
         },
         {
@@ -4996,6 +5010,7 @@
         "created_at"
       ],
       "readers": [
+        "lib/ghostme/location/placeResolver.ts",
         "lib/ghostme/observation/observationEngine.ts",
         "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
         "lib/ghostme/situation/situationEngine.ts"
@@ -5037,6 +5052,14 @@
         "created_at"
       ],
       "operations": [
+        {
+          "file": "lib/ghostme/location/placeResolver.ts",
+          "operation": "select",
+          "columns": [
+            "context",
+            "occurred_at"
+          ]
+        },
         {
           "file": "lib/ghostme/observation/observationEngine.ts",
           "operation": "select",
@@ -5537,11 +5560,7 @@
         {
           "file": "lib/ghostme/location/placeService.ts",
           "operation": "write",
-          "columns": [
-            "external_name",
-            "label",
-            "updated_at"
-          ]
+          "columns": []
         },
         {
           "file": "lib/ghostme/observation/observationEngine.ts",
@@ -5887,8 +5906,6 @@
         "confidence",
         "current_place_id",
         "current_place_label",
-        "external_name",
-        "label",
         "last_changed_at",
         "now",
         "onConflict",
@@ -6055,11 +6072,7 @@
         {
           "file": "lib/ghostme/location/placeService.ts",
           "operation": "write",
-          "columns": [
-            "external_name",
-            "label",
-            "updated_at"
-          ]
+          "columns": []
         },
         {
           "file": "lib/ghostme/observation/observationEngine.ts",

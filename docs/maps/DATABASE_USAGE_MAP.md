@@ -34,7 +34,7 @@ Mappa statica generata dal codice locale.
 | goals_desires | alive | 10 | 1 | 3 | 0 | 0 |
 | house_automation_controls | alive | 3 | 1 | 2 | 0 | 0 |
 | house_entities | alive | 2 | 2 | 0 | 0 | 0 |
-| house_events | alive | 13 | 1 | 3 | 0 | 0 |
+| house_events | alive | 14 | 1 | 3 | 0 | 0 |
 | house_learned_rules | alive | 6 | 2 | 2 | 0 | 0 |
 | house_paths | unused | 0 | 0 | 0 | 0 | 0 |
 | house_patterns | alive | 4 | 1 | 1 | 0 | 0 |
@@ -44,7 +44,7 @@ Mappa statica generata dal codice locale.
 | memories | unused | 0 | 0 | 0 | 0 | 0 |
 | memories_active | alive | 12 | 4 | 3 | 2 | 0 |
 | mental_states | alive | 3 | 1 | 1 | 0 | 0 |
-| observation_events | alive | 3 | 1 | 1 | 0 | 0 |
+| observation_events | alive | 4 | 1 | 1 | 0 | 0 |
 | people_graph | alive | 4 | 1 | 1 | 0 | 0 |
 | people_graph_links | alive | 1 | 0 | 1 | 0 | 0 |
 | questions | unused | 0 | 0 | 0 | 0 | 0 |
@@ -271,7 +271,7 @@ Raw users: -
 
 Stato: **alive**
 
-Readers: app/api/home-assistant/event/route.ts, lib/ghostme/home/homeComfortRiskSnapshot.ts, lib/ghostme/home/houseRouteSnapshot.ts, lib/ghostme/home/houseStateSnapshot.ts, lib/ghostme/home/houseWorkerFlow.ts, lib/ghostme/homeAssistant/homeEventLogger.ts, lib/ghostme/homeAssistant/houseAutomationContext.ts, lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts, lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts, lib/ghostme/homeAssistant/houseLightLearningFlow.ts, lib/ghostme/homeAssistant/housePatternEngine.ts, lib/ghostme/homeAssistant/houseRouteLearningEngine.ts, lib/ghostme/proactive/dailyBriefingRepository.ts
+Readers: app/api/home-assistant/event/route.ts, lib/ghostme/context/reasoningService.ts, lib/ghostme/home/homeComfortRiskSnapshot.ts, lib/ghostme/home/houseRouteSnapshot.ts, lib/ghostme/home/houseStateSnapshot.ts, lib/ghostme/home/houseWorkerFlow.ts, lib/ghostme/homeAssistant/homeEventLogger.ts, lib/ghostme/homeAssistant/houseAutomationContext.ts, lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts, lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts, lib/ghostme/homeAssistant/houseLightLearningFlow.ts, lib/ghostme/homeAssistant/housePatternEngine.ts, lib/ghostme/homeAssistant/houseRouteLearningEngine.ts, lib/ghostme/proactive/dailyBriefingRepository.ts
 
 Writers: lib/ghostme/homeAssistant/homeEventLogger.ts
 
@@ -411,7 +411,7 @@ Raw users: -
 
 Stato: **alive**
 
-Readers: lib/ghostme/observation/observationEngine.ts, lib/ghostme/proactive/proactiveCandidateBuilder.ts, lib/ghostme/situation/situationEngine.ts
+Readers: lib/ghostme/location/placeResolver.ts, lib/ghostme/observation/observationEngine.ts, lib/ghostme/proactive/proactiveCandidateBuilder.ts, lib/ghostme/situation/situationEngine.ts
 
 Writers: lib/ghostme/observation/observationEngine.ts
 

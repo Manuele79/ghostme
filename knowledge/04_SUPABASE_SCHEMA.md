@@ -1,6 +1,6 @@
 # SUPABASE_SCHEMA_MAP V3
 
-Generated: 2026-06-28T02:07:21.574Z
+Generated: 2026-07-07T01:35:28.982Z
 
 > Mappa generata dal codice + schema reale noto parziale. Serve per capire chi legge/scrive ogni tabella e trovare query verso colonne inesistenti.
 
@@ -23,21 +23,21 @@ Generated: 2026-06-28T02:07:21.574Z
 | goals_desires | 10 | 3 | 0 | 0 | 16 | 12 | - |
 | house_automation_controls | 3 | 2 | 0 | 0 | 11 | 7 | - |
 | house_entities | 2 | 2 | 0 | 0 | 7 | 9 | - |
-| house_events | 13 | 5 | 0 | 0 | 11 | 17 | - |
+| house_events | 14 | 5 | 0 | 0 | 11 | 17 | - |
 | house_learned_rules | 6 | 2 | 0 | 0 | 12 | 11 | - |
 | house_patterns | 3 | 1 | 0 | 11 | 11 | 2 | - |
 | house_suggestions | 3 | 3 | 0 | 9 | 9 | 6 | missing: entity_id, entity_name, entity_type, event_type, new_state, occurred_at |
 | life_topics | 14 | 4 | 1 | 0 | 13 | 19 | - |
 | memories_active | 11 | 4 | 2 | 0 | 9 | 7 | - |
 | mental_states | 3 | 1 | 0 | 0 | 1 | 1 | - |
-| observation_events | 3 | 1 | 0 | 10 | 9 | 6 | missing: category, label |
+| observation_events | 4 | 1 | 0 | 10 | 9 | 6 | missing: category, label |
 | people_graph | 4 | 1 | 0 | 0 | 19 | 1 | - |
 | people_graph_links | 1 | 1 | 0 | 0 | 5 | 2 | - |
 | rpc:upsert_people_graph_link | 0 | 1 | 0 | 0 | 0 | 0 | write-only |
 | significant_places | 5 | 3 | 1 | 0 | 12 | 19 | - |
 | topic_links | 5 | 1 | 0 | 0 | 2 | 6 | - |
 | traits | 3 | 1 | 1 | 0 | 2 | 17 | - |
-| user_location_state | 8 | 5 | 0 | 12 | 9 | 14 | - |
+| user_location_state | 8 | 5 | 0 | 12 | 9 | 12 | - |
 | user_profiles | 6 | 1 | 0 | 0 | 9 | 7 | - |
 | users | 0 | 1 | 1 | 0 | 0 | 4 | write-only |
 
@@ -1182,6 +1182,7 @@ Generated: 2026-06-28T02:07:21.574Z
 **Reader**
 
 - app/api/home-assistant/event/route.ts
+- lib/ghostme/context/reasoningService.ts
 - lib/ghostme/home/homeComfortRiskSnapshot.ts
 - lib/ghostme/home/houseRouteSnapshot.ts
 - lib/ghostme/home/houseStateSnapshot.ts
@@ -1249,6 +1250,7 @@ Generated: 2026-06-28T02:07:21.574Z
 - write — app/api/home-assistant/event/route.ts — colonne: can_trigger_event, entity_id, entity_name, entity_type, is_useful, room_key, updated_at, user_id
 - select — app/api/home-assistant/event/route.ts — colonne: occurred_at
 - write — app/api/home-assistant/event/route.ts — colonne: can_trigger_event, entity_id, entity_name, entity_type, is_useful, room_key, updated_at, user_id
+- select — lib/ghostme/context/reasoningService.ts — colonne: entity_name, entity_type, event_type, new_state, occurred_at, room_key, value
 - select — lib/ghostme/home/homeComfortRiskSnapshot.ts — colonne: entity_id, entity_name, entity_type, event_type, new_state, occurred_at, room_key, value
 - select — lib/ghostme/home/houseRouteSnapshot.ts — colonne: event_type, occurred_at, room_key
 - select — lib/ghostme/home/houseStateSnapshot.ts — colonne: entity_id, entity_name, entity_type, event_type, new_state, occurred_at, room_key, value
@@ -1762,6 +1764,7 @@ Generated: 2026-06-28T02:07:21.574Z
 
 **Reader**
 
+- lib/ghostme/location/placeResolver.ts
 - lib/ghostme/observation/observationEngine.ts
 - lib/ghostme/proactive/proactiveCandidateBuilder.ts
 - lib/ghostme/situation/situationEngine.ts
@@ -1811,6 +1814,7 @@ Generated: 2026-06-28T02:07:21.574Z
 
 **Operazioni rilevate**
 
+- select — lib/ghostme/location/placeResolver.ts — colonne: context, occurred_at
 - select — lib/ghostme/observation/observationEngine.ts — colonne: *
 - write — lib/ghostme/observation/observationEngine.ts — colonne: context, occurred_at, place_id, place_label
 - select — lib/ghostme/observation/observationEngine.ts — colonne: category, id, label
@@ -2025,7 +2029,7 @@ Generated: 2026-06-28T02:07:21.574Z
 - write — lib/ghostme/location/placeService.ts — colonne: last_seen_at, visit_count
 - select — lib/ghostme/location/placeService.ts — colonne: *
 - write — lib/ghostme/location/placeService.ts — colonne: last_seen_at, visit_count
-- write — lib/ghostme/location/placeService.ts — colonne: external_name, label, updated_at
+- write — lib/ghostme/location/placeService.ts
 - select — lib/ghostme/observation/observationEngine.ts — colonne: category, id, label
 - write — lib/ghostme/observation/observationEngine.ts
 - select — lib/ghostme/observation/observationEngine.ts — colonne: category, id, label
@@ -2197,8 +2201,6 @@ Generated: 2026-06-28T02:07:21.574Z
 - confidence
 - current_place_id
 - current_place_label
-- external_name
-- label
 - last_changed_at
 - now
 - onConflict
@@ -2227,7 +2229,7 @@ Generated: 2026-06-28T02:07:21.574Z
 - write — lib/ghostme/location/locationUpdateFlow.ts — colonne: accuracy, address, confidence, current_place_id, current_place_label, last_changed_at, now, onConflict, place_category, updated_at, user_id
 - write — lib/ghostme/location/locationUpdateFlow.ts — colonne: accuracy, address, confidence, current_place_id, current_place_label, last_changed_at, now, onConflict, place_category, updated_at, user_id
 - select — lib/ghostme/location/placeService.ts — colonne: *
-- write — lib/ghostme/location/placeService.ts — colonne: external_name, label, updated_at
+- write — lib/ghostme/location/placeService.ts
 - select — lib/ghostme/observation/observationEngine.ts — colonne: current_place_id, current_place_label, place_category
 - write — lib/ghostme/observation/observationEngine.ts
 

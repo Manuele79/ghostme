@@ -153,7 +153,6 @@
     "file": "app/api/ghostme/brain/route.ts",
     "imports": [
       "lib/ghostme/auth/serverAuth.ts",
-      "lib/ghostme/calendar/calendarService.ts",
       "lib/ghostme/context/decisionSnapshot.ts",
       "lib/ghostme/context/reasoningService.ts",
       "lib/ghostme/location/locationStateFreshness.ts",
@@ -171,7 +170,7 @@
     "lines": 67,
     "status": "entrypoint",
     "callerCount": 0,
-    "dependencyCount": 7,
+    "dependencyCount": 6,
     "exportCount": 1
   },
   "app/api/ghostme/proactive/read/route.ts": {
@@ -1321,7 +1320,6 @@
     ],
     "importedBy": [
       "app/api/calendar-events/route.ts",
-      "app/api/ghostme/brain/route.ts",
       "app/api/ghostme/proactive/read/route.ts",
       "lib/ghostme/chat/chatCalendarFlow.ts",
       "lib/ghostme/proactive/proactiveMaintenanceFlow.ts",
@@ -1341,7 +1339,7 @@
     "tablesDeleted": [],
     "lines": 370,
     "status": "active",
-    "callerCount": 6,
+    "callerCount": 5,
     "dependencyCount": 4,
     "exportCount": 9
   },
@@ -1392,7 +1390,7 @@
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 451,
+    "lines": 483,
     "status": "active",
     "callerCount": 1,
     "dependencyCount": 8,
@@ -1508,7 +1506,7 @@
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 541,
+    "lines": 547,
     "status": "god_file_candidate",
     "callerCount": 2,
     "dependencyCount": 1,
@@ -1615,7 +1613,7 @@
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 172,
+    "lines": 174,
     "status": "active",
     "callerCount": 1,
     "dependencyCount": 10,
@@ -1693,6 +1691,7 @@
       "app/api/ghostme/brain/route.ts",
       "components/ghost/types.ts",
       "lib/ghostme/context/reasoningService.ts",
+      "lib/ghostme/context/situationPolicy.ts",
       "lib/ghostme/proactive/trueProactiveSnapshot.ts",
       "lib/ghostme/ui/brainUiAdapter.ts"
     ],
@@ -1702,7 +1701,7 @@
     "tablesDeleted": [],
     "lines": 701,
     "status": "god_file_candidate",
-    "callerCount": 6,
+    "callerCount": 7,
     "dependencyCount": 1,
     "exportCount": 2
   },
@@ -1711,6 +1710,7 @@
     "imports": [
       "lib/ghostme/context/contextSignals.ts",
       "lib/ghostme/context/decisionSnapshot.ts",
+      "lib/ghostme/context/situationPolicy.ts",
       "lib/ghostme/context/temporalPriority.ts",
       "lib/ghostme/context/userContextGraph.ts",
       "lib/ghostme/curiosity/curiositySnapshot.ts",
@@ -1729,7 +1729,8 @@
       "lib/ghostme/projects/goalProjectConsistencySnapshot.ts",
       "lib/ghostme/projects/projectAdvisorSnapshot.ts",
       "lib/ghostme/projects/projectMemorySnapshot.ts",
-      "lib/ghostme/situation/situationEngine.ts"
+      "lib/ghostme/situation/situationEngine.ts",
+      "lib/supabaseAdmin.ts"
     ],
     "exports": [
       "GhostBrainSnapshot",
@@ -1743,20 +1744,47 @@
       "components/ghost/types.ts",
       "lib/ghostme/chat/chatContextBuilder.ts",
       "lib/ghostme/context/decisionSnapshot.ts",
+      "lib/ghostme/context/situationPolicy.ts",
       "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
       "lib/ghostme/proactive/proactiveUserFlow.ts",
       "lib/ghostme/proactive/trueProactiveSnapshot.ts",
       "lib/ghostme/ui/brainUiAdapter.ts"
     ],
+    "tablesRead": [
+      "house_events"
+    ],
+    "tablesWritten": [],
+    "tablesUpdated": [],
+    "tablesDeleted": [],
+    "lines": 1044,
+    "status": "god_file_candidate",
+    "callerCount": 10,
+    "dependencyCount": 23,
+    "exportCount": 4
+  },
+  "lib/ghostme/context/situationPolicy.ts": {
+    "file": "lib/ghostme/context/situationPolicy.ts",
+    "imports": [
+      "lib/ghostme/context/decisionSnapshot.ts",
+      "lib/ghostme/context/reasoningService.ts"
+    ],
+    "exports": [
+      "SituationPolicyAction",
+      "UnifiedSituationModel",
+      "buildUnifiedSituationModel"
+    ],
+    "importedBy": [
+      "lib/ghostme/context/reasoningService.ts"
+    ],
     "tablesRead": [],
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 975,
-    "status": "god_file_candidate",
-    "callerCount": 9,
-    "dependencyCount": 21,
-    "exportCount": 4
+    "lines": 322,
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 2,
+    "exportCount": 3
   },
   "lib/ghostme/context/temporalPriority.ts": {
     "file": "lib/ghostme/context/temporalPriority.ts",
@@ -2942,8 +2970,10 @@
     "file": "lib/ghostme/location/locationUpdateFlow.ts",
     "imports": [
       "lib/ghostme/location/locationLearningFlow.ts",
+      "lib/ghostme/location/placeResolver.ts",
       "lib/ghostme/location/placeService.ts",
       "lib/ghostme/observation/observationEngine.ts",
+      "lib/ghostme/proactive/proactiveMessageService.ts",
       "lib/ghostme/proactive/proactiveTrigger.ts",
       "lib/supabaseAdmin.ts"
     ],
@@ -2961,11 +2991,38 @@
     ],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 212,
+    "lines": 317,
     "status": "active",
     "callerCount": 1,
-    "dependencyCount": 5,
+    "dependencyCount": 7,
     "exportCount": 1
+  },
+  "lib/ghostme/location/placeResolver.ts": {
+    "file": "lib/ghostme/location/placeResolver.ts",
+    "imports": [
+      "lib/ghostme/location/placeService.ts",
+      "lib/supabaseAdmin.ts"
+    ],
+    "exports": [
+      "PlaceResolutionStatus",
+      "ResolvedPlaceResult",
+      "coordinateBucket",
+      "resolvePlaceFromCoordinates"
+    ],
+    "importedBy": [
+      "lib/ghostme/location/locationUpdateFlow.ts"
+    ],
+    "tablesRead": [
+      "observation_events"
+    ],
+    "tablesWritten": [],
+    "tablesUpdated": [],
+    "tablesDeleted": [],
+    "lines": 259,
+    "status": "active",
+    "callerCount": 1,
+    "dependencyCount": 2,
+    "exportCount": 4
   },
   "lib/ghostme/location/placeService.ts": {
     "file": "lib/ghostme/location/placeService.ts",
@@ -2993,6 +3050,7 @@
       "lib/ghostme/location/locationLearningFlow.ts",
       "lib/ghostme/location/locationSavePlaceFlow.ts",
       "lib/ghostme/location/locationUpdateFlow.ts",
+      "lib/ghostme/location/placeResolver.ts",
       "lib/ghostme/situation/situationEngine.ts"
     ],
     "tablesRead": [
@@ -3006,9 +3064,9 @@
       "significant_places"
     ],
     "tablesDeleted": [],
-    "lines": 246,
+    "lines": 260,
     "status": "active",
-    "callerCount": 8,
+    "callerCount": 9,
     "dependencyCount": 1,
     "exportCount": 11
   },
@@ -3570,7 +3628,7 @@
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 558,
+    "lines": 633,
     "status": "god_file_candidate",
     "callerCount": 1,
     "dependencyCount": 10,
@@ -3718,6 +3776,7 @@
       "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
       "lib/ghostme/homeAssistant/houseSuggestionEngine.ts",
       "lib/ghostme/location/locationLearningFlow.ts",
+      "lib/ghostme/location/locationUpdateFlow.ts",
       "lib/ghostme/proactive/curiosityCardWriter.ts",
       "lib/ghostme/proactive/proactiveTrigger.ts",
       "lib/ghostme/proactive/proactiveUserFlow.ts",
@@ -3736,7 +3795,7 @@
     "tablesDeleted": [],
     "lines": 231,
     "status": "active",
-    "callerCount": 11,
+    "callerCount": 12,
     "dependencyCount": 3,
     "exportCount": 2
   },
@@ -3798,7 +3857,7 @@
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 312,
+    "lines": 318,
     "status": "active",
     "callerCount": 2,
     "dependencyCount": 12,
@@ -4375,6 +4434,7 @@
       "lib/ghostme/behavior/behaviorRulesEngine.ts",
       "lib/ghostme/calendar/calendarService.ts",
       "lib/ghostme/context/contextBuilder.ts",
+      "lib/ghostme/context/reasoningService.ts",
       "lib/ghostme/context/userContextGraph.ts",
       "lib/ghostme/contradictions.ts",
       "lib/ghostme/conversationSummary.ts",
@@ -4403,6 +4463,7 @@
       "lib/ghostme/location/locationDeletePlaceFlow.ts",
       "lib/ghostme/location/locationLearningFlow.ts",
       "lib/ghostme/location/locationUpdateFlow.ts",
+      "lib/ghostme/location/placeResolver.ts",
       "lib/ghostme/location/placeService.ts",
       "lib/ghostme/maintenance/retentionEngine.ts",
       "lib/ghostme/memory/memorySearchFlow.ts",
@@ -4434,7 +4495,7 @@
     "tablesDeleted": [],
     "lines": 6,
     "status": "active",
-    "callerCount": 63,
+    "callerCount": 65,
     "dependencyCount": 0,
     "exportCount": 1
   }

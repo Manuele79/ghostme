@@ -319,6 +319,7 @@
     "table": "house_events",
     "readers": [
       "app/api/home-assistant/event/route.ts",
+      "lib/ghostme/context/reasoningService.ts",
       "lib/ghostme/home/homeComfortRiskSnapshot.ts",
       "lib/ghostme/home/houseRouteSnapshot.ts",
       "lib/ghostme/home/houseStateSnapshot.ts",
@@ -517,6 +518,7 @@
   "observation_events": {
     "table": "observation_events",
     "readers": [
+      "lib/ghostme/location/placeResolver.ts",
       "lib/ghostme/observation/observationEngine.ts",
       "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
       "lib/ghostme/situation/situationEngine.ts"

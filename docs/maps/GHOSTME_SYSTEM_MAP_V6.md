@@ -1,6 +1,6 @@
 # GHOSTME SYSTEM MAP V6
 
-Generato automaticamente: 2026-06-28T02:07:21.297Z
+Generato automaticamente: 2026-07-07T01:35:28.711Z
 
 ## Inventario
 
@@ -14,7 +14,7 @@ Generato automaticamente: 2026-06-28T02:07:21.297Z
 - worker: 3
 - orchestrator: 1
 - hook: 3
-- module: 61
+- module: 63
 
 ## Punti di ingresso
 
@@ -297,7 +297,6 @@ Chi lo chiama:
 
 Chi chiama:
 - lib/ghostme/auth/serverAuth.ts
-- lib/ghostme/calendar/calendarService.ts
 - lib/ghostme/context/decisionSnapshot.ts
 - lib/ghostme/context/reasoningService.ts
 - lib/ghostme/location/locationStateFreshness.ts
@@ -1574,7 +1573,6 @@ Responsabilita: Integra servizi o accesso dati specializzato. Area: lib/ghostme/
 
 Chi lo chiama:
 - app/api/calendar-events/route.ts
-- app/api/ghostme/brain/route.ts
 - app/api/ghostme/proactive/read/route.ts
 - lib/ghostme/chat/chatCalendarFlow.ts
 - lib/ghostme/proactive/proactiveMaintenanceFlow.ts
@@ -1953,6 +1951,7 @@ Chi lo chiama:
 - app/api/ghostme/brain/route.ts
 - components/ghost/types.ts
 - lib/ghostme/context/reasoningService.ts
+- lib/ghostme/context/situationPolicy.ts
 - lib/ghostme/proactive/trueProactiveSnapshot.ts
 - lib/ghostme/ui/brainUiAdapter.ts
 
@@ -1982,6 +1981,7 @@ Chi lo chiama:
 - components/ghost/types.ts
 - lib/ghostme/chat/chatContextBuilder.ts
 - lib/ghostme/context/decisionSnapshot.ts
+- lib/ghostme/context/situationPolicy.ts
 - lib/ghostme/proactive/proactiveCandidateBuilder.ts
 - lib/ghostme/proactive/proactiveUserFlow.ts
 - lib/ghostme/proactive/trueProactiveSnapshot.ts
@@ -1990,6 +1990,7 @@ Chi lo chiama:
 Chi chiama:
 - lib/ghostme/context/contextSignals.ts
 - lib/ghostme/context/decisionSnapshot.ts
+- lib/ghostme/context/situationPolicy.ts
 - lib/ghostme/context/temporalPriority.ts
 - lib/ghostme/context/userContextGraph.ts
 - lib/ghostme/curiosity/curiositySnapshot.ts
@@ -2009,9 +2010,10 @@ Chi chiama:
 - lib/ghostme/projects/projectAdvisorSnapshot.ts
 - lib/ghostme/projects/projectMemorySnapshot.ts
 - lib/ghostme/situation/situationEngine.ts
+- lib/supabaseAdmin.ts
 
 Tabelle usate:
-- nessuno
+- house_events (read)
 
 Engine collegati:
 - lib/ghostme/situation/situationEngine.ts
@@ -2031,6 +2033,30 @@ Snapshot collegati:
 - lib/ghostme/projects/goalProjectConsistencySnapshot.ts
 - lib/ghostme/projects/projectAdvisorSnapshot.ts
 - lib/ghostme/projects/projectMemorySnapshot.ts
+
+### lib/ghostme/context/situationPolicy.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/context. Modulo: situationPolicy.
+
+Chi lo chiama:
+- lib/ghostme/context/reasoningService.ts
+
+Chi chiama:
+- lib/ghostme/context/decisionSnapshot.ts
+- lib/ghostme/context/reasoningService.ts
+
+Tabelle usate:
+- nessuno
+
+Engine collegati:
+- nessuno
+
+Snapshot collegati:
+- lib/ghostme/context/decisionSnapshot.ts
 
 ### lib/ghostme/context/temporalPriority.ts
 
@@ -3224,8 +3250,10 @@ Chi lo chiama:
 
 Chi chiama:
 - lib/ghostme/location/locationLearningFlow.ts
+- lib/ghostme/location/placeResolver.ts
 - lib/ghostme/location/placeService.ts
 - lib/ghostme/observation/observationEngine.ts
+- lib/ghostme/proactive/proactiveMessageService.ts
 - lib/ghostme/proactive/proactiveTrigger.ts
 - lib/supabaseAdmin.ts
 
@@ -3235,6 +3263,30 @@ Tabelle usate:
 
 Engine collegati:
 - lib/ghostme/observation/observationEngine.ts
+
+Snapshot collegati:
+- nessuno
+
+### lib/ghostme/location/placeResolver.ts
+
+Tipo: **module**
+
+Stato: **ATTIVO**
+
+Responsabilita: Modulo di supporto applicativo. Area: lib/ghostme/location. Modulo: placeResolver.
+
+Chi lo chiama:
+- lib/ghostme/location/locationUpdateFlow.ts
+
+Chi chiama:
+- lib/ghostme/location/placeService.ts
+- lib/supabaseAdmin.ts
+
+Tabelle usate:
+- observation_events (read)
+
+Engine collegati:
+- nessuno
 
 Snapshot collegati:
 - nessuno
@@ -3255,6 +3307,7 @@ Chi lo chiama:
 - lib/ghostme/location/locationLearningFlow.ts
 - lib/ghostme/location/locationSavePlaceFlow.ts
 - lib/ghostme/location/locationUpdateFlow.ts
+- lib/ghostme/location/placeResolver.ts
 - lib/ghostme/situation/situationEngine.ts
 
 Chi chiama:
@@ -3969,6 +4022,7 @@ Chi lo chiama:
 - lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts
 - lib/ghostme/homeAssistant/houseSuggestionEngine.ts
 - lib/ghostme/location/locationLearningFlow.ts
+- lib/ghostme/location/locationUpdateFlow.ts
 - lib/ghostme/proactive/curiosityCardWriter.ts
 - lib/ghostme/proactive/proactiveTrigger.ts
 - lib/ghostme/proactive/proactiveUserFlow.ts
@@ -4645,6 +4699,7 @@ Chi lo chiama:
 - lib/ghostme/behavior/behaviorRulesEngine.ts
 - lib/ghostme/calendar/calendarService.ts
 - lib/ghostme/context/contextBuilder.ts
+- lib/ghostme/context/reasoningService.ts
 - lib/ghostme/context/userContextGraph.ts
 - lib/ghostme/contradictions.ts
 - lib/ghostme/conversationSummary.ts
@@ -4673,6 +4728,7 @@ Chi lo chiama:
 - lib/ghostme/location/locationDeletePlaceFlow.ts
 - lib/ghostme/location/locationLearningFlow.ts
 - lib/ghostme/location/locationUpdateFlow.ts
+- lib/ghostme/location/placeResolver.ts
 - lib/ghostme/location/placeService.ts
 - lib/ghostme/maintenance/retentionEngine.ts
 - lib/ghostme/memory/memorySearchFlow.ts

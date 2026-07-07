@@ -1,6 +1,6 @@
 # DEPENDENCY TEXT MAP
 
-Generated: 2026-06-28T02:07:05.852Z
+Generated: 2026-07-07T01:35:08.840Z
 
 ## Chi chiama chi
 
@@ -29,7 +29,6 @@ app/api/debug-reasoning/route.ts -> lib/ghostme/context/decisionSnapshot.ts
 app/api/debug-reasoning/route.ts -> lib/ghostme/context/reasoningService.ts
 app/api/debug-reasoning/route.ts -> node_modules/next/server.js
 app/api/ghostme/brain/route.ts -> lib/ghostme/auth/serverAuth.ts
-app/api/ghostme/brain/route.ts -> lib/ghostme/calendar/calendarService.ts
 app/api/ghostme/brain/route.ts -> lib/ghostme/context/decisionSnapshot.ts
 app/api/ghostme/brain/route.ts -> lib/ghostme/context/reasoningService.ts
 app/api/ghostme/brain/route.ts -> lib/ghostme/location/locationStateFreshness.ts
@@ -241,6 +240,7 @@ lib/ghostme/context/contextSignals.ts -> -
 lib/ghostme/context/decisionSnapshot.ts -> -
 lib/ghostme/context/reasoningService.ts -> lib/ghostme/context/contextSignals.ts
 lib/ghostme/context/reasoningService.ts -> lib/ghostme/context/decisionSnapshot.ts
+lib/ghostme/context/reasoningService.ts -> lib/ghostme/context/situationPolicy.ts
 lib/ghostme/context/reasoningService.ts -> lib/ghostme/context/temporalPriority.ts
 lib/ghostme/context/reasoningService.ts -> lib/ghostme/context/userContextGraph.ts
 lib/ghostme/context/reasoningService.ts -> lib/ghostme/curiosity/curiositySnapshot.ts
@@ -260,6 +260,8 @@ lib/ghostme/context/reasoningService.ts -> lib/ghostme/projects/goalProjectConsi
 lib/ghostme/context/reasoningService.ts -> lib/ghostme/projects/projectAdvisorSnapshot.ts
 lib/ghostme/context/reasoningService.ts -> lib/ghostme/projects/projectMemorySnapshot.ts
 lib/ghostme/context/reasoningService.ts -> lib/ghostme/situation/situationEngine.ts
+lib/ghostme/context/reasoningService.ts -> lib/supabaseAdmin.ts
+lib/ghostme/context/situationPolicy.ts -> -
 lib/ghostme/context/temporalPriority.ts -> -
 lib/ghostme/context/userContextGraph.ts -> lib/ghostme/context/temporalPriority.ts
 lib/ghostme/context/userContextGraph.ts -> lib/ghostme/location/locationStateFreshness.ts
@@ -348,10 +350,14 @@ lib/ghostme/location/locationLearningFlow.ts -> lib/supabaseAdmin.ts
 lib/ghostme/location/locationSavePlaceFlow.ts -> lib/ghostme/location/placeService.ts
 lib/ghostme/location/locationStateFreshness.ts -> -
 lib/ghostme/location/locationUpdateFlow.ts -> lib/ghostme/location/locationLearningFlow.ts
+lib/ghostme/location/locationUpdateFlow.ts -> lib/ghostme/location/placeResolver.ts
 lib/ghostme/location/locationUpdateFlow.ts -> lib/ghostme/location/placeService.ts
 lib/ghostme/location/locationUpdateFlow.ts -> lib/ghostme/observation/observationEngine.ts
+lib/ghostme/location/locationUpdateFlow.ts -> lib/ghostme/proactive/proactiveMessageService.ts
 lib/ghostme/location/locationUpdateFlow.ts -> lib/ghostme/proactive/proactiveTrigger.ts
 lib/ghostme/location/locationUpdateFlow.ts -> lib/supabaseAdmin.ts
+lib/ghostme/location/placeResolver.ts -> lib/ghostme/location/placeService.ts
+lib/ghostme/location/placeResolver.ts -> lib/supabaseAdmin.ts
 lib/ghostme/location/placeService.ts -> lib/supabaseAdmin.ts
 lib/ghostme/maintenance/retentionEngine.ts -> lib/supabaseAdmin.ts
 lib/ghostme/memory/memorySearchFlow.ts -> lib/ghostme/context/temporalPriority.ts
@@ -491,6 +497,9 @@ scripts/supabase-schema-map.mjs -> fs
 scripts/supabase-schema-map.mjs -> path
 scripts/system-docs.mjs -> fs
 scripts/system-docs.mjs -> path
+scripts/system-health-report.mjs -> child_process
+scripts/system-health-report.mjs -> fs
+scripts/system-health-report.mjs -> path
 url -> -
 
 ## Moduli isolati

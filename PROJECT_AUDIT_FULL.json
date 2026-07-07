@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-28T02:07:03.448Z",
+  "generatedAt": "2026-07-07T01:35:06.259Z",
   "folders": {
     ".": [
       ".dependency-cruiser.js",
@@ -179,6 +179,7 @@
       "lib/ghostme/context/contextSignals.ts",
       "lib/ghostme/context/decisionSnapshot.ts",
       "lib/ghostme/context/reasoningService.ts",
+      "lib/ghostme/context/situationPolicy.ts",
       "lib/ghostme/context/temporalPriority.ts",
       "lib/ghostme/context/userContextGraph.ts"
     ],
@@ -229,6 +230,7 @@
       "lib/ghostme/location/locationSavePlaceFlow.ts",
       "lib/ghostme/location/locationStateFreshness.ts",
       "lib/ghostme/location/locationUpdateFlow.ts",
+      "lib/ghostme/location/placeResolver.ts",
       "lib/ghostme/location/placeService.ts"
     ],
     "lib/ghostme/maintenance": [
@@ -304,7 +306,8 @@
       "scripts/project-audit.mjs",
       "scripts/project-knowledge-base.mjs",
       "scripts/supabase-schema-map.mjs",
-      "scripts/system-docs.mjs"
+      "scripts/system-docs.mjs",
+      "scripts/system-health-report.mjs"
     ]
   },
   "files": {
@@ -569,8 +572,7 @@
         "lib/ghostme/proactive/visibleProactiveMessages.ts",
         "lib/ghostme/proactive/proactiveUserFlow.ts",
         "lib/ghostme/context/decisionSnapshot.ts",
-        "lib/ghostme/location/locationStateFreshness.ts",
-        "lib/ghostme/calendar/calendarService.ts"
+        "lib/ghostme/location/locationStateFreshness.ts"
       ],
       "importedBy": [],
       "apiCalls": [],
@@ -582,9 +584,7 @@
         "POST",
         "json",
         "getAuthenticatedUserId",
-        "all",
         "buildGhostBrainSnapshot",
-        "getUpcomingCalendarEvents",
         "buildDecisionSnapshot",
         "runAppOpenContinuityLifecycle",
         "loadVisibleProactiveMessages",
@@ -2446,7 +2446,6 @@
       ],
       "importedBy": [
         "app/api/calendar-events/route.ts",
-        "app/api/ghostme/brain/route.ts",
         "app/api/ghostme/proactive/read/route.ts",
         "lib/ghostme/chat/chatCalendarFlow.ts",
         "lib/ghostme/proactive/proactiveMaintenanceFlow.ts",
@@ -2611,16 +2610,17 @@
         "get",
         "buildRelationshipContext",
         "buildPlacesContext",
+        "buildSituationPolicyContext",
+        "trim",
         "buildChatContext",
         "buildGhostBrainSnapshot",
         "isDeepRecallRequest",
         "trimBlock",
         "buildContextualMemory",
         "isFreshLocationState",
-        "log",
         "buildBehaviorPrompt"
       ],
-      "lines": 451
+      "lines": 483
     },
     "lib/ghostme/chat/chatExternalServices.ts": {
       "folder": "lib/ghostme/chat",
@@ -2817,7 +2817,7 @@
         "stringify",
         "recente"
       ],
-      "lines": 541
+      "lines": 547
     },
     "lib/ghostme/chat/chatRecallPolicy.ts": {
       "folder": "lib/ghostme/chat",
@@ -2929,7 +2929,7 @@
         "encode",
         "close"
       ],
-      "lines": 172
+      "lines": 174
     },
     "lib/ghostme/context/contextBuilder.ts": {
       "folder": "lib/ghostme/context",
@@ -3036,6 +3036,7 @@
         "app/api/ghostme/brain/route.ts",
         "components/ghost/types.ts",
         "lib/ghostme/context/reasoningService.ts",
+        "lib/ghostme/context/situationPolicy.ts",
         "lib/ghostme/proactive/trueProactiveSnapshot.ts",
         "lib/ghostme/ui/brainUiAdapter.ts"
       ],
@@ -3088,6 +3089,7 @@
       "folder": "lib/ghostme/context",
       "imports": [
         "lib/ghostme/context/contextSignals.ts",
+        "lib/supabaseAdmin.ts",
         "lib/ghostme/context/userContextGraph.ts",
         "lib/ghostme/homeAssistant/homeReasoningBuilder.ts",
         "lib/ghostme/situation/situationEngine.ts",
@@ -3106,6 +3108,7 @@
         "lib/ghostme/curiosity/curiositySnapshot.ts",
         "lib/ghostme/context/decisionSnapshot.ts",
         "lib/ghostme/proactive/trueProactiveSnapshot.ts",
+        "lib/ghostme/context/situationPolicy.ts",
         "lib/ghostme/homeAssistant/homeAssistantAccess.ts",
         "lib/ghostme/context/temporalPriority.ts"
       ],
@@ -3115,13 +3118,22 @@
         "components/ghost/types.ts",
         "lib/ghostme/chat/chatContextBuilder.ts",
         "lib/ghostme/context/decisionSnapshot.ts",
+        "lib/ghostme/context/situationPolicy.ts",
         "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
         "lib/ghostme/proactive/proactiveUserFlow.ts",
         "lib/ghostme/proactive/trueProactiveSnapshot.ts",
         "lib/ghostme/ui/brainUiAdapter.ts"
       ],
       "apiCalls": [],
-      "tables": {},
+      "tables": {
+        "house_events": {
+          "select": true,
+          "insert": false,
+          "update": false,
+          "upsert": false,
+          "delete": false
+        }
+      },
       "exports": [
         "buildReasoningSnapshot",
         "buildGhostBrainSnapshot"
@@ -3186,15 +3198,64 @@
         "buildHomeLocationConsistency",
         "buildHouseRouteSnapshot",
         "buildHomeComfortRiskSnapshot",
+        "from",
+        "select",
+        "eq",
+        "gte",
+        "order",
+        "limit",
         "buildGhostBrainSimpleSignals",
         "buildCuriositySnapshot",
         "buildRecentPastEvidence",
         "filterFutureCalendar",
         "filterOpenActions",
         "buildDecisionSnapshot",
+        "buildUnifiedSituationModel",
         "buildTrueProactiveSnapshot"
       ],
-      "lines": 975
+      "lines": 1044
+    },
+    "lib/ghostme/context/situationPolicy.ts": {
+      "folder": "lib/ghostme/context",
+      "imports": [
+        "lib/ghostme/context/reasoningService.ts",
+        "lib/ghostme/context/decisionSnapshot.ts"
+      ],
+      "importedBy": [
+        "lib/ghostme/context/reasoningService.ts"
+      ],
+      "apiCalls": [],
+      "tables": {},
+      "exports": [
+        "buildUnifiedSituationModel"
+      ],
+      "calls": [
+        "clean",
+        "trim",
+        "toLowerCase",
+        "minutesUntil",
+        "getTime",
+        "isFinite",
+        "round",
+        "now",
+        "hoursSince",
+        "isHomePlace",
+        "mentalInfluence",
+        "recentLocationEvents",
+        "isArray",
+        "recentHomeEvents",
+        "buildRecentOpenLoops",
+        "push",
+        "join",
+        "sort",
+        "slice",
+        "chooseAction",
+        "some",
+        "includes",
+        "buildUnifiedSituationModel",
+        "max"
+      ],
+      "lines": 322
     },
     "lib/ghostme/context/temporalPriority.ts": {
       "folder": "lib/ghostme/context",
@@ -5467,6 +5528,8 @@
         "lib/ghostme/observation/observationEngine.ts",
         "lib/ghostme/proactive/proactiveTrigger.ts",
         "lib/ghostme/location/locationLearningFlow.ts",
+        "lib/ghostme/proactive/proactiveMessageService.ts",
+        "lib/ghostme/location/placeResolver.ts",
         "lib/ghostme/location/placeService.ts"
       ],
       "importedBy": [
@@ -5491,6 +5554,13 @@
         "includes",
         "validCoordinate",
         "isFinite",
+        "firstText",
+        "trim",
+        "firstNumber",
+        "dayKey",
+        "DateTimeFormat",
+        "format",
+        "poiResolutionContext",
         "updateCurrentLocationFlow",
         "Error",
         "from",
@@ -5498,6 +5568,7 @@
         "eq",
         "maybeSingle",
         "detectCurrentPlace",
+        "resolvePlaceFromCoordinates",
         "distanceMeters",
         "toISOString",
         "upsert",
@@ -5507,9 +5578,70 @@
         "recordObservation",
         "analyzeLocationPatterns",
         "runProactiveTrigger",
+        "upsertProactiveMessage",
         "writeLocationCandidateCard"
       ],
-      "lines": 212
+      "lines": 317
+    },
+    "lib/ghostme/location/placeResolver.ts": {
+      "folder": "lib/ghostme/location",
+      "imports": [
+        "lib/supabaseAdmin.ts",
+        "lib/ghostme/location/placeService.ts"
+      ],
+      "importedBy": [
+        "lib/ghostme/location/locationUpdateFlow.ts"
+      ],
+      "apiCalls": [],
+      "tables": {
+        "observation_events": {
+          "select": true,
+          "insert": false,
+          "update": false,
+          "upsert": false,
+          "delete": false
+        }
+      },
+      "exports": [
+        "coordinateBucket",
+        "resolvePlaceFromCoordinates"
+      ],
+      "calls": [
+        "clean",
+        "trim",
+        "clampConfidence",
+        "min",
+        "max",
+        "round",
+        "coordinateBucket",
+        "toFixed",
+        "dayStartIso",
+        "setHours",
+        "toISOString",
+        "normalizeCategory",
+        "toLowerCase",
+        "test",
+        "includes",
+        "replace",
+        "scoreCandidate",
+        "isFinite",
+        "buildConfirmationQuestion",
+        "loadTodayResolutionCache",
+        "from",
+        "select",
+        "eq",
+        "gte",
+        "order",
+        "limit",
+        "log",
+        "find",
+        "resolvePlaceFromCoordinates",
+        "findSignificantPlaceNear",
+        "markSignificantPlaceSeen",
+        "saveSignificantPlace",
+        "updateSignificantPlace"
+      ],
+      "lines": 259
     },
     "lib/ghostme/location/placeService.ts": {
       "folder": "lib/ghostme/location",
@@ -5524,6 +5656,7 @@
         "lib/ghostme/location/locationLearningFlow.ts",
         "lib/ghostme/location/locationSavePlaceFlow.ts",
         "lib/ghostme/location/locationUpdateFlow.ts",
+        "lib/ghostme/location/placeResolver.ts",
         "lib/ghostme/situation/situationEngine.ts"
       ],
       "apiCalls": [],
@@ -5588,7 +5721,7 @@
         "find",
         "updateSignificantPlace"
       ],
-      "lines": 246
+      "lines": 260
     },
     "lib/ghostme/maintenance/retentionEngine.ts": {
       "folder": "lib/ghostme/maintenance",
@@ -6869,6 +7002,10 @@
         "find",
         "some",
         "includes",
+        "inferOpenLoopKind",
+        "b",
+        "test",
+        "max",
         "collectOpenLoopSources",
         "loadRecentLocationObservations",
         "toISOString",
@@ -6897,7 +7034,7 @@
         "generateButlerMessage",
         "decideProactiveMessage"
       ],
-      "lines": 558
+      "lines": 633
     },
     "lib/ghostme/proactive/proactiveCandidateRanker.ts": {
       "folder": "lib/ghostme/proactive",
@@ -7046,6 +7183,7 @@
         "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
         "lib/ghostme/homeAssistant/houseSuggestionEngine.ts",
         "lib/ghostme/location/locationLearningFlow.ts",
+        "lib/ghostme/location/locationUpdateFlow.ts",
         "lib/ghostme/proactive/curiosityCardWriter.ts",
         "lib/ghostme/proactive/proactiveTrigger.ts",
         "lib/ghostme/proactive/proactiveUserFlow.ts",
@@ -7213,7 +7351,7 @@
         "runAppOpenContinuityLifecycle",
         "buildContinuityCandidate"
       ],
-      "lines": 312
+      "lines": 318
     },
     "lib/ghostme/proactive/trueProactiveCardWriter.ts": {
       "folder": "lib/ghostme/proactive",
@@ -8257,6 +8395,7 @@
         "lib/ghostme/behavior/behaviorRulesEngine.ts",
         "lib/ghostme/calendar/calendarService.ts",
         "lib/ghostme/context/contextBuilder.ts",
+        "lib/ghostme/context/reasoningService.ts",
         "lib/ghostme/context/userContextGraph.ts",
         "lib/ghostme/contradictions.ts",
         "lib/ghostme/conversationSummary.ts",
@@ -8285,6 +8424,7 @@
         "lib/ghostme/location/locationDeletePlaceFlow.ts",
         "lib/ghostme/location/locationLearningFlow.ts",
         "lib/ghostme/location/locationUpdateFlow.ts",
+        "lib/ghostme/location/placeResolver.ts",
         "lib/ghostme/location/placeService.ts",
         "lib/ghostme/maintenance/retentionEngine.ts",
         "lib/ghostme/memory/memorySearchFlow.ts",
@@ -8720,6 +8860,102 @@
         "buildCognitiveRoutingMap"
       ],
       "lines": 424
+    },
+    "scripts/system-health-report.mjs": {
+      "folder": "scripts",
+      "imports": [
+        "node:fs",
+        "node:path",
+        "node:child_process"
+      ],
+      "importedBy": [],
+      "apiCalls": [],
+      "tables": {},
+      "exports": [],
+      "calls": [
+        "cwd",
+        "Set",
+        "join",
+        "readJson",
+        "parse",
+        "readFileSync",
+        "csvRows",
+        "existsSync",
+        "trim",
+        "split",
+        "splitCsvLine",
+        "shift",
+        "fromEntries",
+        "push",
+        "ensureDir",
+        "mkdirSync",
+        "dirname",
+        "walk",
+        "readdirSync",
+        "includes",
+        "isDirectory",
+        "relative",
+        "has",
+        "extname",
+        "rel",
+        "replaceAll",
+        "loadSchema",
+        "values",
+        "sort",
+        "loadRpcs",
+        "collectImports",
+        "matchAll",
+        "test",
+        "resolveImport",
+        "startsWith",
+        "slice",
+        "resolve",
+        "statSync",
+        "isFile",
+        "buildFileGraph",
+        "entries",
+        "detectCycles",
+        "visit",
+        "indexOf",
+        "concat",
+        "some",
+        "add",
+        "pop",
+        "delete",
+        "keys",
+        "importedIdentifiers",
+        "match",
+        "replace",
+        "detectUnusedImports",
+        "RegExp",
+        "extractSelectColumns",
+        "readFirstStringArg",
+        "topLevelKeysFromFirstObject",
+        "collectDbColumnUsage",
+        "min",
+        "countPattern",
+        "filesMatching",
+        "gitChangedFiles",
+        "execFileSync",
+        "status",
+        "scoreFromIssues",
+        "max",
+        "healthLabel",
+        "find",
+        "at",
+        "addIssue",
+        "buildReport",
+        "toISOString",
+        "flatMap",
+        "round",
+        "every",
+        "tableRows",
+        "renderMarkdown",
+        "writeFileSync",
+        "stringify",
+        "log"
+      ],
+      "lines": 937
     }
   },
   "importsGraph": {
@@ -8771,8 +9007,7 @@
       "lib/ghostme/proactive/visibleProactiveMessages.ts",
       "lib/ghostme/proactive/proactiveUserFlow.ts",
       "lib/ghostme/context/decisionSnapshot.ts",
-      "lib/ghostme/location/locationStateFreshness.ts",
-      "lib/ghostme/calendar/calendarService.ts"
+      "lib/ghostme/location/locationStateFreshness.ts"
     ],
     "app/api/ghostme/proactive/read/route.ts": [
       "next/server",
@@ -9101,6 +9336,7 @@
     ],
     "lib/ghostme/context/reasoningService.ts": [
       "lib/ghostme/context/contextSignals.ts",
+      "lib/supabaseAdmin.ts",
       "lib/ghostme/context/userContextGraph.ts",
       "lib/ghostme/homeAssistant/homeReasoningBuilder.ts",
       "lib/ghostme/situation/situationEngine.ts",
@@ -9119,8 +9355,13 @@
       "lib/ghostme/curiosity/curiositySnapshot.ts",
       "lib/ghostme/context/decisionSnapshot.ts",
       "lib/ghostme/proactive/trueProactiveSnapshot.ts",
+      "lib/ghostme/context/situationPolicy.ts",
       "lib/ghostme/homeAssistant/homeAssistantAccess.ts",
       "lib/ghostme/context/temporalPriority.ts"
+    ],
+    "lib/ghostme/context/situationPolicy.ts": [
+      "lib/ghostme/context/reasoningService.ts",
+      "lib/ghostme/context/decisionSnapshot.ts"
     ],
     "lib/ghostme/context/temporalPriority.ts": [],
     "lib/ghostme/context/userContextGraph.ts": [
@@ -9299,6 +9540,12 @@
       "lib/ghostme/observation/observationEngine.ts",
       "lib/ghostme/proactive/proactiveTrigger.ts",
       "lib/ghostme/location/locationLearningFlow.ts",
+      "lib/ghostme/proactive/proactiveMessageService.ts",
+      "lib/ghostme/location/placeResolver.ts",
+      "lib/ghostme/location/placeService.ts"
+    ],
+    "lib/ghostme/location/placeResolver.ts": [
+      "lib/supabaseAdmin.ts",
       "lib/ghostme/location/placeService.ts"
     ],
     "lib/ghostme/location/placeService.ts": [
@@ -9550,6 +9797,11 @@
     "scripts/system-docs.mjs": [
       "node:fs",
       "node:path"
+    ],
+    "scripts/system-health-report.mjs": [
+      "node:fs",
+      "node:path",
+      "node:child_process"
     ]
   },
   "importedBy": {
@@ -9626,6 +9878,7 @@
       "lib/ghostme/behavior/behaviorRulesEngine.ts",
       "lib/ghostme/calendar/calendarService.ts",
       "lib/ghostme/context/contextBuilder.ts",
+      "lib/ghostme/context/reasoningService.ts",
       "lib/ghostme/context/userContextGraph.ts",
       "lib/ghostme/contradictions.ts",
       "lib/ghostme/conversationSummary.ts",
@@ -9654,6 +9907,7 @@
       "lib/ghostme/location/locationDeletePlaceFlow.ts",
       "lib/ghostme/location/locationLearningFlow.ts",
       "lib/ghostme/location/locationUpdateFlow.ts",
+      "lib/ghostme/location/placeResolver.ts",
       "lib/ghostme/location/placeService.ts",
       "lib/ghostme/maintenance/retentionEngine.ts",
       "lib/ghostme/memory/memorySearchFlow.ts",
@@ -9686,7 +9940,6 @@
     ],
     "lib/ghostme/calendar/calendarService.ts": [
       "app/api/calendar-events/route.ts",
-      "app/api/ghostme/brain/route.ts",
       "app/api/ghostme/proactive/read/route.ts",
       "lib/ghostme/chat/chatCalendarFlow.ts",
       "lib/ghostme/proactive/proactiveMaintenanceFlow.ts",
@@ -9728,6 +9981,7 @@
       "components/ghost/types.ts",
       "lib/ghostme/chat/chatContextBuilder.ts",
       "lib/ghostme/context/decisionSnapshot.ts",
+      "lib/ghostme/context/situationPolicy.ts",
       "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
       "lib/ghostme/proactive/proactiveUserFlow.ts",
       "lib/ghostme/proactive/trueProactiveSnapshot.ts",
@@ -9738,6 +9992,7 @@
       "app/api/ghostme/brain/route.ts",
       "components/ghost/types.ts",
       "lib/ghostme/context/reasoningService.ts",
+      "lib/ghostme/context/situationPolicy.ts",
       "lib/ghostme/proactive/trueProactiveSnapshot.ts",
       "lib/ghostme/ui/brainUiAdapter.ts"
     ],
@@ -9799,6 +10054,7 @@
       "lib/ghostme/location/locationLearningFlow.ts",
       "lib/ghostme/location/locationSavePlaceFlow.ts",
       "lib/ghostme/location/locationUpdateFlow.ts",
+      "lib/ghostme/location/placeResolver.ts",
       "lib/ghostme/situation/situationEngine.ts"
     ],
     "lib/ghostme/location/locationCurrentStateFlow.ts": [
@@ -9988,6 +10244,7 @@
       "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
       "lib/ghostme/homeAssistant/houseSuggestionEngine.ts",
       "lib/ghostme/location/locationLearningFlow.ts",
+      "lib/ghostme/location/locationUpdateFlow.ts",
       "lib/ghostme/proactive/curiosityCardWriter.ts",
       "lib/ghostme/proactive/proactiveTrigger.ts",
       "lib/ghostme/proactive/proactiveUserFlow.ts",
@@ -10206,6 +10463,9 @@
       "lib/ghostme/context/reasoningService.ts",
       "lib/ghostme/proactive/trueProactiveCardWriter.ts"
     ],
+    "lib/ghostme/context/situationPolicy.ts": [
+      "lib/ghostme/context/reasoningService.ts"
+    ],
     "lib/ghostme/homeAssistant/housePatternEngine.ts": [
       "lib/ghostme/home/houseWorkerFlow.ts",
       "lib/ghostme/homeAssistant/houseLightLearningFlow.ts",
@@ -10241,6 +10501,9 @@
       "lib/ghostme/location/locationUpdateFlow.ts"
     ],
     "lib/ghostme/proactive/proactiveTrigger.ts": [
+      "lib/ghostme/location/locationUpdateFlow.ts"
+    ],
+    "lib/ghostme/location/placeResolver.ts": [
       "lib/ghostme/location/locationUpdateFlow.ts"
     ],
     "lib/ghostme/observation/observationPolicy.ts": [
@@ -10302,13 +10565,15 @@
     "node:fs": [
       "scripts/db-usage-map.mjs",
       "scripts/file-usage-map.mjs",
-      "scripts/system-docs.mjs"
+      "scripts/system-docs.mjs",
+      "scripts/system-health-report.mjs"
     ],
     "node:path": [
       "scripts/db-usage-map.mjs",
       "scripts/file-usage-map.mjs",
       "scripts/generate-graphs.mjs",
-      "scripts/system-docs.mjs"
+      "scripts/system-docs.mjs",
+      "scripts/system-health-report.mjs"
     ],
     "node:fs/promises": [
       "scripts/generate-graphs.mjs"
@@ -10317,7 +10582,8 @@
       "scripts/generate-graphs.mjs"
     ],
     "node:child_process": [
-      "scripts/generate-graphs.mjs"
+      "scripts/generate-graphs.mjs",
+      "scripts/system-health-report.mjs"
     ],
     "node:url": [
       "scripts/generate-graphs.mjs"
@@ -10529,6 +10795,7 @@
     "house_events": {
       "readBy": [
         "app/api/home-assistant/event/route.ts",
+        "lib/ghostme/context/reasoningService.ts",
         "lib/ghostme/home/homeComfortRiskSnapshot.ts",
         "lib/ghostme/home/houseRouteSnapshot.ts",
         "lib/ghostme/home/houseStateSnapshot.ts",
@@ -10957,6 +11224,22 @@
       "upsertedBy": [],
       "deletedBy": []
     },
+    "observation_events": {
+      "readBy": [
+        "lib/ghostme/location/placeResolver.ts",
+        "lib/ghostme/observation/observationEngine.ts",
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
+        "lib/ghostme/situation/situationEngine.ts"
+      ],
+      "insertedBy": [
+        "lib/ghostme/observation/observationEngine.ts"
+      ],
+      "updatedBy": [
+        "lib/ghostme/observation/observationEngine.ts"
+      ],
+      "upsertedBy": [],
+      "deletedBy": []
+    },
     "topic_links": {
       "readBy": [
         "lib/ghostme/memory/memorySearchFlow.ts",
@@ -10985,21 +11268,6 @@
       ],
       "updatedBy": [
         "lib/ghostme/mentalState.ts"
-      ],
-      "upsertedBy": [],
-      "deletedBy": []
-    },
-    "observation_events": {
-      "readBy": [
-        "lib/ghostme/observation/observationEngine.ts",
-        "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
-        "lib/ghostme/situation/situationEngine.ts"
-      ],
-      "insertedBy": [
-        "lib/ghostme/observation/observationEngine.ts"
-      ],
-      "updatedBy": [
-        "lib/ghostme/observation/observationEngine.ts"
       ],
       "upsertedBy": [],
       "deletedBy": []
@@ -11217,6 +11485,9 @@
       "buildReasoningSnapshot",
       "buildGhostBrainSnapshot"
     ],
+    "lib/ghostme/context/situationPolicy.ts": [
+      "buildUnifiedSituationModel"
+    ],
     "lib/ghostme/context/temporalPriority.ts": [
       "isLikelyTestData",
       "temporalMemoryLabel",
@@ -11378,6 +11649,10 @@
     ],
     "lib/ghostme/location/locationUpdateFlow.ts": [
       "updateCurrentLocationFlow"
+    ],
+    "lib/ghostme/location/placeResolver.ts": [
+      "coordinateBucket",
+      "resolvePlaceFromCoordinates"
     ],
     "lib/ghostme/location/placeService.ts": [
       "toPublicSignificantPlace",
@@ -11713,7 +11988,8 @@
         "scripts/project-audit.mjs",
         "scripts/project-knowledge-base.mjs",
         "scripts/supabase-schema-map.mjs",
-        "scripts/system-docs.mjs"
+        "scripts/system-docs.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "false": {
@@ -11822,7 +12098,9 @@
         "lib/ghostme/home/houseWorkerFlow.ts",
         "lib/ghostme/homeAssistant/homeEventSignificance.ts",
         "lib/ghostme/location/locationLearningFlow.ts",
+        "lib/ghostme/location/placeResolver.ts",
         "lib/ghostme/people/peopleSnapshot.ts",
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
         "lib/ghostme/relationshipResolver.ts",
         "lib/ghostme/topicDetector.ts",
         "lib/ghostme/topicLinks.ts",
@@ -11830,7 +12108,8 @@
         "scripts/file-usage-map.mjs",
         "scripts/project-audit.mjs",
         "scripts/supabase-schema-map.mjs",
-        "scripts/system-docs.mjs"
+        "scripts/system-docs.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "PATCH": {
@@ -11909,6 +12188,7 @@
         "lib/ghostme/context/contextSignals.ts",
         "lib/ghostme/context/decisionSnapshot.ts",
         "lib/ghostme/context/reasoningService.ts",
+        "lib/ghostme/context/situationPolicy.ts",
         "lib/ghostme/context/temporalPriority.ts",
         "lib/ghostme/core/messageClassifier.ts",
         "lib/ghostme/curiosity/curiositySnapshot.ts",
@@ -11934,6 +12214,7 @@
         "lib/ghostme/location/haLocationBridgeFlow.ts",
         "lib/ghostme/location/locationStateFreshness.ts",
         "lib/ghostme/location/locationUpdateFlow.ts",
+        "lib/ghostme/location/placeResolver.ts",
         "lib/ghostme/memory/memorySearchFlow.ts",
         "lib/ghostme/mentalState.ts",
         "lib/ghostme/observation/observationEngine.ts",
@@ -11958,7 +12239,8 @@
         "scripts/file-usage-map.mjs",
         "scripts/project-audit.mjs",
         "scripts/supabase-schema-map.mjs",
-        "scripts/system-docs.mjs"
+        "scripts/system-docs.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "getAuthenticatedUserId": {
@@ -12026,6 +12308,7 @@
         "lib/ghostme/location/locationLearningFlow.ts",
         "lib/ghostme/location/locationStateFreshness.ts",
         "lib/ghostme/location/locationUpdateFlow.ts",
+        "lib/ghostme/location/placeResolver.ts",
         "lib/ghostme/location/placeService.ts",
         "lib/ghostme/maintenance/retentionEngine.ts",
         "lib/ghostme/memoryDecay.ts",
@@ -12052,7 +12335,8 @@
         "scripts/project-audit.mjs",
         "scripts/project-knowledge-base.mjs",
         "scripts/supabase-schema-map.mjs",
-        "scripts/system-docs.mjs"
+        "scripts/system-docs.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "completeActionIntentById": {
@@ -12092,6 +12376,7 @@
         "lib/ghostme/chat/chatPostProcessing.ts",
         "lib/ghostme/context/contextBuilder.ts",
         "lib/ghostme/context/decisionSnapshot.ts",
+        "lib/ghostme/context/reasoningService.ts",
         "lib/ghostme/context/userContextGraph.ts",
         "lib/ghostme/contradictions.ts",
         "lib/ghostme/conversationSummary.ts",
@@ -12121,6 +12406,7 @@
         "lib/ghostme/location/locationDeletePlaceFlow.ts",
         "lib/ghostme/location/locationLearningFlow.ts",
         "lib/ghostme/location/locationUpdateFlow.ts",
+        "lib/ghostme/location/placeResolver.ts",
         "lib/ghostme/location/placeService.ts",
         "lib/ghostme/maintenance/retentionEngine.ts",
         "lib/ghostme/memory/memorySearchFlow.ts",
@@ -12173,6 +12459,7 @@
         "lib/ghostme/calendar/calendarService.ts",
         "lib/ghostme/chat/chatPostProcessing.ts",
         "lib/ghostme/context/contextBuilder.ts",
+        "lib/ghostme/context/reasoningService.ts",
         "lib/ghostme/context/userContextGraph.ts",
         "lib/ghostme/contradictions.ts",
         "lib/ghostme/conversationSummary.ts",
@@ -12199,6 +12486,7 @@
         "lib/ghostme/location/locationCurrentStateFlow.ts",
         "lib/ghostme/location/locationLearningFlow.ts",
         "lib/ghostme/location/locationUpdateFlow.ts",
+        "lib/ghostme/location/placeResolver.ts",
         "lib/ghostme/location/placeService.ts",
         "lib/ghostme/memory/memorySearchFlow.ts",
         "lib/ghostme/memory/memorySnapshot.ts",
@@ -12244,6 +12532,7 @@
         "lib/ghostme/calendar/calendarService.ts",
         "lib/ghostme/chat/chatPostProcessing.ts",
         "lib/ghostme/context/contextBuilder.ts",
+        "lib/ghostme/context/reasoningService.ts",
         "lib/ghostme/context/userContextGraph.ts",
         "lib/ghostme/contradictions.ts",
         "lib/ghostme/conversationSummary.ts",
@@ -12271,6 +12560,7 @@
         "lib/ghostme/location/locationDeletePlaceFlow.ts",
         "lib/ghostme/location/locationLearningFlow.ts",
         "lib/ghostme/location/locationUpdateFlow.ts",
+        "lib/ghostme/location/placeResolver.ts",
         "lib/ghostme/location/placeService.ts",
         "lib/ghostme/maintenance/retentionEngine.ts",
         "lib/ghostme/memory/memorySearchFlow.ts",
@@ -12516,7 +12806,6 @@
         "lib/ghostme/behavior/behaviorRulesEngine.ts",
         "lib/ghostme/calendar/calendarIntent.ts",
         "lib/ghostme/chat/chatCalendarFlow.ts",
-        "lib/ghostme/chat/chatContextBuilder.ts",
         "lib/ghostme/chat/chatExternalServices.ts",
         "lib/ghostme/chat/chatPostProcessing.ts",
         "lib/ghostme/context/reasoningService.ts",
@@ -12541,6 +12830,7 @@
         "lib/ghostme/homeAssistant/houseSuggestionEngine.ts",
         "lib/ghostme/location/haLocationBridgeFlow.ts",
         "lib/ghostme/location/locationUpdateFlow.ts",
+        "lib/ghostme/location/placeResolver.ts",
         "lib/ghostme/location/placeService.ts",
         "lib/ghostme/memoryDecay.ts",
         "lib/ghostme/mentalState.ts",
@@ -12557,7 +12847,8 @@
         "scripts/project-audit.mjs",
         "scripts/project-knowledge-base.mjs",
         "scripts/supabase-schema-map.mjs",
-        "scripts/system-docs.mjs"
+        "scripts/system-docs.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "updateCalendarEvent": {
@@ -12766,6 +13057,7 @@
         "lib/ghostme/context/contextSignals.ts",
         "lib/ghostme/context/decisionSnapshot.ts",
         "lib/ghostme/context/reasoningService.ts",
+        "lib/ghostme/context/situationPolicy.ts",
         "lib/ghostme/context/temporalPriority.ts",
         "lib/ghostme/context/userContextGraph.ts",
         "lib/ghostme/core/messageClassifier.ts",
@@ -12792,6 +13084,7 @@
         "lib/ghostme/location/haLocationBridgeFlow.ts",
         "lib/ghostme/location/locationStateFreshness.ts",
         "lib/ghostme/location/locationUpdateFlow.ts",
+        "lib/ghostme/location/placeResolver.ts",
         "lib/ghostme/memory/memorySearchFlow.ts",
         "lib/ghostme/mentalState.ts",
         "lib/ghostme/observation/observationPolicy.ts",
@@ -12840,7 +13133,8 @@
         "lib/ghostme/topicDetector.ts",
         "scripts/file-usage-map.mjs",
         "scripts/project-audit.mjs",
-        "scripts/system-docs.mjs"
+        "scripts/system-docs.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "sort": {
@@ -12853,6 +13147,7 @@
         "lib/ghostme/behavior/behaviorRulesEngine.ts",
         "lib/ghostme/context/contextSignals.ts",
         "lib/ghostme/context/reasoningService.ts",
+        "lib/ghostme/context/situationPolicy.ts",
         "lib/ghostme/curiosity/curiositySnapshot.ts",
         "lib/ghostme/goals/goalsActionsLifecycle.ts",
         "lib/ghostme/home/houseRouteSnapshot.ts",
@@ -12878,7 +13173,8 @@
         "scripts/project-audit.mjs",
         "scripts/project-knowledge-base.mjs",
         "scripts/supabase-schema-map.mjs",
-        "scripts/system-docs.mjs"
+        "scripts/system-docs.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "localeCompare": {
@@ -12933,6 +13229,7 @@
         "lib/ghostme/context/contextSignals.ts",
         "lib/ghostme/context/decisionSnapshot.ts",
         "lib/ghostme/context/reasoningService.ts",
+        "lib/ghostme/context/situationPolicy.ts",
         "lib/ghostme/context/temporalPriority.ts",
         "lib/ghostme/context/userContextGraph.ts",
         "lib/ghostme/curiosity/curiosityEngine.ts",
@@ -12969,7 +13266,8 @@
         "scripts/file-usage-map.mjs",
         "scripts/project-audit.mjs",
         "scripts/supabase-schema-map.mjs",
-        "scripts/system-docs.mjs"
+        "scripts/system-docs.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "URL": {
@@ -13026,42 +13324,6 @@
         "app/api/ghostme/brain/route.ts",
         "lib/ghostme/context/decisionSnapshot.ts",
         "lib/ghostme/context/reasoningService.ts"
-      ]
-    },
-    "all": {
-      "exportedBy": [],
-      "calledBy": [
-        "app/api/ghostme/brain/route.ts",
-        "app/api/home-assistant/event/route.ts",
-        "components/ghost/GhostDrawers.tsx",
-        "lib/ghostme/agenda/reminderEngine.ts",
-        "lib/ghostme/context/reasoningService.ts",
-        "lib/ghostme/context/userContextGraph.ts",
-        "lib/ghostme/curiosity/curiosityEngine.ts",
-        "lib/ghostme/goals/goalsSnapshot.ts",
-        "lib/ghostme/home/houseRouteSnapshot.ts",
-        "lib/ghostme/home/houseStateSnapshot.ts",
-        "lib/ghostme/home/houseWorkerFlow.ts",
-        "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
-        "lib/ghostme/location/locationLearningFlow.ts",
-        "lib/ghostme/memory/memorySearchFlow.ts",
-        "lib/ghostme/memory/memorySnapshot.ts",
-        "lib/ghostme/observation/observationEngine.ts",
-        "lib/ghostme/people/peopleGraphLinkService.ts",
-        "lib/ghostme/people/peopleGraphService.ts",
-        "lib/ghostme/people/peopleSnapshot.ts",
-        "lib/ghostme/proactive/dailyBriefingRepository.ts",
-        "lib/ghostme/profile/profileBehaviorSeed.ts",
-        "lib/ghostme/situation/situationEngine.ts"
-      ]
-    },
-    "getUpcomingCalendarEvents": {
-      "exportedBy": [
-        "lib/ghostme/calendar/calendarService.ts"
-      ],
-      "calledBy": [
-        "app/api/ghostme/brain/route.ts",
-        "lib/ghostme/calendar/calendarService.ts"
       ]
     },
     "runAppOpenContinuityLifecycle": {
@@ -13139,7 +13401,8 @@
         "scripts/project-audit.mjs",
         "scripts/project-knowledge-base.mjs",
         "scripts/supabase-schema-map.mjs",
-        "scripts/system-docs.mjs"
+        "scripts/system-docs.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "has": {
@@ -13185,7 +13448,8 @@
         "lib/ghostme/topicLinks.ts",
         "scripts/db-usage-map.mjs",
         "scripts/file-usage-map.mjs",
-        "scripts/project-audit.mjs"
+        "scripts/project-audit.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "match": {
@@ -13198,7 +13462,8 @@
         "lib/ghostme/people/peopleSnapshot.ts",
         "lib/ghostme/proactive/visibleProactiveMessages.ts",
         "lib/ghostme/relationshipResolver.ts",
-        "scripts/supabase-schema-map.mjs"
+        "scripts/supabase-schema-map.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "_": {
@@ -13223,6 +13488,7 @@
         "app/api/home-assistant/event/route.ts",
         "lib/ghostme/context/decisionSnapshot.ts",
         "lib/ghostme/context/reasoningService.ts",
+        "lib/ghostme/context/situationPolicy.ts",
         "lib/ghostme/context/temporalPriority.ts",
         "lib/ghostme/curiosity/curiositySnapshot.ts",
         "lib/ghostme/home/homeComfortRiskSnapshot.ts",
@@ -13233,6 +13499,7 @@
         "lib/ghostme/homeAssistant/homeEventSignificance.ts",
         "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
         "lib/ghostme/location/haLocationBridgeFlow.ts",
+        "lib/ghostme/location/placeResolver.ts",
         "lib/ghostme/mentalState.ts",
         "lib/ghostme/observation/observationPolicy.ts",
         "lib/ghostme/people/peopleSnapshot.ts",
@@ -13259,6 +13526,7 @@
         "lib/ghostme/butler/butlerEngine.ts",
         "lib/ghostme/calendar/calendarService.ts",
         "lib/ghostme/chat/chatCalendarFlow.ts",
+        "lib/ghostme/chat/chatContextBuilder.ts",
         "lib/ghostme/chat/chatMessageAnalyzer.ts",
         "lib/ghostme/chat/chatPromptBuilder.ts",
         "lib/ghostme/chat/chatResponseSanitizer.ts",
@@ -13266,6 +13534,7 @@
         "lib/ghostme/context/contextSignals.ts",
         "lib/ghostme/context/decisionSnapshot.ts",
         "lib/ghostme/context/reasoningService.ts",
+        "lib/ghostme/context/situationPolicy.ts",
         "lib/ghostme/context/temporalPriority.ts",
         "lib/ghostme/context/userContextGraph.ts",
         "lib/ghostme/contradictions.ts",
@@ -13290,6 +13559,8 @@
         "lib/ghostme/homeAssistant/houseLearnedRulesContext.ts",
         "lib/ghostme/location/haLocationBridgeFlow.ts",
         "lib/ghostme/location/locationLearningFlow.ts",
+        "lib/ghostme/location/locationUpdateFlow.ts",
+        "lib/ghostme/location/placeResolver.ts",
         "lib/ghostme/location/placeService.ts",
         "lib/ghostme/memory/memorySearchFlow.ts",
         "lib/ghostme/mentalState.ts",
@@ -13319,7 +13590,8 @@
         "lib/ghostme/topicLinks.ts",
         "lib/ghostme/ui/brainUiAdapter.ts",
         "scripts/generate-graphs.mjs",
-        "scripts/supabase-schema-map.mjs"
+        "scripts/supabase-schema-map.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "objectValue": {
@@ -13396,6 +13668,7 @@
         "lib/ghostme/calendar/calendarService.ts",
         "lib/ghostme/chat/chatPostProcessing.ts",
         "lib/ghostme/context/contextBuilder.ts",
+        "lib/ghostme/context/reasoningService.ts",
         "lib/ghostme/context/userContextGraph.ts",
         "lib/ghostme/contradictions.ts",
         "lib/ghostme/conversationSummary.ts",
@@ -13416,6 +13689,7 @@
         "lib/ghostme/homeAssistant/houseLightLearningFlow.ts",
         "lib/ghostme/homeAssistant/housePatternEngine.ts",
         "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts",
+        "lib/ghostme/location/placeResolver.ts",
         "lib/ghostme/location/placeService.ts",
         "lib/ghostme/memory/memorySnapshot.ts",
         "lib/ghostme/mentalState.ts",
@@ -13449,6 +13723,7 @@
         "lib/ghostme/behavior/behaviorRulesEngine.ts",
         "lib/ghostme/chat/chatPostProcessing.ts",
         "lib/ghostme/context/contextBuilder.ts",
+        "lib/ghostme/context/reasoningService.ts",
         "lib/ghostme/context/userContextGraph.ts",
         "lib/ghostme/contradictions.ts",
         "lib/ghostme/conversationSummary.ts",
@@ -13472,6 +13747,7 @@
         "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts",
         "lib/ghostme/homeAssistant/houseSuggestionEngine.ts",
         "lib/ghostme/location/haLocationBridgeFlow.ts",
+        "lib/ghostme/location/placeResolver.ts",
         "lib/ghostme/memory/memorySearchFlow.ts",
         "lib/ghostme/memory/memorySnapshot.ts",
         "lib/ghostme/mentalState.ts",
@@ -13508,7 +13784,34 @@
         "app/api/home-assistant/event/route.ts",
         "scripts/file-usage-map.mjs",
         "scripts/generate-graphs.mjs",
-        "scripts/project-audit.mjs"
+        "scripts/project-audit.mjs",
+        "scripts/system-health-report.mjs"
+      ]
+    },
+    "all": {
+      "exportedBy": [],
+      "calledBy": [
+        "app/api/home-assistant/event/route.ts",
+        "components/ghost/GhostDrawers.tsx",
+        "lib/ghostme/agenda/reminderEngine.ts",
+        "lib/ghostme/context/reasoningService.ts",
+        "lib/ghostme/context/userContextGraph.ts",
+        "lib/ghostme/curiosity/curiosityEngine.ts",
+        "lib/ghostme/goals/goalsSnapshot.ts",
+        "lib/ghostme/home/houseRouteSnapshot.ts",
+        "lib/ghostme/home/houseStateSnapshot.ts",
+        "lib/ghostme/home/houseWorkerFlow.ts",
+        "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
+        "lib/ghostme/location/locationLearningFlow.ts",
+        "lib/ghostme/memory/memorySearchFlow.ts",
+        "lib/ghostme/memory/memorySnapshot.ts",
+        "lib/ghostme/observation/observationEngine.ts",
+        "lib/ghostme/people/peopleGraphLinkService.ts",
+        "lib/ghostme/people/peopleGraphService.ts",
+        "lib/ghostme/people/peopleSnapshot.ts",
+        "lib/ghostme/proactive/dailyBriefingRepository.ts",
+        "lib/ghostme/profile/profileBehaviorSeed.ts",
+        "lib/ghostme/situation/situationEngine.ts"
       ]
     },
     "Boolean": {
@@ -13590,6 +13893,7 @@
         "lib/ghostme/homeAssistant/homeEventSignificance.ts",
         "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
         "lib/ghostme/homeAssistant/housePatternEngine.ts",
+        "lib/ghostme/location/placeResolver.ts",
         "lib/ghostme/mentalState.ts",
         "lib/ghostme/people/peopleGraphLinkService.ts",
         "lib/ghostme/people/peopleGraphService.ts",
@@ -13610,7 +13914,8 @@
         "lib/ghostme/ui/brainUiAdapter.ts",
         "scripts/file-usage-map.mjs",
         "scripts/supabase-schema-map.mjs",
-        "scripts/system-docs.mjs"
+        "scripts/system-docs.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "getDefaultHomeAssistantUserId": {
@@ -13992,6 +14297,7 @@
         "lib/ghostme/home/houseSuggestionResponseFlow.ts",
         "lib/ghostme/homeAssistant/cognitiveHouseBuilder.ts",
         "lib/ghostme/location/haLocationBridgeFlow.ts",
+        "lib/ghostme/location/placeResolver.ts",
         "lib/ghostme/location/placeService.ts",
         "lib/ghostme/observation/observationEngine.ts",
         "lib/ghostme/people/socialSuggestionSnapshot.ts",
@@ -14000,7 +14306,8 @@
         "lib/ghostme/proactive/trueProactiveSnapshot.ts",
         "lib/ghostme/projects/projectAdvisorSnapshot.ts",
         "lib/ghostme/topicDetector.ts",
-        "lib/ghostme/ui/brainUiAdapter.ts"
+        "lib/ghostme/ui/brainUiAdapter.ts",
+        "scripts/system-health-report.mjs"
       ]
     },
     "refreshBrain": {
@@ -14130,7 +14437,8 @@
         "scripts/generate-knowledge.mjs",
         "scripts/project-audit.mjs",
         "scripts/project-knowledge-base.mjs",
-        "scripts/supabase-schema-map.mjs"
+        "scripts/supabase-schema-map.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "text": {
@@ -14193,6 +14501,7 @@
         "lib/ghostme/context/contextSignals.ts",
         "lib/ghostme/context/decisionSnapshot.ts",
         "lib/ghostme/context/reasoningService.ts",
+        "lib/ghostme/context/situationPolicy.ts",
         "lib/ghostme/context/temporalPriority.ts",
         "lib/ghostme/context/userContextGraph.ts",
         "lib/ghostme/curiosity/curiosityEngine.ts",
@@ -14272,6 +14581,7 @@
         "lib/ghostme/context/contextSignals.ts",
         "lib/ghostme/context/decisionSnapshot.ts",
         "lib/ghostme/context/reasoningService.ts",
+        "lib/ghostme/context/situationPolicy.ts",
         "lib/ghostme/context/userContextGraph.ts",
         "lib/ghostme/core/messageClassifier.ts",
         "lib/ghostme/curiosity/curiositySnapshot.ts",
@@ -14308,7 +14618,8 @@
         "scripts/generate-graphs.mjs",
         "scripts/project-audit.mjs",
         "scripts/supabase-schema-map.mjs",
-        "scripts/system-docs.mjs"
+        "scripts/system-docs.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "setCurrentUserId": {
@@ -14712,6 +15023,7 @@
         "lib/ghostme/context/contextSignals.ts",
         "lib/ghostme/context/decisionSnapshot.ts",
         "lib/ghostme/context/reasoningService.ts",
+        "lib/ghostme/context/situationPolicy.ts",
         "lib/ghostme/context/temporalPriority.ts",
         "lib/ghostme/curiosity/curiositySnapshot.ts",
         "lib/ghostme/goals/goalsSnapshot.ts",
@@ -14764,7 +15076,8 @@
         "app/setup/page.tsx",
         "lib/ghostme/location/locationDeletePlaceFlow.ts",
         "lib/ghostme/maintenance/retentionEngine.ts",
-        "lib/ghostme/relationshipResolver.ts"
+        "lib/ghostme/relationshipResolver.ts",
+        "scripts/system-health-report.mjs"
       ]
     },
     "togglePinned": {
@@ -14798,6 +15111,7 @@
         "lib/ghostme/homeAssistant/housePatternEngine.ts",
         "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts",
         "lib/ghostme/location/locationLearningFlow.ts",
+        "lib/ghostme/location/placeResolver.ts",
         "lib/ghostme/location/placeService.ts",
         "lib/ghostme/memoryDecay.ts",
         "lib/ghostme/mentalState.ts",
@@ -14812,7 +15126,8 @@
         "lib/ghostme/projects/projectMemorySnapshot.ts",
         "lib/ghostme/timeline.ts",
         "lib/ghostme/topicLinks.ts",
-        "scripts/db-usage-map.mjs"
+        "scripts/db-usage-map.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "createMemory": {
@@ -14909,7 +15224,8 @@
         "scripts/generate-graphs.mjs",
         "scripts/project-audit.mjs",
         "scripts/project-knowledge-base.mjs",
-        "scripts/system-docs.mjs"
+        "scripts/system-docs.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "SetupPage": {
@@ -15286,7 +15602,8 @@
         "scripts/db-usage-map.mjs",
         "scripts/file-usage-map.mjs",
         "scripts/project-audit.mjs",
-        "scripts/supabase-schema-map.mjs"
+        "scripts/supabase-schema-map.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "proactiveReplyButtonLabel": {
@@ -15471,6 +15788,7 @@
         "lib/ghostme/context/contextBuilder.ts",
         "lib/ghostme/context/decisionSnapshot.ts",
         "lib/ghostme/context/reasoningService.ts",
+        "lib/ghostme/context/situationPolicy.ts",
         "lib/ghostme/context/temporalPriority.ts",
         "lib/ghostme/core/messageClassifier.ts",
         "lib/ghostme/curiosity/curiositySnapshot.ts",
@@ -15495,7 +15813,8 @@
         "lib/ghostme/retrieval.ts",
         "lib/ghostme/services/serviceRouter.ts",
         "lib/ghostme/topicDetector.ts",
-        "lib/ghostme/ui/brainUiAdapter.ts"
+        "lib/ghostme/ui/brainUiAdapter.ts",
+        "scripts/system-health-report.mjs"
       ]
     },
     "setLoadingObservations": {
@@ -15560,6 +15879,7 @@
         "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
         "lib/ghostme/homeAssistant/housePatternEngine.ts",
         "lib/ghostme/location/locationLearningFlow.ts",
+        "lib/ghostme/location/locationUpdateFlow.ts",
         "lib/ghostme/observation/observationEngine.ts",
         "lib/ghostme/proactive/curiosityCardWriter.ts",
         "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
@@ -15580,7 +15900,8 @@
         "components/ghost/GhostDrawers.tsx",
         "lib/ghostme/calendar/calendarService.ts",
         "scripts/generate-knowledge.mjs",
-        "scripts/project-knowledge-base.mjs"
+        "scripts/project-knowledge-base.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "eventsForDay": {
@@ -15631,7 +15952,8 @@
         "scripts/project-audit.mjs",
         "scripts/project-knowledge-base.mjs",
         "scripts/supabase-schema-map.mjs",
-        "scripts/system-docs.mjs"
+        "scripts/system-docs.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "isNaN": {
@@ -15668,6 +15990,7 @@
       "calledBy": [
         "components/ghost/GhostDrawers.tsx",
         "lib/ghostme/conversationSummary.ts",
+        "lib/ghostme/location/placeResolver.ts",
         "lib/ghostme/proactive/proactiveMessageService.ts",
         "lib/ghostme/proactive/proactiveUserFlow.ts"
       ]
@@ -15798,7 +16121,8 @@
         "lib/ghostme/timeline.ts",
         "scripts/generate-graphs.mjs",
         "scripts/project-knowledge-base.mjs",
-        "scripts/system-docs.mjs"
+        "scripts/system-docs.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "isArray": {
@@ -15808,6 +16132,7 @@
         "lib/ghostme/agenda/agendaEngine.ts",
         "lib/ghostme/auth/serverAuth.ts",
         "lib/ghostme/chat/chatPostProcessing.ts",
+        "lib/ghostme/context/situationPolicy.ts",
         "lib/ghostme/entityExtractor.ts",
         "lib/ghostme/goals/goalsActionsLifecycle.ts",
         "lib/ghostme/home/houseWorkerFlow.ts",
@@ -16026,6 +16351,7 @@
         "lib/ghostme/context/contextSignals.ts",
         "lib/ghostme/context/decisionSnapshot.ts",
         "lib/ghostme/context/reasoningService.ts",
+        "lib/ghostme/context/situationPolicy.ts",
         "lib/ghostme/context/temporalPriority.ts",
         "lib/ghostme/contradictions.ts",
         "lib/ghostme/conversationSummary.ts",
@@ -16066,7 +16392,8 @@
         "scripts/project-audit.mjs",
         "scripts/project-knowledge-base.mjs",
         "scripts/supabase-schema-map.mjs",
-        "scripts/system-docs.mjs"
+        "scripts/system-docs.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "create": {
@@ -16141,6 +16468,7 @@
         "lib/ghostme/actionLayer.ts",
         "lib/ghostme/behavior/behaviorRulesEngine.ts",
         "lib/ghostme/context/reasoningService.ts",
+        "lib/ghostme/context/situationPolicy.ts",
         "lib/ghostme/core/messageClassifier.ts",
         "lib/ghostme/curiosity/curiositySnapshot.ts",
         "lib/ghostme/dynamicSelfProfile.ts",
@@ -16153,6 +16481,7 @@
         "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts",
         "lib/ghostme/location/locationLearningFlow.ts",
         "lib/ghostme/location/locationStateFreshness.ts",
+        "lib/ghostme/location/placeResolver.ts",
         "lib/ghostme/location/placeService.ts",
         "lib/ghostme/memoryDecay.ts",
         "lib/ghostme/mentalState.ts",
@@ -16162,9 +16491,11 @@
         "lib/ghostme/people/peopleSnapshot.ts",
         "lib/ghostme/people/socialSuggestionSnapshot.ts",
         "lib/ghostme/proactive/curiosityCardWriter.ts",
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
         "lib/ghostme/proactive/trueProactiveSnapshot.ts",
         "lib/ghostme/profile/profileBehaviorSeed.ts",
-        "lib/ghostme/timeline.ts"
+        "lib/ghostme/timeline.ts",
+        "scripts/system-health-report.mjs"
       ]
     },
     "setDate": {
@@ -16261,6 +16592,7 @@
       "calledBy": [
         "lib/ghostme/agenda/reminderEngine.ts",
         "lib/ghostme/context/contextBuilder.ts",
+        "lib/ghostme/context/reasoningService.ts",
         "lib/ghostme/context/userContextGraph.ts",
         "lib/ghostme/conversationSummary.ts",
         "lib/ghostme/curiosity/curiosityEngine.ts",
@@ -16273,6 +16605,7 @@
         "lib/ghostme/homeAssistant/housePatternEngine.ts",
         "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts",
         "lib/ghostme/homeAssistant/houseSuggestionEngine.ts",
+        "lib/ghostme/location/placeResolver.ts",
         "lib/ghostme/observation/observationEngine.ts",
         "lib/ghostme/observation/observationInsightEngine.ts",
         "lib/ghostme/patterns/patternInsightEngine.ts",
@@ -16311,7 +16644,8 @@
         "lib/ghostme/proactive/proactiveMessageDedupe.ts",
         "lib/ghostme/proactive/trueProactiveSnapshot.ts",
         "lib/ghostme/projects/projectAdvisorSnapshot.ts",
-        "lib/ghostme/projects/projectMemorySnapshot.ts"
+        "lib/ghostme/projects/projectMemorySnapshot.ts",
+        "scripts/system-health-report.mjs"
       ]
     },
     "upsertProactiveMessage": {
@@ -16325,6 +16659,7 @@
         "lib/ghostme/homeAssistant/houseAutomationSuggestionEngine.ts",
         "lib/ghostme/homeAssistant/houseSuggestionEngine.ts",
         "lib/ghostme/location/locationLearningFlow.ts",
+        "lib/ghostme/location/locationUpdateFlow.ts",
         "lib/ghostme/proactive/curiosityCardWriter.ts",
         "lib/ghostme/proactive/proactiveMessageService.ts",
         "lib/ghostme/proactive/proactiveTrigger.ts",
@@ -16381,7 +16716,8 @@
       "exportedBy": [],
       "calledBy": [
         "lib/ghostme/auth/serverAuth.ts",
-        "lib/ghostme/chat/chatResponseSanitizer.ts"
+        "lib/ghostme/chat/chatResponseSanitizer.ts",
+        "scripts/system-health-report.mjs"
       ]
     },
     "set": {
@@ -16422,7 +16758,8 @@
         "scripts/db-usage-map.mjs",
         "scripts/file-usage-map.mjs",
         "scripts/supabase-schema-map.mjs",
-        "scripts/system-docs.mjs"
+        "scripts/system-docs.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "UserContextAuthError": {
@@ -16510,6 +16847,7 @@
         "lib/ghostme/chat/chatRecallPolicy.ts",
         "lib/ghostme/location/locationLearningFlow.ts",
         "lib/ghostme/people/peopleSnapshot.ts",
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
         "lib/ghostme/relationshipResolver.ts",
         "scripts/project-audit.mjs"
       ]
@@ -16545,6 +16883,14 @@
       "calledBy": [
         "lib/ghostme/calendar/calendarService.ts",
         "lib/ghostme/proactive/proactiveTrigger.ts"
+      ]
+    },
+    "getUpcomingCalendarEvents": {
+      "exportedBy": [
+        "lib/ghostme/calendar/calendarService.ts"
+      ],
+      "calledBy": [
+        "lib/ghostme/calendar/calendarService.ts"
       ]
     },
     "cleanupExpiredEvents": {
@@ -16789,7 +17135,8 @@
         "lib/ghostme/topicLinks.ts",
         "scripts/db-usage-map.mjs",
         "scripts/file-usage-map.mjs",
-        "scripts/supabase-schema-map.mjs"
+        "scripts/supabase-schema-map.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "buildRelationshipContext": {
@@ -16800,6 +17147,12 @@
       ]
     },
     "buildPlacesContext": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/chat/chatContextBuilder.ts"
+      ]
+    },
+    "buildSituationPolicyContext": {
       "exportedBy": [],
       "calledBy": [
         "lib/ghostme/chat/chatContextBuilder.ts"
@@ -17127,7 +17480,8 @@
         "lib/ghostme/chat/chatPromptBuilder.ts",
         "scripts/db-usage-map.mjs",
         "scripts/file-usage-map.mjs",
-        "scripts/project-audit.mjs"
+        "scripts/project-audit.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "hasBehaviorRule": {
@@ -17265,6 +17619,7 @@
       "calledBy": [
         "lib/ghostme/context/contextSignals.ts",
         "lib/ghostme/context/reasoningService.ts",
+        "lib/ghostme/context/situationPolicy.ts",
         "lib/ghostme/proactive/trueProactiveSnapshot.ts"
       ]
     },
@@ -17273,19 +17628,22 @@
       "calledBy": [
         "lib/ghostme/context/contextSignals.ts",
         "lib/ghostme/context/reasoningService.ts",
+        "lib/ghostme/context/situationPolicy.ts",
         "lib/ghostme/curiosity/curiositySnapshot.ts",
         "lib/ghostme/home/houseStateSnapshot.ts",
         "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
         "lib/ghostme/homeAssistant/housePatternEngine.ts",
         "lib/ghostme/homeAssistant/houseRouteLearningEngine.ts",
         "lib/ghostme/location/locationLearningFlow.ts",
+        "lib/ghostme/location/placeResolver.ts",
         "lib/ghostme/location/placeService.ts",
         "lib/ghostme/mentalState.ts",
         "lib/ghostme/people/peopleGraphLinkService.ts",
         "lib/ghostme/people/peopleGraphService.ts",
         "lib/ghostme/proactive/trueProactiveSnapshot.ts",
         "lib/ghostme/projects/goalProjectConsistencySnapshot.ts",
-        "lib/ghostme/projects/projectAdvisorSnapshot.ts"
+        "lib/ghostme/projects/projectAdvisorSnapshot.ts",
+        "scripts/system-health-report.mjs"
       ]
     },
     "cleanPlace": {
@@ -17688,6 +18046,15 @@
         "lib/ghostme/situation/situationEngine.ts"
       ]
     },
+    "buildUnifiedSituationModel": {
+      "exportedBy": [
+        "lib/ghostme/context/situationPolicy.ts"
+      ],
+      "calledBy": [
+        "lib/ghostme/context/reasoningService.ts",
+        "lib/ghostme/context/situationPolicy.ts"
+      ]
+    },
     "buildTrueProactiveSnapshot": {
       "exportedBy": [
         "lib/ghostme/proactive/trueProactiveSnapshot.ts"
@@ -17695,6 +18062,76 @@
       "calledBy": [
         "lib/ghostme/context/reasoningService.ts",
         "lib/ghostme/proactive/trueProactiveSnapshot.ts"
+      ]
+    },
+    "isFinite": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/context/situationPolicy.ts",
+        "lib/ghostme/context/temporalPriority.ts",
+        "lib/ghostme/curiosity/curiositySnapshot.ts",
+        "lib/ghostme/home/homeComfortRiskSnapshot.ts",
+        "lib/ghostme/home/houseStateSnapshot.ts",
+        "lib/ghostme/homeAssistant/homeEventLogger.ts",
+        "lib/ghostme/homeAssistant/homeEventSignificance.ts",
+        "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
+        "lib/ghostme/homeAssistant/housePatternEngine.ts",
+        "lib/ghostme/location/locationLearningFlow.ts",
+        "lib/ghostme/location/locationUpdateFlow.ts",
+        "lib/ghostme/location/placeResolver.ts",
+        "lib/ghostme/observation/observationEngine.ts",
+        "lib/ghostme/observation/observationPolicy.ts",
+        "lib/ghostme/people/relationshipMemorySnapshot.ts",
+        "lib/ghostme/people/socialSuggestionSnapshot.ts",
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
+        "lib/ghostme/proactive/trueProactiveSnapshot.ts",
+        "lib/ghostme/proactive/visibleProactiveMessages.ts",
+        "lib/ghostme/projects/projectMemorySnapshot.ts",
+        "lib/ghostme/retrieval.ts",
+        "lib/ghostme/ui/brainUiAdapter.ts"
+      ]
+    },
+    "hoursSince": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/context/situationPolicy.ts",
+        "lib/ghostme/proactive/trueProactiveSnapshot.ts"
+      ]
+    },
+    "isHomePlace": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/context/situationPolicy.ts"
+      ]
+    },
+    "mentalInfluence": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/context/situationPolicy.ts"
+      ]
+    },
+    "recentLocationEvents": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/context/situationPolicy.ts"
+      ]
+    },
+    "recentHomeEvents": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/context/situationPolicy.ts"
+      ]
+    },
+    "buildRecentOpenLoops": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/context/situationPolicy.ts"
+      ]
+    },
+    "chooseAction": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/context/situationPolicy.ts"
       ]
     },
     "isLikelyTestData": {
@@ -17745,31 +18182,6 @@
       "exportedBy": [],
       "calledBy": [
         "lib/ghostme/context/temporalPriority.ts"
-      ]
-    },
-    "isFinite": {
-      "exportedBy": [],
-      "calledBy": [
-        "lib/ghostme/context/temporalPriority.ts",
-        "lib/ghostme/curiosity/curiositySnapshot.ts",
-        "lib/ghostme/home/homeComfortRiskSnapshot.ts",
-        "lib/ghostme/home/houseStateSnapshot.ts",
-        "lib/ghostme/homeAssistant/homeEventLogger.ts",
-        "lib/ghostme/homeAssistant/homeEventSignificance.ts",
-        "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
-        "lib/ghostme/homeAssistant/housePatternEngine.ts",
-        "lib/ghostme/location/locationLearningFlow.ts",
-        "lib/ghostme/location/locationUpdateFlow.ts",
-        "lib/ghostme/observation/observationEngine.ts",
-        "lib/ghostme/observation/observationPolicy.ts",
-        "lib/ghostme/people/relationshipMemorySnapshot.ts",
-        "lib/ghostme/people/socialSuggestionSnapshot.ts",
-        "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
-        "lib/ghostme/proactive/trueProactiveSnapshot.ts",
-        "lib/ghostme/proactive/visibleProactiveMessages.ts",
-        "lib/ghostme/projects/projectMemorySnapshot.ts",
-        "lib/ghostme/retrieval.ts",
-        "lib/ghostme/ui/brainUiAdapter.ts"
       ]
     },
     "explicitlyDescribesPast": {
@@ -18553,6 +18965,7 @@
         "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
         "lib/ghostme/homeAssistant/housePatternEngine.ts",
         "lib/ghostme/location/locationLearningFlow.ts",
+        "lib/ghostme/location/locationUpdateFlow.ts",
         "lib/ghostme/observation/observationEngine.ts",
         "lib/ghostme/proactive/curiosityCardWriter.ts",
         "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
@@ -18850,7 +19263,8 @@
     "toFixed": {
       "exportedBy": [],
       "calledBy": [
-        "lib/ghostme/location/locationLearningFlow.ts"
+        "lib/ghostme/location/locationLearningFlow.ts",
+        "lib/ghostme/location/placeResolver.ts"
       ]
     },
     "candidateWindowDays": {
@@ -18894,6 +19308,7 @@
       ],
       "calledBy": [
         "lib/ghostme/location/locationLearningFlow.ts",
+        "lib/ghostme/location/placeResolver.ts",
         "lib/ghostme/location/placeService.ts"
       ]
     },
@@ -18903,6 +19318,7 @@
       ],
       "calledBy": [
         "lib/ghostme/location/locationLearningFlow.ts",
+        "lib/ghostme/location/placeResolver.ts",
         "lib/ghostme/location/placeService.ts"
       ]
     },
@@ -18913,6 +19329,7 @@
       "calledBy": [
         "lib/ghostme/location/locationLearningFlow.ts",
         "lib/ghostme/location/locationSavePlaceFlow.ts",
+        "lib/ghostme/location/placeResolver.ts",
         "lib/ghostme/location/placeService.ts"
       ]
     },
@@ -18968,12 +19385,47 @@
         "lib/ghostme/location/locationUpdateFlow.ts"
       ]
     },
+    "firstText": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/location/locationUpdateFlow.ts"
+      ]
+    },
+    "firstNumber": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/location/locationUpdateFlow.ts"
+      ]
+    },
+    "dayKey": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/location/locationUpdateFlow.ts",
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts"
+      ]
+    },
+    "poiResolutionContext": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/location/locationUpdateFlow.ts"
+      ]
+    },
+    "resolvePlaceFromCoordinates": {
+      "exportedBy": [
+        "lib/ghostme/location/placeResolver.ts"
+      ],
+      "calledBy": [
+        "lib/ghostme/location/locationUpdateFlow.ts",
+        "lib/ghostme/location/placeResolver.ts"
+      ]
+    },
     "markSignificantPlaceSeen": {
       "exportedBy": [
         "lib/ghostme/location/placeService.ts"
       ],
       "calledBy": [
         "lib/ghostme/location/locationUpdateFlow.ts",
+        "lib/ghostme/location/placeResolver.ts",
         "lib/ghostme/location/placeService.ts"
       ]
     },
@@ -18984,6 +19436,51 @@
       "calledBy": [
         "lib/ghostme/location/locationUpdateFlow.ts",
         "lib/ghostme/proactive/proactiveTrigger.ts"
+      ]
+    },
+    "coordinateBucket": {
+      "exportedBy": [
+        "lib/ghostme/location/placeResolver.ts"
+      ],
+      "calledBy": [
+        "lib/ghostme/location/placeResolver.ts"
+      ]
+    },
+    "clampConfidence": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/location/placeResolver.ts",
+        "lib/ghostme/location/placeService.ts"
+      ]
+    },
+    "dayStartIso": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/location/placeResolver.ts"
+      ]
+    },
+    "normalizeCategory": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/location/placeResolver.ts"
+      ]
+    },
+    "scoreCandidate": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/location/placeResolver.ts"
+      ]
+    },
+    "buildConfirmationQuestion": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/location/placeResolver.ts"
+      ]
+    },
+    "loadTodayResolutionCache": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/location/placeResolver.ts"
       ]
     },
     "getLastKnownPlace": {
@@ -19001,12 +19498,6 @@
       "calledBy": [
         "lib/ghostme/location/placeService.ts",
         "lib/ghostme/situation/situationEngine.ts"
-      ]
-    },
-    "clampConfidence": {
-      "exportedBy": [],
-      "calledBy": [
-        "lib/ghostme/location/placeService.ts"
       ]
     },
     "runRetentionCleanup": {
@@ -19064,7 +19555,8 @@
         "lib/ghostme/mentalState.ts",
         "scripts/project-audit.mjs",
         "scripts/supabase-schema-map.mjs",
-        "scripts/system-docs.mjs"
+        "scripts/system-docs.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "typeof": {
@@ -19128,7 +19620,8 @@
         "lib/ghostme/observation/observationEngine.ts",
         "lib/ghostme/proactive/trueProactiveSnapshot.ts",
         "lib/ghostme/projects/goalProjectConsistencySnapshot.ts",
-        "lib/ghostme/projects/projectMemorySnapshot.ts"
+        "lib/ghostme/projects/projectMemorySnapshot.ts",
+        "scripts/system-health-report.mjs"
       ]
     },
     "generateObservationInsight": {
@@ -19497,7 +19990,8 @@
       "calledBy": [
         "lib/ghostme/people/peopleSnapshot.ts",
         "scripts/file-usage-map.mjs",
-        "scripts/project-audit.mjs"
+        "scripts/project-audit.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "mergeUnique": {
@@ -19750,13 +20244,13 @@
         "lib/ghostme/proactive/proactiveCandidateBuilder.ts"
       ]
     },
-    "dayKey": {
+    "detectOpenLoopKind": {
       "exportedBy": [],
       "calledBy": [
         "lib/ghostme/proactive/proactiveCandidateBuilder.ts"
       ]
     },
-    "detectOpenLoopKind": {
+    "inferOpenLoopKind": {
       "exportedBy": [],
       "calledBy": [
         "lib/ghostme/proactive/proactiveCandidateBuilder.ts"
@@ -19976,12 +20470,6 @@
       ]
     },
     "sharesConcreteTerms": {
-      "exportedBy": [],
-      "calledBy": [
-        "lib/ghostme/proactive/trueProactiveSnapshot.ts"
-      ]
-    },
-    "hoursSince": {
       "exportedBy": [],
       "calledBy": [
         "lib/ghostme/proactive/trueProactiveSnapshot.ts"
@@ -20340,7 +20828,8 @@
         "scripts/db-usage-map.mjs",
         "scripts/file-usage-map.mjs",
         "scripts/project-audit.mjs",
-        "scripts/supabase-schema-map.mjs"
+        "scripts/supabase-schema-map.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "existsSync": {
@@ -20351,7 +20840,8 @@
         "scripts/generate-knowledge.mjs",
         "scripts/project-audit.mjs",
         "scripts/project-knowledge-base.mjs",
-        "scripts/supabase-schema-map.mjs"
+        "scripts/supabase-schema-map.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "readdirSync": {
@@ -20360,7 +20850,8 @@
         "scripts/db-usage-map.mjs",
         "scripts/file-usage-map.mjs",
         "scripts/project-audit.mjs",
-        "scripts/supabase-schema-map.mjs"
+        "scripts/supabase-schema-map.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "isDirectory": {
@@ -20369,7 +20860,8 @@
         "scripts/db-usage-map.mjs",
         "scripts/file-usage-map.mjs",
         "scripts/project-audit.mjs",
-        "scripts/supabase-schema-map.mjs"
+        "scripts/supabase-schema-map.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "relative": {
@@ -20378,7 +20870,8 @@
         "scripts/db-usage-map.mjs",
         "scripts/file-usage-map.mjs",
         "scripts/project-audit.mjs",
-        "scripts/supabase-schema-map.mjs"
+        "scripts/supabase-schema-map.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "extname": {
@@ -20386,7 +20879,8 @@
       "calledBy": [
         "scripts/db-usage-map.mjs",
         "scripts/file-usage-map.mjs",
-        "scripts/project-audit.mjs"
+        "scripts/project-audit.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "classifyUsage": {
@@ -20404,7 +20898,8 @@
         "scripts/project-audit.mjs",
         "scripts/project-knowledge-base.mjs",
         "scripts/supabase-schema-map.mjs",
-        "scripts/system-docs.mjs"
+        "scripts/system-docs.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "mkdirSync": {
@@ -20416,7 +20911,8 @@
         "scripts/project-audit.mjs",
         "scripts/project-knowledge-base.mjs",
         "scripts/supabase-schema-map.mjs",
-        "scripts/system-docs.mjs"
+        "scripts/system-docs.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "writeFileSync": {
@@ -20428,7 +20924,8 @@
         "scripts/project-audit.mjs",
         "scripts/project-knowledge-base.mjs",
         "scripts/supabase-schema-map.mjs",
-        "scripts/system-docs.mjs"
+        "scripts/system-docs.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "toRel": {
@@ -20447,7 +20944,8 @@
       "exportedBy": [],
       "calledBy": [
         "scripts/file-usage-map.mjs",
-        "scripts/project-audit.mjs"
+        "scripts/project-audit.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "dirname": {
@@ -20458,25 +20956,29 @@
         "scripts/generate-knowledge.mjs",
         "scripts/project-audit.mjs",
         "scripts/project-knowledge-base.mjs",
-        "scripts/supabase-schema-map.mjs"
+        "scripts/supabase-schema-map.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "statSync": {
       "exportedBy": [],
       "calledBy": [
-        "scripts/file-usage-map.mjs"
+        "scripts/file-usage-map.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "isFile": {
       "exportedBy": [],
       "calledBy": [
-        "scripts/file-usage-map.mjs"
+        "scripts/file-usage-map.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "collectImports": {
       "exportedBy": [],
       "calledBy": [
-        "scripts/file-usage-map.mjs"
+        "scripts/file-usage-map.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "collectExports": {
@@ -20597,7 +21099,8 @@
     "rel": {
       "exportedBy": [],
       "calledBy": [
-        "scripts/project-audit.mjs"
+        "scripts/project-audit.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "getFolder": {
@@ -20609,7 +21112,8 @@
     "pop": {
       "exportedBy": [],
       "calledBy": [
-        "scripts/project-audit.mjs"
+        "scripts/project-audit.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "list": {
@@ -20666,7 +21170,8 @@
       "exportedBy": [],
       "calledBy": [
         "scripts/project-knowledge-base.mjs",
-        "scripts/system-docs.mjs"
+        "scripts/system-docs.mjs",
+        "scripts/system-health-report.mjs"
       ]
     },
     "lineCount": {
@@ -20787,6 +21292,174 @@
       "exportedBy": [],
       "calledBy": [
         "scripts/system-docs.mjs"
+      ]
+    },
+    "csvRows": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/system-health-report.mjs"
+      ]
+    },
+    "splitCsvLine": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/system-health-report.mjs"
+      ]
+    },
+    "shift": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/system-health-report.mjs"
+      ]
+    },
+    "ensureDir": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/system-health-report.mjs"
+      ]
+    },
+    "loadSchema": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/system-health-report.mjs"
+      ]
+    },
+    "loadRpcs": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/system-health-report.mjs"
+      ]
+    },
+    "buildFileGraph": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/system-health-report.mjs"
+      ]
+    },
+    "detectCycles": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/system-health-report.mjs"
+      ]
+    },
+    "visit": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/system-health-report.mjs"
+      ]
+    },
+    "concat": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/system-health-report.mjs"
+      ]
+    },
+    "importedIdentifiers": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/system-health-report.mjs"
+      ]
+    },
+    "detectUnusedImports": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/system-health-report.mjs"
+      ]
+    },
+    "extractSelectColumns": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/system-health-report.mjs"
+      ]
+    },
+    "readFirstStringArg": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/system-health-report.mjs"
+      ]
+    },
+    "topLevelKeysFromFirstObject": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/system-health-report.mjs"
+      ]
+    },
+    "collectDbColumnUsage": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/system-health-report.mjs"
+      ]
+    },
+    "countPattern": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/system-health-report.mjs"
+      ]
+    },
+    "filesMatching": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/system-health-report.mjs"
+      ]
+    },
+    "gitChangedFiles": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/system-health-report.mjs"
+      ]
+    },
+    "execFileSync": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/system-health-report.mjs"
+      ]
+    },
+    "status": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/system-health-report.mjs"
+      ]
+    },
+    "scoreFromIssues": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/system-health-report.mjs"
+      ]
+    },
+    "healthLabel": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/system-health-report.mjs"
+      ]
+    },
+    "at": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/system-health-report.mjs"
+      ]
+    },
+    "addIssue": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/system-health-report.mjs"
+      ]
+    },
+    "buildReport": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/system-health-report.mjs"
+      ]
+    },
+    "tableRows": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/system-health-report.mjs"
+      ]
+    },
+    "renderMarkdown": {
+      "exportedBy": [],
+      "calledBy": [
+        "scripts/system-health-report.mjs"
       ]
     }
   },

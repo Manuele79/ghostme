@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-06-28T02:07:21.831Z",
+  "generatedAt": "2026-07-07T01:35:29.231Z",
   "version": "1",
   "inputs": {
     "systemMap": {
       "file": "docs/maps/GHOSTME_SYSTEM_MAP_V6.md",
       "exists": true,
-      "lineCount": 3243
+      "lineCount": 3281
     },
     "cognitiveRouting": {
       "file": "docs/maps/COGNITIVE_ROUTING_MAP.md",
@@ -20,17 +20,17 @@
     "fileUsage": {
       "file": "docs/maps/FILE_USAGE_MAP.md",
       "exists": true,
-      "lineCount": 1995
+      "lineCount": 2019
     },
     "supabaseSchemaMd": {
       "file": "docs/maps/SUPABASE_SCHEMA_MAP.md",
       "exists": true,
-      "lineCount": 1811
+      "lineCount": 1813
     },
     "supabaseSchemaJson": {
       "file": "docs/state/SUPABASE_SCHEMA_MAP.json",
       "exists": true,
-      "lineCount": 6270
+      "lineCount": 6283
     },
     "priorityFix": {
       "file": "docs/maps/GHOSTME_PRIORITY_FIX_LIST.md",
@@ -40,7 +40,7 @@
     "dependencyText": {
       "file": "docs/maps/DEPENDENCY_TEXT_MAP.txt",
       "exists": true,
-      "lineCount": 503
+      "lineCount": 512
     }
   },
   "coreTables": [
@@ -668,8 +668,6 @@
         "confidence",
         "current_place_id",
         "current_place_label",
-        "external_name",
-        "label",
         "last_changed_at",
         "now",
         "onConflict",
@@ -756,6 +754,7 @@
     {
       "table": "observation_events",
       "readers": [
+        "lib/ghostme/location/placeResolver.ts",
         "lib/ghostme/observation/observationEngine.ts",
         "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
         "lib/ghostme/situation/situationEngine.ts"
@@ -853,6 +852,7 @@
       "table": "house_events",
       "readers": [
         "app/api/home-assistant/event/route.ts",
+        "lib/ghostme/context/reasoningService.ts",
         "lib/ghostme/home/homeComfortRiskSnapshot.ts",
         "lib/ghostme/home/houseRouteSnapshot.ts",
         "lib/ghostme/home/houseStateSnapshot.ts",
@@ -1696,11 +1696,13 @@
     },
     "observation_events": {
       "ifThisChangesCheck": [
+        "lib/ghostme/location/placeResolver.ts",
         "lib/ghostme/observation/observationEngine.ts",
         "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
         "lib/ghostme/situation/situationEngine.ts"
       ],
       "consumers": [
+        "lib/ghostme/location/placeResolver.ts",
         "lib/ghostme/observation/observationEngine.ts",
         "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
         "lib/ghostme/situation/situationEngine.ts"
@@ -1742,6 +1744,7 @@
     "house_events": {
       "ifThisChangesCheck": [
         "app/api/home-assistant/event/route.ts",
+        "lib/ghostme/context/reasoningService.ts",
         "lib/ghostme/home/homeComfortRiskSnapshot.ts",
         "lib/ghostme/home/houseRouteSnapshot.ts",
         "lib/ghostme/home/houseStateSnapshot.ts",
@@ -1757,6 +1760,7 @@
       ],
       "consumers": [
         "app/api/home-assistant/event/route.ts",
+        "lib/ghostme/context/reasoningService.ts",
         "lib/ghostme/home/homeComfortRiskSnapshot.ts",
         "lib/ghostme/home/houseRouteSnapshot.ts",
         "lib/ghostme/home/houseStateSnapshot.ts",

@@ -16,7 +16,8 @@
     "kb:map": "node scripts/project-knowledge-base.mjs",
     "schema:map": "node scripts/supabase-schema-map.mjs",
     "knowledge": "node scripts/generate-knowledge.mjs",
-    "refresh": "npm run audit:all && npm run schema:map && npm run kb:map && npm run knowledge"
+    "health": "node scripts/system-health-report.mjs",
+    "refresh": "npm run audit:all && npm run schema:map && npm run kb:map && npm run knowledge && npm run health"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.105.4",

@@ -1,6 +1,6 @@
 # PROJECT KNOWLEDGE BASE
 
-Generated: 2026-06-28T02:07:21.831Z
+Generated: 2026-07-07T01:35:29.231Z
 
 Questa è la mappa centrale automatica del progetto GhostMe.
 
@@ -8,14 +8,14 @@ Serve per capire **cosa esiste**, **chi chiama cosa**, **quali dati entrano/esco
 
 ## 1. Documenti collegati
 
-- **systemMap**: OK — `docs/maps/GHOSTME_SYSTEM_MAP_V6.md` (3243 righe)
+- **systemMap**: OK — `docs/maps/GHOSTME_SYSTEM_MAP_V6.md` (3281 righe)
 - **cognitiveRouting**: OK — `docs/maps/COGNITIVE_ROUTING_MAP.md` (147 righe)
 - **databaseUsage**: OK — `docs/maps/DATABASE_USAGE_MAP.md` (296 righe)
-- **fileUsage**: OK — `docs/maps/FILE_USAGE_MAP.md` (1995 righe)
-- **supabaseSchemaMd**: OK — `docs/maps/SUPABASE_SCHEMA_MAP.md` (1811 righe)
-- **supabaseSchemaJson**: OK — `docs/state/SUPABASE_SCHEMA_MAP.json` (6270 righe)
+- **fileUsage**: OK — `docs/maps/FILE_USAGE_MAP.md` (2019 righe)
+- **supabaseSchemaMd**: OK — `docs/maps/SUPABASE_SCHEMA_MAP.md` (1813 righe)
+- **supabaseSchemaJson**: OK — `docs/state/SUPABASE_SCHEMA_MAP.json` (6283 righe)
 - **priorityFix**: OK — `docs/maps/GHOSTME_PRIORITY_FIX_LIST.md` (31 righe)
-- **dependencyText**: OK — `docs/maps/DEPENDENCY_TEXT_MAP.txt` (503 righe)
+- **dependencyText**: OK — `docs/maps/DEPENDENCY_TEXT_MAP.txt` (512 righe)
 
 ## 2. Regola operativa
 
@@ -109,7 +109,7 @@ Capire dove si trova Manu, cosa cambia e quali abitudini emergono.
 
 - user_location_state — reader: 8, writer: 5
 - significant_places — reader: 5, writer: 3
-- observation_events — reader: 3, writer: 1
+- observation_events — reader: 4, writer: 1
 - behavior_patterns — reader: 7, writer: 3
 
 **Output**
@@ -133,7 +133,7 @@ Trasformare eventi casa/sensori in situazione leggibile.
 
 **Tabelle coinvolte**
 
-- house_events — reader: 13, writer: 5
+- house_events — reader: 14, writer: 5
 - house_entities — reader: 2, writer: 2
 - house_patterns — reader: 3, writer: 1
 - house_suggestions — reader: 3, writer: 3
@@ -167,10 +167,10 @@ Decidere cosa mostrare all’utente senza aspettare la chat.
 - calendar_events — reader: 8, writer: 5
 - action_intents — reader: 10, writer: 4
 - goals_desires — reader: 10, writer: 3
-- observation_events — reader: 3, writer: 1
+- observation_events — reader: 4, writer: 1
 - behavior_patterns — reader: 7, writer: 3
 - user_location_state — reader: 8, writer: 5
-- house_events — reader: 13, writer: 5
+- house_events — reader: 14, writer: 5
 
 **Output**
 
@@ -196,7 +196,7 @@ Riprendere storie aperte quando il momento è giusto.
 - autobiographical_timeline — reader: 7, writer: 1
 - episodic_memories — reader: 8, writer: 1
 - conversation_summaries — reader: 8, writer: 1
-- observation_events — reader: 3, writer: 1
+- observation_events — reader: 4, writer: 1
 - user_location_state — reader: 8, writer: 5
 - ghost_proactive_messages — reader: 16, writer: 8
 
@@ -222,11 +222,11 @@ Card continuity: grigliata, rientro, luogo nuovo, evento aperto.
 | ghost_behavior_rules | 3 | 2 | 4 | 12 | - |
 | mental_states | 3 | 1 | 1 | 1 | - |
 | dynamic_self_profile | 4 | 2 | 8 | 6 | - |
-| user_location_state | 8 | 5 | 9 | 14 | - |
+| user_location_state | 8 | 5 | 9 | 12 | - |
 | significant_places | 5 | 3 | 12 | 19 | - |
-| observation_events | 3 | 1 | 9 | 6 | category, label |
+| observation_events | 4 | 1 | 9 | 6 | category, label |
 | behavior_patterns | 7 | 3 | 16 | 5 | - |
-| house_events | 13 | 5 | 11 | 17 | - |
+| house_events | 14 | 5 | 11 | 17 | - |
 | house_entities | 2 | 2 | 7 | 9 | - |
 | house_patterns | 3 | 1 | 11 | 2 | - |
 | house_suggestions | 3 | 3 | 9 | 6 | entity_id, entity_name, entity_type, event_type, new_state, occurred_at |
@@ -533,6 +533,7 @@ Se tocchi una tabella, controlla questi file.
 
 **Consumer / reader**
 
+- lib/ghostme/location/placeResolver.ts
 - lib/ghostme/observation/observationEngine.ts
 - lib/ghostme/proactive/proactiveCandidateBuilder.ts
 - lib/ghostme/situation/situationEngine.ts
@@ -573,6 +574,7 @@ Se tocchi una tabella, controlla questi file.
 **Consumer / reader**
 
 - app/api/home-assistant/event/route.ts
+- lib/ghostme/context/reasoningService.ts
 - lib/ghostme/home/homeComfortRiskSnapshot.ts
 - lib/ghostme/home/houseRouteSnapshot.ts
 - lib/ghostme/home/houseStateSnapshot.ts
