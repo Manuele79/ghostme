@@ -725,8 +725,6 @@ function buildMomentAssessment({
       event.eventType === "place_unknown_detected" &&
       (hoursSince(event.occurredAt) ?? Infinity) <= 14
   );
-  const relevantHomeEvent = [...homeEvents]
-    .sort((left, right) => right.priority - left.priority)[0];
   const highPriorityOpenLoop = openLoops.find((loop) => loop.priority >= 8);
   const importantAction = (snapshot.actions || []).find(
     (item) => Number(item.priority || 0) >= 8
@@ -776,7 +774,6 @@ function buildMomentAssessment({
       signal: "calendar:near",
     });
   }
-  if (relevantHomeEvent?.priority >= 8 && !signals.includes("home:critical")) score += 6;
   if (recentLocationChange) {
     score += 14;
     pushSignal({
@@ -968,8 +965,6 @@ function buildValueAssessment({
 }): SituationValueAssessment {
   const reasons: string[] = [];
   const penalties: string[] = [];
-  const riskSignals = snapshot.home.comfortRisk.riskSignals || [];
-  const comfortSignals = snapshot.home.comfortRisk.comfortSignals || [];
   const nextEvent = [...snapshot.calendar.today, ...snapshot.calendar.upcoming]
     .map((event) => ({
       event,
@@ -987,7 +982,6 @@ function buildValueAssessment({
   const recentLocationSignal = locationEvents.some(
     (event) => (hoursSince(event.occurredAt) ?? Infinity) <= 8
   );
-  const recentHomeSignal = homeEvents.some((event) => event.priority >= 5);
   const strongHomeSignal =
     homeAssessment.score >= 55 &&
     homeAssessment.confidence >= 45 &&
@@ -1035,22 +1029,14 @@ function buildValueAssessment({
     Boolean(snapshot.memory.activeMemories?.length) ||
     Boolean(snapshot.memory.episodicMemories?.length) ||
     Boolean(snapshot.memory.topics?.length);
-  const housePatternSignal =
-    Boolean(snapshot.home.patterns?.length) ||
-    Boolean(snapshot.home.routes?.recentRoute) ||
-    Boolean(snapshot.home.state.activeRooms?.length);
 
   let utility = 0;
   if (action.action === "remind") utility += 8;
   if (action.action === "ask_followup") utility += 6;
   if (action.action === "create_card") utility += 5;
   if (action.action === "suggest_action") utility += 4;
-  if (riskSignals.length) {
-    utility += 10;
-    reasons.push("rischio casa concreto");
-  }
   if (strongHomeSignal) {
-    utility += 5;
+    utility += homeAssessment.level === "critical" ? 8 : 5;
     reasons.push("segnale casa utile");
   } else if (mediumHomeSignal) {
     utility += 2;
@@ -1080,20 +1066,17 @@ function buildValueAssessment({
     reasons.push("segnale persona contestuale");
   }
   if (memorySignal) utility += 2;
-  if (comfortSignals.length) utility += 2;
   if (momentAssessment.level === "exceptional") utility += 6;
   else if (momentAssessment.level === "important") utility += 4;
   else if (momentAssessment.level === "interesting") utility += 2;
 
   let urgency = 0;
-  if (riskSignals.length) urgency += 10;
   if (nextEvent?.minutes !== null && nextEvent?.minutes !== undefined) {
     if (Number(nextEvent.minutes) <= 30) urgency += 10;
     else if (Number(nextEvent.minutes) <= 90) urgency += 7;
     else if (Number(nextEvent.minutes) <= 180) urgency += 4;
   }
   if (recentLocationSignal) urgency += 3;
-  if (recentHomeSignal) urgency += 3;
   if (homeAssessment.level === "critical") urgency += 6;
   else if (strongHomeSignal) urgency += 3;
   if (highPriorityOpenLoop) urgency += 2;
@@ -1104,7 +1087,7 @@ function buildValueAssessment({
   if (knownPlace) contextFit += 3;
   if (knownPlaceDetail) contextFit += 2;
   if (recentLocationSignal) contextFit += 2;
-  if (recentHomeSignal || housePatternSignal || mediumHomeSignal) contextFit += 3;
+  if (mediumHomeSignal) contextFit += 3;
   if (strongHomeSignal) contextFit += 2;
   if (strongPeopleSignal) contextFit += 3;
   else if (mediumPeopleSignal) contextFit += 1;
