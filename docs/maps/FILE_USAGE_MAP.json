@@ -1769,7 +1769,11 @@
       "lib/ghostme/context/reasoningService.ts"
     ],
     "exports": [
+      "SituationHomeAssessment",
+      "SituationMomentAssessment",
+      "SituationPeopleAssessment",
       "SituationPolicyAction",
+      "SituationValueAssessment",
       "UnifiedSituationModel",
       "buildUnifiedSituationModel"
     ],
@@ -1780,11 +1784,11 @@
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 322,
-    "status": "active",
+    "lines": 1485,
+    "status": "god_file_candidate",
     "callerCount": 1,
     "dependencyCount": 2,
-    "exportCount": 3
+    "exportCount": 7
   },
   "lib/ghostme/context/temporalPriority.ts": {
     "file": "lib/ghostme/context/temporalPriority.ts",
@@ -3628,7 +3632,7 @@
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 633,
+    "lines": 1027,
     "status": "god_file_candidate",
     "callerCount": 1,
     "dependencyCount": 10,
@@ -3857,7 +3861,7 @@
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 318,
+    "lines": 370,
     "status": "active",
     "callerCount": 2,
     "dependencyCount": 12,
@@ -3914,7 +3918,7 @@
     "tablesWritten": [],
     "tablesUpdated": [],
     "tablesDeleted": [],
-    "lines": 595,
+    "lines": 625,
     "status": "god_file_candidate",
     "callerCount": 2,
     "dependencyCount": 2,

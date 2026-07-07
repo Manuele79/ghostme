@@ -1,6 +1,6 @@
 # SYSTEM HEALTH REPORT
 
-Generated: 2026-07-07T01:36:17.998Z
+Generated: 2026-07-07T21:01:21.303Z
 
 Health Score: **67/100** - 🟠 Da migliorare
 
@@ -91,9 +91,9 @@ Catena HA -> Snapshot -> Current Situation -> Situation Policy -> Decision -> Pr
 - ingest: OK (15 file)
 - snapshot: OK (4 file)
 - currentSituation: OK (6 file)
-- situationPolicy: OK (6 file)
+- situationPolicy: OK (8 file)
 - decision: OK (4 file)
-- proactive: OK (10 file)
+- proactive: OK (11 file)
 - ui: OK (9 file)
 
 ## 4. Location
@@ -103,7 +103,7 @@ Catena GPS -> user_location_state -> significant_places -> observation_events ->
 - state: OK (8 file)
 - places: OK (8 file)
 - observations: OK (8 file)
-- policy: OK (6 file)
+- policy: OK (8 file)
 - continuity: OK (2 file)
 - cards: OK (4 file)
 - chat: OK (3 file)
@@ -156,7 +156,7 @@ Catena GPS -> user_location_state -> significant_places -> observation_events ->
 
 - Dati raccolti ma senza consumer: nessuno
 - Domande/card deboli da controllare: 38
-- Reminder da controllare: 24
+- Reminder da controllare: 25
 - Proactive cambia comportamento via policy: yes
 
 ## 10. Top Priority
@@ -192,15 +192,7 @@ Catena GPS -> user_location_state -> significant_places -> observation_events ->
 | PROJECT_AUDIT_FULL.md | - | unknown | DATABASE_USAGE_MAP, FILE_USAGE_MAP, PROJECT_KNOWLEDGE_BASE |
 | docs/audits/PROJECT_AUDIT.md | - | unknown | DATABASE_USAGE_MAP, FILE_USAGE_MAP, PROJECT_KNOWLEDGE_BASE |
 | docs/audits/PROJECT_AUDIT_FULL.md | - | unknown | DATABASE_USAGE_MAP, FILE_USAGE_MAP, PROJECT_KNOWLEDGE_BASE |
-| docs/diagrams/brain.svg | Brain/Situation | Brain/Situation | DATABASE_USAGE_MAP, FILE_USAGE_MAP, PROJECT_KNOWLEDGE_BASE |
-| docs/diagrams/chat.svg | Chat | Chat | DATABASE_USAGE_MAP, FILE_USAGE_MAP, PROJECT_KNOWLEDGE_BASE |
-| docs/diagrams/context.svg | Brain/Situation | Brain/Situation | DATABASE_USAGE_MAP, FILE_USAGE_MAP, PROJECT_KNOWLEDGE_BASE |
-| docs/diagrams/ghostme.svg | - | unknown | DATABASE_USAGE_MAP, FILE_USAGE_MAP, PROJECT_KNOWLEDGE_BASE |
-| docs/diagrams/location.svg | Location | Location | DATABASE_USAGE_MAP, FILE_USAGE_MAP, PROJECT_KNOWLEDGE_BASE |
-| docs/diagrams/proactive.svg | Proactive | Proactive | DATABASE_USAGE_MAP, FILE_USAGE_MAP, PROJECT_KNOWLEDGE_BASE |
 | docs/maps/COGNITIVE_ROUTING_MAP.md | - | unknown | DATABASE_USAGE_MAP, FILE_USAGE_MAP, PROJECT_KNOWLEDGE_BASE |
-| docs/maps/DATABASE_USAGE_MAP.json | - | unknown | DATABASE_USAGE_MAP, FILE_USAGE_MAP, PROJECT_KNOWLEDGE_BASE, SUPABASE_SCHEMA_MAP |
-| docs/maps/DATABASE_USAGE_MAP.md | - | unknown | DATABASE_USAGE_MAP, FILE_USAGE_MAP, PROJECT_KNOWLEDGE_BASE, SUPABASE_SCHEMA_MAP |
 | docs/maps/DEPENDENCY_TEXT_MAP.txt | - | unknown | DATABASE_USAGE_MAP, FILE_USAGE_MAP, PROJECT_KNOWLEDGE_BASE |
 | docs/maps/FILE_USAGE_MAP.json | - | unknown | DATABASE_USAGE_MAP, FILE_USAGE_MAP, PROJECT_KNOWLEDGE_BASE |
 | docs/maps/FILE_USAGE_MAP.md | - | unknown | DATABASE_USAGE_MAP, FILE_USAGE_MAP, PROJECT_KNOWLEDGE_BASE |
@@ -212,9 +204,12 @@ Catena GPS -> user_location_state -> significant_places -> observation_events ->
 | docs/state/PROJECT_AUDIT_FULL.json | - | unknown | DATABASE_USAGE_MAP, FILE_USAGE_MAP, PROJECT_KNOWLEDGE_BASE |
 | docs/state/PROJECT_KNOWLEDGE_BASE.json | - | unknown | DATABASE_USAGE_MAP, FILE_USAGE_MAP, PROJECT_KNOWLEDGE_BASE |
 | docs/state/SUPABASE_SCHEMA_MAP.json | - | unknown | DATABASE_USAGE_MAP, FILE_USAGE_MAP, PROJECT_KNOWLEDGE_BASE, SUPABASE_SCHEMA_MAP |
-| docs/state/dependency-graph.json | - | unknown | DATABASE_USAGE_MAP, FILE_USAGE_MAP, PROJECT_KNOWLEDGE_BASE |
 | knowledge/00_PROJECT.md | - | unknown | DATABASE_USAGE_MAP, FILE_USAGE_MAP, PROJECT_KNOWLEDGE_BASE |
 | knowledge/01_ARCHITECTURE.md | - | unknown | DATABASE_USAGE_MAP, FILE_USAGE_MAP, PROJECT_KNOWLEDGE_BASE |
 | knowledge/02_COGNITIVE_ROUTING.md | - | unknown | DATABASE_USAGE_MAP, FILE_USAGE_MAP, PROJECT_KNOWLEDGE_BASE |
-| knowledge/03_DATABASE_USAGE.md | - | unknown | DATABASE_USAGE_MAP, FILE_USAGE_MAP, PROJECT_KNOWLEDGE_BASE, SUPABASE_SCHEMA_MAP |
 | knowledge/04_SUPABASE_SCHEMA.md | - | unknown | DATABASE_USAGE_MAP, FILE_USAGE_MAP, PROJECT_KNOWLEDGE_BASE, SUPABASE_SCHEMA_MAP |
+| knowledge/05_FILE_USAGE.md | - | unknown | DATABASE_USAGE_MAP, FILE_USAGE_MAP, PROJECT_KNOWLEDGE_BASE |
+| knowledge/06_DEPENDENCIES.md | - | unknown | DATABASE_USAGE_MAP, FILE_USAGE_MAP, PROJECT_KNOWLEDGE_BASE |
+| knowledge/07_PRIORITY_FIX.md | - | unknown | DATABASE_USAGE_MAP, FILE_USAGE_MAP, PROJECT_KNOWLEDGE_BASE |
+| knowledge/README.md | - | unknown | DATABASE_USAGE_MAP, FILE_USAGE_MAP, PROJECT_KNOWLEDGE_BASE |
+| knowledge/json/knowledge-index.json | - | unknown | DATABASE_USAGE_MAP, FILE_USAGE_MAP, PROJECT_KNOWLEDGE_BASE |

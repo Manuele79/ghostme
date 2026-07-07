@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-07T01:35:06.259Z",
+  "generatedAt": "2026-07-07T21:01:01.686Z",
   "folders": {
     ".": [
       ".dependency-cruiser.js",
@@ -586,7 +586,7 @@
         "getAuthenticatedUserId",
         "buildGhostBrainSnapshot",
         "buildDecisionSnapshot",
-        "runAppOpenContinuityLifecycle",
+        "runAppOpenProactiveLifecycle",
         "loadVisibleProactiveMessages",
         "toPublicLocationState",
         "Set",
@@ -3240,22 +3240,51 @@
         "now",
         "hoursSince",
         "isHomePlace",
+        "clampScore",
+        "min",
+        "max",
+        "valueLevel",
+        "riskLevel",
+        "signalQualityLevel",
+        "momentLevel",
+        "pushSignal",
+        "push",
+        "relevanceLevel",
+        "homeLevel",
+        "personDisplayName",
+        "includesPerson",
+        "some",
+        "includesPersonText",
+        "join",
+        "includes",
+        "latestPersonEvidence",
+        "sort",
+        "buildPeopleAssessment",
+        "find",
+        "Boolean",
+        "every",
+        "from",
+        "Set",
+        "slice",
+        "flatMap",
+        "buildHomeAssessment",
+        "floor",
         "mentalInfluence",
         "recentLocationEvents",
         "isArray",
         "recentHomeEvents",
         "buildRecentOpenLoops",
-        "push",
-        "join",
-        "sort",
-        "slice",
+        "buildMomentAssessment",
+        "textFor",
+        "hasRecentSimilarProactive",
+        "buildValueAssessment",
+        "applyValueAssessment",
+        "ceil",
+        "basso",
         "chooseAction",
-        "some",
-        "includes",
-        "buildUnifiedSituationModel",
-        "max"
+        "buildUnifiedSituationModel"
       ],
-      "lines": 322
+      "lines": 1485
     },
     "lib/ghostme/context/temporalPriority.ts": {
       "folder": "lib/ghostme/context",
@@ -6976,12 +7005,24 @@
         "buildProactiveCandidatesForUser"
       ],
       "calls": [
+        "policyAction",
+        "policyBlocksGenericCards",
+        "policySuppressesGenericCandidates",
+        "Boolean",
+        "formatPolicySignals",
+        "push",
+        "slice",
+        "join",
+        "firstPolicySubject",
+        "policyCandidateTitle",
+        "policyCandidateCategory",
+        "buildPolicyCandidate",
+        "max",
+        "shouldUsePolicyForContinuity",
         "formatMentalState",
         "mapTitles",
-        "slice",
         "buildHomeSignals",
         "buildSignalSummary",
-        "join",
         "buildSituationFromSnapshot",
         "normalize",
         "toLowerCase",
@@ -6998,6 +7039,8 @@
         "DateTimeFormat",
         "format",
         "titleFor",
+        "hasRecentTimestamp",
+        "isHomePlace",
         "detectOpenLoopKind",
         "find",
         "some",
@@ -7005,7 +7048,6 @@
         "inferOpenLoopKind",
         "b",
         "test",
-        "max",
         "collectOpenLoopSources",
         "loadRecentLocationObservations",
         "toISOString",
@@ -7018,23 +7060,27 @@
         "limit",
         "log",
         "buildMomentAwareness",
-        "Boolean",
+        "currentTimeWindow",
+        "hasRecentCalendarLoop",
+        "hasRecentActionLoop",
+        "hasRecentPersonLoop",
+        "evaluateMoment",
+        "min",
         "buildContinuityCandidate",
         "sort",
-        "push",
-        "min",
+        "sourceWeight",
         "buildCurrentContextFromSnapshot",
         "buildProactiveCandidatesForUser",
         "buildGhostBrainSnapshot",
         "buildAgendaMessage",
+        "applyPatternDecay",
         "generateObservationInsight",
         "generatePatternInsight",
-        "applyPatternDecay",
         "buildBehaviorPrompt",
         "generateButlerMessage",
         "decideProactiveMessage"
       ],
-      "lines": 633
+      "lines": 1027
     },
     "lib/ghostme/proactive/proactiveCandidateRanker.ts": {
       "folder": "lib/ghostme/proactive",
@@ -7317,6 +7363,15 @@
       ],
       "calls": [
         "countWrite",
+        "policyAction",
+        "policyBlocksGenericCards",
+        "policyCandidate",
+        "find",
+        "selectCandidateByPolicy",
+        "pickBestProactiveCandidate",
+        "filterTrueProactiveByPolicy",
+        "shouldBypassPriorityLimit",
+        "shouldWriteAuxiliaryCards",
         "hasTodayDailyBriefing",
         "setHours",
         "buildDailyProactiveLogicalKey",
@@ -7342,7 +7397,6 @@
         "generateHouseAutomationSuggestions",
         "buildGhostBrainSnapshot",
         "buildProactiveCandidatesForUser",
-        "pickBestProactiveCandidate",
         "writeCuriositySnapshotCards",
         "writeTrueProactiveCards",
         "buildProactiveCandidateLogicalKey",
@@ -7351,7 +7405,7 @@
         "runAppOpenContinuityLifecycle",
         "buildContinuityCandidate"
       ],
-      "lines": 318
+      "lines": 370
     },
     "lib/ghostme/proactive/trueProactiveCardWriter.ts": {
       "folder": "lib/ghostme/proactive",
@@ -7444,6 +7498,8 @@
         "candidateTextMatchesMessage",
         "Boolean",
         "includes",
+        "policyRequiresSilence",
+        "policySuppressesCandidate",
         "buildRawCandidates",
         "find",
         "push",
@@ -7457,7 +7513,7 @@
         "add",
         "from"
       ],
-      "lines": 595
+      "lines": 625
     },
     "lib/ghostme/proactive/visibleProactiveMessages.ts": {
       "folder": "lib/ghostme/proactive",
@@ -8955,7 +9011,7 @@
         "stringify",
         "log"
       ],
-      "lines": 937
+      "lines": 946
     }
   },
   "importsGraph": {
@@ -12377,6 +12433,7 @@
         "lib/ghostme/context/contextBuilder.ts",
         "lib/ghostme/context/decisionSnapshot.ts",
         "lib/ghostme/context/reasoningService.ts",
+        "lib/ghostme/context/situationPolicy.ts",
         "lib/ghostme/context/userContextGraph.ts",
         "lib/ghostme/contradictions.ts",
         "lib/ghostme/conversationSummary.ts",
@@ -13326,7 +13383,7 @@
         "lib/ghostme/context/reasoningService.ts"
       ]
     },
-    "runAppOpenContinuityLifecycle": {
+    "runAppOpenProactiveLifecycle": {
       "exportedBy": [
         "lib/ghostme/proactive/proactiveUserFlow.ts"
       ],
@@ -13368,6 +13425,7 @@
         "lib/ghostme/chat/chatPromptBuilder.ts",
         "lib/ghostme/context/decisionSnapshot.ts",
         "lib/ghostme/context/reasoningService.ts",
+        "lib/ghostme/context/situationPolicy.ts",
         "lib/ghostme/context/temporalPriority.ts",
         "lib/ghostme/core/messageClassifier.ts",
         "lib/ghostme/curiosity/curiosityEngine.ts",
@@ -13823,6 +13881,7 @@
         "lib/ghostme/auth/serverAuth.ts",
         "lib/ghostme/context/contextSignals.ts",
         "lib/ghostme/context/reasoningService.ts",
+        "lib/ghostme/context/situationPolicy.ts",
         "lib/ghostme/goals/goalsActionsLifecycle.ts",
         "lib/ghostme/home/homeLocationConsistency.ts",
         "lib/ghostme/home/houseStateSnapshot.ts",
@@ -14291,6 +14350,7 @@
         "lib/ghostme/calendar/calendarService.ts",
         "lib/ghostme/chat/chatPostProcessing.ts",
         "lib/ghostme/context/contextSignals.ts",
+        "lib/ghostme/context/situationPolicy.ts",
         "lib/ghostme/goals/goalsSnapshot.ts",
         "lib/ghostme/home/homeLocationConsistency.ts",
         "lib/ghostme/home/houseStateSnapshot.ts",
@@ -14303,6 +14363,7 @@
         "lib/ghostme/people/socialSuggestionSnapshot.ts",
         "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
         "lib/ghostme/proactive/proactiveMessageService.ts",
+        "lib/ghostme/proactive/proactiveUserFlow.ts",
         "lib/ghostme/proactive/trueProactiveSnapshot.ts",
         "lib/ghostme/projects/projectAdvisorSnapshot.ts",
         "lib/ghostme/topicDetector.ts",
@@ -15099,6 +15160,7 @@
         "lib/ghostme/actionLayer.ts",
         "lib/ghostme/behavior/behaviorRulesEngine.ts",
         "lib/ghostme/chat/chatPostProcessing.ts",
+        "lib/ghostme/context/situationPolicy.ts",
         "lib/ghostme/curiosity/curiositySnapshot.ts",
         "lib/ghostme/dynamicSelfProfile.ts",
         "lib/ghostme/goals/goalsActionsLifecycle.ts",
@@ -17126,6 +17188,7 @@
       "exportedBy": [],
       "calledBy": [
         "lib/ghostme/chat/chatContextBuilder.ts",
+        "lib/ghostme/context/situationPolicy.ts",
         "lib/ghostme/context/userContextGraph.ts",
         "lib/ghostme/homeAssistant/homeAssistantAccess.ts",
         "lib/ghostme/proactive/trueProactiveSnapshot.ts",
@@ -18101,7 +18164,116 @@
     "isHomePlace": {
       "exportedBy": [],
       "calledBy": [
+        "lib/ghostme/context/situationPolicy.ts",
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts"
+      ]
+    },
+    "clampScore": {
+      "exportedBy": [],
+      "calledBy": [
         "lib/ghostme/context/situationPolicy.ts"
+      ]
+    },
+    "valueLevel": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/context/situationPolicy.ts"
+      ]
+    },
+    "riskLevel": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/context/situationPolicy.ts"
+      ]
+    },
+    "signalQualityLevel": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/context/situationPolicy.ts"
+      ]
+    },
+    "momentLevel": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/context/situationPolicy.ts"
+      ]
+    },
+    "pushSignal": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/context/situationPolicy.ts"
+      ]
+    },
+    "relevanceLevel": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/context/situationPolicy.ts"
+      ]
+    },
+    "homeLevel": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/context/situationPolicy.ts"
+      ]
+    },
+    "personDisplayName": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/context/situationPolicy.ts"
+      ]
+    },
+    "includesPerson": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/context/situationPolicy.ts",
+        "lib/ghostme/people/socialSuggestionSnapshot.ts"
+      ]
+    },
+    "includesPersonText": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/context/situationPolicy.ts"
+      ]
+    },
+    "latestPersonEvidence": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/context/situationPolicy.ts"
+      ]
+    },
+    "buildPeopleAssessment": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/context/situationPolicy.ts"
+      ]
+    },
+    "every": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/context/situationPolicy.ts",
+        "lib/ghostme/observation/observationEngine.ts",
+        "lib/ghostme/proactive/trueProactiveSnapshot.ts",
+        "lib/ghostme/projects/goalProjectConsistencySnapshot.ts",
+        "lib/ghostme/projects/projectMemorySnapshot.ts",
+        "scripts/system-health-report.mjs"
+      ]
+    },
+    "buildHomeAssessment": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/context/situationPolicy.ts"
+      ]
+    },
+    "floor": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/context/situationPolicy.ts",
+        "lib/ghostme/goalsDesires.ts",
+        "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
+        "lib/ghostme/memoryDecay.ts",
+        "lib/ghostme/patterns/patternDecay.ts",
+        "lib/ghostme/proactive/trueProactiveSnapshot.ts",
+        "lib/ghostme/retrieval.ts"
       ]
     },
     "mentalInfluence": {
@@ -18123,6 +18295,51 @@
       ]
     },
     "buildRecentOpenLoops": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/context/situationPolicy.ts"
+      ]
+    },
+    "buildMomentAssessment": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/context/situationPolicy.ts"
+      ]
+    },
+    "textFor": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/context/situationPolicy.ts",
+        "lib/ghostme/people/relationshipMemorySnapshot.ts",
+        "lib/ghostme/projects/projectMemorySnapshot.ts"
+      ]
+    },
+    "hasRecentSimilarProactive": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/context/situationPolicy.ts"
+      ]
+    },
+    "buildValueAssessment": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/context/situationPolicy.ts"
+      ]
+    },
+    "applyValueAssessment": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/context/situationPolicy.ts"
+      ]
+    },
+    "ceil": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/context/situationPolicy.ts",
+        "lib/ghostme/location/locationLearningFlow.ts"
+      ]
+    },
+    "basso": {
       "exportedBy": [],
       "calledBy": [
         "lib/ghostme/context/situationPolicy.ts"
@@ -18488,17 +18705,6 @@
       "exportedBy": [],
       "calledBy": [
         "lib/ghostme/goalsDesires.ts"
-      ]
-    },
-    "floor": {
-      "exportedBy": [],
-      "calledBy": [
-        "lib/ghostme/goalsDesires.ts",
-        "lib/ghostme/homeAssistant/houseAutomationControlPlanner.ts",
-        "lib/ghostme/memoryDecay.ts",
-        "lib/ghostme/patterns/patternDecay.ts",
-        "lib/ghostme/proactive/trueProactiveSnapshot.ts",
-        "lib/ghostme/retrieval.ts"
       ]
     },
     "shouldIgnoreGoalMessage": {
@@ -19273,12 +19479,6 @@
         "lib/ghostme/location/locationLearningFlow.ts"
       ]
     },
-    "ceil": {
-      "exportedBy": [],
-      "calledBy": [
-        "lib/ghostme/location/locationLearningFlow.ts"
-      ]
-    },
     "homeDistance": {
       "exportedBy": [],
       "calledBy": [
@@ -19612,16 +19812,6 @@
         "lib/ghostme/observation/observationEngine.ts",
         "lib/ghostme/observation/observationPolicy.ts",
         "lib/ghostme/situation/situationEngine.ts"
-      ]
-    },
-    "every": {
-      "exportedBy": [],
-      "calledBy": [
-        "lib/ghostme/observation/observationEngine.ts",
-        "lib/ghostme/proactive/trueProactiveSnapshot.ts",
-        "lib/ghostme/projects/goalProjectConsistencySnapshot.ts",
-        "lib/ghostme/projects/projectMemorySnapshot.ts",
-        "scripts/system-health-report.mjs"
       ]
     },
     "generateObservationInsight": {
@@ -20018,13 +20208,6 @@
         "lib/ghostme/people/relationshipMemorySnapshot.ts"
       ]
     },
-    "textFor": {
-      "exportedBy": [],
-      "calledBy": [
-        "lib/ghostme/people/relationshipMemorySnapshot.ts",
-        "lib/ghostme/projects/projectMemorySnapshot.ts"
-      ]
-    },
     "mentionedPeople": {
       "exportedBy": [],
       "calledBy": [
@@ -20080,12 +20263,6 @@
       ]
     },
     "personName": {
-      "exportedBy": [],
-      "calledBy": [
-        "lib/ghostme/people/socialSuggestionSnapshot.ts"
-      ]
-    },
-    "includesPerson": {
       "exportedBy": [],
       "calledBy": [
         "lib/ghostme/people/socialSuggestionSnapshot.ts"
@@ -20195,6 +20372,62 @@
         "lib/ghostme/proactive/proactiveUserFlow.ts"
       ]
     },
+    "policyAction": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
+        "lib/ghostme/proactive/proactiveUserFlow.ts"
+      ]
+    },
+    "policyBlocksGenericCards": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
+        "lib/ghostme/proactive/proactiveUserFlow.ts"
+      ]
+    },
+    "policySuppressesGenericCandidates": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts"
+      ]
+    },
+    "formatPolicySignals": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts"
+      ]
+    },
+    "firstPolicySubject": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts"
+      ]
+    },
+    "policyCandidateTitle": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts"
+      ]
+    },
+    "policyCandidateCategory": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts"
+      ]
+    },
+    "buildPolicyCandidate": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts"
+      ]
+    },
+    "shouldUsePolicyForContinuity": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts"
+      ]
+    },
     "formatMentalState": {
       "exportedBy": [],
       "calledBy": [
@@ -20244,6 +20477,12 @@
         "lib/ghostme/proactive/proactiveCandidateBuilder.ts"
       ]
     },
+    "hasRecentTimestamp": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts"
+      ]
+    },
     "detectOpenLoopKind": {
       "exportedBy": [],
       "calledBy": [
@@ -20269,6 +20508,42 @@
       ]
     },
     "buildMomentAwareness": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts"
+      ]
+    },
+    "currentTimeWindow": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts"
+      ]
+    },
+    "hasRecentCalendarLoop": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts"
+      ]
+    },
+    "hasRecentActionLoop": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts"
+      ]
+    },
+    "hasRecentPersonLoop": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts"
+      ]
+    },
+    "evaluateMoment": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts"
+      ]
+    },
+    "sourceWeight": {
       "exportedBy": [],
       "calledBy": [
         "lib/ghostme/proactive/proactiveCandidateBuilder.ts"
@@ -20394,7 +20669,7 @@
         "lib/ghostme/proactive/proactiveTrigger.ts"
       ]
     },
-    "runAppOpenProactiveLifecycle": {
+    "runAppOpenContinuityLifecycle": {
       "exportedBy": [
         "lib/ghostme/proactive/proactiveUserFlow.ts"
       ],
@@ -20403,6 +20678,36 @@
       ]
     },
     "countWrite": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/proactive/proactiveUserFlow.ts"
+      ]
+    },
+    "policyCandidate": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/proactive/proactiveUserFlow.ts"
+      ]
+    },
+    "selectCandidateByPolicy": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/proactive/proactiveUserFlow.ts"
+      ]
+    },
+    "filterTrueProactiveByPolicy": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/proactive/proactiveUserFlow.ts"
+      ]
+    },
+    "shouldBypassPriorityLimit": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/proactive/proactiveUserFlow.ts"
+      ]
+    },
+    "shouldWriteAuxiliaryCards": {
       "exportedBy": [],
       "calledBy": [
         "lib/ghostme/proactive/proactiveUserFlow.ts"
@@ -20476,6 +20781,18 @@
       ]
     },
     "candidateTextMatchesMessage": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/proactive/trueProactiveSnapshot.ts"
+      ]
+    },
+    "policyRequiresSilence": {
+      "exportedBy": [],
+      "calledBy": [
+        "lib/ghostme/proactive/trueProactiveSnapshot.ts"
+      ]
+    },
+    "policySuppressesCandidate": {
       "exportedBy": [],
       "calledBy": [
         "lib/ghostme/proactive/trueProactiveSnapshot.ts"

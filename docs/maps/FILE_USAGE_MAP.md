@@ -76,7 +76,7 @@ Mappa statica generata dal codice locale.
 | lib/ghostme/context/contextSignals.ts | active | 3 | 1 | 4 | 0 | 0 | 396 |
 | lib/ghostme/context/decisionSnapshot.ts | god_file_candidate | 7 | 1 | 2 | 0 | 0 | 701 |
 | lib/ghostme/context/reasoningService.ts | god_file_candidate | 10 | 23 | 4 | 1 | 0 | 1044 |
-| lib/ghostme/context/situationPolicy.ts | active | 1 | 2 | 3 | 0 | 0 | 322 |
+| lib/ghostme/context/situationPolicy.ts | god_file_candidate | 1 | 2 | 7 | 0 | 0 | 1485 |
 | lib/ghostme/context/temporalPriority.ts | active | 12 | 0 | 8 | 0 | 0 | 188 |
 | lib/ghostme/context/userContextGraph.ts | active | 1 | 3 | 1 | 16 | 0 | 295 |
 | lib/ghostme/contradictions.ts | active | 1 | 1 | 1 | 3 | 1 | 168 |
@@ -140,7 +140,7 @@ Mappa statica generata dal codice locale.
 | lib/ghostme/proactive/curiosityCardWriter.ts | active | 2 | 4 | 3 | 1 | 0 | 154 |
 | lib/ghostme/proactive/dailyBriefingBuilder.ts | active | 1 | 0 | 1 | 0 | 0 | 163 |
 | lib/ghostme/proactive/dailyBriefingRepository.ts | active | 1 | 2 | 1 | 13 | 0 | 181 |
-| lib/ghostme/proactive/proactiveCandidateBuilder.ts | god_file_candidate | 1 | 10 | 2 | 1 | 0 | 633 |
+| lib/ghostme/proactive/proactiveCandidateBuilder.ts | god_file_candidate | 1 | 10 | 2 | 1 | 0 | 1027 |
 | lib/ghostme/proactive/proactiveCandidateRanker.ts | active | 1 | 1 | 2 | 0 | 0 | 19 |
 | lib/ghostme/proactive/proactiveCardLifecycle.ts | active | 4 | 0 | 5 | 0 | 0 | 28 |
 | lib/ghostme/proactive/proactiveDecisionEngine.ts | active | 2 | 1 | 2 | 0 | 0 | 152 |
@@ -148,9 +148,9 @@ Mappa statica generata dal codice locale.
 | lib/ghostme/proactive/proactiveMessageDedupe.ts | active | 5 | 0 | 4 | 0 | 0 | 45 |
 | lib/ghostme/proactive/proactiveMessageService.ts | active | 12 | 3 | 2 | 1 | 2 | 231 |
 | lib/ghostme/proactive/proactiveTrigger.ts | active | 1 | 5 | 1 | 1 | 0 | 82 |
-| lib/ghostme/proactive/proactiveUserFlow.ts | active | 2 | 12 | 3 | 1 | 0 | 318 |
+| lib/ghostme/proactive/proactiveUserFlow.ts | active | 2 | 12 | 3 | 1 | 0 | 370 |
 | lib/ghostme/proactive/trueProactiveCardWriter.ts | active | 1 | 6 | 4 | 1 | 0 | 96 |
-| lib/ghostme/proactive/trueProactiveSnapshot.ts | god_file_candidate | 2 | 2 | 4 | 0 | 0 | 595 |
+| lib/ghostme/proactive/trueProactiveSnapshot.ts | god_file_candidate | 2 | 2 | 4 | 0 | 0 | 625 |
 | lib/ghostme/proactive/visibleProactiveMessages.ts | active | 2 | 4 | 1 | 2 | 1 | 174 |
 | lib/ghostme/profile/profileBehaviorSeed.ts | active | 1 | 1 | 1 | 4 | 3 | 224 |
 | lib/ghostme/projects/goalProjectConsistencySnapshot.ts | active | 3 | 2 | 3 | 0 | 0 | 214 |
@@ -175,7 +175,7 @@ Mappa statica generata dal codice locale.
 
 - File: 166
 - File orfani: 6
-- God file candidati: 10
+- God file candidati: 11
 
 ## Orfani candidati
 
@@ -192,11 +192,12 @@ Mappa statica generata dal codice locale.
 - **lib/ghostme/chat/chatPromptBuilder.ts** — 547 righe
 - **lib/ghostme/context/decisionSnapshot.ts** — 701 righe
 - **lib/ghostme/context/reasoningService.ts** — 1044 righe
+- **lib/ghostme/context/situationPolicy.ts** — 1485 righe
 - **lib/ghostme/curiosity/curiositySnapshot.ts** — 775 righe
 - **lib/ghostme/observation/observationEngine.ts** — 712 righe
 - **lib/ghostme/people/peopleGraphLinkService.ts** — 632 righe
-- **lib/ghostme/proactive/proactiveCandidateBuilder.ts** — 633 righe
-- **lib/ghostme/proactive/trueProactiveSnapshot.ts** — 595 righe
+- **lib/ghostme/proactive/proactiveCandidateBuilder.ts** — 1027 righe
+- **lib/ghostme/proactive/trueProactiveSnapshot.ts** — 625 righe
 - **lib/ghostme/situation/situationEngine.ts** — 570 righe
 
 ## Dettaglio
@@ -1787,13 +1788,13 @@ DB delete: -
 
 ### lib/ghostme/context/situationPolicy.ts
 
-Stato: **active**
+Stato: **god_file_candidate**
 
 Chiamato da: lib/ghostme/context/reasoningService.ts
 
 Importa: lib/ghostme/context/decisionSnapshot.ts, lib/ghostme/context/reasoningService.ts
 
-Export: SituationPolicyAction, UnifiedSituationModel, buildUnifiedSituationModel
+Export: SituationHomeAssessment, SituationMomentAssessment, SituationPeopleAssessment, SituationPolicyAction, SituationValueAssessment, UnifiedSituationModel, buildUnifiedSituationModel
 
 Numero chiamanti: 1
 

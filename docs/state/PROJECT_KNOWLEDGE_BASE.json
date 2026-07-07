@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-07T01:35:29.231Z",
+  "generatedAt": "2026-07-07T21:01:20.770Z",
   "version": "1",
   "inputs": {
     "systemMap": {
@@ -20,7 +20,7 @@
     "fileUsage": {
       "file": "docs/maps/FILE_USAGE_MAP.md",
       "exists": true,
-      "lineCount": 2019
+      "lineCount": 2020
     },
     "supabaseSchemaMd": {
       "file": "docs/maps/SUPABASE_SCHEMA_MAP.md",

@@ -1,6 +1,6 @@
 # PROJECT AUDIT FULL
 
-Generato: 2026-07-07T01:35:06.259Z
+Generato: 2026-07-07T21:01:01.686Z
 
 # 1. RIASSUNTO
 
@@ -2852,7 +2852,7 @@ Righe: 1044
 
 ## lib/ghostme/context/situationPolicy.ts
 
-Righe: 322
+Righe: 1485
 
 ### Importa
 - lib/ghostme/context/reasoningService.ts
@@ -4391,7 +4391,7 @@ Righe: 181
 
 ## lib/ghostme/proactive/proactiveCandidateBuilder.ts
 
-Righe: 633
+Righe: 1027
 
 ### Importa
 - lib/ghostme/context/reasoningService.ts
@@ -4593,7 +4593,7 @@ Righe: 82
 
 ## lib/ghostme/proactive/proactiveUserFlow.ts
 
-Righe: 318
+Righe: 370
 
 ### Importa
 - lib/ghostme/proactive/proactiveMessageService.ts
@@ -4652,7 +4652,7 @@ Righe: 96
 
 ## lib/ghostme/proactive/trueProactiveSnapshot.ts
 
-Righe: 595
+Righe: 625
 
 ### Importa
 - lib/ghostme/context/decisionSnapshot.ts

@@ -1,6 +1,6 @@
 # PROJECT KNOWLEDGE BASE
 
-Generated: 2026-07-07T01:35:29.231Z
+Generated: 2026-07-07T21:01:20.770Z
 
 Questa è la mappa centrale automatica del progetto GhostMe.
 
@@ -11,7 +11,7 @@ Serve per capire **cosa esiste**, **chi chiama cosa**, **quali dati entrano/esco
 - **systemMap**: OK — `docs/maps/GHOSTME_SYSTEM_MAP_V6.md` (3281 righe)
 - **cognitiveRouting**: OK — `docs/maps/COGNITIVE_ROUTING_MAP.md` (147 righe)
 - **databaseUsage**: OK — `docs/maps/DATABASE_USAGE_MAP.md` (296 righe)
-- **fileUsage**: OK — `docs/maps/FILE_USAGE_MAP.md` (2019 righe)
+- **fileUsage**: OK — `docs/maps/FILE_USAGE_MAP.md` (2020 righe)
 - **supabaseSchemaMd**: OK — `docs/maps/SUPABASE_SCHEMA_MAP.md` (1813 righe)
 - **supabaseSchemaJson**: OK — `docs/state/SUPABASE_SCHEMA_MAP.json` (6283 righe)
 - **priorityFix**: OK — `docs/maps/GHOSTME_PRIORITY_FIX_LIST.md` (31 righe)

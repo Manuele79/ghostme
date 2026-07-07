@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-07T01:36:17.998Z",
+  "generatedAt": "2026-07-07T21:01:21.303Z",
   "status": {
     "healthScore": 67,
     "healthLabel": "🟠 Da migliorare",
@@ -1842,7 +1842,9 @@
         "lib/ghostme/chat/ghostChatOrchestrator.ts",
         "lib/ghostme/context/reasoningService.ts",
         "lib/ghostme/context/situationPolicy.ts",
-        "lib/ghostme/proactive/proactiveUserFlow.ts"
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
+        "lib/ghostme/proactive/proactiveUserFlow.ts",
+        "lib/ghostme/proactive/trueProactiveSnapshot.ts"
       ],
       "decision": [
         "app/api/debug-reasoning/route.ts",
@@ -1855,6 +1857,7 @@
         "components/ghost/types.ts",
         "hooks/useGhostBrain.ts",
         "lib/ghostme/context/reasoningService.ts",
+        "lib/ghostme/context/situationPolicy.ts",
         "lib/ghostme/home/houseWorkerFlow.ts",
         "lib/ghostme/homeAssistant/houseSuggestionEngine.ts",
         "lib/ghostme/proactive/proactiveUserFlow.ts",
@@ -1927,7 +1930,9 @@
         "lib/ghostme/chat/ghostChatOrchestrator.ts",
         "lib/ghostme/context/reasoningService.ts",
         "lib/ghostme/context/situationPolicy.ts",
-        "lib/ghostme/proactive/proactiveUserFlow.ts"
+        "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
+        "lib/ghostme/proactive/proactiveUserFlow.ts",
+        "lib/ghostme/proactive/trueProactiveSnapshot.ts"
       ],
       "continuity": [
         "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
@@ -2525,6 +2530,7 @@
       "lib/ghostme/goalsDesires.ts",
       "lib/ghostme/people/peopleSnapshot.ts",
       "lib/ghostme/proactive/dailyBriefingBuilder.ts",
+      "lib/ghostme/proactive/proactiveCandidateBuilder.ts",
       "lib/ghostme/proactive/proactiveCardLifecycle.ts",
       "lib/ghostme/proactive/proactiveDecisionEngine.ts",
       "lib/ghostme/proactive/proactiveMaintenanceFlow.ts",
@@ -3287,88 +3293,6 @@
       ]
     },
     {
-      "file": "docs/diagrams/brain.svg",
-      "improvedFlows": [
-        "Brain/Situation"
-      ],
-      "possibleBreakage": [
-        "Brain/Situation"
-      ],
-      "mapsToRegenerate": [
-        "DATABASE_USAGE_MAP",
-        "FILE_USAGE_MAP",
-        "PROJECT_KNOWLEDGE_BASE"
-      ]
-    },
-    {
-      "file": "docs/diagrams/chat.svg",
-      "improvedFlows": [
-        "Chat"
-      ],
-      "possibleBreakage": [
-        "Chat"
-      ],
-      "mapsToRegenerate": [
-        "DATABASE_USAGE_MAP",
-        "FILE_USAGE_MAP",
-        "PROJECT_KNOWLEDGE_BASE"
-      ]
-    },
-    {
-      "file": "docs/diagrams/context.svg",
-      "improvedFlows": [
-        "Brain/Situation"
-      ],
-      "possibleBreakage": [
-        "Brain/Situation"
-      ],
-      "mapsToRegenerate": [
-        "DATABASE_USAGE_MAP",
-        "FILE_USAGE_MAP",
-        "PROJECT_KNOWLEDGE_BASE"
-      ]
-    },
-    {
-      "file": "docs/diagrams/ghostme.svg",
-      "improvedFlows": [],
-      "possibleBreakage": [
-        "unknown"
-      ],
-      "mapsToRegenerate": [
-        "DATABASE_USAGE_MAP",
-        "FILE_USAGE_MAP",
-        "PROJECT_KNOWLEDGE_BASE"
-      ]
-    },
-    {
-      "file": "docs/diagrams/location.svg",
-      "improvedFlows": [
-        "Location"
-      ],
-      "possibleBreakage": [
-        "Location"
-      ],
-      "mapsToRegenerate": [
-        "DATABASE_USAGE_MAP",
-        "FILE_USAGE_MAP",
-        "PROJECT_KNOWLEDGE_BASE"
-      ]
-    },
-    {
-      "file": "docs/diagrams/proactive.svg",
-      "improvedFlows": [
-        "Proactive"
-      ],
-      "possibleBreakage": [
-        "Proactive"
-      ],
-      "mapsToRegenerate": [
-        "DATABASE_USAGE_MAP",
-        "FILE_USAGE_MAP",
-        "PROJECT_KNOWLEDGE_BASE"
-      ]
-    },
-    {
       "file": "docs/maps/COGNITIVE_ROUTING_MAP.md",
       "improvedFlows": [],
       "possibleBreakage": [
@@ -3378,32 +3302,6 @@
         "DATABASE_USAGE_MAP",
         "FILE_USAGE_MAP",
         "PROJECT_KNOWLEDGE_BASE"
-      ]
-    },
-    {
-      "file": "docs/maps/DATABASE_USAGE_MAP.json",
-      "improvedFlows": [],
-      "possibleBreakage": [
-        "unknown"
-      ],
-      "mapsToRegenerate": [
-        "DATABASE_USAGE_MAP",
-        "FILE_USAGE_MAP",
-        "PROJECT_KNOWLEDGE_BASE",
-        "SUPABASE_SCHEMA_MAP"
-      ]
-    },
-    {
-      "file": "docs/maps/DATABASE_USAGE_MAP.md",
-      "improvedFlows": [],
-      "possibleBreakage": [
-        "unknown"
-      ],
-      "mapsToRegenerate": [
-        "DATABASE_USAGE_MAP",
-        "FILE_USAGE_MAP",
-        "PROJECT_KNOWLEDGE_BASE",
-        "SUPABASE_SCHEMA_MAP"
       ]
     },
     {
@@ -3541,18 +3439,6 @@
       ]
     },
     {
-      "file": "docs/state/dependency-graph.json",
-      "improvedFlows": [],
-      "possibleBreakage": [
-        "unknown"
-      ],
-      "mapsToRegenerate": [
-        "DATABASE_USAGE_MAP",
-        "FILE_USAGE_MAP",
-        "PROJECT_KNOWLEDGE_BASE"
-      ]
-    },
-    {
       "file": "knowledge/00_PROJECT.md",
       "improvedFlows": [],
       "possibleBreakage": [
@@ -3586,19 +3472,6 @@
         "DATABASE_USAGE_MAP",
         "FILE_USAGE_MAP",
         "PROJECT_KNOWLEDGE_BASE"
-      ]
-    },
-    {
-      "file": "knowledge/03_DATABASE_USAGE.md",
-      "improvedFlows": [],
-      "possibleBreakage": [
-        "unknown"
-      ],
-      "mapsToRegenerate": [
-        "DATABASE_USAGE_MAP",
-        "FILE_USAGE_MAP",
-        "PROJECT_KNOWLEDGE_BASE",
-        "SUPABASE_SCHEMA_MAP"
       ]
     },
     {
@@ -3664,54 +3537,6 @@
     },
     {
       "file": "knowledge/json/knowledge-index.json",
-      "improvedFlows": [],
-      "possibleBreakage": [
-        "unknown"
-      ],
-      "mapsToRegenerate": [
-        "DATABASE_USAGE_MAP",
-        "FILE_USAGE_MAP",
-        "PROJECT_KNOWLEDGE_BASE"
-      ]
-    },
-    {
-      "file": "package.json",
-      "improvedFlows": [],
-      "possibleBreakage": [
-        "unknown"
-      ],
-      "mapsToRegenerate": [
-        "DATABASE_USAGE_MAP",
-        "FILE_USAGE_MAP",
-        "PROJECT_KNOWLEDGE_BASE"
-      ]
-    },
-    {
-      "file": "docs/health/",
-      "improvedFlows": [],
-      "possibleBreakage": [
-        "unknown"
-      ],
-      "mapsToRegenerate": [
-        "DATABASE_USAGE_MAP",
-        "FILE_USAGE_MAP",
-        "PROJECT_KNOWLEDGE_BASE"
-      ]
-    },
-    {
-      "file": "docs/state/SYSTEM_HEALTH_REPORT.json",
-      "improvedFlows": [],
-      "possibleBreakage": [
-        "unknown"
-      ],
-      "mapsToRegenerate": [
-        "DATABASE_USAGE_MAP",
-        "FILE_USAGE_MAP",
-        "PROJECT_KNOWLEDGE_BASE"
-      ]
-    },
-    {
-      "file": "scripts/system-health-report.mjs",
       "improvedFlows": [],
       "possibleBreakage": [
         "unknown"
