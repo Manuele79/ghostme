@@ -80,6 +80,11 @@ function formatPolicySignals(snapshot: GhostBrainSnapshot) {
     );
   }
 
+  if (policy?.peopleAssessment?.relevantPeople?.length) {
+    const person = policy.peopleAssessment.relevantPeople[0];
+    parts.push(`Persona: ${person.name} (${person.relevance}, ${person.score}/100)`);
+  }
+
   if (policy?.sourceSignals?.length) {
     parts.push(`Segnali collegati: ${policy.sourceSignals.slice(0, 4).join(", ")}`);
   }

@@ -31,6 +31,20 @@ export type SituationMomentAssessment = {
   signals: string[];
 };
 
+export type SituationPeopleAssessment = {
+  score: number;
+  confidence: number;
+  relevantPeople: Array<{
+    name: string;
+    relevance: "low" | "medium" | "high";
+    score: number;
+    reasons: string[];
+    signals: string[];
+  }>;
+  reasons: string[];
+  signals: string[];
+};
+
 export type UnifiedSituationModel = {
   currentPlace: string | null;
   placeCategory: string | null;
@@ -60,6 +74,7 @@ export type UnifiedSituationModel = {
     reason: string;
   }>;
   behaviorSignals: string[];
+  peopleAssessment: SituationPeopleAssessment;
   momentAssessment: SituationMomentAssessment;
   mentalInfluence: {
     load: "low" | "medium" | "high";
@@ -142,6 +157,244 @@ function pushSignal({
 }) {
   reasons.push(reason);
   signals.push(signal);
+}
+
+function relevanceLevel(score: number): SituationPeopleAssessment["relevantPeople"][number]["relevance"] {
+  if (score >= 65) return "high";
+  if (score >= 35) return "medium";
+  return "low";
+}
+
+function personDisplayName(value: any) {
+  return String(value?.name || value?.person || value?.topic || "").trim();
+}
+
+function includesPerson(values: any[], name: string) {
+  const key = clean(name);
+  if (!key) return false;
+
+  return (values || []).some((value) =>
+    (value?.people || []).some((person: any) => clean(person) === key)
+  );
+}
+
+function includesPersonText(value: any, name: string) {
+  const key = clean(name);
+  if (!key) return false;
+
+  return clean(
+    [
+      value?.title,
+      value?.description,
+      value?.content,
+      value?.summary,
+      value?.reason,
+      value?.target_label,
+      value?.place,
+      value?.source,
+    ]
+      .filter(Boolean)
+      .join(" ")
+  ).includes(key);
+}
+
+function latestPersonEvidence(values: Array<string | null | undefined>) {
+  return values
+    .map((value) => ({
+      value,
+      time: new Date(value || 0).getTime(),
+    }))
+    .filter((entry) => entry.value && Number.isFinite(entry.time))
+    .sort((left, right) => right.time - left.time)[0]?.value || null;
+}
+
+function buildPeopleAssessment({
+  snapshot,
+}: {
+  snapshot: GhostBrainSnapshotCore;
+}): SituationPeopleAssessment {
+  const people = snapshot.people.items || [];
+  const importantPeople = snapshot.people.importantPeople || [];
+  const relationship = snapshot.people.relationshipMemory;
+  const social = snapshot.people.socialSuggestions;
+  const peopleAtHome = (snapshot.home.state.people || [])
+    .filter((person) => person.presenceKnown && person.isHome)
+    .map((person) => person.name)
+    .filter(Boolean);
+  const currentPlace = snapshot.location.situation.currentPlace;
+  const projectsWithPeople = snapshot.projects.projects || [];
+  const relevantPeople: SituationPeopleAssessment["relevantPeople"] = [];
+
+  for (const person of people) {
+    const name = personDisplayName(person);
+    if (!name) continue;
+
+    const reasons: string[] = [];
+    const signals: string[] = [];
+    const activity = relationship.personActivity.find(
+      (item) => clean(item.person) === clean(name)
+    );
+    const attention = social.relationshipAttention.find(
+      (item) => clean(item.person) === clean(name)
+    );
+    const hasRecentMention =
+      includesPerson(relationship.recentMentions, name) ||
+      Number(activity?.recentMentions || 0) > 0;
+    const hasOpenLoop =
+      includesPerson(relationship.openLoops, name) ||
+      Number(activity?.openLoops || 0) > 0 ||
+      Boolean(attention?.signals.includes("person_with_open_loop"));
+    const hasSharedEvent =
+      includesPerson(relationship.sharedEvents, name) ||
+      Number(activity?.linkedEvents || 0) > 0 ||
+      Boolean(attention?.signals.includes("upcoming_shared_event"));
+    const hasPlaceLink =
+      Boolean(currentPlace) &&
+      (relationship.relatedPlaces || []).some(
+        (place) =>
+          includesPerson([place], name) &&
+          (clean(place.place).includes(clean(currentPlace)) ||
+            clean(currentPlace).includes(clean(place.place)))
+      );
+    const isHomeNow = peopleAtHome.some((item) => clean(item) === clean(name));
+    const hasProjectLink = projectsWithPeople.some((project) =>
+      (project.relatedPeople || []).some(
+        (related: any) =>
+          clean(personDisplayName(related)) === clean(name) ||
+          includesPersonText(related, name)
+      )
+    );
+    const hasGraphLink = (person.graph_links || []).length || snapshot.people.links.some(
+      (link) => link.person_id === person.id || link.target_id === person.id
+    );
+    const importance = Number(person.importance || activity?.importance || 0);
+    const mentionCount = Number(person.mention_count || activity?.totalMentions || 0);
+    const latestEvidence = latestPersonEvidence([
+      person.last_mentioned_at,
+      person.updated_at,
+      activity?.lastMentionedAt,
+      attention?.lastMentionedAt,
+    ]);
+    const recentEvidence = (hoursSince(latestEvidence) ?? Infinity) <= 14 * 24;
+
+    let score = 0;
+    if (hasOpenLoop) {
+      score += 35;
+      pushSignal({
+        reasons,
+        signals,
+        reason: `${name}: punto aperto personale`,
+        signal: "people:open_loop",
+      });
+    }
+    if (hasSharedEvent) {
+      score += 28;
+      pushSignal({
+        reasons,
+        signals,
+        reason: `${name}: evento condiviso rilevante`,
+        signal: "people:shared_event",
+      });
+    }
+    if (hasRecentMention) {
+      score += Number(activity?.recentMentions || 0) >= 3 ? 22 : 12;
+      pushSignal({
+        reasons,
+        signals,
+        reason: `${name}: presenza in memoria recente`,
+        signal: "people:recent_memory",
+      });
+    }
+    if (isHomeNow) {
+      score += 18;
+      pushSignal({
+        reasons,
+        signals,
+        reason: `${name}: presente ora nel contesto casa`,
+        signal: "people:present_home",
+      });
+    }
+    if (hasPlaceLink) {
+      score += 14;
+      pushSignal({
+        reasons,
+        signals,
+        reason: `${name}: collegamento con il luogo attuale`,
+        signal: "people:place_link",
+      });
+    }
+    if (hasProjectLink) {
+      score += 12;
+      pushSignal({
+        reasons,
+        signals,
+        reason: `${name}: collegamento con progetto/goal`,
+        signal: "people:project_link",
+      });
+    }
+    if (hasGraphLink) {
+      score += 8;
+      signals.push("people:graph_link");
+    }
+    if (importance >= 7) {
+      score += 10;
+      signals.push("people:important_person");
+    }
+    if (mentionCount >= 5) {
+      score += 6;
+      signals.push("people:frequent_mentions");
+    }
+    if (recentEvidence) {
+      score += 6;
+      signals.push("people:fresh_evidence");
+    }
+    if (
+      attention?.signals.every((signal) =>
+        ["relationship_context_sparse", "no_recent_mentions", "reconnect_candidate"].includes(signal)
+      )
+    ) {
+      score -= 14;
+      signals.push("people:weak_or_intrusive_signal");
+    }
+
+    const finalScore = clampScore(score);
+    if (finalScore < 25) continue;
+
+    relevantPeople.push({
+      name,
+      relevance: relevanceLevel(finalScore),
+      score: finalScore,
+      reasons: Array.from(new Set(reasons)).slice(0, 4),
+      signals: Array.from(new Set(signals)).slice(0, 8),
+    });
+  }
+
+  const sortedPeople = relevantPeople
+    .sort((left, right) => right.score - left.score)
+    .slice(0, 5);
+  const reasons = Array.from(
+    new Set(sortedPeople.flatMap((person) => person.reasons))
+  ).slice(0, 8);
+  const signals = Array.from(
+    new Set(sortedPeople.flatMap((person) => person.signals))
+  ).slice(0, 12);
+  const strongestScore = sortedPeople[0]?.score || 0;
+  const concreteSignalCount = signals.filter(
+    (signal) => !["people:weak_or_intrusive_signal"].includes(signal)
+  ).length;
+  const confidence = clampScore(
+    (relationship.confidence || 0) * 0.5 +
+      (social.confidence || 0) * 0.3 +
+      (concreteSignalCount >= 3 ? 20 : concreteSignalCount >= 2 ? 12 : concreteSignalCount ? 6 : 0)
+  );
+
+  return {
+    score: strongestScore,
+    confidence,
+    relevantPeople: sortedPeople,
+    reasons,
+    signals,
+  };
 }
 
 function mentalInfluence(snapshot: GhostBrainSnapshotCore) {
@@ -232,6 +485,7 @@ function buildMomentAssessment({
   locationEvents,
   homeEvents,
   behaviorSignals,
+  peopleAssessment,
 }: {
   snapshot: GhostBrainSnapshotCore;
   decision: DecisionSnapshot;
@@ -239,6 +493,7 @@ function buildMomentAssessment({
   locationEvents: UnifiedSituationModel["recentLocationEvents"];
   homeEvents: UnifiedSituationModel["recentHomeEvents"];
   behaviorSignals: string[];
+  peopleAssessment: SituationPeopleAssessment;
 }): SituationMomentAssessment {
   const reasons: string[] = [];
   const signals: string[] = [];
@@ -274,10 +529,6 @@ function buildMomentAssessment({
   const importantGoal = (snapshot.goals.activeGoals || []).find(
     (item) => Number(item.importance || 0) >= 8
   );
-  const peopleSignal =
-    Boolean(snapshot.people.importantPeople?.length) ||
-    Boolean(snapshot.people.relationshipMemory.sharedEvents?.length) ||
-    Boolean(snapshot.people.socialSuggestions.relationshipAttention?.length);
   const memorySignal =
     Boolean(snapshot.memory.activeMemories?.length) ||
     Boolean(snapshot.memory.episodicMemories?.length) ||
@@ -393,13 +644,22 @@ function buildMomentAssessment({
       signal: "home:route_uncertain",
     });
   }
-  if (peopleSignal) {
+  if (peopleAssessment.score >= 65 && peopleAssessment.confidence >= 50) {
+    score += 16;
+    const person = peopleAssessment.relevantPeople[0];
+    pushSignal({
+      reasons,
+      signals,
+      reason: `persona molto rilevante ora: ${person?.name || "persona"}`,
+      signal: "people:high_relevance",
+    });
+  } else if (peopleAssessment.score >= 35 && peopleAssessment.confidence >= 40) {
     score += 8;
     pushSignal({
       reasons,
       signals,
-      reason: "persone rilevanti nel contesto",
-      signal: "people:relevant",
+      reason: "segnale persona collegato al momento",
+      signal: "people:contextual_relevance",
     });
   }
   if (memorySignal && behaviorSignals.length >= 3) {
@@ -499,6 +759,7 @@ function buildValueAssessment({
   locationEvents,
   homeEvents,
   momentAssessment,
+  peopleAssessment,
 }: {
   snapshot: GhostBrainSnapshotCore;
   decision: DecisionSnapshot;
@@ -514,6 +775,7 @@ function buildValueAssessment({
   locationEvents: UnifiedSituationModel["recentLocationEvents"];
   homeEvents: UnifiedSituationModel["recentHomeEvents"];
   momentAssessment: SituationMomentAssessment;
+  peopleAssessment: SituationPeopleAssessment;
 }): SituationValueAssessment {
   const reasons: string[] = [];
   const penalties: string[] = [];
@@ -543,10 +805,24 @@ function buildValueAssessment({
       clean(place.label) === clean(snapshot.location.situation.currentPlace) ||
       clean(place.category) === clean(snapshot.location.situation.category)
   );
-  const peopleSignal =
-    Boolean(snapshot.people.importantPeople?.length) ||
-    Boolean(snapshot.people.relationshipMemory.openLoops?.length) ||
-    Boolean(snapshot.people.relationshipMemory.sharedEvents?.length);
+  const strongPeopleSignal =
+    peopleAssessment.score >= 65 &&
+    peopleAssessment.confidence >= 50 &&
+    peopleAssessment.signals.some((signal) =>
+      [
+        "people:open_loop",
+        "people:shared_event",
+        "people:present_home",
+        "people:place_link",
+        "people:project_link",
+      ].includes(signal)
+    );
+  const mediumPeopleSignal =
+    peopleAssessment.score >= 35 &&
+    peopleAssessment.confidence >= 40 &&
+    !peopleAssessment.signals.every((signal) =>
+      ["people:weak_or_intrusive_signal", "people:important_person"].includes(signal)
+    );
   const memorySignal =
     Boolean(snapshot.memory.activeMemories?.length) ||
     Boolean(snapshot.memory.episodicMemories?.length) ||
@@ -581,9 +857,12 @@ function buildValueAssessment({
     utility += 5;
     reasons.push("open loop recente");
   }
-  if (peopleSignal) {
-    utility += 3;
-    reasons.push("segnale persone");
+  if (strongPeopleSignal) {
+    utility += 5;
+    reasons.push("persona rilevante nel momento");
+  } else if (mediumPeopleSignal) {
+    utility += 2;
+    reasons.push("segnale persona contestuale");
   }
   if (memorySignal) utility += 2;
   if (comfortSignals.length) utility += 2;
@@ -609,7 +888,8 @@ function buildValueAssessment({
   if (knownPlaceDetail) contextFit += 2;
   if (recentLocationSignal) contextFit += 2;
   if (recentHomeSignal || housePatternSignal) contextFit += 3;
-  if (peopleSignal) contextFit += 2;
+  if (strongPeopleSignal) contextFit += 3;
+  else if (mediumPeopleSignal) contextFit += 1;
   if (action.sourceSignals.length >= 3) contextFit += 2;
   if (snapshot.signals.context.length >= 3) contextFit += 2;
   if (!decision.missingContext.includes("no_fresh_location")) contextFit += 1;
@@ -621,7 +901,8 @@ function buildValueAssessment({
   if (Number(snapshot.location.situation.confidence || 0) >= 70) signalQuality += 2;
   if (Number(snapshot.home.state.confidence || 0) >= 60) signalQuality += 2;
   if (snapshot.signals.context.length >= 2) signalQuality += 2;
-  if (peopleSignal) signalQuality += 1;
+  if (strongPeopleSignal) signalQuality += 2;
+  else if (mediumPeopleSignal) signalQuality += 1;
   if (memorySignal) signalQuality += 1;
   if (decision.missingContext.length >= 4) {
     signalQuality -= 2;
@@ -739,6 +1020,7 @@ function chooseAction({
   locationEvents,
   homeEvents,
   momentAssessment,
+  peopleAssessment,
 }: {
   snapshot: GhostBrainSnapshotCore;
   decision: DecisionSnapshot;
@@ -746,6 +1028,7 @@ function chooseAction({
   locationEvents: UnifiedSituationModel["recentLocationEvents"];
   homeEvents: UnifiedSituationModel["recentHomeEvents"];
   momentAssessment: SituationMomentAssessment;
+  peopleAssessment: SituationPeopleAssessment;
 }) {
   const riskSignals = snapshot.home.comfortRisk.riskSignals || [];
   const nextEvent = [...snapshot.calendar.today, ...snapshot.calendar.upcoming]
@@ -777,6 +1060,9 @@ function chooseAction({
     openLoops.length ? "continuity:recent_open_loop" : null,
     nextEvent?.event?.title ? "calendar:imminent_event" : null,
     riskSignals.length ? "home:risk_signal" : null,
+    peopleAssessment.score >= 65 && peopleAssessment.confidence >= 50
+      ? "people:high_relevance"
+      : null,
   ].filter(Boolean) as string[];
 
   let action: {
@@ -865,6 +1151,7 @@ function chooseAction({
     locationEvents,
     homeEvents,
     momentAssessment,
+    peopleAssessment,
   });
   const valuedAction = applyValueAssessment({
     action,
@@ -904,6 +1191,9 @@ export function buildUnifiedSituationModel({
       .map((pattern) => pattern.pattern_type || pattern.title)
       .filter(Boolean),
   ].slice(0, 16);
+  const peopleAssessment = buildPeopleAssessment({
+    snapshot,
+  });
   const momentAssessment = buildMomentAssessment({
     snapshot,
     decision,
@@ -911,6 +1201,7 @@ export function buildUnifiedSituationModel({
     locationEvents,
     homeEvents,
     behaviorSignals,
+    peopleAssessment,
   });
   const action = chooseAction({
     snapshot,
@@ -919,6 +1210,7 @@ export function buildUnifiedSituationModel({
     locationEvents,
     homeEvents,
     momentAssessment,
+    peopleAssessment,
   });
 
   return {
@@ -939,6 +1231,7 @@ export function buildUnifiedSituationModel({
     activeGoals: snapshot.goals.activeGoals.slice(0, 8),
     recentOpenLoops: openLoops,
     behaviorSignals,
+    peopleAssessment,
     momentAssessment,
     mentalInfluence: mental,
     confidence: Math.max(
